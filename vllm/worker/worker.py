@@ -144,6 +144,7 @@ class Worker:
         # Add prompt tokens.
         prompt_lens: List[int] = []
         for seq_group_metadata in seq_group_metadata_list:
+            print("seq_group_metadata:", seq_group_metadata, seq_group_metadata.is_prompt)
             if not seq_group_metadata.is_prompt:
                 continue
 
