@@ -167,7 +167,7 @@ class PagedAttention(nn.Module):
         num_prompt_tokens = input_metadata.num_prompt_tokens
         if num_prompt_tokens > 0:
             self.set_attn_bias(input_metadata)
-            print("aaa")
+            print("multi_query_kv_attention")
             self.multi_query_kv_attention(
                 output[:num_prompt_tokens],
                 query[:num_prompt_tokens],
