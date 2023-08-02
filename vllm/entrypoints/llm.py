@@ -146,11 +146,11 @@ class LLM:
             pbar = tqdm(total=num_requests, desc="Processed prompts")
         # Run the engine.
         outputs: List[RequestOutput] = []
-        interation = 0
+        # interation = 0
         while self.llm_engine.has_unfinished_requests():
-            print("interation: ", interation)
+            # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
-            interation = interation  + 1
+            # interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
