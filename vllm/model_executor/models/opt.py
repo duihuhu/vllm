@@ -229,7 +229,7 @@ class OPTDecoder(nn.Module):
         if self.project_in is not None:
             inputs_embeds = self.project_in(inputs_embeds)
         hidden_states = inputs_embeds + pos_embeds
-        print(self.layers)
+        print(len(self.layers))
         for i in range(len(self.layers)):
             if cache_events is None:
                 cache_event = None
