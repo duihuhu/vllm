@@ -279,7 +279,8 @@ class Worker:
         # Prepare input tensors.
         input_tokens, input_positions, input_metadata = self._prepare_inputs(
             seq_group_metadata_list)
-
+        
+        print(self.gpu_cache)
         # Execute the model.
         output = self.model(
             input_ids=input_tokens,
