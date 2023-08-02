@@ -184,35 +184,35 @@ class Worker:
         max_num_blocks_per_seq = 0
         context_lens: List[int] = []
         generation_block_tables: List[List[int]] = []
-        # for seq_group_metadata in seq_group_metadata_list:
-        #     if seq_group_metadata.is_prompt:
-        #         continue
+        for seq_group_metadata in seq_group_metadata_list:
+            if seq_group_metadata.is_prompt:
+                continue
 
-        #     seq_ids = list(seq_group_metadata.seq_data.keys())
-        #     sampling_params = seq_group_metadata.sampling_params
-        #     seq_groups.append((seq_ids, sampling_params))
+            seq_ids = list(seq_group_metadata.seq_data.keys())
+            sampling_params = seq_group_metadata.sampling_params
+            seq_groups.append((seq_ids, sampling_params))
 
-        #     for seq_id in seq_ids:
-        #         seq_data = seq_group_metadata.seq_data[seq_id]
-        #         generation_token = seq_data.get_last_token_id()
-        #         input_tokens.append(generation_token)
+            for seq_id in seq_ids:
+                seq_data = seq_group_metadata.seq_data[seq_id]
+                generation_token = seq_data.get_last_token_id()
+                input_tokens.append(generation_token)
 
-        #         context_len = seq_data.get_len()
-        #         position = context_len - 1
-        #         input_positions.append(position)
+                context_len = seq_data.get_len()
+                position = context_len - 1
+                input_positions.append(position)
 
-        #         block_table = seq_group_metadata.block_tables[seq_id]
-        #         generation_block_tables.append(block_table)
+                block_table = seq_group_metadata.block_tables[seq_id]
+                generation_block_tables.append(block_table)
 
-        #         max_context_len = max(max_context_len, context_len)
-        #         max_num_blocks_per_seq = max(max_num_blocks_per_seq,
-        #                                      len(block_table))
-        #         context_lens.append(context_len)
+                max_context_len = max(max_context_len, context_len)
+                max_num_blocks_per_seq = max(max_num_blocks_per_seq,
+                                             len(block_table))
+                context_lens.append(context_len)
 
-        #         block_number = block_table[position // self.block_size]
-        #         block_offset = position % self.block_size
-        #         slot = block_number * self.block_size + block_offset
-        #         slot_mapping.append(slot)
+                block_number = block_table[position // self.block_size]
+                block_offset = position % self.block_size
+                slot = block_number * self.block_size + block_offset
+                slot_mapping.append(slot)
 
         # Optimization: Pad the input length to be a multiple of 8.
         # This is required for utilizing the Tensor Cores in NVIDIA GPUs.
