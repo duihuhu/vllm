@@ -257,12 +257,13 @@ class LLMEngine:
         self._stop_sequences(seq_groups)
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
-
         # Create the outputs.
         request_outputs: List[RequestOutput] = []
         for seq_group in seq_groups + ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
+            
+        self.scheduler.store_prompt_kv_cache()
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
@@ -324,6 +325,7 @@ class LLMEngine:
     ) -> Any:
         """Runs the given method on all workers."""
         all_outputs = []
+        print
         for worker in self.workers:
             executor = getattr(worker, method)
             if self.parallel_config.worker_use_ray:
