@@ -275,16 +275,11 @@ class Scheduler:
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
 
     def store_prompt_kv_cache(self):
-        for seq_group in self.running:
-            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-                print(" running seq after interation",seq.seq_id)
-        for seq_group in self.swapped:
-            for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
-                print(" swapped seq after interation",seq.seq_id) 
-        for seq_group in self.waiting:
-            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-                print(" waiting seq after interation",seq.seq_id) 
-                
+        while self.running:
+            seq_group = self.running.pop(0)
+            blocks = self.block_manager._get_physical_blocks(seq_group)
+            print("request_id: ", blocks)
+
     def schedule(
         self
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
