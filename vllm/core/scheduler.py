@@ -274,16 +274,16 @@ class Scheduler:
                         f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
 
-    def store_prompt_kv_cache(self):
-        for seq_group in self.running:
-            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-                print(" running seq after interation",seq.seq_id)
-        for seq_group in self.swapped:
-            for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
-                print(" swapped seq after interation",seq.seq_id) 
-        for seq_group in self.waiting:
-            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-                print(" waiting seq after interation",seq.seq_id) 
+    # def store_prompt_kv_cache(self):
+    #     for seq_group in self.running:
+    #         for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+    #             print(" running seq after interation",seq.seq_id)
+    #     for seq_group in self.swapped:
+    #         for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
+    #             print(" swapped seq after interation",seq.seq_id) 
+    #     for seq_group in self.waiting:
+    #         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+    #             print(" waiting seq after interation",seq.seq_id) 
                 
     def schedule(
         self
