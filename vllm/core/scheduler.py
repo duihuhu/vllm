@@ -302,7 +302,7 @@ class Scheduler:
         while self.running:
             seq_group = self.running.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
-            print("request_id: ", seq_group.request_id, blocks)
+            # print("request_id: ", seq_group.request_id, blocks)
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.PREFILLED
             mapping = self.block_manager.swap_out(seq_group)
