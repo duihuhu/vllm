@@ -281,7 +281,7 @@ class Scheduler:
         self
     ) -> None:
         while self.prefilled:
-            seq_group = self.running.pop(0)
+            seq_group = self.prefilled.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
             print("request_id: ", seq_group.request_id, blocks)
             
