@@ -271,6 +271,7 @@ class LLMEngine:
                 blocks_to_swap_out=prefill_blocks_to_swap_out
             )
             
+        self.scheduler.watch_cpu_kv_cache()
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:

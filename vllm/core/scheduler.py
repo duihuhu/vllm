@@ -74,6 +74,9 @@ class Scheduler:
         self.running: List[SequenceGroup] = []
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
+        
+        # Sequence groups in the prefilled state
+        self.prefilled: List[SequenceGroup] = []
 
         self.last_logging_time: float = 0.0
         # List[timestamp, num_tokens]
@@ -274,6 +277,14 @@ class Scheduler:
                         f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
 
+    def watch_cpu_kv_cache(
+        self
+    ) -> None:
+        while self.prefilled:
+            seq_group = self.running.pop(0)
+            blocks = self.block_manager._get_physical_blocks(seq_group)
+            print("request_id: ", seq_group.request_id, blocks)
+            
     def store_prompt_kv_cache(
         self
     ) -> Dict[int, int]:
@@ -284,7 +295,7 @@ class Scheduler:
             print("request_id: ", seq_group.request_id, blocks)
             mapping = self.block_manager.swap_out(seq_group)
             blocks_to_swap_out.update(mapping)
-
+            self.prefilled.append(seq_group)
         return blocks_to_swap_out
     
     def schedule(
