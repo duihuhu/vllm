@@ -159,7 +159,6 @@ class LLM:
         
         self.llm_engine.convert_prefilled_to_swapped()
         while self.llm_engine.has_unfinished_requests():
-            print("aaaa")
             step_outputs = self.llm_engine.step_decoder()
             for output in step_outputs:
                 if output.finished:
