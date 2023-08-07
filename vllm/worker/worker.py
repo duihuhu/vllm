@@ -245,6 +245,22 @@ class Worker:
         )
         return tokens_tensor, positions_tensor, input_metadata
 
+    def swap_prefilled_cache(
+        self,
+        blocks_to_swap_out: Dict[int, int],
+    )  -> None:
+        if blocks_to_swap_out:
+            self.cache_engine.swap_out(blocks_to_swap_out)
+            issued_cache_op = True
+            
+        if issued_cache_op:
+            cache_events = self.cache_events
+        else:
+            cache_events = None
+        if cache_events is not None:
+            for event in cache_events:
+                event.wait()
+
     @torch.inference_mode()
     def execute_model(
         self,

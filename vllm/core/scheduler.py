@@ -274,12 +274,19 @@ class Scheduler:
                         f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
 
-    def store_prompt_kv_cache(self):
+    def store_prompt_kv_cache(
+        self
+    ) -> Dict[int, int]:
+        blocks_to_swap_out: Dict[int, int] = {}
         while self.running:
             seq_group = self.running.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
-            print("request_id: ", blocks)
+            print("request_id: ", seq_group.request_id, blocks)
+            mapping = self.block_manager.swap_out(seq_group)
+            blocks_to_swap_out.update(mapping)
 
+        return blocks_to_swap_out
+    
     def schedule(
         self
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
@@ -344,8 +351,8 @@ class Scheduler:
         self.block_manager.free(seq)
 
     def free_finished_seq_groups(self) -> None:
-        for seq_group in self.running:
-            print("finished ", seq_group.is_finished())
+        # for seq_group in self.running:
+        #     print("finished ", seq_group.is_finished())
             
         self.running = [
             seq_group for seq_group in self.running

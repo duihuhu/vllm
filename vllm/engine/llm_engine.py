@@ -263,7 +263,14 @@ class LLMEngine:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
             
-        self.scheduler.store_prompt_kv_cache()
+        prefill_blocks_to_swap_out = self.scheduler.store_prompt_kv_cache()
+        if prefill_blocks_to_swap_out:
+            # Execute the swap prefill cache.
+            self._run_workers(
+                "swap_prefilled_cache",
+                blocks_to_swap_out=prefill_blocks_to_swap_out
+            )
+            
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
@@ -325,7 +332,6 @@ class LLMEngine:
     ) -> Any:
         """Runs the given method on all workers."""
         all_outputs = []
-        print
         for worker in self.workers:
             executor = getattr(worker, method)
             if self.parallel_config.worker_use_ray:
