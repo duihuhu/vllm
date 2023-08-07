@@ -165,6 +165,7 @@ class PagedAttention(nn.Module):
 
         # Compute the attention op for prompts.
         num_prompt_tokens = input_metadata.num_prompt_tokens
+        # print("num_prompt_tokens", num_prompt_tokens, input_metadata.num_generation_tokens)
         if num_prompt_tokens > 0:
             self.set_attn_bias(input_metadata)
             self.multi_query_kv_attention(
