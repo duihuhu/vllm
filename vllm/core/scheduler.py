@@ -98,6 +98,16 @@ class Scheduler:
                         self.free_seq(seq, SequenceStatus.FINISHED_ABORTED)
                     return
 
+    def has_prefilled_seqs(self) -> bool:
+        return self.prefilled
+    
+    def convert_prefilled_to_swapped_seqs(self):
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.SWAPPED
+            self.swapped.append(seq_group)
+            
     def has_unfinished_seqs(self) -> bool:
         return self.waiting or self.running or self.swapped
 
@@ -293,6 +303,8 @@ class Scheduler:
             seq_group = self.running.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
             print("request_id: ", seq_group.request_id, blocks)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.PREFILLED
             mapping = self.block_manager.swap_out(seq_group)
             blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)

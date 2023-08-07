@@ -221,9 +221,54 @@ class LLMEngine:
         """Gets the number of unfinished requests."""
         return self.scheduler.get_num_unfinished_seq_groups()
 
+    def has_prefilled_requests(self) -> bool:
+        return self.scheduler.has_prefilled_seqs()
+    
     def has_unfinished_requests(self) -> bool:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
+
+    def convert_prefilled_to_swapped(self) -> None:
+        self.scheduler.convert_prefilled_to_swapped_seqs()
+        
+    def step_decoder(self) -> List[RequestOutput]:
+        """Performs one decoding iteration and returns newly generated results.
+
+        This function performs one decoding iteration of the engine. It first
+        schedules the sequences to be executed in the next iteration and the
+        token blocks to be swapped in/out/copy. Then, it executes the model
+        and updates the scheduler with the model outputs. Finally, it decodes
+        the sequences and returns the newly generated results.
+        """
+        (seq_group_metadata_list, scheduler_outputs,
+         ignored_seq_groups) = self.scheduler.schedule()
+        if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
+                and (not ignored_seq_groups)):
+            # Nothing to do.
+            return []
+        # Execute the model.
+        output = self._run_workers(
+            "execute_model",
+            seq_group_metadata_list=seq_group_metadata_list,
+            blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
+            blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
+            blocks_to_copy=scheduler_outputs.blocks_to_copy,
+        )
+        # Update the scheduler with the model outputs.
+        seq_groups = self.scheduler.update(output)
+
+        # Decode the sequences.
+        self._decode_sequences(seq_groups)
+        # Stop the sequences that meet the stopping criteria.
+        self._stop_sequences(seq_groups)
+        # Free the finished sequence groups.
+        self.scheduler.free_finished_seq_groups()
+        # Create the outputs.
+        request_outputs: List[RequestOutput] = []
+        for seq_group in seq_groups + ignored_seq_groups:
+            request_output = RequestOutput.from_seq_group(seq_group)
+            request_outputs.append(request_output)
+        
 
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
@@ -262,7 +307,7 @@ class LLMEngine:
         for seq_group in seq_groups + ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
-            
+        
         prefill_blocks_to_swap_out = self.scheduler.store_prompt_kv_cache()
         if prefill_blocks_to_swap_out:
             # Execute the swap prefill cache.
@@ -272,6 +317,7 @@ class LLMEngine:
             )
             
         self.scheduler.watch_cpu_kv_cache()
+        
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
