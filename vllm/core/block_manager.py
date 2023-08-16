@@ -31,6 +31,7 @@ class BlockAllocator:
                                        block_number=i,
                                        block_size=block_size)
             self.free_blocks.append(block)
+        print("init free_blocks", len(self.free_blocks))
 
     def allocate(self) -> PhysicalTokenBlock:
         if not self.free_blocks:

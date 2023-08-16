@@ -66,7 +66,7 @@ class CacheEngine:
             self.head_size,
             self.block_size,
         )
-
+    #average gpu memory to each layer
     def allocate_gpu_cache(self) -> List[KVCache]:
         gpu_cache: List[KVCache] = []
         key_block_shape = self.get_key_block_shape()
@@ -83,8 +83,9 @@ class CacheEngine:
                 device="cuda",
             )
             gpu_cache.append((key_blocks, value_blocks))
+        print("allocate_gpu_cache: ",len(gpu_cache), len(key_blocks))
         return gpu_cache
-
+    #average cpu memory to each layer
     def allocate_cpu_cache(self) -> List[KVCache]:
         cpu_cache: List[KVCache] = []
         key_block_shape = self.get_key_block_shape()
@@ -151,6 +152,8 @@ class CacheEngine:
 
         key_cache_block = block_size * num_heads * head_size
         value_cache_block = key_cache_block
+        # block size: 16 - 32 tokens
+        # total = num_layers * (hidden_size * 2 * block_size)
         total = num_layers * (key_cache_block + value_cache_block)
         dtype_size = _get_dtype_size(model_config.dtype)
         return dtype_size * total
