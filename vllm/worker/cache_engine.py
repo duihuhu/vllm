@@ -119,7 +119,7 @@ class CacheEngine:
             for i in range(self.num_layers):
                 src_key_cache, src_value_cache = src[i]
                 dst_key_cache, dst_value_cache = dst[i]
-                print("before ", src_key_cache, src_value_cache)
+                print("before ", dst_key_cache)
                 # Copy the key blocks.
                 cache_ops.swap_blocks(src_key_cache, dst_key_cache, src_to_dst)
                 # Copy the value blocks.
@@ -127,7 +127,6 @@ class CacheEngine:
                                       src_to_dst)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                print("after ", src_key_cache, src_value_cache)
                 
     def swap_in(self, src_to_dst: Dict[int, int]) -> None:
         self._swap(self.cpu_cache, self.gpu_cache, src_to_dst)
