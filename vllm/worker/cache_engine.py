@@ -126,8 +126,6 @@ class CacheEngine:
                 cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                print(sys.getsizeof(dst_key_cache))
-                print(sys.getsizeof(pickle.dumps(dst_key_cache)))
 
     def swap_in(self, src_to_dst: Dict[int, int]) -> None:
         self._swap(self.cpu_cache, self.gpu_cache, src_to_dst)
