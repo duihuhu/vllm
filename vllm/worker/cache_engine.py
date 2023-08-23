@@ -1,6 +1,7 @@
 """CacheEngine class for managing the KV cache."""
 from typing import Dict, List, Tuple
-
+import sys
+import pickle
 import torch
 
 from vllm import cache_ops
@@ -122,12 +123,12 @@ class CacheEngine:
                 # Copy the key blocks.
                 cache_ops.swap_blocks(src_key_cache, dst_key_cache, src_to_dst)
                 # Copy the value blocks.
-                cache_ops.swap_blocks(src_value_cache, dst_value_cache,
-                                      src_to_dst)
+                cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                print("after ", dst_key_cache)
-                
+                print(sys.getsizeof(dst_key_cache))
+                print(sys.getsizeof(pickle.dumps(dst_key_cache)))
+
     def swap_in(self, src_to_dst: Dict[int, int]) -> None:
         self._swap(self.cpu_cache, self.gpu_cache, src_to_dst)
 
