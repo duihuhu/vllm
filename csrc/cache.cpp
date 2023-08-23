@@ -8,6 +8,17 @@ void swap_blocks(
   torch::Tensor& dst,
   const std::map<int64_t, int64_t>& block_mapping);
 
+void alloc_blocks(
+  torch::Tensor& src,
+  torch::Tensor& dst,
+  const std::map<int64_t, int64_t>& block_mapping){
+  void *src_ptr = src.data_ptr();
+  void *dst_ptr = dst.data_ptr();
+
+  const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
+  printf("aaa");
+};
+
 void copy_blocks(
   std::vector<torch::Tensor>& key_caches,
   std::vector<torch::Tensor>& value_caches,

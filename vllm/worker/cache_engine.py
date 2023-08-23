@@ -124,6 +124,9 @@ class CacheEngine:
                 cache_ops.swap_blocks(src_key_cache, dst_key_cache, src_to_dst)
                 # Copy the value blocks.
                 cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
+                #add test 
+                cache_ops.alloc_blocks(src_value_cache, dst_value_cache, src_to_dst)
+                
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
 
