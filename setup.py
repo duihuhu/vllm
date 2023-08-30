@@ -7,7 +7,7 @@ from typing import List, Set
 from packaging.version import parse, Version
 import setuptools
 import torch
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME, CppExtension
 
 ROOT_DIR = os.path.dirname(__file__)
 
@@ -112,6 +112,9 @@ activation_extension = CUDAExtension(
 )
 ext_modules.append(activation_extension)
 
+cpp_ext_modules = [] 
+ops_extension = CppExtension(name='vllm.mem_ops', sources=['csrc/ops.cpp'])
+cpp_ext_modules.append(ops_extension)
 
 def get_path(*filepath) -> str:
     return os.path.join(ROOT_DIR, *filepath)
@@ -166,6 +169,8 @@ setuptools.setup(
         exclude=("assets", "benchmarks", "csrc", "docs", "examples", "tests")),
     python_requires=">=3.8",
     install_requires=get_requirements(),
-    ext_modules=ext_modules,
+    ext_modules=[ext_modules, cpp_ext_modules],
     cmdclass={"build_ext": BuildExtension},
 )
+
+
