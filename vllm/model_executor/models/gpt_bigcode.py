@@ -22,24 +22,24 @@
 The input of the model is flattened to a 1D tensor of tokens. The model uses
 InputMetadata to extract the original 2D shape of the input.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 from torch import nn
-import numpy as np
 from transformers import GPTBigCodeConfig
 
 from vllm.model_executor.input_metadata import InputMetadata
 from vllm.model_executor.layers.activation import get_act_fn
 from vllm.model_executor.layers.attention import PagedAttention
 from vllm.model_executor.layers.sampler import Sampler
-from vllm.model_executor.weight_utils import (hf_model_weights_iterator,
-                                              load_tensor_parallel_weights)
+from vllm.model_executor.weight_utils import (
+    hf_model_weights_iterator, load_padded_tensor_parallel_vocab,
+    load_tensor_parallel_weights)
 from vllm.model_executor.parallel_utils.parallel_state import (
     get_tensor_model_parallel_rank, get_tensor_model_parallel_world_size)
 from vllm.model_executor.parallel_utils.tensor_parallel import (
     VocabParallelEmbedding, ColumnParallelLinear, RowParallelLinear)
-from vllm.sequence import SequenceOutputs
+from vllm.sequence import SamplerOutput
 
 KVCache = Tuple[torch.Tensor, torch.Tensor]
 
@@ -50,18 +50,36 @@ class GPTBigCodeAttention(nn.Module):
         super().__init__()
         self.hidden_size = config.hidden_size
         total_num_heads = config.num_attention_heads
-        tensor_model_parallel_world_size = (
+        self.tensor_model_parallel_world_size = (
             get_tensor_model_parallel_world_size())
-        assert total_num_heads % tensor_model_parallel_world_size == 0
-        self.num_heads = total_num_heads // tensor_model_parallel_world_size
+        assert total_num_heads % self.tensor_model_parallel_world_size == 0
+        self.num_heads = (total_num_heads //
+                          self.tensor_model_parallel_world_size)
         self.head_dim = self.hidden_size // total_num_heads
         self.scale = self.head_dim**-0.5
 
-        self.c_attn = ColumnParallelLinear(self.hidden_size,
-                                           3 * self.hidden_size,
-                                           bias=True,
-                                           gather_output=False,
-                                           perform_initialization=False)
+        self.multi_query = config.multi_query
+        if self.multi_query:
+            self.num_kv_heads = 1
+            self.kv_dim = self.head_dim
+            self.c_attn_q = ColumnParallelLinear(self.hidden_size,
+                                                 self.hidden_size,
+                                                 bias=True,
+                                                 gather_output=False,
+                                                 perform_initialization=False)
+            self.c_attn_kv = nn.Linear(self.hidden_size,
+                                       2 * self.kv_dim,
+                                       bias=True)
+        else:
+            self.num_kv_heads = self.num_heads
+            self.kv_dim = self.num_kv_heads * self.head_dim
+            self.c_attn = ColumnParallelLinear(self.hidden_size,
+                                               self.hidden_size +
+                                               2 * self.kv_dim,
+                                               bias=True,
+                                               gather_output=False,
+                                               perform_initialization=False)
+
         self.c_proj = RowParallelLinear(self.hidden_size,
                                         self.hidden_size,
                                         bias=True,
@@ -69,7 +87,8 @@ class GPTBigCodeAttention(nn.Module):
                                         perform_initialization=False)
         self.attn = PagedAttention(self.num_heads,
                                    self.head_dim,
-                                   scale=self.scale)
+                                   scale=self.scale,
+                                   num_kv_heads=self.num_kv_heads)
 
     def forward(
         self,
@@ -78,8 +97,17 @@ class GPTBigCodeAttention(nn.Module):
         input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
-        qkv, _ = self.c_attn(hidden_states)
-        q, k, v = qkv.chunk(chunks=3, dim=-1)
+        if self.multi_query:
+            q, _ = self.c_attn_q(hidden_states)
+            kv = self.c_attn_kv(hidden_states)
+            k, v = kv.split([self.kv_dim, self.kv_dim], dim=-1)
+        else:
+            qkv, _ = self.c_attn(hidden_states)
+            q, k, v = qkv.split([
+                self.hidden_size // self.tensor_model_parallel_world_size,
+                self.kv_dim, self.kv_dim
+            ],
+                                dim=-1)
         key_cache, value_cache = kv_cache
         attn_output = self.attn(q, k, v, key_cache, value_cache,
                                 input_metadata, cache_event)
@@ -218,14 +246,14 @@ class GPTBigCodeForCausalLM(nn.Module):
         kv_caches: List[KVCache],
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
-    ) -> Dict[int, SequenceOutputs]:
+    ) -> SamplerOutput:
         hidden_states = self.transformer(input_ids, positions, kv_caches,
                                          input_metadata, cache_events)
         next_tokens = self.sampler(self.lm_head_weight, hidden_states,
                                    input_metadata)
         return next_tokens
 
-    _column_parallel_weights = ["wte.weight", "c_fc.weight", "c_fc.bias"]
+    _column_parallel_weights = ["c_fc.weight", "c_fc.bias"]
     _row_parallel_weights = ["c_proj.weight"]
 
     def load_weights(self,
@@ -248,50 +276,8 @@ class GPTBigCodeForCausalLM(nn.Module):
                 # NOTE: "c_attn.bias" should not be skipped.
                 continue
 
-            param = state_dict[name]
-
             if not name.startswith("transformer."):
                 name = "transformer." + name
-
-            if name == "transformer.wte.weight":
-                # Consider padding in the vocab size.
-                padded_vocab_size = param.shape[
-                    0] * tensor_model_parallel_world_size
-                num_extra_rows = padded_vocab_size - self.config.vocab_size
-                extra_rows = torch.empty(num_extra_rows,
-                                         loaded_weight.shape[1])
-                extra_rows = extra_rows.to(loaded_weight)
-                loaded_weight = torch.cat([loaded_weight, extra_rows], dim=0)
-
-            def _expand_mqa_mha(qkv_array, n_head, head_dim):
-                """manipulates along axis=0 from MQA to MHA
-                inputs: qkv_array.shape=((n_heads + 2) * head_dim, hidden_dim)
-                    with n_heads for q, then 1 for k, 1 for 1 v, times head dim
-                return: qkv_array.shape=(3 * n_heads * head_dim, hidden_dim)
-
-                TODO: this function is no longer needed once vllm supports MQA.
-                """
-                qkv_array = qkv_array.numpy()
-
-                dims_q = n_head * head_dim
-                # pylint: disable=unbalanced-tuple-unpacking
-                q, k, v = np.split(qkv_array, (dims_q, dims_q + head_dim),
-                                   axis=0)
-                # q is fine, but k & v have not replicated shape along the first
-                # axis as long as MQA is not nativly supported, increase memory
-                # and replicated (head_dim, hidden_dim) to
-                # (n_heads * head_dim, hidden_dim)
-                if k.ndim == 2 and v.ndim == 2:
-                    replication = (n_head, 1)  # weights
-                else:
-                    replication = n_head  # biases
-                # replicate n_head times for q, v
-                k, v = np.tile(k, replication), np.tile(v, replication)
-                # concat q, k, v along the first axis
-                # (n_heads * head_dim, hidden_dim)
-                # to (3 * n_heads * head_dim, hidden_dim)
-                qkv_array = np.concatenate((q, k, v), axis=0)
-                return torch.from_numpy(qkv_array)
 
             # For the fused QKV linear layer, manually shard the weights.
             if "c_attn" in name:
@@ -300,30 +286,52 @@ class GPTBigCodeForCausalLM(nn.Module):
                 # When tensor parallelism is used, we shard the weights along
                 # the head dimension.
                 total_num_heads = self.config.num_attention_heads
+                total_num_kv_heads = (1 if self.config.multi_query else
+                                      total_num_heads)
                 hidden_size = self.config.hidden_size
                 head_size = hidden_size // total_num_heads
+                total_kv_size = head_size * total_num_kv_heads
                 num_heads = total_num_heads // tensor_model_parallel_world_size
                 head_start = tensor_model_parallel_rank * num_heads
                 head_end = (tensor_model_parallel_rank + 1) * num_heads
 
-                if name.endswith(".weight"):
-                    loaded_weight = _expand_mqa_mha(loaded_weight,
-                                                    n_head=total_num_heads,
-                                                    head_dim=head_size)
-                    loaded_weight = loaded_weight.view(3, total_num_heads,
-                                                       head_size, hidden_size)
-                    loaded_weight = loaded_weight[:, head_start:head_end, :, :]
-                    loaded_weight = loaded_weight.reshape(-1, hidden_size)
-                elif name.endswith(".bias"):
-                    loaded_weight = _expand_mqa_mha(loaded_weight,
-                                                    n_head=total_num_heads,
-                                                    head_dim=head_size)
-                    loaded_weight = loaded_weight.view(3, total_num_heads,
-                                                       head_size)
-                    loaded_weight = loaded_weight[:, head_start:head_end, :]
-                    loaded_weight = loaded_weight.reshape(-1)
+                wq, wk, wv = torch.split(
+                    loaded_weight, [hidden_size, total_kv_size, total_kv_size],
+                    dim=0)
+
+                wq = wq[head_size * head_start:head_size * head_end]
+                if not self.config.multi_query:
+                    # Split the heads when using normal multi-head attention
+                    wk = wk[head_size * head_start:head_size * head_end]
+                    wv = wv[head_size * head_start:head_size * head_end]
+                    loaded_weight = torch.cat([wq, wk, wv], dim=0)
                 else:
-                    raise ValueError(f"Unexpected parameter name {name}")
+                    # For multi-query attention, we split the query
+                    # but replicate the key and value.
+                    loaded_weight_q = wq
+                    loaded_weight_kv = torch.cat([wk, wv], dim=0)
+                    q_weight_name = name.replace("c_attn", "c_attn_q")
+                    kv_weight_name = name.replace("c_attn", "c_attn_kv")
+                    load_tensor_parallel_weights(state_dict[q_weight_name],
+                                                 loaded_weight_q,
+                                                 q_weight_name,
+                                                 self._column_parallel_weights,
+                                                 self._row_parallel_weights,
+                                                 tensor_model_parallel_rank)
+                    load_tensor_parallel_weights(state_dict[kv_weight_name],
+                                                 loaded_weight_kv,
+                                                 kv_weight_name,
+                                                 self._column_parallel_weights,
+                                                 self._row_parallel_weights,
+                                                 tensor_model_parallel_rank)
+                    continue
+
+            param = state_dict[name]
+
+            if name == "transformer.wte.weight":
+                load_padded_tensor_parallel_vocab(param, loaded_weight,
+                                                  tensor_model_parallel_rank)
+                continue
 
             load_tensor_parallel_weights(param, loaded_weight, name,
                                          self._column_parallel_weights,

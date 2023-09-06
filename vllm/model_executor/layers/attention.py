@@ -20,12 +20,20 @@ class PagedAttention(nn.Module):
     """GPT-style multi-head PagedAttention.
 
     This class takes flattened 1D query, key, and value tensors as input. The
-    input 1D tensors can be split into three parts: the prompt tokens, the
-    generation tokens, and the paddings.
+    input 1D tensors can either contain prompt tokens or generation tokens, in
+    addition to paddings.
 
-    |<------------------------------------- num_valid_tokens ------------------------------------->|
-    |<--------------- num_prompt_tokens -------------->|<------- num_generation_tokens (M) ------->|
-    |<--prompt_0-->|<--prompt_1-->|...|<--prompt_N-1-->|<--generation_0-->|...|<--generation_M-1-->|<--padding-->|
+    If the input tensors contain prompt tokens, the layout is as follows:
+
+    |<---------------------- num_valid_tokens ---------------------->|
+    |<--------------- num_prompt_tokens -------------->|
+    |<--prompt_0-->|<--prompt_1-->|...|<--prompt_N-1-->|<--padding-->|
+
+    Otherwise, the layout is as follows:
+
+    |<------------------ num_valid_tokens ------------------->|
+    |<------- num_generation_tokens (M) ------->|
+    |<--generation_0-->|...|<--generation_M-1-->|<--padding-->|
 
     The prompts might have different lengths, while the generation tokens always
     have length 1. The paddings are appended to make the input length a multiple
@@ -44,12 +52,22 @@ class PagedAttention(nn.Module):
     5. Output a flattened 1D tensor.
     """
 
-    def __init__(self, num_heads: int, head_size: int, scale: float) -> None:
+    def __init__(self,
+                 num_heads: int,
+                 head_size: int,
+                 scale: float,
+                 num_kv_heads: Optional[int] = None) -> None:
         super().__init__()
         self.num_heads = num_heads
         self.head_size = head_size
         self.scale = float(scale)
-        self.attn_op = xops.fmha.cutlass.FwOp()
+        self.num_kv_heads = num_heads if num_kv_heads is None else num_kv_heads
+
+        assert self.num_heads % self.num_kv_heads == 0
+        self.num_queries_per_kv = self.num_heads // self.num_kv_heads
+        self.head_mapping = torch.repeat_interleave(
+            torch.arange(self.num_kv_heads, dtype=torch.int32, device="cuda"),
+            self.num_queries_per_kv)
 
         if self.head_size not in _SUPPORTED_HEAD_SIZES:
             raise ValueError(f"head_size ({self.head_size}) is not supported. "
@@ -76,10 +94,18 @@ class PagedAttention(nn.Module):
         Args:
             output: shape = [num_prompt_tokens, num_heads, head_size]
             query: shape = [num_prompt_tokens, num_heads, head_size]
-            key: shape = [num_prompt_tokens, num_heads, head_size]
-            value: shape = [num_prompt_tokens, num_heads, head_size]
+            key: shape = [num_prompt_tokens, num_kv_heads, head_size]
+            value: shape = [num_prompt_tokens, num_kv_heads, head_size]
             input_metadata: metadata for paged attention.
         """
+
+        if self.num_kv_heads != self.num_heads:
+            # Project the key and value tensors to the desired number of heads.
+            key = torch.repeat_interleave(key, self.num_queries_per_kv, dim=1)
+            value = torch.repeat_interleave(value,
+                                            self.num_queries_per_kv,
+                                            dim=1)
+
         # TODO(woosuk): The unsqueeze op may incur some CPU overhead. Optimize.
         out = xops.memory_efficient_attention_forward(
             query.unsqueeze(0),
@@ -88,7 +114,6 @@ class PagedAttention(nn.Module):
             attn_bias=input_metadata.attn_bias[0],
             p=0.0,
             scale=self.scale,
-            op=self.attn_op,
         )
         # TODO(woosuk): Unnecessary copy. Optimize.
         output.copy_(out.squeeze(0))
@@ -107,9 +132,10 @@ class PagedAttention(nn.Module):
         Args:
             output: shape = [num_generation_tokens, num_heads, head_size]
             query: shape = [num_generation_tokens, num_heads, head_size]
-            key_cache: shape = [num_blocks, num_heads, head_size/x,
+            key_cache: shape = [num_blocks, num_kv_heads, head_size/x,
                 block_size, x]
-            value_cache: shape = [num_blocks, num_heads, head_size, block_size]
+            value_cache: shape = [num_blocks, num_kv_heads, head_size,
+                block_size]
             input_metadata: metadata for paged attention.
         """
         block_size = value_cache.shape[3]
@@ -118,6 +144,7 @@ class PagedAttention(nn.Module):
             query,
             key_cache,
             value_cache,
+            self.head_mapping,
             self.scale,
             input_metadata.block_tables,
             input_metadata.context_lens,
@@ -143,11 +170,12 @@ class PagedAttention(nn.Module):
 
         Args:
             query: shape = [num_tokens, num_heads * head_size]
-            key: shape = [num_tokens, num_heads * head_size]
-            value: shape = [num_tokens, num_heads * head_size]
-            key_cache: shape = [num_blocks, num_heads, head_size/x,
+            key: shape = [num_tokens, num_kv_heads * head_size]
+            value: shape = [num_tokens, num_kv_heads * head_size]
+            key_cache: shape = [num_blocks, num_kv_heads, head_size/x,
                 block_size, x]
-            value_cache: shape = [num_blocks, num_heads, head_size, block_size]
+            value_cache: shape = [num_blocks, num_kv_heads, head_size,
+                block_size]
             input_metadata: metadata for paged attention.
             cache_event: event to wait for the cache operations to finish.
 
@@ -157,8 +185,8 @@ class PagedAttention(nn.Module):
 
         # Reshape the query, key, and value tensors.
         query = query.view(-1, self.num_heads, self.head_size)
-        key = key.view(-1, self.num_heads, self.head_size)
-        value = value.view(-1, self.num_heads, self.head_size)
+        key = key.view(-1, self.num_kv_heads, self.head_size)
+        value = value.view(-1, self.num_kv_heads, self.head_size)
 
         # Pre-allocate the output tensor.
         output = torch.empty_like(query)
@@ -167,6 +195,8 @@ class PagedAttention(nn.Module):
         num_prompt_tokens = input_metadata.num_prompt_tokens
         # print("num_prompt_tokens", num_prompt_tokens, input_metadata.num_generation_tokens)
         if num_prompt_tokens > 0:
+            # Prompt run.
+            assert input_metadata.num_generation_tokens == 0
             self.set_attn_bias(input_metadata)
             self.multi_query_kv_attention(
                 output[:num_prompt_tokens],
@@ -196,6 +226,8 @@ class PagedAttention(nn.Module):
             )
 
         if input_metadata.num_generation_tokens > 0:
+            # Decoding run.
+            assert input_metadata.num_prompt_tokens == 0
             assert key_cache is not None and value_cache is not None, (
                 "key_cache and value_cache must be provided when "
                 "generating tokens.")
@@ -211,7 +243,7 @@ class PagedAttention(nn.Module):
 
 
 class PagedAttentionWithRoPE(PagedAttention):
-    """PagedAttention with GPT-NeoX style rotary embedding."""
+    """PagedAttention with rotary embedding."""
 
     def __init__(
         self,
@@ -221,8 +253,11 @@ class PagedAttentionWithRoPE(PagedAttention):
         rotary_dim: int,
         max_position: int = 8192,
         base: int = 10000,
+        num_kv_heads: Optional[int] = None,
+        is_neox_style: bool = True,
     ) -> None:
-        super().__init__(num_heads, head_size, scale)
+        super().__init__(num_heads, head_size, scale, num_kv_heads)
+        self.is_neox_style = is_neox_style
 
         # Create the cos and sin cache.
         inv_freq = 1.0 / (base**(torch.arange(0, rotary_dim, 2) / rotary_dim))
@@ -256,11 +291,12 @@ class PagedAttentionWithRoPE(PagedAttention):
         Args:
             positions: shape = [num_tokens]
                         query: shape = [num_tokens, num_heads * head_size]
-            key: shape = [num_tokens, num_heads * head_size]
-            value: shape = [num_tokens, num_heads * head_size]
-            key_cache: shape = [num_blocks, num_heads, head_size/x,
+            key: shape = [num_tokens, num_kv_heads * head_size]
+            value: shape = [num_tokens, num_kv_heads * head_size]
+            key_cache: shape = [num_blocks, num_kv_heads, head_size/x,
                 block_size, x]
-            value_cache: shape = [num_blocks, num_heads, head_size, block_size]
+            value_cache: shape = [num_blocks, num_kv_heads, head_size,
+                block_size]
             input_metadata: metadata for paged attention.
             cache_event: event to wait for the cache operations to finish.
 
@@ -270,12 +306,13 @@ class PagedAttentionWithRoPE(PagedAttention):
 
         # Apply rotary embedding to the query and key before passing them
         # to the attention op.
-        pos_encoding_ops.rotary_embedding_neox(
+        pos_encoding_ops.rotary_embedding(
             positions,
             query,
             key,
             self.head_size,
             self.cos_sin_cache,
+            self.is_neox_style,
         )
         return super().forward(
             query,
@@ -291,14 +328,13 @@ class PagedAttentionWithRoPE(PagedAttention):
 class PagedAttentionWithALiBi(PagedAttention):
     """PagedAttention with ALiBi attention bias."""
 
-    def __init__(
-        self,
-        num_heads: int,
-        head_size: int,
-        scale: float,
-        slopes: List[float],
-    ) -> None:
-        super().__init__(num_heads, head_size, scale)
+    def __init__(self,
+                 num_heads: int,
+                 head_size: int,
+                 scale: float,
+                 slopes: List[float],
+                 num_kv_heads: Optional[int] = None) -> None:
+        super().__init__(num_heads, head_size, scale, num_kv_heads)
         assert len(slopes) == num_heads
 
         slopes = torch.tensor(slopes, dtype=torch.float32)
@@ -311,6 +347,11 @@ class PagedAttentionWithALiBi(PagedAttention):
         # Generates ALiBi mask for each prompt.
         for prompt_len in input_metadata.prompt_lens:
             bias = torch.arange(prompt_len)
+            # Note(zhuohan): HF uses
+            #     `bias = bias[None, :].repeat(prompt_len, 1)`
+            # here. We find that both biases give the same results, but
+            # the bias below more accurately follows the original ALiBi
+            # paper.
             bias = bias[None, :] - bias[:, None]
             bias = bias.to(self.alibi_slopes.device)
 
@@ -318,11 +359,12 @@ class PagedAttentionWithALiBi(PagedAttention):
             # be sliced from a tensor whose length is a multiple of 8.
             padded_len = (prompt_len + 7) // 8 * 8
             bias = torch.empty(
+                1,  # batch_size
                 self.num_heads,
-                padded_len,
+                prompt_len,
                 padded_len,
                 device=self.alibi_slopes.device,
-            )[:, :prompt_len, :prompt_len].copy_(bias)
+            )[:, :, :, :prompt_len].copy_(bias)
             bias.mul_(self.alibi_slopes[:, None, None])
             attn_bias = LowerTriangularMaskWithTensorBias(bias)
             input_metadata.attn_bias.append(attn_bias)
@@ -340,10 +382,17 @@ class PagedAttentionWithALiBi(PagedAttention):
         Args:
             output: shape = [num_prompt_tokens, num_heads, head_size]
             query: shape = [num_prompt_tokens, num_heads, head_size]
-            key: shape = [num_prompt_tokens, num_heads, head_size]
-            value: shape = [num_prompt_tokens, num_heads, head_size]
+            key: shape = [num_prompt_tokens, num_kv_heads, head_size]
+            value: shape = [num_prompt_tokens, num_kv_heads, head_size]
             input_metadata: metadata for paged attention.
         """
+        if self.num_kv_heads != self.num_heads:
+            # Project the key and value tensors to the desired number of heads.
+            key = torch.repeat_interleave(key, self.num_queries_per_kv, dim=1)
+            value = torch.repeat_interleave(value,
+                                            self.num_queries_per_kv,
+                                            dim=1)
+
         # FIXME(woosuk): Because xformers does not support dynamic sequence
         # lengths with custom attention bias, we process each prompt one by
         # one. This is inefficient, especially when we have many short prompts.
@@ -357,7 +406,6 @@ class PagedAttentionWithALiBi(PagedAttention):
                 attn_bias=input_metadata.attn_bias[i],
                 p=0.0,
                 scale=self.scale,
-                op=self.attn_op,
             )
             # TODO(woosuk): Unnecessary copy. Optimize.
             output[start:end].copy_(out.squeeze(0))
@@ -377,9 +425,10 @@ class PagedAttentionWithALiBi(PagedAttention):
         Args:
             output: shape = [num_generation_tokens, num_heads, head_size]
             query: shape = [num_generation_tokens, num_heads, head_size]
-            key_cache: shape = [num_blocks, num_heads, head_size/x,
+            key_cache: shape = [num_blocks, num_kv_heads, head_size/x,
                 block_size, x]
-            value_cache: shape = [num_blocks, num_heads, head_size, block_size]
+            value_cache: shape = [num_blocks, num_kv_heads, head_size,
+                block_size]
             input_metadata: metadata for paged attention.
         """
         block_size = value_cache.shape[3]
@@ -388,6 +437,7 @@ class PagedAttentionWithALiBi(PagedAttention):
             query,
             key_cache,
             value_cache,
+            self.head_mapping,
             self.scale,
             input_metadata.block_tables,
             input_metadata.context_lens,
