@@ -9,6 +9,7 @@ from vllm.logger import init_logger
 from vllm.utils import in_wsl
 
 logger = init_logger(__name__)
+from vllm import mem_ops
 
 KVCache = Tuple[torch.Tensor, torch.Tensor]
 
