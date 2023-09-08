@@ -150,13 +150,14 @@ class LLM:
         while self.llm_engine.has_unfinished_requests():
             # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
-            print("aaaaaaa")
+            print("aaaaaaa\n")
             # interation = interation  + 1
             # for output in step_outputs:
             #     if output.finished:
             #         outputs.append(output)
                     # if use_tqdm:
                     #     pbar.update(1)
+        print("bbbbbbb\n")
         self.llm_engine.convert_prefilled_to_swapped()
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder()
