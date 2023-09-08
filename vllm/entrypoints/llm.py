@@ -156,7 +156,6 @@ class LLM:
             #         outputs.append(output)
                     # if use_tqdm:
                     #     pbar.update(1)
-        print("aaaaaaa")
         self.llm_engine.convert_prefilled_to_swapped()
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder()
