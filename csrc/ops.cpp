@@ -1,9 +1,11 @@
 #include <iostream>
 #include <torch/extension.h>
-
-void print_blocks(){
-  printf("aaaa\n");
-
+#include <map>
+void print_blocks(torch::Tensor& src,
+  torch::Tensor& dst,
+  const std::map<int64_t, int64_t>& block_mapping){
+  void *src_ptr = src.data_ptr();
+  printf("address %p\n", src_ptr);
 };
 
 
