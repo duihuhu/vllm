@@ -127,6 +127,8 @@ activation_extension = CUDAExtension(
 )
 ext_modules.append(activation_extension)
 
+ops_extension = CppExtension(name='vllm.mem_ops', sources=['csrc/ops.cpp'])
+ext_modules.append(ops_extension)
 
 def get_path(*filepath) -> str:
     return os.path.join(ROOT_DIR, *filepath)

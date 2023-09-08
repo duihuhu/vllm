@@ -1,12 +1,12 @@
 #include <iostream>
 #include <torch/extension.h>
+#include <map>
 
 void print_blocks(torch::Tensor& src,
   torch::Tensor& dst,
   const std::map<int64_t, int64_t>& block_mapping){
   void *src_ptr = src.data_ptr();
   printf("%p\n", src_ptr);
-
 };
 
 
