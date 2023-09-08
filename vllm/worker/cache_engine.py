@@ -127,7 +127,7 @@ class CacheEngine:
                                       src_to_dst)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                mem_ops.print_blocks(src_key_cache, dst_key_cache)
+                mem_ops.print_blocks(src_key_cache, dst_key_cache, src_to_dst)
 
     def swap_in(self, src_to_dst: Dict[int, int]) -> None:
         self._swap(self.cpu_cache, self.gpu_cache, src_to_dst)
