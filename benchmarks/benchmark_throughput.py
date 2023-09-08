@@ -68,7 +68,6 @@ def run_vllm(
     n: int,
     use_beam_search: bool,
 ) -> float:
-    print("aaaaaaa")
     llm = LLM(
         model=model,
         tokenizer=tokenizer,
