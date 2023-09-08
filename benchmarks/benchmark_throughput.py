@@ -91,7 +91,6 @@ def run_vllm(
             prompt_token_ids=None,
             sampling_params=sampling_params,
         )
-    print("in vllm\n")
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
