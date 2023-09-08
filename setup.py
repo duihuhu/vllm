@@ -7,7 +7,7 @@ from typing import List, Set
 from packaging.version import parse, Version
 import setuptools
 import torch
-from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME
+from torch.utils.cpp_extension import BuildExtension, CUDAExtension, CUDA_HOME, CppExtension
 
 ROOT_DIR = os.path.dirname(__file__)
 
