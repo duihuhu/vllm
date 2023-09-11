@@ -9,7 +9,7 @@ from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl
 
-from vllm import mem_ops
+# from vllm import mem_ops
 logger = init_logger(__name__)
 
 KVCache = Tuple[torch.Tensor, torch.Tensor]
@@ -125,17 +125,38 @@ class CacheEngine:
                 cache_ops.swap_blocks(src_key_cache, dst_key_cache, src_to_dst)
                 # Copy the value blocks.
                 cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
-                #add test
-                
+        
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
+                # mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
 
     def swap_in(self, src_to_dst: Dict[int, int]) -> None:
         self._swap(self.cpu_cache, self.gpu_cache, src_to_dst)
 
     def swap_out(self, src_to_dst: Dict[int, int]) -> None:
         self._swap(self.gpu_cache, self.cpu_cache, src_to_dst)
+
+    def _swap_prefilled(
+        self,
+        src: List[KVCache],
+        dst: List[KVCache],
+        src_to_dst: Dict[int, int],
+    ) -> None:
+        with torch.cuda.stream(self.cache_stream):
+            for i in range(self.num_layers):
+                src_key_cache, src_value_cache = src[i]
+                dst_key_cache, dst_value_cache = dst[i]
+                # # Copy the key blocks.
+                # cache_ops.swap_blocks(src_key_cache, dst_key_cache, src_to_dst)
+                # # Copy the value blocks.
+                # cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
+                
+                event = self.events[i]
+                event.record(stream=self.cache_stream)
+                mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
+
+    def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
+        self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
 
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         key_caches = [key_cache for key_cache, _ in self.gpu_cache]

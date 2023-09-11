@@ -308,6 +308,7 @@ class LLMEngine:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
         
+        #find prefill blocks to swap out 
         prefill_blocks_to_swap_out = self.scheduler.store_prompt_kv_cache()
         if prefill_blocks_to_swap_out:
             # Execute the swap prefill cache.

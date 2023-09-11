@@ -250,7 +250,7 @@ class Worker:
         blocks_to_swap_out: Dict[int, int],
     )  -> None:
         if blocks_to_swap_out:
-            self.cache_engine.swap_out(blocks_to_swap_out)
+            self.cache_engine.swap_out_prefilled(blocks_to_swap_out)
             issued_cache_op = True
             
         if issued_cache_op:
