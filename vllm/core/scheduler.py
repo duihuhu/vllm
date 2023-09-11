@@ -298,7 +298,8 @@ class Scheduler:
     def store_prompt_kv_cache(
         self
     ) -> Dict[int, int]:
-        blocks_to_swap_out: Dict[int, int] = {}
+        # blocks_to_swap_out: Dict[int, int] = {}
+        seq_to_swap_out: Dict[SequenceGroup, Dict[int, int]] = {}
         while self.running:
             seq_group = self.running.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
@@ -306,9 +307,11 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.PREFILLED
             mapping = self.block_manager.swap_out(seq_group)
-            blocks_to_swap_out.update(mapping)
+            # blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)
-        return blocks_to_swap_out
+            seq_to_swap_out[seq_group] = mapping
+        # return blocks_to_swap_out
+        return seq_to_swap_out
     
     def schedule(
         self

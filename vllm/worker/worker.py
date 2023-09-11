@@ -9,9 +9,10 @@ from vllm.model_executor import get_model, InputMetadata, set_random_seed
 from vllm.model_executor.parallel_utils.parallel_state import (
     initialize_model_parallel, initialize_all_reduce_launcher)
 from vllm.sampling_params import SamplingParams
-from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs
+from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, SequenceGroup
 from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
+
 
 
 class Worker:
@@ -247,10 +248,12 @@ class Worker:
 
     def swap_prefilled_cache(
         self,
-        blocks_to_swap_out: Dict[int, int],
+        blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
     )  -> None:
         if blocks_to_swap_out:
-            self.cache_engine.swap_out_prefilled(blocks_to_swap_out)
+            for key, value in blocks_to_swap_out:
+                print("request_id: \n", key.request_id)
+                self.cache_engine.swap_out_prefilled(value)
             issued_cache_op = True
             
         if issued_cache_op:
