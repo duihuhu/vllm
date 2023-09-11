@@ -41,7 +41,7 @@ void print_blocks(torch::Tensor& src,
   //     block_size_in_bytes,
   //     memcpy_type,
   //     stream);
-  // }
+  }
 
 };
 
