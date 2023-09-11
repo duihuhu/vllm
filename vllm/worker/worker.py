@@ -251,7 +251,7 @@ class Worker:
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
     )  -> None:
         if blocks_to_swap_out:
-            for key, value in blocks_to_swap_out:
+            for key, value in blocks_to_swap_out.items():
                 print("request_id: \n", key.request_id)
                 self.cache_engine.swap_out_prefilled(value)
             issued_cache_op = True
