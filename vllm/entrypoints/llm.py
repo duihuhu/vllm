@@ -8,7 +8,7 @@ from vllm.engine.llm_engine import LLMEngine
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
 from vllm.utils import Counter
-
+import time
 
 class LLM:
     """An LLM for generating texts from given prompts and sampling parameters.
@@ -147,6 +147,7 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         # interation = 0
+        print("start prefill\n")
         while self.llm_engine.has_unfinished_requests():
             # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
@@ -156,6 +157,8 @@ class LLM:
             #         outputs.append(output)
                     # if use_tqdm:
                     #     pbar.update(1)
+        print("end prefill\n")
+        time.sleep(5)
         self.llm_engine.convert_prefilled_to_swapped()
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder()
