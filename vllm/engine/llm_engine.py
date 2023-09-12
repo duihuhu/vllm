@@ -325,6 +325,7 @@ class LLMEngine:
         """Decodes the sequence outputs."""
         for seq_group in seq_groups:
             for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                print("seq ", seq.prompt)
                 new_token, new_output_text = detokenize_incrementally(
                     self.tokenizer,
                     seq.output_tokens,
