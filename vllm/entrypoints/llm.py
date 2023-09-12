@@ -147,8 +147,8 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         # interation = 0
-        print("start prefill")
         start_time = time.time()
+        print(start_time, " start prefill")
         while self.llm_engine.has_unfinished_requests():
             # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
@@ -159,7 +159,7 @@ class LLM:
                     # if use_tqdm:
                     #     pbar.update(1)
         end_time = time.time()
-        print("prefill: ", end_time - start_time)
+        print(end_time, " prefill ")
         time.sleep(5)
         self.llm_engine.convert_prefilled_to_swapped()
         while self.llm_engine.has_unfinished_requests():
