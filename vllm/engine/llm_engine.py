@@ -257,8 +257,7 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
-        print("len(seq_group_metadata_list) ", len(seq_group_metadata_list))
-        print("scheduler_outputs.is_empty() ", scheduler_outputs.is_empty())
+
         # Execute the model.
         output = self._run_workers(
             "execute_model",
