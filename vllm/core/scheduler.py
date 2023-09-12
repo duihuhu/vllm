@@ -329,7 +329,7 @@ class Scheduler:
         blocks_to_copy: Dict[int, List[int]] = {}
         
         while self.prefilled:
-            seq_group = self.prefilled.pop(0)
+            seq_group = self.prefilled[0]
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
                 break
@@ -344,7 +344,7 @@ class Scheduler:
                     self.scheduler_config.max_num_seqs):
                 break
 
-            seq_group = self.swapped.pop(0)
+            seq_group = self.prefilled.pop(0)
             self._swap_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
