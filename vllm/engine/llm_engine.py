@@ -228,6 +228,17 @@ class LLMEngine:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
 
+    def covert_prefilled_to_running(self) -> None:
+        scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
+        if not scheduler_outputs.is_empty():
+            # Execute the swap prefill cache.
+            self._run_workers(
+                "swap_in_prefilled_cache",
+                blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
+                blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
+                blocks_to_copy=scheduler_outputs.blocks_to_copy,
+            )
+            
     def convert_prefilled_to_swapped(self) -> None:
         self.scheduler.convert_prefilled_to_swapped_seqs()
         
@@ -313,7 +324,7 @@ class LLMEngine:
         if prefill_blocks_to_swap_out:
             # Execute the swap prefill cache.
             self._run_workers(
-                "swap_prefilled_cache",
+                "swap_out_prefilled_cache",
                 blocks_to_swap_out=prefill_blocks_to_swap_out
             )
             

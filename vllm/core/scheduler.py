@@ -101,6 +101,13 @@ class Scheduler:
     def has_prefilled_seqs(self) -> bool:
         return self.prefilled
     
+    def covert_prefilled_to_running(self):
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.RUNNING
+            self.running.append(seq_group)
+            
     def convert_prefilled_to_swapped_seqs(self):
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
@@ -313,6 +320,42 @@ class Scheduler:
         # return blocks_to_swap_out
         return seq_to_swap_out
     
+    def swap_in_prompt_kv_cache(
+        self
+    ) -> SchedulerOutputs:
+        
+        blocks_to_swap_out: Dict[int, int] = {}
+        blocks_to_swap_in: Dict[int, int] = {}
+        blocks_to_copy: Dict[int, List[int]] = {}
+        
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            # If the sequence group cannot be swapped in, stop.
+            if not self.block_manager.can_swap_in(seq_group):
+                break
+
+            # The total number of seqzuences in the RUNNING state should not
+            # exceed the maximum number of sequences.
+            num_new_seqs = seq_group.num_seqs(status=SequenceStatus.SWAPPED)
+            num_curr_seqs = sum(
+                seq_group.num_seqs(status=SequenceStatus.RUNNING)
+                for seq_group in self.running)
+            if (num_curr_seqs + num_new_seqs >
+                    self.scheduler_config.max_num_seqs):
+                break
+
+            seq_group = self.swapped.pop(0)
+            self._swap_in(seq_group, blocks_to_swap_in)
+            self._append_slot(seq_group, blocks_to_copy)
+            self.running.append(seq_group)
+            
+        scheduler_outputs = SchedulerOutputs(
+            blocks_to_swap_in=blocks_to_swap_in,
+            blocks_to_swap_out=blocks_to_swap_out,
+            blocks_to_copy=blocks_to_copy,
+        )
+        return scheduler_outputs
+        
     def schedule(
         self
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,

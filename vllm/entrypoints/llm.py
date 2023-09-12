@@ -161,7 +161,12 @@ class LLM:
         end_time = time.time()
         print(end_time, " prefill ")
         time.sleep(5)
-        self.llm_engine.convert_prefilled_to_swapped()
+        #swap kv cache in decode progress
+        # self.llm_engine.convert_prefilled_to_swapped()
+        
+        #swap kv cache before decode
+        self.llm_engine.covert_prefilled_to_running()
+        
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder()
             for output in step_outputs:
