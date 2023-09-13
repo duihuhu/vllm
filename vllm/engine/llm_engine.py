@@ -229,7 +229,7 @@ class LLMEngine:
         return self.scheduler.has_unfinished_seqs()
 
     def covert_prefilled_to_running(self) -> None:
-        scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
+        seq_group_metadata_list, scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
         if not scheduler_outputs.is_empty():
             # Execute the swap prefill cache.
             self._run_workers(
@@ -242,7 +242,7 @@ class LLMEngine:
     def convert_prefilled_to_swapped(self) -> None:
         self.scheduler.convert_prefilled_to_swapped_seqs()
         
-    def step_decoder(self) -> List[RequestOutput]:
+    def step_decoder(self, seq_group_metadata_prefill_list) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
@@ -261,7 +261,7 @@ class LLMEngine:
         # Execute the model.
         output = self._run_workers(
             "execute_model",
-            seq_group_metadata_list=seq_group_metadata_list,
+            seq_group_metadata_list=seq_group_metadata_list + seq_group_metadata_prefill_list,
             blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
             blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
             blocks_to_copy=scheduler_outputs.blocks_to_copy,

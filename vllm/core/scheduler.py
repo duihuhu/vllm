@@ -322,8 +322,9 @@ class Scheduler:
     
     def swap_in_prompt_kv_cache(
         self
-    ) -> SchedulerOutputs:
-        
+    ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
+        seq_group_metadata_list: List[SequenceGroupMetadata] = []
+
         blocks_to_swap_out: Dict[int, int] = {}
         blocks_to_swap_in: Dict[int, int] = {}
         blocks_to_copy: Dict[int, List[int]] = {}
@@ -349,12 +350,29 @@ class Scheduler:
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
             
+            #compose seq_group_metadata_list
+            seq_data: Dict[int, List[SequenceData]] = {}
+            block_tables: Dict[int, List[int]] = {}
+            for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+                seq_id = seq.seq_id
+                seq_data[seq_id] = seq.data
+                block_tables[seq_id] = self.block_manager.get_block_table(seq)
+
+            seq_group_metadata = SequenceGroupMetadata(
+                request_id=seq_group.request_id,
+                is_prompt=False,
+                seq_data=seq_data,
+                sampling_params=seq_group.sampling_params,
+                block_tables=block_tables,
+            )
+            seq_group_metadata_list.append(seq_group_metadata)
+            
         scheduler_outputs = SchedulerOutputs(
             blocks_to_swap_in=blocks_to_swap_in,
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,
         )
-        return scheduler_outputs
+        return seq_group_metadata_list, scheduler_outputs
         
     def schedule(
         self

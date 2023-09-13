@@ -289,7 +289,7 @@ class Worker:
         if cache_events is not None:
             for event in cache_events:
                 event.wait()
-
+        
     @torch.inference_mode()
     def execute_model(
         self,
