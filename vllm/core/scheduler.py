@@ -350,6 +350,12 @@ class Scheduler:
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
             
+            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                seq_id = seq.seq_id
+                print(seq_id, seq.data)
+                # seq_data[seq_id] = seq.data
+                # block_tables[seq_id] = self.block_manager.get_block_table(seq)
+            
             #compose seq_group_metadata_list
             # seq_data: Dict[int, List[SequenceData]] = {}
             # block_tables: Dict[int, List[int]] = {}
