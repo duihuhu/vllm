@@ -232,7 +232,7 @@ class LLMEngine:
         return self.scheduler.watch_prefilled_queue()
     
     def watch_running_queue(self) -> None:
-            return self.scheduler.watch_running_queue()
+        return self.scheduler.watch_running_queue()
 
     def covert_prefilled_to_running(self) -> List[SequenceGroupMetadata]:
         scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
