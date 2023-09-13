@@ -322,8 +322,8 @@ class Scheduler:
     
     def swap_in_prompt_kv_cache(
         self
-    ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
-        seq_group_metadata_list: List[SequenceGroupMetadata] = []
+    ) -> SchedulerOutputs:
+        # seq_group_metadata_list: List[SequenceGroupMetadata] = []
 
         blocks_to_swap_out: Dict[int, int] = {}
         blocks_to_swap_in: Dict[int, int] = {}
@@ -351,28 +351,28 @@ class Scheduler:
             self.running.append(seq_group)
             
             #compose seq_group_metadata_list
-            seq_data: Dict[int, List[SequenceData]] = {}
-            block_tables: Dict[int, List[int]] = {}
-            for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
-                seq_id = seq.seq_id
-                seq_data[seq_id] = seq.data
-                block_tables[seq_id] = self.block_manager.get_block_table(seq)
+            # seq_data: Dict[int, List[SequenceData]] = {}
+            # block_tables: Dict[int, List[int]] = {}
+            # for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+            #     seq_id = seq.seq_id
+            #     seq_data[seq_id] = seq.data
+            #     block_tables[seq_id] = self.block_manager.get_block_table(seq)
 
-            seq_group_metadata = SequenceGroupMetadata(
-                request_id=seq_group.request_id,
-                is_prompt=False,
-                seq_data=seq_data,
-                sampling_params=seq_group.sampling_params,
-                block_tables=block_tables,
-            )
-            seq_group_metadata_list.append(seq_group_metadata)
+            # seq_group_metadata = SequenceGroupMetadata(
+            #     request_id=seq_group.request_id,
+            #     is_prompt=False,
+            #     seq_data=seq_data,
+            #     sampling_params=seq_group.sampling_params,
+            #     block_tables=block_tables,
+            # )
+            # seq_group_metadata_list.append(seq_group_metadata)
             
         scheduler_outputs = SchedulerOutputs(
             blocks_to_swap_in=blocks_to_swap_in,
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,
         )
-        return seq_group_metadata_list, scheduler_outputs
+        return scheduler_outputs
         
     def schedule(
         self
@@ -388,7 +388,7 @@ class Scheduler:
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
         for seq_group in self.running:
             is_prompt = seq_group.request_id in prompt_group_ids
-
+            print("is_prompt:", is_prompt)
             seq_data: Dict[int, List[SequenceData]] = {}
             block_tables: Dict[int, List[int]] = {}
             for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
