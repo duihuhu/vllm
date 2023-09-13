@@ -259,6 +259,10 @@ class LLMEngine:
             # Nothing to do.
             return []
         # Execute the model.
+        for seq in seq_group_metadata_list:
+            print(seq.request_id, seq.is_prompt, seq.seq_data[0].prompt_token_ids, seq.seq_data[0].output_token_ids,\
+                seq.sampling_params, seq.block_tables)
+
         output = self._run_workers(
             "execute_model",
             seq_group_metadata_list=seq_group_metadata_list,
