@@ -532,6 +532,16 @@ class Scheduler:
         self._swap_out(seq_group, blocks_to_swap_out)
         self.swapped.append(seq_group)
 
+    def _swap_prefilled_in(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_in: Dict[int, int],
+    ) -> None:
+        mapping = self.block_manager.swap_in(seq_group)
+        blocks_to_swap_in.update(mapping)
+        for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+            seq.status = SequenceStatus.RUNNING
+
     def _swap_in(
         self,
         seq_group: SequenceGroup,
