@@ -336,7 +336,7 @@ class Scheduler:
     def watch_running_queue(self) -> None:
         while self.running:
             seq_group = self.running[0]
-            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            for seq in seq_group:
                 print("seq status ", seq.status)
             for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
                 seq_id = seq.seq_id
