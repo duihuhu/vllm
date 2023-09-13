@@ -159,6 +159,16 @@ class BlockSpaceManager:
                 blocks.add(block)
         return list(blocks)
 
+    def can_swap_prefilled_in(self, seq_group: SequenceGroup) -> bool:
+        blocks = self._get_physical_blocks(seq_group)
+        num_swapped_seqs = seq_group.num_seqs(status=SequenceStatus.PREFILLED)
+        num_free_blocks = self.gpu_allocator.get_num_free_blocks()
+        # NOTE: Conservatively, we assume that every sequence will allocate
+        # at least one free block right after the swap-in.
+        # NOTE: This should match the logic in can_append_slot().
+        num_required_blocks = len(blocks) + num_swapped_seqs
+        return num_free_blocks - num_required_blocks >= self.watermark_blocks
+    
     def can_swap_in(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
         num_swapped_seqs = seq_group.num_seqs(status=SequenceStatus.SWAPPED)

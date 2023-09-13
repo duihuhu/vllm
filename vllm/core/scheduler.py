@@ -337,6 +337,8 @@ class Scheduler:
         blocks_to_copy: Dict[int, List[int]] = {}
         
         while self.prefilled:
+            
+            seq_group = self.prefilled[0]
             for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
                 seq_id = seq.seq_id
                 print("prefilled queue ", seq_id, seq.data)
