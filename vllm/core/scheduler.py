@@ -323,10 +323,16 @@ class Scheduler:
         #     for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
         #         seq_id = seq.seq_id
         #         print("prefilled queue ", seq_id, seq.data)
-                # seq_data[seq_id] = seq.data
-                # block_tables[seq_id] = self.block_manager.get_block_table(seq)
         return seq_to_swap_out
     
+    def watch_prefilled_queue():
+        while self.prefilled:
+            seq_group = self.prefilled[0]
+            for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+                seq_id = seq.seq_id
+                print("watch prefilled queue ", seq_id, seq.data)
+            break 
+        
     def swap_in_prompt_kv_cache(
         self
     ) -> SchedulerOutputs:
@@ -337,7 +343,6 @@ class Scheduler:
         blocks_to_copy: Dict[int, List[int]] = {}
         
         while self.prefilled:
-            
             seq_group = self.prefilled[0]
             for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
                 seq_id = seq.seq_id

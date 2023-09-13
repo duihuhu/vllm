@@ -228,6 +228,9 @@ class LLMEngine:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
 
+    def watch_prefilled_queue(self) -> None:
+        return self.scheduler.watch_prefilled_queue()
+    
     def covert_prefilled_to_running(self) -> List[SequenceGroupMetadata]:
         scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
         if not scheduler_outputs.is_empty():
