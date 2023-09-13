@@ -161,26 +161,23 @@ class LLM:
         end_time = time.time()
         print(end_time, " prefill ")
         time.sleep(5)
-        #swap kv cache in decode progress
+        #swap kv cache in decode progress (use this function or covert_prefilled_to_running)
         # self.llm_engine.convert_prefilled_to_swapped()
         
         #swap kv cache before decode
         # self.llm_engine.watch_prefilled_queue()
         self.llm_engine.covert_prefilled_to_running()
         # self.llm_engine.watch_running_queue()
-        # print(seq_group_metadata_list)
+
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder()
-            # seq_group_metadata_list.clear()
             
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
-            # print(step_outputs)
-            # return
-                    
+
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
