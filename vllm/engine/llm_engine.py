@@ -231,6 +231,9 @@ class LLMEngine:
     def watch_prefilled_queue(self) -> None:
         return self.scheduler.watch_prefilled_queue()
     
+    def watch_running_queue(self) -> None:
+            return self.scheduler.watch_running_queue()
+
     def covert_prefilled_to_running(self) -> List[SequenceGroupMetadata]:
         scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
         if not scheduler_outputs.is_empty():
@@ -261,10 +264,8 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
+        
         # Execute the model.
-        for seq in seq_group_metadata_list:
-            print(seq.request_id, seq.is_prompt, seq.sampling_params, seq.block_tables)
-
         output = self._run_workers(
             "execute_model",
             seq_group_metadata_list=seq_group_metadata_list,

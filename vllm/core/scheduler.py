@@ -332,6 +332,14 @@ class Scheduler:
                 seq_id = seq.seq_id
                 print("watch prefilled queue ", seq_id, seq.data)
             break 
+    
+    def watch_running_queue(self) -> None:
+        while self.running:
+            seq_group = self.running[0]
+            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                seq_id = seq.seq_id
+                print("watch running queue ", seq_id, seq.data)
+            break 
         
     def swap_in_prompt_kv_cache(
         self
