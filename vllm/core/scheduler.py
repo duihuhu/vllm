@@ -388,7 +388,6 @@ class Scheduler:
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
         for seq_group in self.running:
             is_prompt = seq_group.request_id in prompt_group_ids
-            print("is_prompt:", is_prompt)
             seq_data: Dict[int, List[SequenceData]] = {}
             block_tables: Dict[int, List[int]] = {}
             for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
