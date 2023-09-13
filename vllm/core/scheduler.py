@@ -373,7 +373,7 @@ class Scheduler:
                 break
 
             seq_group = self.prefilled.pop(0)
-            self._swap_in(seq_group, blocks_to_swap_in)
+            self._swap_prefilled_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
             
