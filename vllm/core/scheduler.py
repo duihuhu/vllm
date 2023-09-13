@@ -336,7 +336,7 @@ class Scheduler:
 
             # The total number of seqzuences in the RUNNING state should not
             # exceed the maximum number of sequences.
-            num_new_seqs = seq_group.num_seqs(status=SequenceStatus.SWAPPED)
+            num_new_seqs = seq_group.num_seqs(status=SequenceStatus.PREFILLED)
             num_curr_seqs = sum(
                 seq_group.num_seqs(status=SequenceStatus.RUNNING)
                 for seq_group in self.running)
