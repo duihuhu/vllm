@@ -343,6 +343,7 @@ class Scheduler:
                 print("watch running queue ", seq_id, seq.data)
             break 
         
+    #swap prompt kv_cache, this needs revise 
     def swap_in_prompt_kv_cache(
         self
     ) -> SchedulerOutputs:
@@ -354,10 +355,6 @@ class Scheduler:
         
         while self.prefilled:
             seq_group = self.prefilled[0]
-            # for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
-            #     seq_id = seq.seq_id
-            #     print("prefilled queue ", seq_id, seq.data)
-                
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
                 break
@@ -376,12 +373,6 @@ class Scheduler:
             self._swap_prefilled_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
-            
-            # for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-            #     seq_id = seq.seq_id
-            #     print(seq_id, seq.data)
-                # seq_data[seq_id] = seq.data
-                # block_tables[seq_id] = self.block_manager.get_block_table(seq)
             
         scheduler_outputs = SchedulerOutputs(
             blocks_to_swap_in=blocks_to_swap_in,
