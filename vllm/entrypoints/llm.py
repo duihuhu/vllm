@@ -166,7 +166,7 @@ class LLM:
         
         #swap kv cache before decode
         seq_group_metadata_list = self.llm_engine.covert_prefilled_to_running()
-        
+        print(seq_group_metadata_list)
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder(seq_group_metadata_list)
             seq_group_metadata_list.clear()

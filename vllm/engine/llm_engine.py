@@ -258,9 +258,6 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
-        print(seq_group_metadata_list)
-        print(seq_group_metadata_prefill_list)
-
         # Execute the model.
         output = self._run_workers(
             "execute_model",
