@@ -9,7 +9,7 @@ from vllm.engine.ray_utils import DeviceID, initialize_cluster, ray
 from vllm.logger import init_logger
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
-from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
+from vllm.sequence import Sequence, SequenceGroup, SequenceStatus, SequenceGroupMetadata
 from vllm.transformers_utils.tokenizer import (detokenize_incrementally,
                                                get_tokenizer)
 from vllm.utils import Counter
@@ -228,7 +228,7 @@ class LLMEngine:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
 
-    def covert_prefilled_to_running(self) -> None:
+    def covert_prefilled_to_running(self) -> List[SequenceGroupMetadata]:
         seq_group_metadata_list, scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
         if not scheduler_outputs.is_empty():
             # Execute the swap prefill cache.
