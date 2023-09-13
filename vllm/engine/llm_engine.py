@@ -264,7 +264,7 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
-        
+        print("three blocks ", scheduler_outputs.blocks_to_swap_in, scheduler_outputs.blocks_to_swap_out, scheduler_outputs.blocks_to_copy,)
         # Execute the model.
         output = self._run_workers(
             "execute_model",
