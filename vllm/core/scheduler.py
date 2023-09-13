@@ -317,12 +317,12 @@ class Scheduler:
             # blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)
             seq_to_swap_out[seq_group] = mapping
-        # return blocks_to_swap_out
-        while self.prefilled:
-            seq_group = self.prefilled[0]
-            for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
-                seq_id = seq.seq_id
-                print("prefilled queue ", seq_id, seq.data)
+
+        # while self.prefilled:
+        #     seq_group = self.prefilled[0]
+        #     for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+        #         seq_id = seq.seq_id
+        #         print("prefilled queue ", seq_id, seq.data)
                 # seq_data[seq_id] = seq.data
                 # block_tables[seq_id] = self.block_manager.get_block_table(seq)
         return seq_to_swap_out
@@ -337,7 +337,10 @@ class Scheduler:
         blocks_to_copy: Dict[int, List[int]] = {}
         
         while self.prefilled:
-            seq_group = self.prefilled[0]
+            for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+                seq_id = seq.seq_id
+                print("prefilled queue ", seq_id, seq.data)
+                
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
                 break
