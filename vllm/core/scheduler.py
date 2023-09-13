@@ -344,9 +344,9 @@ class Scheduler:
         
         while self.prefilled:
             seq_group = self.prefilled[0]
-            for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
-                seq_id = seq.seq_id
-                print("prefilled queue ", seq_id, seq.data)
+            # for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+            #     seq_id = seq.seq_id
+            #     print("prefilled queue ", seq_id, seq.data)
                 
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
