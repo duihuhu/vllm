@@ -162,7 +162,7 @@ class LLM:
         print(end_time, " prefill ")
         time.sleep(5)
         #swap kv cache in decode progress
-        self.llm_engine.convert_prefilled_to_swapped()
+        # self.llm_engine.convert_prefilled_to_swapped()
         
         #swap kv cache before decode
         self.llm_engine.covert_prefilled_to_running()
