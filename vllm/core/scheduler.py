@@ -325,7 +325,7 @@ class Scheduler:
         #         print("prefilled queue ", seq_id, seq.data)
         return seq_to_swap_out
     
-    def watch_prefilled_queue():
+    def watch_prefilled_queue(self) -> None:
         while self.prefilled:
             seq_group = self.prefilled[0]
             for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
