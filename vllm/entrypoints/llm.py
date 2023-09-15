@@ -175,6 +175,7 @@ class LLM:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
+                    print(output)
                     if use_tqdm:
                         pbar.update(1)
 
