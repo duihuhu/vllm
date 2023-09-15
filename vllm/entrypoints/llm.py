@@ -162,11 +162,11 @@ class LLM:
         print(end_time, " prefill ")
         time.sleep(5)
         #swap kv cache in decode progress (use this function or covert_prefilled_to_running)
-        # self.llm_engine.convert_prefilled_to_swapped()
+        self.llm_engine.convert_prefilled_to_swapped()
         
         #swap kv cache before decode
         # self.llm_engine.watch_prefilled_queue()
-        self.llm_engine.covert_prefilled_to_running()
+        # self.llm_engine.covert_prefilled_to_running()
         # self.llm_engine.watch_running_queue()
 
         while self.llm_engine.has_unfinished_requests():
