@@ -4,6 +4,7 @@ import json
 import random
 import time
 from typing import List, Tuple
+import os
 
 import torch
 from transformers import AutoModelForCausalLM, PreTrainedTokenizerBase
@@ -12,12 +13,14 @@ from tqdm import tqdm
 from vllm import LLM, SamplingParams
 from vllm.transformers_utils.tokenizer import get_tokenizer
 
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 def sample_requests(
     dataset_path: str,
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
-) -> List[Tuple[str, int, int]]:
+    max_length: int
+) -> List[Tuple[List, int, int]]:
     # Load the dataset.
     with open(dataset_path) as f:
         dataset = json.load(f)
@@ -56,11 +59,20 @@ def sample_requests(
 
     # Sample the requests.
     sampled_requests = random.sample(filtered_dataset, num_requests)
-    return sampled_requests
+
+    # Padding and truncation
+    prompts = []
+    for prompt, _, _ in sampled_requests:
+        prompts.append(prompt)
+    prompts_ids = tokenizer(prompts, padding='max_length', truncation=True, max_length=max_length).input_ids
+    result_requests = []
+    for i, a_prompt_ids in enumerate(prompts_ids):
+        result_requests.append((a_prompt_ids, len(a_prompt_ids), sampled_requests[i][2]))
+    return result_requests
 
 
 def run_vllm(
-    requests: List[Tuple[str, int, int]],
+    requests: List[Tuple[List, int, int]],
     model: str,
     tokenizer: str,
     tensor_parallel_size: int,
@@ -76,7 +88,7 @@ def run_vllm(
     )
 
     # Add the requests to the engine.
-    for prompt, _, output_len in requests:
+    for prompt_ids, _, output_len in requests:
         sampling_params = SamplingParams(
             n=n,
             temperature=0.0 if use_beam_search else 1.0,
@@ -87,14 +99,14 @@ def run_vllm(
         )
         # FIXME(woosuk): Do not use internal method.
         llm._add_request(
-            prompt=prompt,
-            prompt_token_ids=None,
+            prompt=None,
+            prompt_token_ids=prompt_ids,
             sampling_params=sampling_params,
         )
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    llm._run_engine(use_tqdm=True)
+    llm._run_engine(use_tqdm=False)
     end = time.time()
     return end - start
 
@@ -162,7 +174,7 @@ def main(args: argparse.Namespace):
 
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
-    requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    requests = sample_requests(args.dataset, args.num_prompts, tokenizer, args.prompt_length)
 
     if args.backend == "vllm":
         elapsed_time = run_vllm(
@@ -174,12 +186,14 @@ def main(args: argparse.Namespace):
                               args.use_beam_search, args.hf_max_batch_size)
     else:
         raise ValueError(f"Unknown backend: {args.backend}")
-    total_num_tokens = sum(
-        prompt_len + output_len
-        for _, prompt_len, output_len in requests
-    )
+    total_prompt_num_tokens = sum(prompt_len for _, prompt_len, _ in requests)
+    total_output_num_tokens = sum(output_len for _, _, output_len in requests)
+    total_num_tokens = total_prompt_num_tokens + total_output_num_tokens
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-          f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+          f"{total_num_tokens / elapsed_time:.2f} tokens/s, "
+          f"Total prompts' number {len(requests)}, "
+          f"Prompt tokens' number {total_prompt_num_tokens}, "
+          f"Output tokens' number {total_output_num_tokens}")
 
 
 if __name__ == "__main__":
@@ -199,6 +213,8 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
+    parser.add_argument("--prompt-length", type=int, default=None, 
+                        help="The token length of every prompt within a batch")
     args = parser.parse_args()
 
     if args.backend == "vllm":

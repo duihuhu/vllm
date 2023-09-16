@@ -159,14 +159,19 @@ class LLM:
                     # if use_tqdm:
                     #     pbar.update(1)
         end_time = time.time()
-        print(end_time, " prefill ")
+        print(end_time, " end prefill")
+        print(end_time - start_time, "seconds in total prefill")
         time.sleep(5)
         #swap kv cache in decode progress
         self.llm_engine.convert_prefilled_to_swapped()
+        print("continuously swap in prefilled sequences")
         
         #swap kv cache before decode
-        # self.llm_engine.covert_prefilled_to_running()
-        
+        #self.llm_engine.covert_prefilled_to_running()
+        #print("swap in prefilled sequences at once")
+
+        start_time_2 = time.time()
+        print(start_time_2, " start decode")
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder()
             # print(step_outputs)
@@ -175,7 +180,10 @@ class LLM:
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
-                        
+        end_time_2 = time.time()
+        print(end_time_2, " end decode")
+        print(end_time_2 - start_time_2, "seconds in total decode")
+        
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
