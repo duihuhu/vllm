@@ -154,7 +154,7 @@ class CacheEngine:
                 event.record(stream=self.cache_stream)
                 mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
                 print("dst_value_cache: ", dst_value_cache)
-                print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel())
+                print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel(), src_key_cache.shape())
                 # print(src_to_dst)
                 # print(src_key_cache)
                 
