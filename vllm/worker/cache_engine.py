@@ -153,8 +153,11 @@ class CacheEngine:
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
                 mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
-                print("dst_value_cache: ", dst_value_cache)
-                print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel(), src_key_cache.shape)
+                # print("dst_value_cache: ", dst_value_cache)
+                print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel(), src_key_cache[0].shape)
+                # print(dst_value_cache[src_to_dst[0]])
+                for ks, ds in src_to_dst.items():
+                    print(dst[ds])
                 # print(src_to_dst)
                 # print(src_key_cache)
                 
