@@ -152,7 +152,7 @@ class CacheEngine:
                 
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                # mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
+                mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
 
                 # print(src_to_dst)
                 # print(src_key_cache)
