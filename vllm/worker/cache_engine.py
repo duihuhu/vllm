@@ -153,10 +153,9 @@ class CacheEngine:
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
                 # mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
-                # for key, value in src_to_dst:
-                #     print("src_to_dst: ", key, value)
-                #     print("src_to_dst: ", src[key])
-                print(src_to_dst)
+
+                # print(src_to_dst)
+                # print(src_key_cache)
                 
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
