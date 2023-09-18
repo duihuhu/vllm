@@ -35,7 +35,10 @@ void print_blocks(torch::Tensor& src,
     int64_t dst_offset = dst_block_number * block_size_in_bytes;
     // printf("src address %p , src_block_number %lld , src_offset %lld , dst_prt %p , dst_block_number %lld , dst_offset %lld\n", \
     //   src_ptr, src_block_number, src_offset, dst_ptr, dst_block_number, dst_offset);
-
+    for (int i = 0; i < block_size_in_bytes; ++i) {
+        std::cout << (src_ptr + src_offset)[i] << " ";
+    }
+    cout<<"\n";
   //   cudaMemcpyAsync(
   //     dst_ptr + dst_offset,
   //     src_ptr + src_offset,
