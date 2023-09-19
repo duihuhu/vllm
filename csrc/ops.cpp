@@ -24,7 +24,7 @@ void print_blocks(torch::Tensor& src,
   void *src_ptr = src.data_ptr();
   void *dst_ptr = dst.data_ptr();
 
-  long long *l_dst_ptr = (long long)dst_ptr;
+  long long *l_dst_ptr = (long long*)dst_ptr;
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   // printf("block size in bytes: %lld\n", block_size_in_bytes);
   // const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
