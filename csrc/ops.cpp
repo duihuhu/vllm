@@ -24,7 +24,7 @@ void print_blocks(torch::Tensor& src,
   void *src_ptr = src.data_ptr();
   void *dst_ptr = dst.data_ptr();
 
-  long long *l_dst_ptr = (long long*)dst_ptr;
+  float *l_dst_ptr = (float*)dst_ptr;
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   // printf("block size in bytes: %lld\n", block_size_in_bytes);
   // const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
@@ -36,9 +36,9 @@ void print_blocks(torch::Tensor& src,
     int64_t dst_offset = dst_block_number * block_size_in_bytes;
     printf("src address %p , src_block_number %lld , src_offset %lld , dst_prt %p , dst_block_number %lld , dst_offset %lld\n", \
       src_ptr, src_block_number, src_offset, dst_ptr, dst_block_number, dst_offset);
-    
+    cout<<dst[dst_block_number]<<endl;
     // for (int i = 0; i < block_size_in_bytes; ++i) {
-    printf("%f", *(l_dst_ptr + dst_offset + 0));
+    // printf("%f", *(l_dst_ptr + dst_offset + 0));
     // }
 
   //   cudaMemcpyAsync(
