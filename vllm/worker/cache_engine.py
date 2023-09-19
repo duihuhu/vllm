@@ -10,6 +10,8 @@ from vllm.logger import init_logger
 from vllm.utils import in_wsl
 
 from vllm import mem_ops
+import ctypes
+
 logger = init_logger(__name__)
 
 KVCache = Tuple[torch.Tensor, torch.Tensor]
@@ -156,10 +158,12 @@ class CacheEngine:
                 # print("dst_value_cache: ", dst_value_cache)
                 print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel(), src_key_cache[0].shape)
                 # print(dst_value_cache[src_to_dst[0]])
-                for ks, ds in src_to_dst.items():
-                    print("ks, ds ", ks, ds)
+                # for ks, ds in src_to_dst.items():
+                #     print("ks, ds : ", dst_value_cache[ds].shape)
                 # print(src_to_dst)
                 # print(src_key_cache)
+                dst_key_cache_address = ctypes.addressof(dst_key_cache)
+                print("dst_key_cache_address: ", dst_key_cache_address)
                 
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
