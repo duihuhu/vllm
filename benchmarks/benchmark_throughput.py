@@ -12,6 +12,7 @@ from tqdm import tqdm
 
 from vllm import LLM, SamplingParams
 from vllm.transformers_utils.tokenizer import get_tokenizer
+from vllm.outputs import RequestOutput
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -78,13 +79,17 @@ def run_vllm(
     tensor_parallel_size: int,
     seed: int,
     n: int,
-    use_beam_search: bool,
-) -> float:
+    use_beam_search: int,
+    max_num_seqs: int,
+    input_len: int
+):
     llm = LLM(
         model=model,
         tokenizer=tokenizer,
         tensor_parallel_size=tensor_parallel_size,
         seed=seed,
+        max_num_seqs=max_num_seqs,
+        max_num_batched_tokens=max_num_seqs * input_len,
     )
 
     # Add the requests to the engine.
@@ -106,9 +111,9 @@ def run_vllm(
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    llm._run_engine(use_tqdm=False)
+    the_outputs = llm._run_engine(use_tqdm=False)
     end = time.time()
-    return end - start
+    return end - start, the_outputs
 
 
 def run_hf(
@@ -177,25 +182,37 @@ def main(args: argparse.Namespace):
     requests = sample_requests(args.dataset, args.num_prompts, tokenizer, args.prompt_length)
 
     if args.backend == "vllm":
-        elapsed_time = run_vllm(
+        back_tuple = run_vllm(
             requests, args.model, args.tokenizer, args.tensor_parallel_size,
-            args.seed, args.n, args.use_beam_search)
+            args.seed, args.n, args.use_beam_search, args.batch_size, args.prompt_length)
     elif args.backend == "hf":
         assert args.tensor_parallel_size == 1
         elapsed_time = run_hf(requests, args.model, tokenizer, args.n,
                               args.use_beam_search, args.hf_max_batch_size)
     else:
         raise ValueError(f"Unknown backend: {args.backend}")
+    elapsed_time = back_tuple[0]
+    prefill_time = back_tuple[1][1] - back_tuple[1][0]
+    decode_time = back_tuple[1][3] - back_tuple[1][2]
+    requests_outputs = back_tuple[1][4]
+    total_output_num_tokens = 0
+    for outputs in requests_outputs:
+        for output in outputs.outputs:
+            total_output_num_tokens = total_output_num_tokens + len(output.token_ids)
     total_prompt_num_tokens = sum(prompt_len for _, prompt_len, _ in requests)
-    total_output_num_tokens = sum(output_len for _, _, output_len in requests)
     total_num_tokens = total_prompt_num_tokens + total_output_num_tokens
+    prefill_utilization = (2*1.25*100000000*args.batch_size*args.prompt_length) / (prefill_time*(args.batch_size/args.num_prompts)*14*1000000000000)
+    #decode_utilization = (2*1.25*100000000*total_output_num_tokens) / (4*decode_time*14*1000000000000)
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-          f"{total_num_tokens / elapsed_time:.2f} tokens/s, "
+          f"Total: {total_num_tokens / elapsed_time:.2f} tokens/s, "
+          f"Output: {total_output_num_tokens / elapsed_time:.2f} tokens/s, "
           f"Total prompts' number {len(requests)}, "
           f"Prompt tokens' number {total_prompt_num_tokens}, "
-          f"Output tokens' number {total_output_num_tokens}")
-
-
+          f"Output tokens' number {total_output_num_tokens}, "
+          f"Prefill GPU utilization {prefill_utilization:.2f}, "
+          f"Decode GPU utilization - profiling..., "
+          f"{back_tuple[1][0]},{back_tuple[1][1]},{back_tuple[1][2]},{back_tuple[1][3]}")
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
     parser.add_argument("--backend", type=str, choices=["vllm", "hf"],
@@ -207,7 +224,8 @@ if __name__ == "__main__":
     parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=1)
     parser.add_argument("--n", type=int, default=1,
                         help="Number of generated sequences per prompt.")
-    parser.add_argument("--use-beam-search", action="store_true")
+    parser.add_argument("--use-beam-search", type=int, default=0,
+                        help="Whether to use beam serach")
     parser.add_argument("--num-prompts", type=int, default=1000,
                         help="Number of prompts to process.")
     parser.add_argument("--seed", type=int, default=0)
@@ -215,6 +233,8 @@ if __name__ == "__main__":
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--prompt-length", type=int, default=None, 
                         help="The token length of every prompt within a batch")
+    parser.add_argument("--batch-size", type=int, default=None, 
+                        help="Max seq number within a batch")
     args = parser.parse_args()
 
     if args.backend == "vllm":

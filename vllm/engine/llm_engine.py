@@ -257,6 +257,10 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
+        
+        #for seq_group_metadata in seq_group_metadata_list:
+        #    print(f"Request id is {seq_group_metadata.request_id}")
+        #    print(f"Request status is {seq_group_metadata.is_prompt}")
 
         # Execute the model.
         output = self._run_workers(
@@ -297,6 +301,11 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
+        
+        #for seq_group_metadata in seq_group_metadata_list:
+        #    print(f"Request id is {seq_group_metadata.request_id}")
+        #    print(f"Request status is {seq_group_metadata.is_prompt}")
+
         # Execute the model.
         output = self._run_workers(
             "execute_model",
@@ -337,6 +346,9 @@ class LLMEngine:
         """Decodes the sequence outputs."""
         for seq_group in seq_groups:
             for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                # print(f"Newly generated token id is: {seq.get_last_token_id()}")
+                # print(f"The whole output token ids are: {seq.get_output_token_ids()}")
+                # print(f"The token ids of new seq are: {seq.get_token_ids()}")
                 new_token, new_output_text = detokenize_incrementally(
                     self.tokenizer,
                     seq.output_tokens,
