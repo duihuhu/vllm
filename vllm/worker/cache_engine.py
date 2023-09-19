@@ -162,8 +162,10 @@ class CacheEngine:
                 #     print("ks, ds : ", dst_value_cache[ds].shape)
                 # print(src_to_dst)
                 # print(src_key_cache)
-                dst_value_cache_address = hex(id(dst_value_cache))
-                print("dst_key_cache_address: ", dst_value_cache_address)
+                # dst_value_cache_address = hex(id(dst_value_cache))
+                dst_value_cache_address = dst_value_cache.numpy().__array_interface__["data"][0]
+
+                print("dst_key_cache_address: ", hex(dst_value_cache_address))
                 
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
