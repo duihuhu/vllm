@@ -163,6 +163,8 @@ class CacheEngine:
                 # print(src_to_dst)
                 # print(src_key_cache)
                 # dst_value_cache_address = hex(id(dst_value_cache))
+                print("cpu blocks: ", self.num_cpu_blocks)
+                print("gpu blocks: ", self.num_gpu_blocks)
                 print("get_key_block_shape: ", self.get_key_block_shape())
                 print("get_value_block_shape: ", self.get_value_block_shape())
                 
