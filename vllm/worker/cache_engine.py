@@ -10,7 +10,7 @@ from vllm.logger import init_logger
 from vllm.utils import in_wsl
 
 from vllm import mem_ops
-import ctypes
+# import ctypes
 
 logger = init_logger(__name__)
 
@@ -162,7 +162,7 @@ class CacheEngine:
                 #     print("ks, ds : ", dst_value_cache[ds].shape)
                 # print(src_to_dst)
                 # print(src_key_cache)
-                dst_key_cache_address = ctypes.addressof(dst_key_cache)
+                dst_key_cache_address = id(dst_key_cache)
                 print("dst_key_cache_address: ", dst_key_cache_address)
                 
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
