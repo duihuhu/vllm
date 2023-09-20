@@ -110,8 +110,8 @@ class Scheduler:
             self.running.append(seq_group)
             
     def covert_running_to_prefilled(self):
-        while self.prefilled:
-            seq_group = self.prefilled.pop(0)
+        while self.running:
+            seq_group = self.running.pop(0)
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.PREFILLED
             self.prefilled.append(seq_group)
