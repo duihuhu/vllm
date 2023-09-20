@@ -84,7 +84,7 @@ class BlockSpaceManager:
         seq = seq_group.get_seqs()[0]
         num_required_blocks = len(seq.logical_token_blocks)
         num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
-        print("num_free_gpu_blocks: ", num_free_gpu_blocks)
+        print("num_free_gpu_blocks: ", num_free_gpu_blocks, self.gpu_allocator.num_blocks)
         # Use watermark to avoid frequent cache eviction.
         return (num_free_gpu_blocks - num_required_blocks >=
                 self.watermark_blocks)
