@@ -74,7 +74,8 @@ class Scheduler:
         self.running: List[SequenceGroup] = []
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
-
+        self.prefilled: List[SequenceGroup] = []
+        
         self.last_logging_time: float = 0.0
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
@@ -100,6 +101,20 @@ class Scheduler:
 
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
+
+    def covert_prefilled_to_running(self):
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.RUNNING
+            self.running.append(seq_group)
+            
+    def covert_running_to_prefilled(self):
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.PREFILLED
+            self.prefilled.append(seq_group)
 
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:

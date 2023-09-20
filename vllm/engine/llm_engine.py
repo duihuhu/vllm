@@ -225,6 +225,12 @@ class LLMEngine:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
 
+    def covert_running_to_prefilled(self):
+        self.scheduler.covert_running_to_prefilled()
+
+    def covert_prefilled_to_running(self):
+        self.scheduler.covert_prefilled_to_running()
+
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
