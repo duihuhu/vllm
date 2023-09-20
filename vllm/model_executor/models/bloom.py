@@ -103,7 +103,7 @@ class BloomAttention(nn.Module):
         alibi_slopes = alibi_slopes[head_start:head_end].tolist()
 
         scaling = self.head_dim**-0.5
-        self.attn = PagedAttentionWithALiBi(self.num_heads, self.head_dim,
+        self.attn = (self.num_heads, self.head_dim,
                                             scaling, alibi_slopes)
 
     def forward(

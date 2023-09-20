@@ -156,17 +156,20 @@ class CacheEngine:
                 event.record(stream=self.cache_stream)
                 mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
                 # print("dst_value_cache: ", dst_value_cache)
-                print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel(), src_key_cache[0].shape, src_key_cache[0].dtype)
+                ##
+                # print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel(), src_key_cache[0].shape, src_key_cache[0].dtype)
+                
                 # print(dst_value_cache[src_to_dst[0]])
                 # for ks, ds in src_to_dst.items():
                 #     print("ks, ds : ", dst_value_cache[ds].shape)
                 # print(src_to_dst)
                 # print(src_key_cache)
                 # dst_value_cache_address = hex(id(dst_value_cache))
-                print("cpu blocks: ", self.num_cpu_blocks)
-                print("gpu blocks: ", self.num_gpu_blocks)
-                print("get_key_block_shape: ", self.get_key_block_shape())
-                print("get_value_block_shape: ", self.get_value_block_shape())
+                ###
+                # print("cpu blocks: ", self.num_cpu_blocks)
+                # print("gpu blocks: ", self.num_gpu_blocks)
+                # print("get_key_block_shape: ", self.get_key_block_shape())
+                # print("get_value_block_shape: ", self.get_value_block_shape())
                 
                 dst_value_cache_address = dst_value_cache.numpy().__array_interface__["data"][0]
                 print("dst_key_cache_address: ", hex(dst_value_cache_address))
