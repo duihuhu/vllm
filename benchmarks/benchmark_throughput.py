@@ -94,8 +94,19 @@ def run_vllm(
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    llm._run_engine(use_tqdm=True)
+    outputs = llm._run_engine(use_tqdm=True)
     end = time.time()
+    
+    
+    elapsed_time = end-start 
+    total_num_tokens = sum(
+        len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
+        for output in outputs
+    )
+    
+    print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
+          f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+
     return end - start
 
 
