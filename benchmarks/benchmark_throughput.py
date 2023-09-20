@@ -103,7 +103,7 @@ def run_vllm(
         len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
         for output in outputs
     )
-    
+    print("total_num_tokens: ", total_num_tokens)
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
           f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 
