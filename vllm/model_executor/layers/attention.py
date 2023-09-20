@@ -91,7 +91,7 @@ class PagedAttention(nn.Module):
             op=self.attn_op,
         )
         # TODO(woosuk): Unnecessary copy. Optimize.
-        print("output: ", out.squeeze(0))
+        # print("output: ", out.squeeze(0))
         output.copy_(out.squeeze(0))
         return output
 
