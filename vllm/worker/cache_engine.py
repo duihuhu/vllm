@@ -172,7 +172,7 @@ class CacheEngine:
                 # print("get_value_block_shape: ", self.get_value_block_shape())
                 
                 dst_value_cache_address = dst_value_cache.numpy().__array_interface__["data"][0]
-                print("dst_key_cache_address: ", hex(dst_value_cache_address))
+                # print("dst_key_cache_address: ", hex(dst_value_cache_address))
                 
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)

@@ -244,9 +244,9 @@ class Worker:
             max_context_len=max_context_len,
             block_tables=block_tables_tensor,
         )
-        print("tokens_tensor: ", tokens_tensor)
-        print("positions_tensor: ", positions_tensor)
-        print("block_tables_tensor: ", block_tables_tensor)
+        # print("tokens_tensor: ", tokens_tensor)
+        # print("positions_tensor: ", positions_tensor)
+        # print("block_tables_tensor: ", block_tables_tensor)
 
         return tokens_tensor, positions_tensor, input_metadata
 
