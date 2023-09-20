@@ -104,8 +104,6 @@ def run_vllm(
         for output in outputs
     )
     
-    print("requests: ", requests)
-    print("outputs: ", outputs)
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
           f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 

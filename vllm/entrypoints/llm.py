@@ -157,6 +157,10 @@ class LLM:
                     # print(output)
                     if use_tqdm:
                         pbar.update(1)
+            self.llm_engine.convert_running_to_prefilled()
+        
+        self.llm_engine.covert_prefilled_to_running()
+
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
