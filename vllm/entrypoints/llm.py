@@ -157,20 +157,20 @@ class LLM:
                     # print(output)
                     if use_tqdm:
                         pbar.update(1)
-        #     self.llm_engine.covert_running_to_prefilled()
+            self.llm_engine.covert_running_to_prefilled()
         
-        # self.llm_engine.covert_prefilled_to_running()
+        self.llm_engine.covert_prefilled_to_running()
         
-        # while self.llm_engine.has_unfinished_requests():
-        #     # print("interation: ", interation)
-        #     step_outputs = self.llm_engine.step()
-        #     # interation = interation  + 1
-        #     for output in step_outputs:
-        #         if output.finished:
-        #             outputs.append(output)
-        #             # print(output)
-        #             if use_tqdm:
-        #                 pbar.update(1)
+        while self.llm_engine.has_unfinished_requests():
+            # print("interation: ", interation)
+            step_outputs = self.llm_engine.step()
+            # interation = interation  + 1
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+                    # print(output)
+                    if use_tqdm:
+                        pbar.update(1)
                         
         if use_tqdm:
             pbar.close()
