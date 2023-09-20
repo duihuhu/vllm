@@ -171,7 +171,7 @@ class LLM:
                     # print(output)
                     if use_tqdm:
                         pbar.update(1)
-                        
+        print(outputs)            
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
