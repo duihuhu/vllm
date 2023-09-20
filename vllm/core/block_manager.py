@@ -53,7 +53,18 @@ class BlockAllocator:
 # Mapping: logical block number -> physical block.
 BlockTable = List[PhysicalTokenBlock]
 
-
+##no use
+class PlasmaAllocator:
+    """Manages cpu blocks"""
+    def __init__(
+        self,
+        device: Device,
+        block_size: int,
+    ) -> None:
+        self.device = device
+        self.block_size = block_size
+        ##get_cache_block_size??
+        
 class BlockSpaceManager:
     """Manages the mapping between logical and physical token blocks."""
 
@@ -75,6 +86,10 @@ class BlockSpaceManager:
                                             num_gpu_blocks)
         self.cpu_allocator = BlockAllocator(Device.CPU, block_size,
                                             num_cpu_blocks)
+        
+        #todo use plasma_allocator to allocate block from memmory
+        self.plasma_allocator = None
+        self.used_cpu_blocks = 0
         # Mapping: seq_id -> BlockTable.
         self.block_tables: Dict[int, BlockTable] = {}
 
@@ -84,7 +99,6 @@ class BlockSpaceManager:
         seq = seq_group.get_seqs()[0]
         num_required_blocks = len(seq.logical_token_blocks)
         num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
-        print("num_free_gpu_blocks: ", num_free_gpu_blocks, self.gpu_allocator.num_blocks)
         # Use watermark to avoid frequent cache eviction.
         return (num_free_gpu_blocks - num_required_blocks >=
                 self.watermark_blocks)
