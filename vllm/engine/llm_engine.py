@@ -331,7 +331,6 @@ class LLMEngine:
     ) -> Any:
         """Runs the given method on all workers."""
         all_outputs = []
-        print
         for worker in self.workers:
             executor = getattr(worker, method)
             if self.parallel_config.worker_use_ray:
