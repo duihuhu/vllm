@@ -5,6 +5,8 @@ from vllm.block import PhysicalTokenBlock
 from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device
 import pyarrow.plasma as plasma
+import pyarrow._plasma as plasma_object
+
 import numpy as np
 class BlockAllocator:
     """Manages free physical token blocks for a device.
@@ -63,7 +65,6 @@ class PlasmaAllocator:
     ##
     def allocate(self) -> PhysicalTokenBlock:
         object_id = plasma.ObjectID(np.random.bytes(20))
-        print("object id: ", object_id)
         block = PhysicalTokenBlock(device = self.device,
                             block_number = -1,
                             block_size = self.block_size,
@@ -103,7 +104,8 @@ class BlockSpaceManager:
         
         # Mapping: seq_id -> BlockTable.
         self.block_tables: Dict[int, BlockTable] = {}
-
+        self.block_tables_object: Dict[int, BlockTable] = {}
+        
     def can_allocate(self, seq_group: SequenceGroup) -> bool:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
@@ -263,7 +265,7 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
-    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, int]:
+    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, plasma_object.Object]:
         # GPU block -> Plasma CPU block.
         # mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
@@ -280,19 +282,19 @@ class BlockSpaceManager:
                 else:
                     ##todo 
                     object_block = self.plasma_allocator.allocate()
-                    # mapping[gpu_block] = object_block
+                    mapping[gpu_block] = object_block
                     # cpu_block = self.cpu_allocator.allocate()
                     # mapping[gpu_block] = cpu_block
-                # new_block_table.append(object_block)
+                new_block_table.append(object_block)
                 # Free the GPU block swapped out to CPU.
                 # self.gpu_allocator.free(gpu_block)
-            # self.block_tables[seq.seq_id] = new_block_table
+            self.block_tables_object[seq.seq_id] = new_block_table
 
-        # block_number_mapping = {
-        #     gpu_block.block_number: cpu_block.block_number
-        #     for gpu_block, cpu_block in mapping.items()
-        # }
-        # return block_number_mapping
+        block_number_object_id_mapping = {
+            gpu_block.block_number: object_block.object_id
+            for gpu_block, object_block in mapping.items()
+        }
+        return block_number_object_id_mapping
 
     def _free_block_table(self, block_table: BlockTable) -> None:
         for block in block_table:

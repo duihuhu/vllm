@@ -328,12 +328,13 @@ class LLMEngine:
             request_outputs.append(request_output)
         
         #find prefill blocks to swap out 
-        prefill_blocks_to_swap_out = self.scheduler.store_prompt_kv_cache()
+        prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
         if prefill_blocks_to_swap_out:
             # Execute the swap prefill cache.
             self._run_workers(
                 "swap_out_prefilled_cache",
-                blocks_to_swap_out=prefill_blocks_to_swap_out
+                blocks_to_swap_out = prefill_blocks_to_swap_out,
+                blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
             )
             
         # self.scheduler.watch_cpu_kv_cache()

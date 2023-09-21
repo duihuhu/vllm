@@ -9,6 +9,7 @@ from vllm.logger import init_logger
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceOutputs,
                            SequenceStatus)
+import pyarrow._plasma as plasma_object
 
 logger = init_logger(__name__)
 
@@ -307,6 +308,9 @@ class Scheduler:
     ) -> Dict[SequenceGroup, Dict[int, int]]:
         # blocks_to_swap_out: Dict[int, int] = {}
         seq_to_swap_out: Dict[SequenceGroup, Dict[int, int]] = {}
+        
+        seq_to_swap_out_object: Dict[SequenceGroup, Dict[int, plasma_object.Object]] = {}
+
         while self.running:
             seq_group = self.running.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
@@ -315,19 +319,20 @@ class Scheduler:
                 seq.status = SequenceStatus.PREFILLED
                 
             #test for plasma
-            self.block_manager.swap_out_to_plasma(seq_group)
+            mapping_object = self.block_manager.swap_out_to_plasma(seq_group)
             
             mapping = self.block_manager.swap_out(seq_group)
             # blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)
             seq_to_swap_out[seq_group] = mapping
+            seq_to_swap_out_object[seq_group] = mapping_object
 
         # while self.prefilled:
         #     seq_group = self.prefilled[0]
         #     for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
         #         seq_id = seq.seq_id
         #         print("prefilled queue ", seq_id, seq.data)
-        return seq_to_swap_out
+        return seq_to_swap_out, seq_to_swap_out_object
     
     def watch_prefilled_queue(self) -> None:
         while self.prefilled:

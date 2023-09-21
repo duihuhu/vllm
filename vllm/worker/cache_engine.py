@@ -48,6 +48,7 @@ class CacheEngine:
         self.gpu_cache = self.allocate_gpu_cache()
         self.cpu_cache = self.allocate_cpu_cache()
 
+        self.object_cache = self.allocate_object_cache()
         # Initialize the stream for caching operations.
         self.cache_stream = torch.cuda.Stream()
         assert self.cache_stream != torch.cuda.current_stream()

@@ -12,7 +12,7 @@ from vllm.sampling_params import SamplingParams
 from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, SequenceGroup
 from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
-
+import pyarrow._plasma as plasma_object
 
 
 class Worker:
@@ -279,6 +279,7 @@ class Worker:
     def swap_out_prefilled_cache(
         self,
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
+        blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, plasma_object.Object]],
     )  -> None:
         if blocks_to_swap_out:
             for key, value in blocks_to_swap_out.items():
