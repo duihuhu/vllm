@@ -1,7 +1,8 @@
 """Token blocks."""
-from typing import List
+from typing import List, Optional
 
 from vllm.utils import Device
+import pyarrow
 
 _BLANK_TOKEN_ID = -1
 
@@ -55,13 +56,16 @@ class PhysicalTokenBlock:
         device: Device,
         block_number: int,
         block_size: int,
+        object_id: Optional[pyarrow._plasma.ObjectID] = None,
     ) -> None:
         self.device = device
         self.block_number = block_number
         self.block_size = block_size
 
         self.ref_count = 0
-
+        #to reprsent plasma object_id    
+        self.object_id = object_id
+    
     def __repr__(self) -> str:
         return (f'PhysicalTokenBlock(device={self.device}, '
                 f'block_number={self.block_number}, '

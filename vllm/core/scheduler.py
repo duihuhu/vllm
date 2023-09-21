@@ -313,6 +313,10 @@ class Scheduler:
             # print("request_id: ", seq_group.request_id, blocks)
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.PREFILLED
+                
+            #test for plasma
+            self.block_manager.swap_out_to_plasma(seq_group)
+            
             mapping = self.block_manager.swap_out(seq_group)
             # blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)
