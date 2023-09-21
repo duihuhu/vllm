@@ -64,10 +64,10 @@ class PlasmaAllocator:
     def allocate(self) -> PhysicalTokenBlock:
         object_id = plasma.ObjectID(np.random.bytes(20))
         print("object id: ", object_id)
-        block = PhysicalTokenBlock(device=device,
-                            block_number=-1,
-                            block_size=block_size,
-                            object_id=object_id)
+        block = PhysicalTokenBlock(device = self.device,
+                            block_number = -1,
+                            block_size = self.block_size,
+                            object_id = object_id)
         return block
     ##todo 
     def free(self, block: PhysicalTokenBlock) -> None:
