@@ -2,7 +2,7 @@
 from typing import List, Optional
 
 from vllm.utils import Device
-import pyarrow
+import pyarrow._plasma as plasma
 
 _BLANK_TOKEN_ID = -1
 
@@ -56,7 +56,7 @@ class PhysicalTokenBlock:
         device: Device,
         block_number: int,
         block_size: int,
-        object_id: Optional[pyarrow._plasma.ObjectID] = None,
+        object_id: Optional[plasma.ObjectID] = None,
     ) -> None:
         self.device = device
         self.block_number = block_number
