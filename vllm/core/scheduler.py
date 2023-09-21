@@ -206,6 +206,7 @@ class Scheduler:
 
                 num_prompt_tokens = seq_group.get_seqs()[0].get_len()
                 if num_prompt_tokens >= self.scheduler_config.max_seq_len:
+                    print("no space 1")
                     logger.warning(
                         f"Input prompt ({num_prompt_tokens} tokens) is too long"
                         " and exceeds limit of "
@@ -218,11 +219,13 @@ class Scheduler:
 
                 # If the sequence group cannot be allocated, stop.
                 if not self.block_manager.can_allocate(seq_group):
+                    print("no space 2")
                     break
 
                 # If the number of batched tokens exceeds the limit, stop.
                 if (num_batched_tokens + num_prompt_tokens >
                         self.scheduler_config.max_num_batched_tokens):
+                    print("no space 3")
                     break
 
                 # The total number of sequences in the RUNNING state should not
