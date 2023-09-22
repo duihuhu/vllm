@@ -67,12 +67,15 @@ def run_vllm(
     seed: int,
     n: int,
     use_beam_search: bool,
+    batch_size: int,
 ) -> float:
+    print(batch_size)
     llm = LLM(
         model=model,
         tokenizer=tokenizer,
         tensor_parallel_size=tensor_parallel_size,
         seed=seed,
+        max_num_seqs=batch_size,
     )
 
     # Add the requests to the engine.
@@ -178,7 +181,7 @@ def main(args: argparse.Namespace):
     if args.backend == "vllm":
         elapsed_time = run_vllm(
             requests, args.model, args.tokenizer, args.tensor_parallel_size,
-            args.seed, args.n, args.use_beam_search)
+            args.seed, args.n, args.use_beam_search, args.batch_size)
     elif args.backend == "hf":
         assert args.tensor_parallel_size == 1
         elapsed_time = run_hf(requests, args.model, tokenizer, args.n,
@@ -210,6 +213,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
+    parser.add_argument("--batch-size", "-bs", type=int, default=256)
     args = parser.parse_args()
 
     if args.backend == "vllm":
