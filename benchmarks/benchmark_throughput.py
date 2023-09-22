@@ -171,7 +171,6 @@ def run_hf(
 
 
 def main(args: argparse.Namespace):
-    print(args)
     random.seed(args.seed)
 
     # Sample the requests.
@@ -215,6 +214,7 @@ if __name__ == "__main__":
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--batch-size", "-bs", type=int, default=256)
     args = parser.parse_args()
+    print(args)
 
     if args.backend == "vllm":
         if args.hf_max_batch_size is not None:
