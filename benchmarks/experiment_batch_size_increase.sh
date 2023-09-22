@@ -6,9 +6,9 @@ do
   do
     if [ $ts -eq 1 ]
     then
-      $num_prompts=64
+      num_prompts=64
     else
-      $num_prompts=128
+      num_prompts=128
     fi
     echo $batch_size $ts $num_prompts
 
