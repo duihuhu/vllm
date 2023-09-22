@@ -69,7 +69,6 @@ def run_vllm(
     use_beam_search: bool,
     batch_size: int,
 ) -> float:
-    print(batch_size)
     llm = LLM(
         model=model,
         tokenizer=tokenizer,
@@ -214,7 +213,6 @@ if __name__ == "__main__":
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--batch-size", type=int, default=256)
     args = parser.parse_args()
-    print(args.batch_size)
 
     if args.backend == "vllm":
         if args.hf_max_batch_size is not None:
