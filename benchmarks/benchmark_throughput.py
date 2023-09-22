@@ -212,7 +212,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
-    parser.add_argument("--batch-size", "-bs", type=int, default=256)
+    parser.add_argument("--batch-size", type=int, default=256)
     args = parser.parse_args()
     print(args.batch_size)
 
