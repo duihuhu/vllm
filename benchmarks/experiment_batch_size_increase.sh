@@ -1,6 +1,7 @@
 #!/bin/bash
 #note: first need to ensure num_prompts
 num_prompts=0
+split_two_phase=0
 for ((ts=1; ts<=4; ts=ts*4))
 do
   for ((batch_size=2; batch_size<=4; batch_size=batch_size*2))

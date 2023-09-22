@@ -68,6 +68,7 @@ def run_vllm(
     n: int,
     use_beam_search: bool,
     batch_size: int,
+    split_two_phase: int
 ) -> float:
     llm = LLM(
         model=model,
@@ -96,7 +97,7 @@ def run_vllm(
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=True)
+    outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase)
     end = time.time()
     
     
@@ -179,7 +180,7 @@ def main(args: argparse.Namespace):
     if args.backend == "vllm":
         elapsed_time = run_vllm(
             requests, args.model, args.tokenizer, args.tensor_parallel_size,
-            args.seed, args.n, args.use_beam_search, args.batch_size)
+            args.seed, args.n, args.use_beam_search, args.batch_size, args.split_two_phase)
     elif args.backend == "hf":
         assert args.tensor_parallel_size == 1
         elapsed_time = run_hf(requests, args.model, tokenizer, args.n,
@@ -212,6 +213,7 @@ if __name__ == "__main__":
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--batch-size", type=int, default=256)
+    parser.add_argument("--split-two-phase", type=int, default=0)
     args = parser.parse_args()
 
     if args.backend == "vllm":
