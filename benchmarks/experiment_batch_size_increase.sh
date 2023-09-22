@@ -4,11 +4,11 @@ for ((batch_size=2; batch_size<=64; batch_size=batch_size*2))
 do
   for ((ts=1; ts<=4; ts=ts*4))
   do
-    if [ $ts -eq 1]
+    if [ $ts -eq 1 ]
     then
-      num_prompts= 64
+      $num_prompts=64
     else
-      num_prompts= 128
+      $num_prompts=128
     fi
     echo $batch_size $ts $num_prompts
 
