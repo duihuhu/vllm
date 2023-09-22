@@ -1,4 +1,5 @@
 #!/bin/bash
+#note: first need to ensure num_prompts
 num_prompts=0
 for ((ts=1; ts<=4; ts=ts*4))
 do
@@ -10,10 +11,10 @@ do
     else
       num_prompts=4
     fi
-    echo $batch_size $ts $num_prompts
+    echo "current parameter: tensor-parallel-size batch_size num_prompts " $ts $batch_size  $num_prompts
 
     python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json \
     --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --num-prompts $num_prompts --tensor-parallel-size=$ts
-
+    sleep 5
   done 
 done
