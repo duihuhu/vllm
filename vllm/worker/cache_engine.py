@@ -8,7 +8,7 @@ from vllm import cache_ops
 from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl
-from pyarrow._plasma import plasma_object
+import pyarrow._plasma as plasma_object
 from vllm import mem_ops
 # import ctypes
 
