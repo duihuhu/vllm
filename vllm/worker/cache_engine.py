@@ -8,7 +8,7 @@ from vllm import cache_ops
 from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl
-
+from pyarrow._plasma import plasma_object
 from vllm import mem_ops
 # import ctypes
 
@@ -175,10 +175,21 @@ class CacheEngine:
                 
                 # dst_value_cache_address = dst_value_cache.numpy().__array_interface__["data"][0]
                 # print("dst_key_cache_address: ", hex(dst_value_cache_address))
-                
+
+    def _swap_out_prefilled_to_plasma(
+       self,
+        src: List[KVCache],
+        dst: List[KVCache],
+        src_to_dst: Dict[int, plasma_object.Object]) -> None:
+        return
+    
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
 
+    def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, plasma_object.Object]) -> None:
+        self._swap_out_prefilled_to_plasma(self.gpu_cache, self.object_cache, src_to_dst)
+    
+    
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         key_caches = [key_cache for key_cache, _ in self.gpu_cache]
         value_caches = [value_cache for _, value_cache in self.gpu_cache]
