@@ -283,11 +283,13 @@ class Worker:
     )  -> None:
         if blocks_to_swap_out:
             for key, value in blocks_to_swap_out.items():
+                print("swap_out_prefilled value: ", value)
                 self.cache_engine.swap_out_prefilled(value)
             issued_cache_op = True
             
         if blocks_to_object_swap_out:
             for key, value in blocks_to_object_swap_out.items():
+                print("swap_out_prefilled_to_plasma value: ", value)
                 self.cache_engine.swap_out_prefilled_to_plasma(value)
         if issued_cache_op:
             cache_events = self.cache_events
