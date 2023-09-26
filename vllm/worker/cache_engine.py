@@ -123,9 +123,10 @@ class CacheEngine:
             cpu_cache.append((key_blocks, value_blocks))
         return cpu_cache
 
+    def calculate_size():
+        return self.num_heads * self.head_size * self.block_size * self.dtype/8
+    
     def allocate_object_cache(self) -> List[KVCache]:
-        key_block_shape = self.get_key_block_shape()
-        value_block_shape = self.get_value_block_shape()
         return 
     
     def _swap(
@@ -194,6 +195,9 @@ class CacheEngine:
        self,
         src: List[KVCache],
         src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
+        
+        #self.client.allocate()
+        
         for key, object_id in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
             with torch.cuda.stream(self.cache_stream):
