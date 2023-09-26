@@ -214,6 +214,8 @@ class Worker:
                 block_offset = position % self.block_size
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
+                #print(f"The seq id is {seq_id}")
+                #print(f"The input tokens are {input_tokens}")
 
         # Optimization: Pad the input length to be a multiple of 8.
         # This is required for utilizing the Tensor Cores in NVIDIA GPUs.

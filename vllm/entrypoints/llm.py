@@ -139,7 +139,7 @@ class LLM:
         self.llm_engine.add_request(request_id, prompt, sampling_params,
                                     prompt_token_ids)
 
-    def _run_engine(self, use_tqdm: bool) -> List[RequestOutput]:
+    def _run_engine(self, use_tqdm: bool):
         # Initialize tqdm. 
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -153,11 +153,11 @@ class LLM:
             # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
             # interation = interation  + 1
-            # for output in step_outputs:
-            #     if output.finished:
-            #         outputs.append(output)
-                    # if use_tqdm:
-                    #     pbar.update(1)
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+                    if use_tqdm:
+                        pbar.update(1)
         end_time = time.time()
         print(end_time, " prefill ")
         time.sleep(5)
@@ -168,6 +168,19 @@ class LLM:
         # self.llm_engine.watch_prefilled_queue()
         self.llm_engine.covert_prefilled_to_running()
         # self.llm_engine.watch_running_queue()
+        #print(end_time, " end prefill")
+        #print(end_time - start_time, "seconds in total prefill")
+        #time.sleep(5)
+        #swap kv cache in decode progress
+        #self.llm_engine.convert_prefilled_to_swapped()
+        #print("continuously swap in prefilled sequences")
+        
+        #swap kv cache before decode
+        #self.llm_engine.covert_prefilled_to_running()
+        #print("swap in prefilled sequences at once")
+
+        start_time_2 = time.time()
+        print(start_time_2, " start decode")
 
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step_decoder()
@@ -179,10 +192,14 @@ class LLM:
                     if use_tqdm:
                         pbar.update(1)
 
+        end_time_2 = time.time()
+        print(end_time_2, " end decode")
+        print(end_time_2 - start_time_2, "seconds in total decode")
+        
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        return outputs
+        return (start_time, end_time, start_time_2, end_time_2, outputs)

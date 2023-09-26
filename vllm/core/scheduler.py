@@ -181,6 +181,8 @@ class Scheduler:
             num_curr_seqs = sum(
                 seq_group.num_seqs(status=SequenceStatus.RUNNING)
                 for seq_group in self.running)
+            if num_curr_seqs < self.scheduler_config.max_num_seqs:
+                print(f"num_curr_seqs is {num_curr_seqs}")
             if (num_curr_seqs + num_new_seqs >
                     self.scheduler_config.max_num_seqs):
                 break
@@ -238,6 +240,8 @@ class Scheduler:
                 num_curr_seqs = sum(
                     seq_group.num_seqs(status=SequenceStatus.RUNNING)
                     for seq_group in self.running)
+                if num_curr_seqs < self.scheduler_config.max_num_seqs:
+                    print(f"num_curr_seqs is {num_curr_seqs}")
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
                     break
