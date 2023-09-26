@@ -265,7 +265,7 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
-    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, plasma_object.Object]:
+    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, plasma_object.ObjectID]:
         # GPU block -> Plasma CPU block.
         # mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}

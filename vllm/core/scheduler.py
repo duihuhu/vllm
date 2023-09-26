@@ -309,7 +309,7 @@ class Scheduler:
         # blocks_to_swap_out: Dict[int, int] = {}
         seq_to_swap_out: Dict[SequenceGroup, Dict[int, int]] = {}
         
-        seq_to_swap_out_object: Dict[SequenceGroup, Dict[int, plasma_object.Object]] = {}
+        seq_to_swap_out_object: Dict[SequenceGroup, Dict[int, plasma_object.ObjectID]] = {}
 
         while self.running:
             seq_group = self.running.pop(0)

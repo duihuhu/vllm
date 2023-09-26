@@ -180,13 +180,13 @@ class CacheEngine:
        self,
         src: List[KVCache],
         dst: List[KVCache],
-        src_to_dst: Dict[int, plasma_object.Object]) -> None:
+        src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
 
-    def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, plasma_object.Object]) -> None:
+    def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, self.object_cache, src_to_dst)
     
     
