@@ -19,6 +19,10 @@ logger = init_logger(__name__)
 
 KVCache = Tuple[torch.Tensor, torch.Tensor]
 
+class PlasmaClient:
+    def __init__(self, plasma_store_socket_name) -> None:
+      self.plasma_client_ = plasma.connect(plasma_store_socket_name)
+    
 
 class CacheEngine:
     """Manages the KV cache.
@@ -53,8 +57,8 @@ class CacheEngine:
 
         self.object_cache = self.allocate_object_cache()
         
-        self.plasma_client = plasma.connect("/tmp/plasma_store")
-        # Initialize the stream for caching operations.
+        self.client = PlasmaClient("/tmp/plasma_store")
+        
         self.cache_stream = torch.cuda.Stream()
         assert self.cache_stream != torch.cuda.current_stream()
         # Initialize the events for stream synchronization.
@@ -194,8 +198,8 @@ class CacheEngine:
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
             with torch.cuda.stream(self.cache_stream):
                 for i in range(self.num_layers):
-                    src_key_cache, src_value_cache = src[i]
-                    print("layer = ", i, " block = ", key, " key ", src_key_cache[key])
+                    # src_key_cache, src_value_cache = src[i]
+                    print("layer = ", i, " block = ", key, " key ")
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
