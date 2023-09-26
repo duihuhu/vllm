@@ -114,6 +114,9 @@ class CacheEngine:
             cpu_cache.append((key_blocks, value_blocks))
         return cpu_cache
 
+    def allocate_object_cache(self) -> List[KVCache]:
+        return 
+    
     def _swap(
         self,
         src: List[KVCache],
