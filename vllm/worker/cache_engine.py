@@ -9,7 +9,10 @@ from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl
 import pyarrow._plasma as plasma_object
+import pyarrow.plasma as plasma
+
 from vllm import mem_ops
+import numpy as np
 # import ctypes
 
 logger = init_logger(__name__)
@@ -49,6 +52,8 @@ class CacheEngine:
         self.cpu_cache = self.allocate_cpu_cache()
 
         self.object_cache = self.allocate_object_cache()
+        
+        self.plasma_client = plasma.connect("/tmp/plasma_store")
         # Initialize the stream for caching operations.
         self.cache_stream = torch.cuda.Stream()
         assert self.cache_stream != torch.cuda.current_stream()
@@ -115,6 +120,8 @@ class CacheEngine:
         return cpu_cache
 
     def allocate_object_cache(self) -> List[KVCache]:
+        key_block_shape = self.get_key_block_shape()
+        value_block_shape = self.get_value_block_shape()
         return 
     
     def _swap(
@@ -182,15 +189,20 @@ class CacheEngine:
     def _swap_out_prefilled_to_plasma(
        self,
         src: List[KVCache],
-        dst: List[KVCache],
         src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
+        for key, object_id in src_to_dst:
+            # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
+            with torch.cuda.stream(self.cache_stream):
+                for i in range(self.num_layers):
+                    src_key_cache, src_value_cache = src[i]
+                    print("layer = ", i, " block = ", key, " key ", src_key_cache[key])
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
 
     def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
-        self._swap_out_prefilled_to_plasma(self.gpu_cache, self.object_cache, src_to_dst)
+        self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst)
     
     
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
