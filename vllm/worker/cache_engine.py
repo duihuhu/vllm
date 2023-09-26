@@ -190,7 +190,7 @@ class CacheEngine:
        self,
         src: List[KVCache],
         src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
-        for key, object_id in src_to_dst:
+        for key, object_id in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
             with torch.cuda.stream(self.cache_stream):
                 for i in range(self.num_layers):
