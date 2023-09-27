@@ -125,7 +125,7 @@ class CacheEngine:
             cpu_cache.append((key_blocks, value_blocks))
         return cpu_cache
 
-    def calculate_object_size():
+    def calculate_object_size(self):
         return self.num_heads * self.head_size * self.block_size * self.dtype/8
     
     def allocate_object_cache(self) -> List[KVCache]:
