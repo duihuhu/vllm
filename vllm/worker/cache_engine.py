@@ -23,6 +23,8 @@ class PlasmaClient:
     def __init__(self, plasma_store_socket_name) -> None:
       self.plasma_client_ = plasma.connect(plasma_store_socket_name)
     
+    def create(object_id, length, dtype):
+        self.plasma_client_.create((object_id, length), dtype=self.dtype)
 
 class CacheEngine:
     """Manages the KV cache.
@@ -123,7 +125,7 @@ class CacheEngine:
             cpu_cache.append((key_blocks, value_blocks))
         return cpu_cache
 
-    def calculate_size():
+    def calculate_object_size():
         return self.num_heads * self.head_size * self.block_size * self.dtype/8
     
     def allocate_object_cache(self) -> List[KVCache]:
@@ -196,14 +198,17 @@ class CacheEngine:
         src: List[KVCache],
         src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
         
-        #self.client.allocate()
-        
+        object_size = calculate_object_size()
         for key, object_id in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
             with torch.cuda.stream(self.cache_stream):
                 for i in range(self.num_layers):
-                    # src_key_cache, src_value_cache = src[i]
-                    print("layer = ", i, " block = ", key, " key ")
+                    src_key_cache, src_value_cache = src[i]
+                    # print("layer = ", i, " block = ", key, " key ")
+                    
+                    memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
+                    print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
+
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
