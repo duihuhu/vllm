@@ -206,6 +206,7 @@ class CacheEngine:
             with torch.cuda.stream(self.cache_stream):
                 for i in range(self.num_layers):
                     src_key_cache, src_value_cache = src[i]
+                    mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
                     # self.client.create(object_id, object_size)
@@ -226,7 +227,12 @@ class CacheEngine:
         value_caches = [value_cache for _, value_cache in self.gpu_cache]
         # NOTE(woosuk): This operation implicitly synchronizes the CPU and GPU.
         cache_ops.copy_blocks(key_caches, value_caches, src_to_dsts)
-
+    
+    @staticmethod
+    def get_num_layers():
+        num_layers = model_config.get_num_layers(parallel_config)
+        return num_layers
+    
     @staticmethod
     def get_cache_block_size(
         block_size: int,

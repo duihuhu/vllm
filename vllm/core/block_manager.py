@@ -6,6 +6,7 @@ from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device
 import pyarrow.plasma as plasma
 import pyarrow._plasma as plasma_object
+from vllm.worker.cache_engine import CacheEngine
 
 import numpy as np
 class BlockAllocator:
@@ -61,14 +62,18 @@ class PlasmaAllocator:
     ) -> None:
         self.device = device
         self.block_size = block_size
+        self.num_layers = CacheEngine.get_num_layers()
         ##get_cache_block_size??
     ##
     def allocate(self) -> PhysicalTokenBlock:
-        object_id = plasma.ObjectID(np.random.bytes(20))
+        print("num_layers: ", self.num_layers)
         block = PhysicalTokenBlock(device = self.device,
-                            block_number = -1,
-                            block_size = self.block_size,
-                            object_id = object_id)
+                    block_number = -1,
+                    block_size = self.block_size,
+                    object_id = [])
+        for i in range(self.num_layers):
+            object_id = plasma.ObjectID(np.random.bytes(20))
+            block.object_id.append(object_id)
         return block
     ##todo 
     def free(self, block: PhysicalTokenBlock) -> None:
