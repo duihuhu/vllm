@@ -23,8 +23,8 @@ class PlasmaClient:
     def __init__(self, plasma_store_socket_name) -> None:
         self.plasma_client_ = plasma.connect(plasma_store_socket_name)
     
-    def create(self, object_id, length, dtype):
-        return self.plasma_client_.create((object_id, length), dtype=dtype)
+    def create(self, object_id, length):
+        return self.plasma_client_.create(object_id, length)
 
 class CacheEngine:
     """Manages the KV cache.
@@ -206,7 +206,7 @@ class CacheEngine:
                     src_key_cache, src_value_cache = src[i]
                     # print("layer = ", i, " block = ", key, " key ")
                     
-                    memory_buffer = np.frombuffer(self.client.create(object_id, object_size, self.dtype), dtype=self.dtype)
+                    memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
                     print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
 
         return
