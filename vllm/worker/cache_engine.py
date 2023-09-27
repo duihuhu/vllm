@@ -125,8 +125,8 @@ class CacheEngine:
             cpu_cache.append((key_blocks, value_blocks))
         return cpu_cache
 
-    def calculate_object_size(self):
-        return self.num_heads * self.head_size * self.block_size * self.dtype/8
+    # def calculate_object_size(self):
+    #     return self.num_heads * self.head_size * self.block_size * self.dtype/8
     
     def allocate_object_cache(self) -> List[KVCache]:
         return 
@@ -198,7 +198,8 @@ class CacheEngine:
         src: List[KVCache],
         src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
         
-        object_size = self.calculate_object_size()
+        object_size = self._get_dtype_size()
+        print(object_size)
         for key, object_id in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
             with torch.cuda.stream(self.cache_stream):
