@@ -21,10 +21,10 @@ KVCache = Tuple[torch.Tensor, torch.Tensor]
 
 class PlasmaClient:
     def __init__(self, plasma_store_socket_name) -> None:
-      self.plasma_client_ = plasma.connect(plasma_store_socket_name)
+        self.plasma_client_ = plasma.connect(plasma_store_socket_name)
     
-    def create(object_id, length, dtype):
-        self.plasma_client_.create((object_id, length), dtype=self.dtype)
+    def create(self, object_id, length, dtype):
+        return self.plasma_client_.create((object_id, length), dtype=dtype)
 
 class CacheEngine:
     """Manages the KV cache.
