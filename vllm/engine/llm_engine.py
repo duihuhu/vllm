@@ -108,7 +108,8 @@ class LLMEngine:
         self._init_cache()
 
         # Create the scheduler.
-        self.scheduler = Scheduler(scheduler_config, cache_config, log_stats)
+        self.scheduler = Scheduler(scheduler_config, cache_config, log_stats,\
+                            model_config, parallel_config)
 
     def _verify_args(self) -> None:
         self.model_config.verify_with_parallel_config(self.parallel_config)

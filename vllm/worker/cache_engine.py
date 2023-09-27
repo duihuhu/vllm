@@ -229,11 +229,6 @@ class CacheEngine:
         cache_ops.copy_blocks(key_caches, value_caches, src_to_dsts)
     
     @staticmethod
-    def get_num_layers():
-        num_layers = model_config.get_num_layers(parallel_config)
-        return num_layers
-    
-    @staticmethod
     def get_cache_block_size(
         block_size: int,
         model_config: ModelConfig,

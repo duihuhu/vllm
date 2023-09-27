@@ -6,8 +6,8 @@ from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device
 import pyarrow.plasma as plasma
 import pyarrow._plasma as plasma_object
-from vllm.worker.cache_engine import CacheEngine
 
+from vllm.config import ModelConfig, ParallelConfig
 import numpy as np
 class BlockAllocator:
     """Manages free physical token blocks for a device.
@@ -59,11 +59,13 @@ class PlasmaAllocator:
         self,
         device: Device,
         block_size: int,
+        model_config: ModelConfig,
+        parallel_config: ParallelConfig,
     ) -> None:
         self.device = device
         self.block_size = block_size
-        self.num_layers = CacheEngine.get_num_layers()
         ##get_cache_block_size??
+        self.num_layers = model_config.get_num_layers(parallel_config)
     ##
     def allocate(self) -> PhysicalTokenBlock:
         print("num_layers: ", self.num_layers)
@@ -89,12 +91,15 @@ class BlockSpaceManager:
         block_size: int,
         num_gpu_blocks: int,
         num_cpu_blocks: int,
+        model_config: ModelConfig,
+        parallel_config: ParallelConfig,
         watermark: float = 0.01,
     ) -> None:
         self.block_size = block_size
         self.num_total_gpu_blocks = num_gpu_blocks
         self.num_total_cpu_blocks = num_cpu_blocks
         self.watermark = watermark
+    
         assert watermark >= 0.0
 
         self.watermark_blocks = int(watermark * num_gpu_blocks)
@@ -104,7 +109,7 @@ class BlockSpaceManager:
                                             num_cpu_blocks)
         
         #todo use plasma_allocator to allocate block from memmory
-        self.plasma_allocator = PlasmaAllocator(Device.CPU, block_size)
+        self.plasma_allocator = PlasmaAllocator(Device.CPU, block_size, model_config, parallel_config)
         # self.used_cpu_blocks = 0
         
         # Mapping: seq_id -> BlockTable.

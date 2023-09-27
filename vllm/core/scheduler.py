@@ -2,7 +2,7 @@ import enum
 import time
 from typing import Dict, List, Optional, Tuple
 
-from vllm.config import CacheConfig, SchedulerConfig
+from vllm.config import CacheConfig, SchedulerConfig, ModelConfig, ParallelConfig
 from vllm.core.block_manager import BlockSpaceManager
 from vllm.core.policy import PolicyFactory
 from vllm.logger import init_logger
@@ -55,11 +55,16 @@ class Scheduler:
         scheduler_config: SchedulerConfig,
         cache_config: CacheConfig,
         log_stats: bool,
+        model_config: ModelConfig,
+        parallel_config: ParallelConfig,
     ) -> None:
         self.scheduler_config = scheduler_config
         self.cache_config = cache_config
         self.log_stats = log_stats
 
+        self.model_config = model_config
+        self.parallel_config = parallel_config    
+        
         # Instantiate the scheduling policy.
         self.policy = PolicyFactory.get_policy(policy_name="fcfs")
         # Create the block space manager.
@@ -67,6 +72,8 @@ class Scheduler:
             block_size=self.cache_config.block_size,
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
+            model_config = self.model_config,
+            parallel_config = self.parallel_config,
         )
 
         # Sequence groups in the WAITING state.
