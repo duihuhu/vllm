@@ -206,7 +206,7 @@ class CacheEngine:
                     src_key_cache, src_value_cache = src[i]
                     # print("layer = ", i, " block = ", key, " key ")
                     
-                    memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
+                    memory_buffer = np.frombuffer(self.client.create(object_id, object_size, self.dtype), dtype=self.dtype)
                     print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
 
         return
