@@ -314,6 +314,7 @@ class Scheduler:
         while self.running:
             seq_group = self.running.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
+            
             # print("request_id: ", seq_group.request_id, blocks)
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.PREFILLED
@@ -322,6 +323,7 @@ class Scheduler:
             mapping_object = self.block_manager.swap_out_to_plasma(seq_group)
             
             mapping = self.block_manager.swap_out(seq_group)
+            print("mapping:",  mapping_object, mapping)
             # blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)
             seq_to_swap_out[seq_group] = mapping

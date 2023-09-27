@@ -207,7 +207,7 @@ class CacheEngine:
                 for i in range(self.num_layers):
                     src_key_cache, src_value_cache = src[i]
                     # print("layer = ", i, " block = ", key, " key ")
-                    print("gpu block, object id ", key, object_id)
+                    # print("i, gpu block, object id ", i, key, object_id)
                     # self.client.create(object_id, object_size)
                     # memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
                     # print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
