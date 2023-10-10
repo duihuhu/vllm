@@ -198,7 +198,7 @@ class CacheEngine:
     def _swap_out_prefilled_to_plasma(
        self,
         src: List[KVCache],
-        src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
+        src_to_dst: Dict[int, List[plasma_object.ObjectID]]) -> None:
 
         key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         value_block_size_in_bytes =  src[0][1].element_size() * src[0][1][0].numel()
@@ -229,7 +229,7 @@ class CacheEngine:
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
 
-    def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
+    def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, List[plasma_object.ObjectID]]) -> None:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst)
     
     
