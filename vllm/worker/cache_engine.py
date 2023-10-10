@@ -200,9 +200,17 @@ class CacheEngine:
         src: List[KVCache],
         src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
 
-        key_block_size_in_bytes = src[0].element_size() * src[0][0].numel()
-        value_block_size_in_bytes = src[0].element_size() * src[0][0].numel()
+        key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
+        value_block_size_in_bytes =  src[0][1].element_size() * src[0][1][0].numel()
         print("key value block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
+        
+        # # Create a new buffer and write to it.
+        # length = 50
+        # memory_buffer = np.frombuffer(self.plasma_client.create(object_id,
+        #                                                         length),
+        #                               dtype="uint8")
+        # for i in range(length):
+        #     memory_buffer[i] = i % 256
         
         for key, objects in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
