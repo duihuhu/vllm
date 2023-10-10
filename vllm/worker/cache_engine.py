@@ -199,14 +199,17 @@ class CacheEngine:
        self,
         src: List[KVCache],
         src_to_dst: Dict[int, plasma_object.ObjectID]) -> None:
+
+        key_block_size_in_bytes = src[0].element_size() * src[0][0].numel()
+        value_block_size_in_bytes = src[0].element_size() * src[0][0].numel()
+        print("key value block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
         
-        object_size = self.calculate_object_size()
-        for key, object_id in src_to_dst.items():
+        for key, objects in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
             with torch.cuda.stream(self.cache_stream):
                 for i in range(self.num_layers):
                     src_key_cache, src_value_cache = src[i]
-                    mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
+                    dst_key_object = objects[i]
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
                     # self.client.create(object_id, object_size)
