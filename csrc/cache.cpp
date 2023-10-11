@@ -8,6 +8,12 @@ void swap_blocks(
   torch::Tensor& dst,
   const std::map<int64_t, int64_t>& block_mapping);
 
+void swap_blocks_to_object(
+  torch::Tensor& src,
+  std::vector<long long> &dst_address,
+  const std::map<int64_t, int64_t>& block_mapping
+);
+
 void copy_blocks(
   std::vector<torch::Tensor>& key_caches,
   std::vector<torch::Tensor>& value_caches,
@@ -32,6 +38,12 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "swap_blocks",
     &swap_blocks,
     "Swap in (out) the cache blocks from src to dst");
+
+  m.def(
+    "swap_blocks_to_object",
+    &swap_blocks_to_object,
+    "Swap in (out) the cache blocks from src to dst object address");
+  
   m.def(
     "copy_blocks",
     &copy_blocks,

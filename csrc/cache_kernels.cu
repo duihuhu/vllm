@@ -6,6 +6,36 @@
 #include <map>
 #include <vector>
 
+void swap_blocks_to_object(
+  torch::Tensor& src,
+  std::vector<long long> &dst_address,
+  const std::map<int64_t, int64_t>& block_mapping
+) {
+  cudaMemcpyKind memcpy_type;
+  memcpy_type = cudaMemcpyDeviceToHost;
+  void *src_ptr = src.data_ptr();
+  int i = 0;
+  const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
+  // printf("block size in bytes %lld\n", block_size_in_bytes);
+  const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+  // NOTE(woosuk): This can be slow if the number of blocks is large.
+  for (const auto& pair : block_mapping) {
+    int64_t src_block_number = pair.first;
+    // int64_t dst_block_number = pair.second;
+    void *dst_ptr = dst_address[i];
+    int64_t src_offset = src_block_number * block_size_in_bytes;
+    // int64_t dst_offset = dst_block_number * block_size_in_bytes;
+    cudaMemcpyAsync(
+      dst_ptr,
+      src_ptr + src_offset,
+      block_size_in_bytes,
+      memcpy_type,
+      stream);
+    i = i + 1;
+  }
+}
+
+
 void swap_blocks(
   torch::Tensor& src,
   torch::Tensor& dst,
