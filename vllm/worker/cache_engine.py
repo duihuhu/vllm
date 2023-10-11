@@ -9,7 +9,7 @@ from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl
 import pyarrow._plasma as plasma_object
-# import pyarrow.plasma as plasma
+import pyarrow.plasma as plasma
 
 from vllm import mem_ops
 import numpy as np
@@ -197,7 +197,7 @@ class CacheEngine:
     def _swap_out_prefilled_to_plasma(
        self,
         src: List[KVCache],
-        src_to_dst: Dict[int, List[plasma_object.ObjectID]]) -> None:
+        src_to_dst: Dict[int, int]) -> None:
 
         block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         # value_block_size_in_bytes =  src[0][1].element_size() * src[0][1][0].numel()
@@ -210,13 +210,18 @@ class CacheEngine:
         #                               dtype="uint8")
         # for i in range(length):
         #     memory_buffer[i] = i % 256
-        
-        for key, objects in src_to_dst.items():
+        object_swap_lists = []
+        for i in range(self.num_layers):
+            obj_id = plasma.ObjectID.from_random()
+            obj = self.client.create(obj_id, block_size_in_bytes * 2)
+            object_swap_lists.append(obj)
+            
+        for key, value in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
             with torch.cuda.stream(self.cache_stream):
                 for i in range(self.num_layers):
                     src_key_cache, src_value_cache = src[i]
-                    dst_key_object = objects[i]
+                    dst_key_object = object_swap_lists[i]
                     
                     # print("create object: ", dst_key_object)
                     # obj = self.client.create(dst_key_object, block_size_in_bytes)
@@ -232,7 +237,7 @@ class CacheEngine:
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)
 
-    def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, List[plasma_object.ObjectID]]) -> None:
+    def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst)
     
     

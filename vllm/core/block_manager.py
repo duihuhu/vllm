@@ -74,11 +74,12 @@ class PlasmaAllocator:
         block = PhysicalTokenBlock(device = self.device,
                     block_number = -1,
                     block_size = self.block_size,
-                    object_id = [])
-        for i in range(self.num_layers):
-            # object_id = plasma.ObjectID(np.random.bytes(20))
-            object_id = plasma.ObjectID.from_random()
-            block.object_id.append(object_id)
+                    num_layer_object = self.num_layers)
+                    # object_id = [])
+        # for i in range(self.num_layers):
+        #     # object_id = plasma.ObjectID(np.random.bytes(20))
+        #     object_id = plasma.ObjectID.from_random()
+        #     block.object_id.append(object_id)
         return block
     ##todo 
     def free(self, block: PhysicalTokenBlock) -> None:
@@ -278,7 +279,7 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
-    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, List[plasma_object.ObjectID]]:
+    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, int]:
         # GPU block -> Plasma CPU block.
         # mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
@@ -304,7 +305,7 @@ class BlockSpaceManager:
             self.block_tables_object[seq.seq_id] = new_block_table
 
         block_number_object_id_mapping = {
-            gpu_block.block_number: object_block.object_id
+            gpu_block.block_number: object_block.num_layer_object
             for gpu_block, object_block in mapping.items()
         }
         return block_number_object_id_mapping

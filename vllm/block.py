@@ -56,7 +56,8 @@ class PhysicalTokenBlock:
         device: Device,
         block_number: int,
         block_size: int,
-        object_id: Optional[List[plasma_object.ObjectID]] = None,
+        # object_id: Optional[List[plasma_object.ObjectID]] = None,
+        num_layer_object: int 
     ) -> None:
         self.device = device
         self.block_number = block_number
@@ -64,8 +65,10 @@ class PhysicalTokenBlock:
 
         self.ref_count = 0
         #to reprsent plasma object_id    
-        self.object_id = object_id
-    
+        # self.object_id = object_id
+        
+        #to reprsent to worker: how many layers
+        self.num_layer_object = num_layer_object
     def __repr__(self) -> str:
         return (f'PhysicalTokenBlock(device={self.device}, '
                 f'block_number={self.block_number}, '
