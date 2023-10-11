@@ -5,12 +5,17 @@
 #include <cassert>
 #include <map>
 #include <vector>
+#include <iostream>
 
 void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,
   const std::map<int64_t, int64_t>& block_mapping
 ) {
+  // 获取张量的数据类型
+  torch::ScalarType dtype = src.dtype();
+  std::cout << "数据类型: " << dtype << std::endl;
+  
   cudaMemcpyKind memcpy_type;
   memcpy_type = cudaMemcpyDeviceToHost;
   void *src_ptr = src.data_ptr();
