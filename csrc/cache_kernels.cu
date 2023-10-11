@@ -14,7 +14,6 @@ void swap_blocks_to_object(
   cudaMemcpyKind memcpy_type;
   memcpy_type = cudaMemcpyDeviceToHost;
   void *src_ptr = src.data_ptr();
-  float *f_src_ptr = (float*)src.data_ptr();
   int i = 0;
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   // printf("block size in bytes %lld\n", block_size_in_bytes);
@@ -24,26 +23,14 @@ void swap_blocks_to_object(
     int64_t src_block_number = pair.first;
     // int64_t dst_block_number = pair.second;
     void *dst_ptr = (void*)dst_address[i];
-    float *f_dst_ptr = (float*)dst_address[i];
-
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
-    for (int j = 0; j < block_size_in_bytes; ++j) {
-      printf("%f", *(f_src_ptr + src_offset + j));
-    }
-    printf("\n");
-
     cudaMemcpyAsync(
       dst_ptr,
       src_ptr + src_offset,
       block_size_in_bytes,
       memcpy_type,
       stream);
-  
-    for (int j = 0; j < block_size_in_bytes; ++j) {
-      printf("%f", *(f_dst_ptr + j));
-    }
-    printf("\n");
 
     i = i + 1;
   }

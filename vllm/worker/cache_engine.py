@@ -227,7 +227,11 @@ class CacheEngine:
                 # self.client.create(object_id, object_size)
                 # memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
                 # print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
-
+        for i in range(self.num_layers):
+            src_key_cache, src_value_cache = src[i]
+            dst_key_cache = layer_object_address_lists[i]
+            for key, value in src_to_dst.items():
+                print(src_key_cache[key])
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
