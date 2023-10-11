@@ -70,7 +70,7 @@ class PlasmaAllocator:
     
     ##only allocate object id 
     def allocate(self) -> PhysicalTokenBlock:
-        print("num_layers: ", self.num_layers)
+        # print("num_layers: ", self.num_layers)
         block = PhysicalTokenBlock(device = self.device,
                     block_number = -1,
                     block_size = self.block_size,

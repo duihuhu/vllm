@@ -9,7 +9,7 @@ from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl
 import pyarrow._plasma as plasma_object
-import pyarrow.plasma as plasma
+# import pyarrow.plasma as plasma
 
 from vllm import mem_ops
 import numpy as np
@@ -21,7 +21,7 @@ KVCache = Tuple[torch.Tensor, torch.Tensor]
 
 class PlasmaClient:
     def __init__(self, plasma_store_socket_name) -> None:
-        self.plasma_client_ = plasma.connect(plasma_store_socket_name)
+        self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
     
     def create(self, object_id, length):
         obj = self.plasma_client_.create(object_id, length)
@@ -218,8 +218,8 @@ class CacheEngine:
                     src_key_cache, src_value_cache = src[i]
                     dst_key_object = objects[i]
                     
+                    print("create object: ", dst_key_object)
                     obj = self.client.create(dst_key_object, block_size_in_bytes)
-                    print("object: ", obj, "object address: ", obj.address)
                     
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
