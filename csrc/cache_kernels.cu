@@ -26,12 +26,23 @@ void swap_blocks_to_object(
     printf("cur i %d, dst address %p\n", i, dst_ptr);
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
+    for (int j = 0; j < block_size_in_bytes; ++j) {
+      printf("%f", *(src_ptr + src_offset + j));
+    }
+    printf("\n");
+
     cudaMemcpyAsync(
       dst_ptr,
       src_ptr + src_offset,
       block_size_in_bytes,
       memcpy_type,
       stream);
+  
+    for (int j = 0; j < block_size_in_bytes; ++j) {
+      printf("%f", *(dst_ptr + j));
+    }
+    printf("\n");
+
     i = i + 1;
   }
 }
