@@ -76,8 +76,8 @@ class PlasmaAllocator:
                     block_size = self.block_size,
                     object_id = [])
         for i in range(self.num_layers):
-            object_id = plasma.ObjectID(np.random.bytes(20))
-            # object_id = plasma.ObjectID.from_random()
+            # object_id = plasma.ObjectID(np.random.bytes(20))
+            object_id = plasma.ObjectID.from_random()
             block.object_id.append(object_id)
         return block
     ##todo 

@@ -22,7 +22,8 @@ KVCache = Tuple[torch.Tensor, torch.Tensor]
 class PlasmaClient:
     def __init__(self, plasma_store_socket_name) -> None:
         self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
-    
+        print("when init client: ", self.plasma_client_.list())
+        
     def create(self, object_id, length):
         obj = self.plasma_client_.create(object_id, length)
         return obj
@@ -220,7 +221,6 @@ class CacheEngine:
                     
                     print("create object: ", dst_key_object)
                     obj = self.client.create(dst_key_object, block_size_in_bytes)
-                    print(obj)
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
                     # self.client.create(object_id, object_size)
