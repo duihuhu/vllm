@@ -229,9 +229,14 @@ class CacheEngine:
         for i in range(1):
             src_key_cache, src_value_cache = src[i]
             dst_key_cache = layer_object_address_lists[i]
-            i = 0
+            j = 0
             for key, value in src_to_dst.items():
                 print(src_key_cache[key])
+                memory_buffer = np.frombuffer(object_swap_lists[j])
+                j = j + 1
+                for k in range(block_size_in_bytes):
+                    print(memory_buffer[k])
+                print("\n\n")
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
