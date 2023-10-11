@@ -88,7 +88,6 @@ class LLMEngine:
         self.workers: List[Worker] = []
         assert len(stage_devices) == 1, "Only support one stage for now."
         for rank, node_resource, _ in stage_devices[0]:
-            print(rank, node_resource, _)
             worker_cls = Worker
             if self.parallel_config.worker_use_ray:
                 worker_cls = ray.remote(
@@ -103,6 +102,7 @@ class LLMEngine:
                 scheduler_config,
                 rank,
                 distributed_init_method,
+                device_id=_
             )
             self.workers.append(worker)
         # Profile the memory usage and initialize the cache.

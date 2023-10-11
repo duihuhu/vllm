@@ -30,13 +30,15 @@ class Worker:
         scheduler_config: SchedulerConfig,
         rank: int,
         distributed_init_method: str,
+        device_id: int,
     ) -> None:
         self.model_config = model_config
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
         self.rank = rank
         self.distributed_init_method = distributed_init_method
-
+        self.device_id = device_id
+        
         # Initialize the distributed environment.
         _init_distributed_environment(parallel_config, rank,
                                       distributed_init_method)
