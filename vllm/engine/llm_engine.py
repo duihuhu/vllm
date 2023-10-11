@@ -407,9 +407,7 @@ class LLMEngine:
             if self.parallel_config.worker_use_ray:
                 executor = executor.remote
 
-            print("executor: ", executor)
             output = executor(*args, **kwargs)
-            print("output: ", output)
             all_outputs.append(output)
 
         if self.parallel_config.worker_use_ray:
