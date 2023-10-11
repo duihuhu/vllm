@@ -21,10 +21,11 @@ KVCache = Tuple[torch.Tensor, torch.Tensor]
 
 class PlasmaClient:
     def __init__(self, plasma_store_socket_name) -> None:
-        self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
         print("when init client: ", self.plasma_client_.list())
+        self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
         
     def create(self, object_id, length):
+        print("lists object ", self.plasma_client_.list())
         obj = self.plasma_client_.create(object_id, length)
         return obj
 
