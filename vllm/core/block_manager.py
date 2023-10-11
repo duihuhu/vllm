@@ -295,7 +295,6 @@ class BlockSpaceManager:
                 else:
                     ##todo 
                     object_block = self.plasma_allocator.allocate()
-                    print("gpu info: ", gpu_block.device.name, gpu_block.device.value)
                     mapping[gpu_block] = object_block
                     # cpu_block = self.cpu_allocator.allocate()
                     # mapping[gpu_block] = cpu_block
