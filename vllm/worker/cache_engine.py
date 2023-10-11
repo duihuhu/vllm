@@ -24,7 +24,6 @@ class PlasmaClient:
         self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
     
     def create(self, object_id, length):
-        print("create plasma object")
         obj = self.plasma_client_.create(object_id, length)
         return obj
 
@@ -219,9 +218,9 @@ class CacheEngine:
                     src_key_cache, src_value_cache = src[i]
                     dst_key_object = objects[i]
                     
-                    # print("create object: ", dst_key_object)
-                    # obj = self.client.create(dst_key_object, block_size_in_bytes)
-                    
+                    print("create object: ", dst_key_object)
+                    obj = self.client.create(dst_key_object, block_size_in_bytes)
+                    print(obj)
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
                     # self.client.create(object_id, object_size)
