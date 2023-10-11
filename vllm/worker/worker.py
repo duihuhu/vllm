@@ -281,7 +281,7 @@ class Worker:
     def swap_out_prefilled_cache(
         self,
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
-        blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, List[plasma_object.ObjectID]]],
+        blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, int]],
     )  -> None:
         print("blocks_to_object_swap_out: ", blocks_to_object_swap_out)
         if blocks_to_swap_out:

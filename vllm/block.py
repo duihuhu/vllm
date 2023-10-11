@@ -57,7 +57,7 @@ class PhysicalTokenBlock:
         block_number: int,
         block_size: int,
         # object_id: Optional[List[plasma_object.ObjectID]] = None,
-        num_layer_object: Optional[int]
+        num_layer_object: Optional[int] = None
     ) -> None:
         self.device = device
         self.block_number = block_number
