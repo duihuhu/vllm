@@ -212,7 +212,7 @@ class CacheEngine:
         #     memory_buffer[i] = i % 256
         object_swap_lists = []
         for i in range(self.num_layers):
-            obj_id = plasma.ObjectID.from_random()
+            obj_id = plasma_object.ObjectID.from_random()
             obj = self.client.create(obj_id, block_size_in_bytes)
             object_swap_lists.append(obj)
             
