@@ -23,6 +23,7 @@ void swap_blocks_to_object(
     int64_t src_block_number = pair.first;
     // int64_t dst_block_number = pair.second;
     void *dst_ptr = (void*)dst_address[i];
+    long long *l_dst_ptr = (long long*)dst_address[i];
     printf("cur i %d, dst address %p\n", i, dst_ptr);
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
@@ -39,7 +40,7 @@ void swap_blocks_to_object(
       stream);
   
     for (int j = 0; j < block_size_in_bytes; ++j) {
-      printf("%f", *(char(*)dst_ptr + j));
+      printf("%f", *(dst_ptr + j));
     }
     printf("\n");
 
