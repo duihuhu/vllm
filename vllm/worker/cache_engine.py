@@ -213,22 +213,20 @@ class CacheEngine:
             layer_object_swap_lists.append(object_swap_lists)
             layer_object_address_lists.append(object_address_lists)
         
-        for key, value in src_to_dst.items():
-            # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
-            with torch.cuda.stream(self.cache_stream):
-                for i in range(self.num_layers):
-                    src_key_cache, src_value_cache = src[i]
-                    # dst_key_object = object_swap_lists[i]
-                    cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
-                    
-                    # print("create object: ", dst_key_object)
-                    # obj = self.client.create(dst_key_object, block_size_in_bytes)
-                    
-                    # print("layer = ", i, " block = ", key, " key ")
-                    # print("i, gpu block, object id ", i, key, object_id)
-                    # self.client.create(object_id, object_size)
-                    # memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
-                    # print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
+        with torch.cuda.stream(self.cache_stream):
+            for i in range(self.num_layers):
+                src_key_cache, src_value_cache = src[i]
+                # dst_key_object = object_swap_lists[i]
+                cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
+                
+                # print("create object: ", dst_key_object)
+                # obj = self.client.create(dst_key_object, block_size_in_bytes)
+                
+                # print("layer = ", i, " block = ", key, " key ")
+                # print("i, gpu block, object id ", i, key, object_id)
+                # self.client.create(object_id, object_size)
+                # memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
+                # print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
 
         return
     
