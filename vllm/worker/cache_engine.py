@@ -26,6 +26,7 @@ class PlasmaClient:
         
     def create(self, object_id, length):
         print("lists object ", self.plasma_client_.list())
+        print("cur object: ", object_id)
         obj = self.plasma_client_.create(object_id, length)
         return obj
 
