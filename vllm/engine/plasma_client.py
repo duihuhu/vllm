@@ -4,7 +4,7 @@ class PlasmaClient:
     def __init__(self, plasma_store_socket_name) -> None:
         self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
     
-    def allocate_object_id():
+    def allocate_object_id(self):
         obj_id = plasma_object.ObjectID.from_random()
         return obj_id
     
