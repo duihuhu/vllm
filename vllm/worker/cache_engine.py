@@ -211,6 +211,18 @@ class CacheEngine:
                 object_address_lists.append(obj.address)
             layer_object_swap_lists.append(object_swap_lists)
             layer_object_address_lists.append(object_address_lists)
+
+        for i in range(1):
+            src_key_cache, src_value_cache = src[i]
+            dst_key_cache = layer_object_address_lists[i]
+            j = 0
+            for key, value in src_to_dst.items():
+                # print(src_key_cache[key])
+                memory_buffer = np.frombuffer(object_swap_lists[j])
+                j = j + 1
+                for k in range(0, 10):
+                    print(memory_buffer[k])
+                print("\n\n")
         
         with torch.cuda.stream(self.cache_stream):
             for i in range(self.num_layers):
@@ -226,17 +238,20 @@ class CacheEngine:
                 # self.client.create(object_id, object_size)
                 # memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
                 # print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
-        for i in range(1):
-            src_key_cache, src_value_cache = src[i]
-            dst_key_cache = layer_object_address_lists[i]
-            j = 0
-            for key, value in src_to_dst.items():
-                print(src_key_cache[key])
-                memory_buffer = np.frombuffer(object_swap_lists[j])
-                j = j + 1
-                for k in range(block_size_in_bytes):
-                    print(memory_buffer[k])
-                print("\n\n")
+
+
+
+        # for i in range(1):
+        #     src_key_cache, src_value_cache = src[i]
+        #     dst_key_cache = layer_object_address_lists[i]
+        #     j = 0
+        #     for key, value in src_to_dst.items():
+        #         # print(src_key_cache[key])
+        #         memory_buffer = np.frombuffer(object_swap_lists[j])
+        #         for k in range(0, 10):
+        #             print(memory_buffer[k])
+        #         print("\n\n")
+        #         j = j + 1
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
