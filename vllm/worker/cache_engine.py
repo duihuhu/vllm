@@ -25,7 +25,6 @@ class PlasmaClient:
     
     def create(self, object_id, length):
         obj = self.plasma_client_.create(object_id, length)
-        print("create object: ", obj, " object type: ", type(obj) )
         return obj
 
 class CacheEngine:
@@ -219,8 +218,10 @@ class CacheEngine:
                     src_key_cache, src_value_cache = src[i]
                     dst_key_object = objects[i]
                     
-                    self.client.create(dst_key_object, block_size_in_bytes)
-                    # print("buffer: ", memory_buffer, " type buffer ", type(memory_buffer))
+                    obj = self.client.create(dst_key_object, block_size_in_bytes)
+                    memory_buffer = np.frombuffer(obj)
+                    print("object: ", obj, "object address: ", obj.address , "buffer: ", memory_buffer, " address ", id(memory_buffer))
+                    
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
                     # self.client.create(object_id, object_size)
