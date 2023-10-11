@@ -88,6 +88,7 @@ class LLMEngine:
         self.workers: List[Worker] = []
         assert len(stage_devices) == 1, "Only support one stage for now."
         for rank, node_resource, _ in stage_devices[0]:
+            print(rank, node_resource, _)
             worker_cls = Worker
             if self.parallel_config.worker_use_ray:
                 worker_cls = ray.remote(
