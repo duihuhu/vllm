@@ -1,6 +1,6 @@
 #include <torch/extension.h>
 #include <ATen/cuda/CUDAContext.h>
-#include <torch/torch.h> 
+
 #include <algorithm>
 #include <cassert>
 #include <map>
@@ -13,7 +13,7 @@ void swap_blocks_to_object(
   const std::map<int64_t, int64_t>& block_mapping
 ) {
   // 获取张量的数据类型
-  torch::ScalarType dtype = src.dtype();
+  torch::TypeMeta dtype = src.dtype();
   std::cout << "数据类型: " << dtype << std::endl;
 
   cudaMemcpyKind memcpy_type;
