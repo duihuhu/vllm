@@ -43,8 +43,7 @@ class Worker:
                                       distributed_init_method)
 
         # Initialize the model.
-        # set_random_seed(self.model_config.seed)
-        set_random_seed(self.device_id)
+        set_random_seed(self.model_config.seed)
         
         self.model = get_model(model_config)
         initialize_all_reduce_launcher(
