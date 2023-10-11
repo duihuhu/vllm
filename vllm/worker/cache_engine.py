@@ -11,7 +11,7 @@ from vllm.utils import in_wsl
 
 from vllm import mem_ops
 import numpy as np
-from vllm.engine.llm_engine import PlasmaClient
+from vllm.engine.plasma_client import PlasmaClient
 # import ctypes
 
 logger = init_logger(__name__)

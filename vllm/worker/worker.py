@@ -13,7 +13,7 @@ from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, 
 from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
 # import pyarrow._plasma as plasma_object
-from vllm.engine.llm_engine import PlasmaClient
+from vllm.engine.plasma_client import PlasmaClient
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -38,6 +38,7 @@ class Worker:
         self.scheduler_config = scheduler_config
         self.rank = rank
         self.distributed_init_method = distributed_init_method
+        self.plasma_client = plasma_client
         self.device_id = device_id
         
         # Initialize the distributed environment.
