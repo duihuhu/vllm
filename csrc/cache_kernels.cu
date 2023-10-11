@@ -29,7 +29,7 @@ void swap_blocks_to_object(
   printf("start Tensor Data:\n");
   for (int i = 0; i < block_size_in_bytes; i++) {
       // printf("%f ", __half2float(f_src_ptr[i]));
-      cout<<f_src_ptr[i];
+      std::cout<<f_src_ptr[i];
   }
   printf("end Tensor Data:\n");
   // printf("block size in bytes %lld\n", block_size_in_bytes);
