@@ -163,7 +163,7 @@ def main(args: argparse.Namespace):
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
     requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
-
+    print("aaaaa")
     if args.backend == "vllm":
         elapsed_time = run_vllm(
             requests, args.model, args.tokenizer, args.tensor_parallel_size,
