@@ -38,7 +38,6 @@ class Worker:
         self.scheduler_config = scheduler_config
         self.rank = rank
         self.distributed_init_method = distributed_init_method
-        self.plasma_client = plasma_client
         self.device_id = device_id
         
         # Initialize the distributed environment.
@@ -133,7 +132,7 @@ class Worker:
         self.cache_config = cache_config
         self.block_size = cache_config.block_size
         self.cache_engine = CacheEngine(self.cache_config, self.model_config,
-                                        self.parallel_config, self.plasma_client)
+                                        self.parallel_config)
         self.cache_events = self.cache_engine.events
         self.gpu_cache = self.cache_engine.gpu_cache
 

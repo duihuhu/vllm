@@ -11,7 +11,7 @@ from vllm.utils import in_wsl
 
 from vllm import mem_ops
 import numpy as np
-from vllm.engine.plasma_client import PlasmaClient
+from vllm.engine.plasma_client import plasma_client
 # import ctypes
 
 logger = init_logger(__name__)
@@ -31,7 +31,6 @@ class CacheEngine:
         cache_config: CacheConfig,
         model_config: ModelConfig,
         parallel_config: ParallelConfig,
-        plasma_client: PlasmaClient
     ) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
@@ -51,9 +50,7 @@ class CacheEngine:
         self.cpu_cache = self.allocate_cpu_cache()
 
         self.object_cache = self.allocate_object_cache()
-        
-        self.client = plasma_client
-        
+                
         self.cache_stream = torch.cuda.Stream()
         assert self.cache_stream != torch.cuda.current_stream()
         # Initialize the events for stream synchronization.
@@ -204,9 +201,9 @@ class CacheEngine:
         #     memory_buffer[i] = i % 256
         object_swap_lists = []
         for i in range(self.num_layers):
-            obj_id = self.client.allocate_object_id()
+            obj_id = plasma_client.allocate_object_id()
             print("object id: ", obj_id)
-            obj = self.client.create(obj_id, block_size_in_bytes)
+            obj = plasma_client.create(obj_id, block_size_in_bytes)
             object_swap_lists.append(obj)
             
         for key, value in src_to_dst.items():

@@ -11,3 +11,5 @@ class PlasmaClient:
     def create(self, object_id, length):
         obj = self.plasma_client_.create(object_id, length)
         return obj
+  
+plasma_client = PlasmaClient("/tmp/plasma_store")
