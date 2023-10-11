@@ -6,28 +6,29 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <cuda_fp16.h>
 
 void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,
   const std::map<int64_t, int64_t>& block_mapping
 ) {
-  // 获取张量的数据类型
-    torch::ScalarType dtype = src.scalar_type();
+// 获取张量的数据类型
+  torch::ScalarType dtype = src.scalar_type();
 
-    // 打印数据类型
-    std::cout << "数据类型: " << torch::toString(dtype) << std::endl;
+  // 打印数据类型
+  std::cout << "数据类型: " << torch::toString(dtype) << std::endl;
 
   cudaMemcpyKind memcpy_type;
   memcpy_type = cudaMemcpyDeviceToHost;
   void *src_ptr = src.data_ptr();
   printf("before convert Tensor Data:\n");
-  float *f_src_ptr = src.data_ptr<float>();
+  half *f_src_ptr = src.data_ptr<half>();
   int i = 0;
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   printf("start Tensor Data:\n");
   for (int i = 0; i < block_size_in_bytes; i++) {
-      printf("%f ", f_src_ptr[i]);
+      printf("%f ", __half2float(f_src_ptr[i]));
   }
   printf("end Tensor Data:\n");
   // printf("block size in bytes %lld\n", block_size_in_bytes);
