@@ -115,7 +115,7 @@ class LLMEngine:
                 scheduler_config,
                 rank,
                 distributed_init_method,
-                plasma_client = self.plasma_client
+                plasma_client = self.plasma_client,
                 device_id=_
             )
             self.workers.append(worker)
