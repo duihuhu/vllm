@@ -14,6 +14,7 @@ void swap_blocks_to_object(
   cudaMemcpyKind memcpy_type;
   memcpy_type = cudaMemcpyDeviceToHost;
   void *src_ptr = src.data_ptr();
+  printf("before convert Tensor Data:\n");
   float *f_src_ptr = src.data_ptr<float>();
   int i = 0;
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
