@@ -219,7 +219,7 @@ class CacheEngine:
                 for i in range(self.num_layers):
                     src_key_cache, src_value_cache = src[i]
                     # dst_key_object = object_swap_lists[i]
-                    cache_ops.swap_blocks_to_object(src_key_cache, object_address_lists[i], src_to_dst)
+                    cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
                     
                     # print("create object: ", dst_key_object)
                     # obj = self.client.create(dst_key_object, block_size_in_bytes)
