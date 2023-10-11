@@ -8,24 +8,15 @@ from vllm import cache_ops
 from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl
-import pyarrow._plasma as plasma_object
-import pyarrow.plasma as plasma
 
 from vllm import mem_ops
 import numpy as np
+from vllm.engine.llm_engine import PlasmaClient
 # import ctypes
 
 logger = init_logger(__name__)
 
 KVCache = Tuple[torch.Tensor, torch.Tensor]
-
-class PlasmaClient:
-    def __init__(self, plasma_store_socket_name) -> None:
-        self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
-        
-    def create(self, object_id, length):
-        obj = self.plasma_client_.create(object_id, length)
-        return obj
 
 class CacheEngine:
     """Manages the KV cache.
@@ -40,6 +31,7 @@ class CacheEngine:
         cache_config: CacheConfig,
         model_config: ModelConfig,
         parallel_config: ParallelConfig,
+        plasma_client: PlasmaClient
     ) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
@@ -60,7 +52,7 @@ class CacheEngine:
 
         self.object_cache = self.allocate_object_cache()
         
-        self.client = PlasmaClient("/tmp/plasma_store")
+        self.client = plasma_client
         
         self.cache_stream = torch.cuda.Stream()
         assert self.cache_stream != torch.cuda.current_stream()
@@ -212,7 +204,7 @@ class CacheEngine:
         #     memory_buffer[i] = i % 256
         object_swap_lists = []
         for i in range(self.num_layers):
-            obj_id = plasma_object.ObjectID.from_random()
+            obj_id = self.client.allocate_object_id()
             print("object id: ", obj_id)
             obj = self.client.create(obj_id, block_size_in_bytes)
             object_swap_lists.append(obj)

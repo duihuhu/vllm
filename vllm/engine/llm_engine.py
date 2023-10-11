@@ -14,8 +14,21 @@ from vllm.transformers_utils.tokenizer import (detokenize_incrementally,
                                                get_tokenizer)
 from vllm.utils import Counter
 from vllm.worker.worker import Worker
+import pyarrow._plasma as plasma_object
 
 logger = init_logger(__name__)
+
+class PlasmaClient:
+    def __init__(self, plasma_store_socket_name) -> None:
+        self.plasma_client_ = plasma_object.connect(plasma_store_socket_name)
+    
+    def allocate_object_id():
+        obj_id = plasma_object.ObjectID.from_random()
+        return obj_id
+    
+    def create(self, object_id, length):
+        obj = self.plasma_client_.create(object_id, length)
+        return obj
 
 
 class LLMEngine:
@@ -83,7 +96,7 @@ class LLMEngine:
             tokenizer_mode=model_config.tokenizer_mode,
             trust_remote_code=model_config.trust_remote_code)
         self.seq_counter = Counter()
-
+        self.plasma_client = PlasmaClient()
         # Create the parallel GPU workers.
         self.workers: List[Worker] = []
         assert len(stage_devices) == 1, "Only support one stage for now."
@@ -102,6 +115,7 @@ class LLMEngine:
                 scheduler_config,
                 rank,
                 distributed_init_method,
+                plasma_client = self.plasma_client
                 device_id=_
             )
             self.workers.append(worker)
