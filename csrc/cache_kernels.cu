@@ -14,7 +14,7 @@ void swap_blocks_to_object(
   cudaMemcpyKind memcpy_type;
   memcpy_type = cudaMemcpyDeviceToHost;
   void *src_ptr = src.data_ptr();
-  float *f_src_ptr = src.data_ptr();
+  float *f_src_ptr = (float*)src.data_ptr();
   int i = 0;
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   // printf("block size in bytes %lld\n", block_size_in_bytes);
