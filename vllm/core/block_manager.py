@@ -7,6 +7,7 @@ from vllm.utils import Device
 import pyarrow.plasma as plasma
 import pyarrow._plasma as plasma_object
 
+
 from vllm.config import ModelConfig, ParallelConfig
 import numpy as np
 class BlockAllocator:
@@ -76,6 +77,8 @@ class PlasmaAllocator:
                     object_id = [])
         for i in range(self.num_layers):
             object_id = plasma.ObjectID(np.random.bytes(20))
+            object_ids = plasma.ObjectID().from_random()
+            print("object_ids ", object_ids)
             block.object_id.append(object_id)
         return block
     ##todo 

@@ -219,8 +219,7 @@ class CacheEngine:
                     dst_key_object = objects[i]
                     
                     obj = self.client.create(dst_key_object, block_size_in_bytes)
-                    memory_buffer = np.frombuffer(obj)
-                    print("object: ", obj, "object address: ", obj.address , "buffer: ", memory_buffer, " address ", id(memory_buffer))
+                    print("object: ", obj, "object address: ", obj.address)
                     
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
