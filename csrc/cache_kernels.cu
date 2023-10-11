@@ -30,7 +30,7 @@ void swap_blocks(
   void *dst_ptr = dst.data_ptr();
 
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
-  printf("block size in bytes %lld\n", block_size_in_bytes);
+  // printf("block size in bytes %lld\n", block_size_in_bytes);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
   // NOTE(woosuk): This can be slow if the number of blocks is large.
   for (const auto& pair : block_mapping) {

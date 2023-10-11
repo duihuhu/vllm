@@ -24,9 +24,9 @@ class PlasmaClient:
         self.plasma_client_ = plasma.connect(plasma_store_socket_name)
     
     def create(self, object_id, length):
-        objects = self.plasma_client_.create(object_id, length)
-        print(objects)
-        return objects
+        obj = self.plasma_client_.create(object_id, length)
+        print("create object: ", obj, " object type: ", type(obj) )
+        return obj
 
 class CacheEngine:
     """Manages the KV cache.
@@ -200,9 +200,9 @@ class CacheEngine:
         src: List[KVCache],
         src_to_dst: Dict[int, List[plasma_object.ObjectID]]) -> None:
 
-        key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
-        value_block_size_in_bytes =  src[0][1].element_size() * src[0][1][0].numel()
-        print("key value block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
+        block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
+        # value_block_size_in_bytes =  src[0][1].element_size() * src[0][1][0].numel()
+        # print("key value block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
         
         # # Create a new buffer and write to it.
         # length = 50
@@ -218,6 +218,9 @@ class CacheEngine:
                 for i in range(self.num_layers):
                     src_key_cache, src_value_cache = src[i]
                     dst_key_object = objects[i]
+                    
+                    self.client.create(dst_key_object, block_size_in_bytes)
+                    # print("buffer: ", memory_buffer, " type buffer ", type(memory_buffer))
                     # print("layer = ", i, " block = ", key, " key ")
                     # print("i, gpu block, object id ", i, key, object_id)
                     # self.client.create(object_id, object_size)
