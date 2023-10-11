@@ -13,7 +13,6 @@ from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, 
 from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
 # import pyarrow._plasma as plasma_object
-from vllm.engine.plasma_client import PlasmaClient
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -30,7 +29,6 @@ class Worker:
         scheduler_config: SchedulerConfig,
         rank: int,
         distributed_init_method: str,
-        plasma_client: PlasmaClient,
         device_id: int,
     ) -> None:
         self.model_config = model_config
