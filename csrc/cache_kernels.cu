@@ -39,7 +39,7 @@ void swap_blocks_to_object(
       stream);
   
     for (int j = 0; j < block_size_in_bytes; ++j) {
-      printf("%f", *(dst_ptr + j));
+      printf("%f", *(char(*)dst_ptr + j));
     }
     printf("\n");
 
