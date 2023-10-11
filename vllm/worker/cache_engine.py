@@ -27,7 +27,7 @@ class PlasmaClient:
         obj = self.plasma_client_.create(object_id, length)
         return obj
 
-class CacheEngine:
+class :
     """Manages the KV cache.
 
     This class is responsible for initializing and managing the GPU and CPU KV
@@ -213,7 +213,8 @@ class CacheEngine:
         object_swap_lists = []
         for i in range(self.num_layers):
             obj_id = plasma.ObjectID.from_random()
-            obj = self.client.create(obj_id, block_size_in_bytes * 2)
+            print("obj_id: ", obj_id)
+            obj = self.client.create(obj_id, block_size_in_bytes)
             object_swap_lists.append(obj)
             
         for key, value in src_to_dst.items():
