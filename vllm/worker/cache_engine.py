@@ -204,7 +204,7 @@ class CacheEngine:
         for i in range(self.num_layers):
             obj_id = plasma_client.allocate_object_id()
             obj = plasma_client.create(obj_id, block_size_in_bytes)
-            print("object address: ", obj.address)
+            print("object address: ", hex(obj.address))
             object_swap_lists.append(obj)
             object_address_lists.append(obj.address)
         
