@@ -199,14 +199,19 @@ class CacheEngine:
         #                               dtype="uint8")
         # for i in range(length):
         #     memory_buffer[i] = i % 256
-        object_swap_lists = []
-        object_address_lists = []
+        layer_object_swap_lists = []
+        layer_object_address_lists = []
         for i in range(self.num_layers):
-            obj_id = plasma_client.allocate_object_id()
-            obj = plasma_client.create(obj_id, block_size_in_bytes)
-            print("object address: ", hex(obj.address))
-            object_swap_lists.append(obj)
-            object_address_lists.append(obj.address)
+            object_swap_lists = []
+            object_address_lists = []
+            for key, value in src_to_dst.items():
+                obj_id = plasma_client.allocate_object_id()
+                obj = plasma_client.create(obj_id, block_size_in_bytes)
+                print("object address: ", hex(obj.address))
+                object_swap_lists.append(obj)
+                object_address_lists.append(obj.address)
+            layer_object_swap_lists.append(object_swap_lists)
+            layer_object_address_lists.append(object_address_lists)
         
         for key, value in src_to_dst.items():
             # memory_buffer = np.frombuffer(self.plasma_client.get_buffers(object_id))
@@ -214,7 +219,7 @@ class CacheEngine:
                 for i in range(self.num_layers):
                     src_key_cache, src_value_cache = src[i]
                     # dst_key_object = object_swap_lists[i]
-                    cache_ops.swap_blocks_to_object(src_key_cache, object_address_lists, src_to_dst)
+                    cache_ops.swap_blocks_to_object(src_key_cache, object_address_lists[i], src_to_dst)
                     
                     # print("create object: ", dst_key_object)
                     # obj = self.client.create(dst_key_object, block_size_in_bytes)
