@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cuda_fp16.h>
 
+// swap kv cahe to plasma object address
 void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,
@@ -25,9 +26,6 @@ void swap_blocks_to_object(
 
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
 
-  // at::Half *t_dest = (at::Half*) malloc(block_size_in_bytes);
-  // memset(t_dest, 0, block_size_in_bytes);
-
   int i = 0;
   // printf("block size in bytes %lld\n", block_size_in_bytes);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
@@ -39,33 +37,21 @@ void swap_blocks_to_object(
     at::Half *f_dst_ptr = (at::Half*)dst_address[i];
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
-    cudaMemcpy(
+    cudaMemcpyAsync(
       dst_ptr,
       src_ptr + src_offset,
       block_size_in_bytes,
-      memcpy_type
-      );
-    // cudaMemcpyAsync(
-    //   t_dest,
-    //   src_ptr + src_offset,
-    //   block_size_in_bytes,
-    //   memcpy_type,
-    //   stream);
-
-    // printf("t_dest\n");
+      memcpy_type,
+      stream);
+    // for compared swap data with original data
+    // printf("src_block_number %lld, object\n",src_block_number);
     // for (int j = 0; j < 10; j++) {
-    //   std::cout<<t_dest[j]<<" ";
+    //   std::cout<<f_dst_ptr[j]<<" ";
     // }
     // printf("\n");
-    printf("src_block_number %lld, object\n",src_block_number);
-    for (int j = 0; j < 10; j++) {
-      std::cout<<f_dst_ptr[j]<<" ";
-    }
-    printf("\n");
     // printf("end compared\n");
     i = i + 1;
   }
-  // free(t_dest);
 }
 
 
@@ -101,20 +87,20 @@ void swap_blocks(
     int64_t dst_block_number = pair.second;
     int64_t src_offset = src_block_number * block_size_in_bytes;
     int64_t dst_offset = dst_block_number * block_size_in_bytes;
-    cudaMemcpy(
+    cudaMemcpyAsync(
       dst_ptr + dst_offset,
       src_ptr + src_offset,
       block_size_in_bytes,
-      memcpy_type
-      );
+      memcpy_type,
+      stream);
 
-    at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
-
-    printf("src_block_number %lld, swap_blocks f_dst_ptr\n", src_block_number);
-    for (int j = 0; j < 10; j++) {
-      std::cout<<f_dst_ptr[j]<<" ";
-    }
-    printf("\n");
+    // for compared swap data with original data
+    // at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
+    // printf("src_block_number %lld, swap_blocks f_dst_ptr\n", src_block_number);
+    // for (int j = 0; j < 10; j++) {
+    //   std::cout<<f_dst_ptr[j]<<" ";
+    // }
+    // printf("\n");
 
   }
 

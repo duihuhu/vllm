@@ -198,6 +198,7 @@ class CacheEngine:
             for key, value in src_to_dst.items():
                 obj_id = plasma_client.allocate_object_id()
                 obj = plasma_client.create(obj_id, block_size_in_bytes)
+                print("object: ", obj)
                 object_swap_lists.append(obj)
                 object_address_lists.append(obj.address)
             layer_object_swap_lists.append(object_swap_lists)
@@ -210,6 +211,9 @@ class CacheEngine:
                 # dst_key_object = object_swap_lists[i]
                 cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
                 
+        for object_swap_lists in layer_object_swap_lists:
+            for obj in object_swap_lists:
+                plasma_client.seal(obj.object_id)
                 # print("create object: ", dst_key_object)
                 # obj = self.client.create(dst_key_object, block_size_in_bytes)
                 
