@@ -31,9 +31,6 @@ void swap_blocks_to_object(
   memset(t_dest, 0, block_size_in_bytes);
   printf("start Tensor Data:\n");
 
-  // for (int i = 0; i < block_size_in_bytes; i++) {
-  //     std::cout<<f_src_ptr[i];
-  // }
   int i = 0;
   printf("end Tensor Data:\n");
   // printf("block size in bytes %lld\n", block_size_in_bytes);
@@ -56,9 +53,13 @@ void swap_blocks_to_object(
       block_size_in_bytes,
       memcpy_type);
       
-    for (int j = 0; j < block_size_in_bytes; j++) {
+    for (int j = 0; j < 10; j++) {
       std::cout<<t_dest[j];
     }
+    for (int j = 0; j < 10; j++) {
+      std::cout<<dst_ptr[i];
+    }
+    print("\n\n")
     i = i + 1;
   }
   free(t_dest);
