@@ -159,7 +159,7 @@ class LLM:
                     # if use_tqdm:
                     #     pbar.update(1)
         end_time = time.time()
-        print(end_time, " prefill ")
+        print(end_time, " end prefill ")
         time.sleep(5)
         #swap kv cache in decode progress (use this function or covert_prefilled_to_running)
         # self.llm_engine.convert_prefilled_to_swapped()

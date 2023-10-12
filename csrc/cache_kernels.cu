@@ -14,16 +14,14 @@ void swap_blocks_to_object(
   const std::map<int64_t, int64_t>& block_mapping
 ) {
   // 获取张量的数据类型
-  torch::ScalarType dtype = src.scalar_type();
+  // torch::ScalarType dtype = src.scalar_type();
 
-  // 打印数据类型
-  std::cout << "数据类型: " << torch::toString(dtype) << std::endl;
+  // // 打印数据类型
+  // std::cout << "数据类型: " << torch::toString(dtype) << std::endl;
 
   cudaMemcpyKind memcpy_type;
   memcpy_type = cudaMemcpyDeviceToHost;
   void *src_ptr = src.data_ptr();
-  printf("before convert Tensor Data:\n");
-  at::Half *f_src_ptr = src.data_ptr<at::Half>();
 
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
 
@@ -109,7 +107,6 @@ void swap_blocks(
       block_size_in_bytes,
       memcpy_type,
       stream);
-
 
     at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
 
