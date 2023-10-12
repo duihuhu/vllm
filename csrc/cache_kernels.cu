@@ -45,12 +45,14 @@ void swap_blocks_to_object(
       dst_ptr,
       src_ptr + src_offset,
       block_size_in_bytes,
-      memcpy_type);
+      memcpy_type,
+      stream);
     cudaMemcpyAsync(
       t_dest,
       src_ptr + src_offset,
       block_size_in_bytes,
-      memcpy_type);
+      memcpy_type,
+      stream);
     printf("t_dest\n");
     for (int j = 0; j < 10; j++) {
       std::cout<<t_dest[j]<<" ";
