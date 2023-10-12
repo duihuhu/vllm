@@ -201,7 +201,7 @@ class CacheEngine:
                 obj = plasma_client.create(obj_id, block_size_in_bytes)
                 object_swap_lists.append(obj)
                 object_address_lists.append(obj.address)
-                buf2obj[obj] = obj_id
+                buf2obj[obj.address] = obj_id
             layer_object_swap_lists.append(object_swap_lists)
             layer_object_address_lists.append(object_address_lists)
             
@@ -213,7 +213,7 @@ class CacheEngine:
                 cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
                 
         for object_swap_lists in layer_object_swap_lists:
-            for obj in object_swap_lists:
+            for obj in object_address_lists:
                 plasma_client.seal(buf2obj[obj])
                 # print("create object: ", dst_key_object)
                 # obj = self.client.create(dst_key_object, block_size_in_bytes)
