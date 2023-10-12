@@ -53,14 +53,16 @@ void swap_blocks_to_object(
       src_ptr + src_offset,
       block_size_in_bytes,
       memcpy_type);
-    printf("compared\n");
+    printf("t_dest\n");
     for (int j = 0; j < 10; j++) {
       std::cout<<t_dest[j];
     }
     printf("\n");
+    printf("f_dst_ptr\n");
     for (int j = 0; j < 10; j++) {
       std::cout<<f_dst_ptr[j];
     }
+    printf("\n");
     printf("end compared\n");
     i = i + 1;
   }
