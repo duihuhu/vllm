@@ -27,7 +27,6 @@ void swap_blocks_to_object(
   int i = 0;
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   printf("start Tensor Data:\n");
-  std::cout<<f_src_ptr[0];
 
   // for (int i = 0; i < block_size_in_bytes; i++) {
   //     std::cout<<f_src_ptr[i];

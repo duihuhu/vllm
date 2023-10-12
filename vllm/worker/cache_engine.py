@@ -189,16 +189,7 @@ class CacheEngine:
         src_to_dst: Dict[int, int]) -> None:
 
         block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
-        # value_block_size_in_bytes =  src[0][1].element_size() * src[0][1][0].numel()
-        # print("key value block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
-        
-        # # Create a new buffer and write to it.
-        # length = 50
-        # memory_buffer = np.frombuffer(self.plasma_client.create(object_id,
-        #                                                         length),
-        #                               dtype="uint8")
-        # for i in range(length):
-        #     memory_buffer[i] = i % 256
+
         layer_object_swap_lists = []
         layer_object_address_lists = []
         for i in range(self.num_layers):
@@ -208,7 +199,9 @@ class CacheEngine:
                 obj_id = plasma_client.allocate_object_id()
                 obj = plasma_client.create(obj_id, block_size_in_bytes)
                 object_swap_lists.append(obj)
+                mem_address = memoryview(obj)
                 object_address_lists.append(obj.address)
+                print("address: ", mem_address, obj.address)
             layer_object_swap_lists.append(object_swap_lists)
             layer_object_address_lists.append(object_address_lists)
             
