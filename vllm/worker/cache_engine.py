@@ -192,32 +192,32 @@ class CacheEngine:
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
         print("block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
         ##allocate key, value to objects and com by layer
-        layer_object_swap_lists = []
-        layer_object_address_lists = []
-        buf2obj = {}
+        key_layer_object_swap_lists = []
+        key_layer_object_address_lists = []
+        key_buf2obj = {}
         for i in range(self.num_layers):
-            object_swap_lists = []
-            object_address_lists = []
+            key_object_swap_lists = []
+            key_object_address_lists = []
             for key, value in src_to_dst.items():
                 obj_id = plasma_client.allocate_object_id()
                 obj = plasma_client.create(obj_id, key_block_size_in_bytes)
-                object_swap_lists.append(obj)
-                object_address_lists.append(obj.address)
-                buf2obj[obj.address] = obj_id
-            layer_object_swap_lists.append(object_swap_lists)
-            layer_object_address_lists.append(object_address_lists)
+                key_object_swap_lists.append(obj)
+                key_object_address_lists.append(obj.address)
+                key_buf2obj[obj.address] = obj_id
+            key_layer_object_swap_lists.append(key_object_swap_lists)
+            key_layer_object_address_lists.append(key_object_address_lists)
             
 
         with torch.cuda.stream(self.cache_stream):
             for i in range(self.num_layers):
                 src_key_cache, src_value_cache = src[i]
                 # dst_key_object = object_swap_lists[i]
-                cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
+                cache_ops.swap_blocks_to_object(src_key_cache, key_layer_object_address_lists[i], src_to_dst)
                 
         #seal object after swap data
-        for object_address_lists in layer_object_address_lists:
+        for object_address_lists in key_layer_object_address_lists:
             for addr in object_address_lists:
-                plasma_client.seal(buf2obj[addr])
+                plasma_client.seal(key_buf2obj[addr])
                 # buffer = plasma_client.get_buffers(buf2obj[addr])
     
                 # print("create object: ", dst_key_object)
