@@ -215,6 +215,9 @@ class CacheEngine:
         for object_address_lists in layer_object_address_lists:
             for addr in object_address_lists:
                 plasma_client.seal(buf2obj[addr])
+                buffer = plasma_client.get_buffers(buf2obj[addr])
+                print("buffer: ", buffer)
+    
                 # print("create object: ", dst_key_object)
                 # obj = self.client.create(dst_key_object, block_size_in_bytes)
                 
