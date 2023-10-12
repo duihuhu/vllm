@@ -43,7 +43,7 @@ void swap_blocks_to_object(
       dst_ptr,
       src_ptr + src_offset,
       block_size_in_bytes,
-      memcpy_type,
+      memcpy_type
       );
     // cudaMemcpyAsync(
     //   t_dest,
@@ -101,12 +101,12 @@ void swap_blocks(
     int64_t dst_block_number = pair.second;
     int64_t src_offset = src_block_number * block_size_in_bytes;
     int64_t dst_offset = dst_block_number * block_size_in_bytes;
-    cudaMemcpyAsync(
+    cudaMemcpy(
       dst_ptr + dst_offset,
       src_ptr + src_offset,
       block_size_in_bytes,
-      memcpy_type,
-      stream);
+      memcpy_type
+      );
 
     at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
 
