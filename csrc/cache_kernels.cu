@@ -40,6 +40,7 @@ void swap_blocks_to_object(
     int64_t src_block_number = pair.first;
     // int64_t dst_block_number = pair.second;
     void *dst_ptr = (void*)dst_address[i];
+    float *f_dst_ptr = (float*)dst_address[i];
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
     cudaMemcpy(
@@ -58,7 +59,7 @@ void swap_blocks_to_object(
     }
     printf("\n");
     for (int j = 0; j < 10; j++) {
-      std::cout<<(float*)dst_ptr[j];
+      std::cout<<(float*)f_dst_ptr[j];
     }
     printf("end compared\n");
     i = i + 1;
