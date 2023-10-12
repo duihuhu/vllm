@@ -93,7 +93,6 @@ void swap_blocks(
 
   void *src_ptr = src.data_ptr();
   void *dst_ptr = dst.data_ptr();
-  at::Half *f_dst_ptr = dst.data_ptr<at::Half>();
 
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   // printf("block size in bytes %lld\n", block_size_in_bytes);
@@ -110,10 +109,12 @@ void swap_blocks(
       block_size_in_bytes,
       memcpy_type,
       stream);
-    
+
+    at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
+
     printf("swap_blocks f_dst_ptr\n");
     for (int j = 0; j < 10; j++) {
-      std::cout<<(f_dst_ptr+dst_offset)[j]<<" ";
+      std::cout<<f_dst_ptr[j]<<" ";
     }
     printf("\n");
 
