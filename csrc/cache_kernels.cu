@@ -8,7 +8,7 @@
 #include <iostream>
 #include <cuda_fp16.h>
 
-// swap kv cahe to plasma object address
+// swap kv cahe to plasma object address, if ensure data pass, use cudaMemcpy instead of cudaMemcpyAsync or check stream status
 void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,

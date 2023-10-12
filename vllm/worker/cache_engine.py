@@ -188,8 +188,9 @@ class CacheEngine:
         src: List[KVCache],
         src_to_dst: Dict[int, int]) -> None:
 
-        block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
-        print("block size ", block_size_in_bytes)
+        key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
+        value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
+        print("block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
         ##allocate key, value to objects and com by layer
         layer_object_swap_lists = []
         layer_object_address_lists = []
@@ -199,7 +200,7 @@ class CacheEngine:
             object_address_lists = []
             for key, value in src_to_dst.items():
                 obj_id = plasma_client.allocate_object_id()
-                obj = plasma_client.create(obj_id, block_size_in_bytes)
+                obj = plasma_client.create(obj_id, key_block_size_in_bytes)
                 object_swap_lists.append(obj)
                 object_address_lists.append(obj.address)
                 buf2obj[obj.address] = obj_id
@@ -213,11 +214,11 @@ class CacheEngine:
                 # dst_key_object = object_swap_lists[i]
                 cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
                 
+        #seal object after swap data
         for object_address_lists in layer_object_address_lists:
             for addr in object_address_lists:
                 plasma_client.seal(buf2obj[addr])
-                buffer = plasma_client.get_buffers(buf2obj[addr])
-                print("buffer: ", buffer)
+                # buffer = plasma_client.get_buffers(buf2obj[addr])
     
                 # print("create object: ", dst_key_object)
                 # obj = self.client.create(dst_key_object, block_size_in_bytes)
