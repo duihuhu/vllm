@@ -67,7 +67,7 @@ void swap_blocks_to_object(
     // printf("end compared\n");
     i = i + 1;
   }
-  free(t_dest);
+  // free(t_dest);
 }
 
 
