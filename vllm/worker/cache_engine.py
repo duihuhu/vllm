@@ -190,8 +190,7 @@ class CacheEngine:
 
         key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
-        print("block size: ", key_block_size_in_bytes, value_block_size_in_bytes)
-        ##allocate key, value to objects and com by layer
+        ##allocate key, value to objects and com by layer, lack swap value
         key_layer_object_swap_lists = []
         key_layer_object_address_lists = []
         key_buf2obj = {}
