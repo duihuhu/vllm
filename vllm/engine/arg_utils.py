@@ -17,7 +17,7 @@ class EngineArgs:
     download_dir: Optional[str] = None
     use_np_weights: bool = False
     use_dummy_weights: bool = False
-    dtype: str = 'float'
+    dtype: str = 'auto'
     seed: int = 0
     worker_use_ray: bool = False
     pipeline_parallel_size: int = 1

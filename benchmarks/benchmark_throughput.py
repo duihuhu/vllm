@@ -73,6 +73,7 @@ def run_vllm(
         tokenizer=tokenizer,
         tensor_parallel_size=tensor_parallel_size,
         seed=seed,
+        dtype="float"
     )
 
     # Add the requests to the engine.
