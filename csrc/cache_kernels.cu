@@ -113,7 +113,7 @@ void swap_blocks(
     
     printf("swap_blocks f_dst_ptr\n");
     for (int j = 0; j < 10; j++) {
-      std::cout<<f_dst_ptr[j]<<" ";
+      std::cout<<(f_dst_ptr+dst_offset)[j]<<" ";
     }
     printf("\n");
 
