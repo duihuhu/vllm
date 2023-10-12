@@ -94,9 +94,6 @@ void swap_blocks(
   void *src_ptr = src.data_ptr();
   void *dst_ptr = dst.data_ptr();
 
-  at::Half *f_dst_ptr = dst.data_ptr<at::Half>();
-
-
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   // printf("block size in bytes %lld\n", block_size_in_bytes);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
@@ -113,7 +110,8 @@ void swap_blocks(
       memcpy_type,
       stream);
 
-    f_dst_ptr = f_dst_ptr + dst_offset;
+
+    at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
 
     printf("swap_blocks f_dst_ptr\n");
     for (int j = 0; j < 10; j++) {
