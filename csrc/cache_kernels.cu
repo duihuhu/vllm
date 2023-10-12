@@ -27,8 +27,8 @@ void swap_blocks_to_object(
 
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
 
-  at::Half *t_dest = (at::Half*) malloc(block_size_in_bytes);
-  memset(t_dest, 0, block_size_in_bytes);
+  // at::Half *t_dest = (at::Half*) malloc(block_size_in_bytes);
+  // memset(t_dest, 0, block_size_in_bytes);
 
   int i = 0;
   // printf("block size in bytes %lld\n", block_size_in_bytes);
@@ -47,24 +47,24 @@ void swap_blocks_to_object(
       block_size_in_bytes,
       memcpy_type,
       stream);
-    cudaMemcpyAsync(
-      t_dest,
-      src_ptr + src_offset,
-      block_size_in_bytes,
-      memcpy_type,
-      stream);
+    // cudaMemcpyAsync(
+    //   t_dest,
+    //   src_ptr + src_offset,
+    //   block_size_in_bytes,
+    //   memcpy_type,
+    //   stream);
 
-    printf("t_dest\n");
-    for (int j = 0; j < 10; j++) {
-      std::cout<<t_dest[j]<<" ";
-    }
-    printf("\n");
-    printf("f_dst_ptr\n");
+    // printf("t_dest\n");
+    // for (int j = 0; j < 10; j++) {
+    //   std::cout<<t_dest[j]<<" ";
+    // }
+    // printf("\n");
+    printf("object\n");
     for (int j = 0; j < 10; j++) {
       std::cout<<f_dst_ptr[j]<<" ";
     }
     printf("\n");
-    printf("end compared\n");
+    // printf("end compared\n");
     i = i + 1;
   }
   free(t_dest);
@@ -94,6 +94,9 @@ void swap_blocks(
   void *src_ptr = src.data_ptr();
   void *dst_ptr = dst.data_ptr();
 
+  at::Half *f_dst_ptr = dst.data_ptr<at::Half>();
+
+
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
   // printf("block size in bytes %lld\n", block_size_in_bytes);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
@@ -110,7 +113,7 @@ void swap_blocks(
       memcpy_type,
       stream);
 
-    at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
+    f_dst_ptr = f_dst_ptr + dst_offset;
 
     printf("swap_blocks f_dst_ptr\n");
     for (int j = 0; j < 10; j++) {
