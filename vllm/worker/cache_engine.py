@@ -189,7 +189,8 @@ class CacheEngine:
         src_to_dst: Dict[int, int]) -> None:
 
         block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
-
+        print("block size ", block_size_in_bytes)
+        ##allocate key, value to objects and com by layer
         layer_object_swap_lists = []
         layer_object_address_lists = []
         buf2obj = {}
