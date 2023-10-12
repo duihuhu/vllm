@@ -213,7 +213,7 @@ class CacheEngine:
                 # dst_key_object = object_swap_lists[i]
                 cache_ops.swap_blocks_to_object(src_key_cache, layer_object_address_lists[i], src_to_dst)
                 
-        for object_swap_lists in layer_object_swap_lists:
+        for object_address_lists in layer_object_address_lists:
             for addr in object_address_lists:
                 print("dict object info: ", addr, buf2obj[addr])
                 # print("create object: ", dst_key_object)
