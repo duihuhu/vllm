@@ -16,5 +16,5 @@ class PlasmaClient:
         self.plasma_client_.seal(object_id)
   
     def get_buffers(self, object_id):
-        return self.plasma_client_.get_buffers(object_id)
+        return self.plasma_client_.get_buffers([object_id])
 plasma_client = PlasmaClient("/tmp/plasma_store")
