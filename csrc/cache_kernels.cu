@@ -24,13 +24,16 @@ void swap_blocks_to_object(
   void *src_ptr = src.data_ptr();
   printf("before convert Tensor Data:\n");
   float *f_src_ptr = src.data_ptr<float>();
-  int i = 0;
+
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
+  float *t_dest = float* malloc(block_size_in_bytes);
+  memset(t_dest, 0, block_size_in_bytes)
   printf("start Tensor Data:\n");
 
   // for (int i = 0; i < block_size_in_bytes; i++) {
   //     std::cout<<f_src_ptr[i];
   // }
+  int i = 0;
   printf("end Tensor Data:\n");
   // printf("block size in bytes %lld\n", block_size_in_bytes);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
@@ -46,6 +49,15 @@ void swap_blocks_to_object(
       src_ptr + src_offset,
       block_size_in_bytes,
       memcpy_type);
+    cudaMemcpy(
+      t_dest,
+      src_ptr + src_offset,
+      block_size_in_bytes,
+      memcpy_type);
+      
+    for (int j = 0; j < block_size_in_bytes; j++) {
+      std::cout<<t_dest[j];
+    }
     i = i + 1;
   }
 }

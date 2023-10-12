@@ -199,9 +199,7 @@ class CacheEngine:
                 obj_id = plasma_client.allocate_object_id()
                 obj = plasma_client.create(obj_id, block_size_in_bytes)
                 object_swap_lists.append(obj)
-                mem_address = memoryview(obj)
                 object_address_lists.append(obj.address)
-                print("address: ", mem_address, obj.address)
             layer_object_swap_lists.append(object_swap_lists)
             layer_object_address_lists.append(object_address_lists)
             
