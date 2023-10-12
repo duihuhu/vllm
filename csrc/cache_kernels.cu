@@ -26,7 +26,8 @@ void swap_blocks_to_object(
   float *f_src_ptr = src.data_ptr<float>();
 
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
-  float *t_dest = float* malloc(block_size_in_bytes);
+
+  float *t_dest = (float*) malloc(block_size_in_bytes);
   memset(t_dest, 0, block_size_in_bytes);
   printf("start Tensor Data:\n");
 
