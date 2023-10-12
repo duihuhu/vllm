@@ -57,7 +57,7 @@ void swap_blocks_to_object(
       std::cout<<t_dest[j];
     }
     for (int j = 0; j < 10; j++) {
-      std::cout<<dst_ptr[i];
+      std::cout<<dst_ptr[j];
     }
     print("\n\n")
     i = i + 1;
