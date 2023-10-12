@@ -212,12 +212,7 @@ class CacheEngine:
             layer_object_swap_lists.append(object_swap_lists)
             layer_object_address_lists.append(object_address_lists)
             
-        import pyarrow as pa
-        for i in range(self.num_layers):
-            src_key_cache, src_value_cache = src[i]
-            for key, value in src_to_dst.items():
-                data_size = pa.ipc.get_tensor_size(src_key_cache[key])
-                print("tensor data size: ", data_size)
+
         with torch.cuda.stream(self.cache_stream):
             for i in range(self.num_layers):
                 src_key_cache, src_value_cache = src[i]
