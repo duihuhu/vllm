@@ -61,6 +61,7 @@ void swap_blocks_to_object(
     }
     i = i + 1;
   }
+  free(t_dest);
 }
 
 
