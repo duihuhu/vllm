@@ -13,7 +13,7 @@ void swap_blocks_to_object(
   std::vector<long long> &dst_address,
   const std::map<int64_t, int64_t>& block_mapping
 ) {
-// 获取张量的数据类型
+  // 获取张量的数据类型
   torch::ScalarType dtype = src.scalar_type();
 
   // 打印数据类型
@@ -29,10 +29,8 @@ void swap_blocks_to_object(
 
   float *t_dest = (float*) malloc(block_size_in_bytes);
   memset(t_dest, 0, block_size_in_bytes);
-  printf("start Tensor Data:\n");
 
   int i = 0;
-  printf("end Tensor Data:\n");
   // printf("block size in bytes %lld\n", block_size_in_bytes);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
   // NOTE(woosuk): This can be slow if the number of blocks is large.
@@ -55,12 +53,12 @@ void swap_blocks_to_object(
       memcpy_type);
     printf("t_dest\n");
     for (int j = 0; j < 10; j++) {
-      std::cout<<t_dest[j];
+      std::cout<<t_dest[j]<<" ";
     }
     printf("\n");
     printf("f_dst_ptr\n");
     for (int j = 0; j < 10; j++) {
-      std::cout<<f_dst_ptr[j];
+      std::cout<<f_dst_ptr[j]<<" ";
     }
     printf("\n");
     printf("end compared\n");
