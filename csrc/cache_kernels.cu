@@ -58,7 +58,7 @@ void swap_blocks_to_object(
     }
     printf("\n");
     for (int j = 0; j < 10; j++) {
-      std::cout<<dst_ptr[j];
+      std::cout<<(float*)dst_ptr[j];
     }
     printf("end compared\n");
     i = i + 1;
