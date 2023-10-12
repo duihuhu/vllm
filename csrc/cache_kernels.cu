@@ -57,7 +57,7 @@ void swap_blocks_to_object(
     //   std::cout<<t_dest[j]<<" ";
     // }
     // printf("\n");
-    printf("object\n");
+    printf("src_block_number %lld, object\n",src_block_number);
     for (int j = 0; j < 10; j++) {
       std::cout<<f_dst_ptr[j]<<" ";
     }
@@ -110,7 +110,7 @@ void swap_blocks(
 
     at::Half *f_dst_ptr = (at::Half *)(dst_ptr + dst_offset);
 
-    printf("swap_blocks f_dst_ptr\n");
+    printf("src_block_number %lld, swap_blocks f_dst_ptr\n", src_block_number);
     for (int j = 0; j < 10; j++) {
       std::cout<<f_dst_ptr[j]<<" ";
     }
