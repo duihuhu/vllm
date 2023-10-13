@@ -16,6 +16,7 @@ from vllm.utils import get_gpu_memory
 #
 from vllm.worker.client import ObjectClient
 from vllm.worker.object_info import ObjectId
+import pyarrow._plasma as plasma_object
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
