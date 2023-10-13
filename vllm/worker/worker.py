@@ -17,7 +17,8 @@ from vllm.utils import get_gpu_memory
 from vllm.worker.client import ObjectClient
 from vllm.worker.object_info import ObjectId
 import pyarrow._plasma as plasma_object
-
+import sys
+sys.path.append("/Users/gaofz/Desktop/胡cunchen/Phd/LLM/vllm/vllm/worker/object_info.py")
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
 
