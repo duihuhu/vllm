@@ -15,8 +15,7 @@ from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
 #
 from vllm.worker.client import ObjectClient
-from typing import List
-import pyarrow._plasma as plasma_object
+from vllm.worker.object_info import ObjectId
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -25,15 +24,6 @@ class Worker:
     maintaining the KV cache and executing the model on the GPU. In case of
     distributed inference, each worker is assigned a partition of the model.
     """
-    class ObjectId:
-        def __init__(self, request_id, seq_id, block_num, num_layers, device_id, ip_address) -> None:
-            self.request_id = request_id
-            self.seq_id = seq_id
-            self.gpu_block_num = block_num
-            self.num_layers = num_layers 
-            self.device_id = device_id
-            self.ip_address = ip_address
-            self.object_ids = []
             
     def __init__(
         self,
