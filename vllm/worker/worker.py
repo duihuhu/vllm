@@ -2,6 +2,7 @@
 from typing import Dict, List, Tuple
 
 import torch
+import pickle
 
 from vllm.config import (CacheConfig, ModelConfig, ParallelConfig,
                          SchedulerConfig)
@@ -16,7 +17,6 @@ from vllm.utils import get_gpu_memory
 from vllm.worker.client import ObjectClient
 # from vllm.worker.object_info import ObjectId
 
-import pickle
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
 
