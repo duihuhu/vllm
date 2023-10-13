@@ -82,7 +82,7 @@ class PlasmaAllocator:
         #     # object_id = plasma.ObjectID(np.random.bytes(20))
         #     object_id = plasma.ObjectID.from_random()
         #     block.object_id.append(object_id)
-        for i in range(parallel_config.tensor_parallel_size):
+        for i in range(self.parallel_config.tensor_parallel_size):
             #  def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
             obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, [gpu_block], self.num_layers, i, i)
             block.objects_info.append(pickle.loads(obj))
