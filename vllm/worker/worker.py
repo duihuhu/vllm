@@ -294,21 +294,21 @@ class Worker:
         #     for object_id in value.object_ids:
         #         print("self.rank: ", self.rank, key, object_id.binary().hex())
                 
-        if blocks_to_swap_out:
-            for key, value in blocks_to_swap_out.items():
-                self.cache_engine.swap_out_prefilled(value)
-            issued_cache_op = True
+        # if blocks_to_swap_out:
+        #     for key, value in blocks_to_swap_out.items():
+        #         self.cache_engine.swap_out_prefilled(value)
+        #     issued_cache_op = True
             
-        if blocks_to_object_swap_out:
-            for key, value in blocks_to_object_swap_out.items():
-                self.cache_engine.swap_out_prefilled_to_plasma(value)
-        if issued_cache_op:
-            cache_events = self.cache_events
-        else:
-            cache_events = None
-        if cache_events is not None:
-            for event in cache_events:
-                event.wait()
+        # if blocks_to_object_swap_out:
+        #     for key, value in blocks_to_object_swap_out.items():
+        #         self.cache_engine.swap_out_prefilled_to_plasma(value)
+        # if issued_cache_op:
+        #     cache_events = self.cache_events
+        # else:
+        #     cache_events = None
+        # if cache_events is not None:
+        #     for event in cache_events:
+        #         event.wait()
 
     @torch.inference_mode()
     def execute_model(
