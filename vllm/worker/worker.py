@@ -24,7 +24,16 @@ class Worker:
     maintaining the KV cache and executing the model on the GPU. In case of
     distributed inference, each worker is assigned a partition of the model.
     """
-
+    class ObjectId:
+        def __init__(self, request_id, seq_id, block_num, num_layers, device_id, ip_address) -> None:
+            self.request_id = request_id
+            self.seq_id = seq_id
+            self.gpu_block_num = block_num
+            self.num_layers = num_layers 
+            self.device_id = device_id
+            self.ip_address = ip_address
+            self.object_ids = []
+            
     def __init__(
         self,
         model_config: ModelConfig,
@@ -289,10 +298,10 @@ class Worker:
     )  -> None:
         obj = self.object_client.socket_client_.create_objects_id(2, 1, [3], 2, 0, 1)
         print(obj)
-        # objs = pickle.loads(obj)
-        # for key, value in objs.items():
-        #     for object_id in value.object_ids:
-        #         print("self.rank: ", self.rank, key, object_id.binary().hex())
+        objs = pickle.loads(obj)
+        for key, value in objs.items():
+            for object_id in value.object_ids:
+                print("self.rank: ", self.rank, key, object_id.binary().hex())
                 
         # if blocks_to_swap_out:
         #     for key, value in blocks_to_swap_out.items():
