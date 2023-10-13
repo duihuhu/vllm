@@ -1,5 +1,4 @@
 import zerorpc
-from vllm.worker.object_info import ObjectId
 import pyarrow._plasma as plasma_object
 
 class ObjectClient:
