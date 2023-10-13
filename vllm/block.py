@@ -1,11 +1,12 @@
 """Token blocks."""
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from vllm.utils import Device
 import pyarrow._plasma as plasma_object
 
 _BLANK_TOKEN_ID = -1
 
+PlasmaObjectIDS = List[Tuple[plasma_object.ObjectID, plasma_object.ObjectID]]
 
 class LogicalTokenBlock:
     """A block that stores a contiguous chunk of tokens from left to right.
@@ -47,7 +48,6 @@ class LogicalTokenBlock:
         assert self.num_tokens > 0
         return self.token_ids[self.num_tokens - 1]
 
-
 class PhysicalTokenBlock:
     """Represents the state of a block in the KV cache."""
 
@@ -57,7 +57,8 @@ class PhysicalTokenBlock:
         block_number: int,
         block_size: int,
         # object_id: Optional[List[plasma_object.ObjectID]] = None,
-        num_layer_object: Optional[int] = None
+        num_layer_object: Optional[int] = None,
+        plasma_objects_ids: Optional[List[PlasmaObjectIDS]] = None
     ) -> None:
         self.device = device
         self.block_number = block_number
@@ -69,6 +70,8 @@ class PhysicalTokenBlock:
         
         #to reprsent to worker: how many layers
         self.num_layer_object = num_layer_object
+        #to reprsent a id list which in shape of [worker_num...[num_layers...]]
+        self.plasma_objects_ids = plasma_objects_ids
     def __repr__(self) -> str:
         return (f'PhysicalTokenBlock(device={self.device}, '
                 f'block_number={self.block_number}, '

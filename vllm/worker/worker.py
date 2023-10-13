@@ -12,6 +12,7 @@ from vllm.sampling_params import SamplingParams
 from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, SequenceGroup
 from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
+from vllm.block import PlasmaObjectIDS
 # import pyarrow._plasma as plasma_object
 
 class Worker:
@@ -256,12 +257,17 @@ class Worker:
         self,
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
-        blocks_to_copy: Dict[int, List[int]])  -> None:
+        blocks_to_copy: Dict[int, List[int]],
+        objects_to_swap_in: Dict[List[PlasmaObjectIDS], int])  -> None:
 
         issued_cache_op = False
         if blocks_to_swap_in:
             self.cache_engine.swap_in(blocks_to_swap_in)
             issued_cache_op = True
+
+        if objects_to_swap_in:
+            self.cache_engine.swap_in_prefilled_from_plasma(objects_to_swap_in, self.device_id)
+
         if blocks_to_swap_out:
             self.cache_engine.swap_out(blocks_to_swap_out)
             issued_cache_op = True
@@ -281,7 +287,7 @@ class Worker:
     def swap_out_prefilled_cache(
         self,
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
-        blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, int]],
+        blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, List[PlasmaObjectIDS]]],
     )  -> None:
         if blocks_to_swap_out:
             for key, value in blocks_to_swap_out.items():
@@ -290,7 +296,7 @@ class Worker:
             
         if blocks_to_object_swap_out:
             for key, value in blocks_to_object_swap_out.items():
-                self.cache_engine.swap_out_prefilled_to_plasma(value)
+                self.cache_engine.swap_out_prefilled_to_plasma(value, self.device_id)
         if issued_cache_op:
             cache_events = self.cache_events
         else:

@@ -12,7 +12,8 @@
 void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,
-  const std::map<int64_t, int64_t>& block_mapping
+  const std::vector<int64_t> &gpu_blocks,
+  const int64_t &plasma
 ) {
   // 获取张量的数据类型
   // torch::ScalarType dtype = src.scalar_type();
@@ -21,7 +22,12 @@ void swap_blocks_to_object(
   // std::cout << "数据类型: " << torch::toString(dtype) << std::endl;
 
   cudaMemcpyKind memcpy_type;
-  memcpy_type = cudaMemcpyDeviceToHost;
+  if (plasma == 0) {
+    memcpy_type = cudaMemcpyDeviceToHost;
+  } else {
+    memcpy_type = cudaMemcpyHostToDevice
+  }
+  
   void *src_ptr = src.data_ptr();
 
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
@@ -30,11 +36,11 @@ void swap_blocks_to_object(
   // printf("block size in bytes %lld\n", block_size_in_bytes);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
   // NOTE(woosuk): This can be slow if the number of blocks is large.
-  for (const auto& pair : block_mapping) {
-    int64_t src_block_number = pair.first;
+  for (const auto& gpu_block_id : gpu_blocks) {
+    int64_t src_block_number = gpu_block_id;
     // int64_t dst_block_number = pair.second;
     void *dst_ptr = (void*)dst_address[i];
-    at::Half *f_dst_ptr = (at::Half*)dst_address[i];
+    // at::Half *f_dst_ptr = (at::Half*)dst_address[i];
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
     cudaMemcpyAsync(

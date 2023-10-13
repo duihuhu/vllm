@@ -84,7 +84,7 @@ class LLMEngine:
         # Create the parallel GPU workers.
         self.workers: List[Worker] = []
         assert len(stage_devices) == 1, "Only support one stage for now."
-        for rank, node_resource, _ in stage_devices[0]:
+        for rank, node_resource, device_id in stage_devices[0]:
             worker_cls = Worker
             if self.parallel_config.worker_use_ray:
                 worker_cls = ray.remote(
@@ -99,7 +99,7 @@ class LLMEngine:
                 scheduler_config,
                 rank,
                 distributed_init_method,
-                device_id=_
+                device_id=device_id
             )
             self.workers.append(worker)
         # Profile the memory usage and initialize the cache.
@@ -234,7 +234,7 @@ class LLMEngine:
         return self.scheduler.watch_running_queue()
 
     def covert_prefilled_to_running(self) -> List[SequenceGroupMetadata]:
-        scheduler_outputs = self.scheduler.swap_in_prompt_kv_cache()
+        scheduler_outputs, objects_to_swap_in = self.scheduler.swap_in_prompt_kv_cache()
         if not scheduler_outputs.is_empty():
             # Execute the swap prefill cache.
             self._run_workers(
@@ -242,6 +242,7 @@ class LLMEngine:
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
                 blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy=scheduler_outputs.blocks_to_copy,
+                objects_to_swap_in = objects_to_swap_in
             )
         # return seq_group_metadata_list
             

@@ -17,4 +17,8 @@ class PlasmaClient:
   
     def get_buffers(self, object_id):
         return self.plasma_client_.get_buffers([object_id])
+    
+    def delete(self, object_id):
+        return self.plasma_client_.delete([object_id])
+
 plasma_client = PlasmaClient("/tmp/plasma_store")

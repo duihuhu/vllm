@@ -1,11 +1,12 @@
 """A block manager that manages token blocks."""
 from typing import Dict, List, Optional, Set, Tuple
 
-from vllm.block import PhysicalTokenBlock
+from vllm.block import PhysicalTokenBlock, PlasmaObjectIDS
 from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device
-import pyarrow.plasma as plasma
-import pyarrow._plasma as plasma_object
+from vllm.engine.plasma_client import plasma_client
+#import pyarrow.plasma as plasma
+#import pyarrow._plasma as plasma_object
 
 
 from vllm.config import ModelConfig, ParallelConfig
@@ -23,11 +24,14 @@ class BlockAllocator:
         device: Device,
         block_size: int,
         num_blocks: int,
+        num_layers: Optional[int] = None,
+        num_tps: Optional[int] = None
     ) -> None:
         self.device = device
         self.block_size = block_size
         self.num_blocks = num_blocks
-
+        self.num_layers = num_layers
+        self.num_tps = num_tps
         # Initialize the free blocks.
         self.free_blocks: List[PhysicalTokenBlock] = []
         for i in range(num_blocks):
@@ -110,7 +114,7 @@ class BlockSpaceManager:
         self.gpu_allocator = BlockAllocator(Device.GPU, block_size,
                                             num_gpu_blocks)
         self.cpu_allocator = BlockAllocator(Device.CPU, block_size,
-                                            num_cpu_blocks)
+                                            num_cpu_blocks, model_config.get_num_layers(parallel_config), parallel_config.tensor_parallel_size)
         
         #todo use plasma_allocator to allocate block from memmory
         self.plasma_allocator = PlasmaAllocator(Device.CPU, block_size, model_config, parallel_config)
@@ -248,6 +252,37 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
+    def plasma_swap_in(self, seq_group: SequenceGroup) -> Dict[List[PlasmaObjectIDS], int]:
+        # plasma object -> GPU block
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+        for seq in seq_group.get_seqs():
+            if seq.is_finished():
+                continue
+            new_block_table: BlockTable = []
+            block_table = self.block_tables[seq.seq_id]
+
+            for cpu_block in block_table:
+                if cpu_block in mapping:
+                    gpu_block = mapping[cpu_block]
+                    gpu_block.ref_count += 1
+                else:
+                    gpu_block = self.gpu_allocator.allocate()
+                    mapping[cpu_block] = gpu_block
+                new_block_table.append(gpu_block)
+                # Free this CPU block and clear the object ids
+                self.cpu_allocator.free(cpu_block)
+            self.block_tables[seq.seq_id] = new_block_table
+        
+        plasma_object_block_number_mapping = {
+            cpu_block.plasma_objects_ids: gpu_block.block_number
+            for cpu_block, gpu_block in mapping.items()
+        }
+
+        for cpu_block, _ in mapping.items():
+            cpu_block.plasma_objects_ids.clear()
+        
+        return plasma_object_block_number_mapping
+
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
         return len(blocks) <= self.cpu_allocator.get_num_free_blocks()
@@ -279,7 +314,7 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
-    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, int]:
+    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, List[PlasmaObjectIDS]]:
         # GPU block -> Plasma CPU block.
         # mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
@@ -295,17 +330,26 @@ class BlockSpaceManager:
                     object_block.ref_count += 1
                 else:
                     ##todo 
-                    object_block = self.plasma_allocator.allocate()
+                    object_block = self.cpu_allocator.allocate()
+                    generated_worker_ids = []
+                    for _ in range(self.cpu_allocator.num_tps):
+                        generated_layer_ids: PlasmaObjectIDS = []
+                        for _ in range(self.cpu_allocator.num_layers):
+                            k_id = plasma_client.allocate_object_id()
+                            v_id = plasma_client.allocate_object_id()
+                            generated_layer_ids.append((k_id, v_id))
+                        generated_worker_ids.append(generated_layer_ids)
+                    object_block.plasma_objects_ids = generated_worker_ids
                     mapping[gpu_block] = object_block
                     # cpu_block = self.cpu_allocator.allocate()
                     # mapping[gpu_block] = cpu_block
                 new_block_table.append(object_block)
                 # Free the GPU block swapped out to CPU.
-                # self.gpu_allocator.free(gpu_block)
-            self.block_tables_object[seq.seq_id] = new_block_table
+                self.gpu_allocator.free(gpu_block)
+            self.block_tables[seq.seq_id] = new_block_table
 
         block_number_object_id_mapping = {
-            gpu_block.block_number: object_block.num_layer_object
+            gpu_block.block_number: object_block.plasma_objects_ids
             for gpu_block, object_block in mapping.items()
         }
         return block_number_object_id_mapping

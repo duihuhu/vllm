@@ -9,7 +9,8 @@ from vllm.logger import init_logger
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceOutputs,
                            SequenceStatus)
-import pyarrow._plasma as plasma_object
+from vllm.block import PlasmaObjectIDS
+#import pyarrow._plasma as plasma_object
 
 logger = init_logger(__name__)
 
@@ -312,11 +313,11 @@ class Scheduler:
             
     def store_prompt_kv_cache(
         self
-    ) -> Tuple[Dict[SequenceGroup, Dict[int, int]], Dict[SequenceGroup, Dict[int, int]]]:
+    ) -> Tuple[Dict[SequenceGroup, Dict[int, int]], Dict[SequenceGroup, Dict[int, List[PlasmaObjectIDS]]]]:
         # blocks_to_swap_out: Dict[int, int] = {}
         seq_to_swap_out: Dict[SequenceGroup, Dict[int, int]] = {}
         
-        seq_to_swap_out_object: Dict[SequenceGroup, Dict[int, int]] = {}
+        seq_to_swap_out_object: Dict[SequenceGroup, Dict[int, List[PlasmaObjectIDS]]] = {}
 
         while self.running:
             seq_group = self.running.pop(0)
@@ -364,12 +365,13 @@ class Scheduler:
     #swap prompt kv_cache, this needs revise 
     def swap_in_prompt_kv_cache(
         self
-    ) -> SchedulerOutputs:
+    ) -> Tuple[SchedulerOutputs, Dict[List[PlasmaObjectIDS], int]]:
         # seq_group_metadata_list: List[SequenceGroupMetadata] = []
 
         blocks_to_swap_out: Dict[int, int] = {}
         blocks_to_swap_in: Dict[int, int] = {}
         blocks_to_copy: Dict[int, List[int]] = {}
+        objects_to_swap_in: Dict[List[PlasmaObjectIDS], int] = {}
         
         while self.prefilled:
             seq_group = self.prefilled[0]
@@ -388,7 +390,7 @@ class Scheduler:
                 break
 
             seq_group = self.prefilled.pop(0)
-            self._swap_prefilled_in(seq_group, blocks_to_swap_in)
+            self._swap_prefilled_in(seq_group, blocks_to_swap_in, objects_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
             
@@ -397,7 +399,7 @@ class Scheduler:
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,
         )
-        return scheduler_outputs
+        return (scheduler_outputs, objects_to_swap_in)
         
     def schedule(
         self
@@ -547,9 +549,12 @@ class Scheduler:
         self,
         seq_group: SequenceGroup,
         blocks_to_swap_in: Dict[int, int],
+        objects_to_swap_in: Dict[List[PlasmaObjectIDS], int]
     ) -> None:
         mapping = self.block_manager.swap_in(seq_group)
+        objects_mapping = self.block_manager.plasma_swap_in(seq_group)
         blocks_to_swap_in.update(mapping)
+        objects_to_swap_in.update(objects_mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
             seq.status = SequenceStatus.RUNNING
 
