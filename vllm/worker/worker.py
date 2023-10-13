@@ -287,6 +287,12 @@ class Worker:
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
         blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, int]],
     )  -> None:
+        obj = self.object_client.socket_client_.create_objects_id(2, 1, 3, 2, 0, 1)
+        objs = pickle.loads(obj)
+        for key, value in objs.items():
+            for object_id in value.object_ids:
+                print("self.rank: ", self.rank, key, object_id.binary().hex())
+                
         if blocks_to_swap_out:
             for key, value in blocks_to_swap_out.items():
                 self.cache_engine.swap_out_prefilled(value)
@@ -302,12 +308,6 @@ class Worker:
         if cache_events is not None:
             for event in cache_events:
                 event.wait()
-        
-        obj = self.object_client.create_objects_id(2, 1, 3, 2, 0, 1)
-        objs = pickle.loads(obj)
-        for key, value in objs.items():
-            for object_id in value.object_ids:
-                print("self.rank: ", self.rank, key, object_id.binary().hex())
 
     @torch.inference_mode()
     def execute_model(
