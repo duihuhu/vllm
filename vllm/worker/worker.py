@@ -14,7 +14,7 @@ from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
 #
 from vllm.worker.client import ObjectClient
-from vllm.worker.object_info import ObjectId
+# from vllm.worker.object_info import ObjectId
 
 import pickle
 class Worker:
@@ -298,7 +298,7 @@ class Worker:
     )  -> None:
         obj = self.object_client.socket_client_.create_objects_id(2, 1, [3], 2, 0, 1)
         print("object: ", obj)
-        # objs = pickle.loads(obj)
+        objs = pickle.loads(obj)
         # for key, value in objs.items():
         #     for object_id in value.object_ids:
         #         print("self.rank: ", self.rank, key, object_id.binary().hex())
