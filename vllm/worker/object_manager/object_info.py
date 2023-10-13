@@ -1,7 +1,7 @@
 from typing import List
 import pyarrow._plasma as plasma_object
 
-class ObjectId:
+class ObjectInfo:
   def __init__(self, request_id, seq_id, block_num, num_layers, device_id, ip_address) -> None:
     self.request_id = request_id
     self.seq_id = seq_id

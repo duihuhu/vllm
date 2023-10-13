@@ -10,6 +10,7 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceOutputs,
                            SequenceStatus)
 import pyarrow._plasma as plasma_object
+from vllm.worker.object_manager.object_info import ObjectInfo
 
 logger = init_logger(__name__)
 
@@ -316,7 +317,7 @@ class Scheduler:
         # blocks_to_swap_out: Dict[int, int] = {}
         seq_to_swap_out: Dict[SequenceGroup, Dict[int, int]] = {}
         
-        seq_to_swap_out_object: Dict[SequenceGroup, Dict[int, int]] = {}
+        seq_to_swap_out_object: Dict[SequenceGroup, Dict[int, List[ObjectInfo]]] = {}
 
         while self.running:
             seq_group = self.running.pop(0)

@@ -15,7 +15,7 @@ from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
 #
 from vllm.worker.object_manager.client import ObjectClient
-from vllm.worker.object_manager.object_info import ObjectId
+from vllm.worker.object_manager.object_info import ObjectInfo
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -285,29 +285,30 @@ class Worker:
     def swap_out_prefilled_cache(
         self,
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
-        blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, int]],
+        blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, List[ObjectInfo]]],
     )  -> None:
-        obj = self.object_client.socket_client_.create_objects_id(2, 1, [3], 2, 0, 1)
-        objs = pickle.loads(obj)
-        for key, value in objs.items():
-            for object_id in value.object_ids:
-                print("self.rank: ", self.rank, key, object_id.binary().hex())
+        #  def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
+        # obj = self.object_client.socket_client_.create_objects_id(2, 1, [3], 2, 0, 1)
+        # objs = pickle.loads(obj)
+        # for key, value in objs.items():
+        #     for object_id in value.object_ids:
+        #         print("self.rank: ", self.rank, key, object_id.binary().hex())
                 
-        # if blocks_to_swap_out:
-        #     for key, value in blocks_to_swap_out.items():
-        #         self.cache_engine.swap_out_prefilled(value)
-        #     issued_cache_op = True
+        if blocks_to_swap_out:
+            for key, value in blocks_to_swap_out.items():
+                self.cache_engine.swap_out_prefilled(value)
+            issued_cache_op = True
             
-        # if blocks_to_object_swap_out:
-        #     for key, value in blocks_to_object_swap_out.items():
-        #         self.cache_engine.swap_out_prefilled_to_plasma(value)
-        # if issued_cache_op:
-        #     cache_events = self.cache_events
-        # else:
-        #     cache_events = None
-        # if cache_events is not None:
-        #     for event in cache_events:
-        #         event.wait()
+        if blocks_to_object_swap_out:
+            for key, value in blocks_to_object_swap_out.items():
+                self.cache_engine.swap_out_prefilled_to_plasma(value, self.rank)
+        if issued_cache_op:
+            cache_events = self.cache_events
+        else:
+            cache_events = None
+        if cache_events is not None:
+            for event in cache_events:
+                event.wait()
 
     @torch.inference_mode()
     def execute_model(

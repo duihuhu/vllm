@@ -10,6 +10,8 @@ import pyarrow._plasma as plasma_object
 
 from vllm.config import ModelConfig, ParallelConfig
 import numpy as np
+import pickle
+from vllm.worker.object_manager.object_info import ObjectInfo
 class BlockAllocator:
     """Manages free physical token blocks for a device.
 
@@ -68,19 +70,22 @@ class PlasmaAllocator:
         ##get_cache_block_size??
         self.num_layers = model_config.get_num_layers(parallel_config)
         
-        self.num_arr_objects = 0
     ##only allocate object id 
-    def allocate(self) -> PhysicalTokenBlock:
+    def allocate(self, request_id, seq_id, gpu_block) -> PhysicalTokenBlock:
         # print("num_layers: ", self.num_layers)
         block = PhysicalTokenBlock(device = self.device,
                     block_number = -1,
                     block_size = self.block_size,
-                    num_layer_object = self.num_layers)
-                    # object_id = [])
+                    # num_layer_object = self.num_layers)
+                    objects_info = [])
         # for i in range(self.num_layers):
         #     # object_id = plasma.ObjectID(np.random.bytes(20))
         #     object_id = plasma.ObjectID.from_random()
         #     block.object_id.append(object_id)
+        for i in range(parallel_config.tensor_parallel_size):
+            #  def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
+            obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, [gpu_block], self.num_layers, i, i)
+            block.objects_info.append(pickle.loads(obj))
         return block
     ##todo 
     def free(self, block: PhysicalTokenBlock) -> None:
@@ -280,7 +285,7 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
-    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, int]:
+    def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, List[ObjectInfo]]:
         # GPU block -> Plasma CPU block.
         # mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
@@ -296,7 +301,7 @@ class BlockSpaceManager:
                     object_block.ref_count += 1
                 else:
                     ##todo 
-                    object_block = self.plasma_allocator.allocate()
+                    object_block = self.plasma_allocator.allocate(seq_group.request_id, seq.seq_id, gpu_block)
                     mapping[gpu_block] = object_block
                     # cpu_block = self.cpu_allocator.allocate()
                     # mapping[gpu_block] = cpu_block
@@ -306,7 +311,7 @@ class BlockSpaceManager:
             self.block_tables_object[seq.seq_id] = new_block_table
 
         block_number_object_id_mapping = {
-            gpu_block.block_number: object_block.num_layer_object
+            gpu_block.block_number: object_block.objects_info
             for gpu_block, object_block in mapping.items()
         }
         return block_number_object_id_mapping
