@@ -9,11 +9,11 @@ class ObjectId:
     self.num_layers = num_layers 
     self.device_id = device_id
     self.ip_address = ip_address
-    self.object_ids = allocate_objects_id(num_layers)
+    self.object_ids = []
   
-def allocate_objects_id(num_layers) -> List[plasma_object.ObjectID]:
-  object_ids = []
-  for i in range(num_layers):
-    obj_id = plasma_object.ObjectID.from_random()
-    object_ids.append(obj_id)
-  return object_ids
+  def allocate_objects_id(self, num_layers) -> List[plasma_object.ObjectID]:
+    object_ids = []
+    for i in range(num_layers):
+      obj_id = plasma_object.ObjectID.from_random()
+      object_ids.append(obj_id)
+    return object_ids
