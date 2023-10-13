@@ -287,7 +287,7 @@ class Worker:
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
         blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, int]],
     )  -> None:
-        obj = self.object_client.socket_client_.create_objects_id(2, 1, 3, 2, 0, 1)
+        obj = self.object_client.socket_client_.create_objects_id(2, 1, [3], 2, 0, 1)
         objs = pickle.loads(obj)
         for key, value in objs.items():
             for object_id in value.object_ids:
