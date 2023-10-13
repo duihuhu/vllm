@@ -1,5 +1,4 @@
 import zerorpc
-import pyarrow._plasma as plasma_object
 
 class ObjectClient:
     def __init__(self) -> None:

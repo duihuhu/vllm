@@ -14,9 +14,8 @@ from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, 
 from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
 #
-from vllm.worker.client import ObjectClient
-from vllm.worker.object_info import ObjectId
-import pyarrow._plasma as plasma_object
+from vllm.worker.object_manager.client import ObjectClient
+from vllm.worker.object_manager.object_info import ObjectId
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -289,11 +288,10 @@ class Worker:
         blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, int]],
     )  -> None:
         obj = self.object_client.socket_client_.create_objects_id(2, 1, [3], 2, 0, 1)
-        print("object: ", obj)
         objs = pickle.loads(obj)
-        # for key, value in objs.items():
-        #     for object_id in value.object_ids:
-        #         print("self.rank: ", self.rank, key, object_id.binary().hex())
+        for key, value in objs.items():
+            for object_id in value.object_ids:
+                print("self.rank: ", self.rank, key, object_id.binary().hex())
                 
         # if blocks_to_swap_out:
         #     for key, value in blocks_to_swap_out.items():

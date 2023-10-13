@@ -1,4 +1,3 @@
-import pickle
 from typing import List
 import pyarrow._plasma as plasma_object
 

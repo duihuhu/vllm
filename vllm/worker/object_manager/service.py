@@ -1,6 +1,6 @@
 #run plasma server: ./plasma-store-server -m 4000000000 -s /tmp/plasma_store
 import pyarrow._plasma as plasma_object
-from vllm.worker.object_info import ObjectId
+from vllm.worker.object_manager.object_info import ObjectId
 import pickle
 # class PlasmaClient:
 #     def __init__(self, plasma_store_socket_name) -> None:
