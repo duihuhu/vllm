@@ -12,8 +12,11 @@ from vllm.sampling_params import SamplingParams
 from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, SequenceGroup
 from vllm.worker.cache_engine import CacheEngine
 from vllm.utils import get_gpu_memory
-# import pyarrow._plasma as plasma_object
+#
+from vllm.worker.object_service.object_client.client import ObjectClient
+from vllm.worker.object_service.object_info import ObjectId
 
+import pickle
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
 
@@ -38,6 +41,7 @@ class Worker:
         self.distributed_init_method = distributed_init_method
         self.device_id = device_id
         
+        self.object_client = ObjectClient()
         # Initialize the distributed environment.
         _init_distributed_environment(parallel_config, rank,
                                       distributed_init_method)
@@ -299,6 +303,12 @@ class Worker:
             for event in cache_events:
                 event.wait()
         
+        obj = self.object_client.create_objects_id(2, 1, 3, 2, 0, 1)
+        objs = pickle.loads(obj)
+        for key, value in objs.items():
+            for object_id in value.object_ids:
+                print("self.rank: ", self.rank, key, object_id.binary().hex())
+
     @torch.inference_mode()
     def execute_model(
         self,
