@@ -195,6 +195,7 @@ class CacheEngine:
         
         key_layer_object_address_lists = []
         for key, value in src_to_dst.items():
+            print(value)
             object_info = value[rank].object_ids
             key_object_address_lists = []
             for object_id in object_info:
