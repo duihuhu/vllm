@@ -11,7 +11,7 @@ class ObjectInfo:
     self.ip_address = ip_address
     self.object_ids = []
   
-  def allocate_objects_id(self, num_layers) -> List[plasma_object.ObjectID]:
+  def allocate_objects_id(self, num_layers) -> List[List[plasma_object.ObjectID]]:
     object_ids = []
     key_object_ids = []  
     value_object_ids = [] 
