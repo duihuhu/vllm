@@ -210,7 +210,7 @@ class CacheEngine:
             key_object_address_lists = []
             for key, value in src_to_dst.items():
                 object_info = value[rank][key]
-                obj = plasma_client.create(object_info[i], key_block_size_in_bytes)
+                obj = plasma_client.create(object_info.object_ids[i], key_block_size_in_bytes)
                 key_object_address_lists.append(obj.address)
             key_layer_object_address_lists.append(key_object_address_lists)
         
