@@ -206,17 +206,28 @@ class CacheEngine:
         
         #by layers compose
         key_layer_objects_address = []
+        value_layer_objects_address = []
+        
         for i in range(self.num_layers):
             key_objects_address = []
-            for key, value in src_to_dst.items():
-                object_info = value[rank][key]
-                obj = plasma_client.create(object_info.object_ids[i], key_block_size_in_bytes)
-                key_objects_address.append(obj.address)
+            value_objects_address = []
+            
+            for key, obj_info in src_to_dst.items():
+                key_object_info = obj_info[rank][key][0]
+                value_object_info = obj_info[rank][key][1]
+                key_obj = plasma_client.create(key_object_info.object_ids[i], key_block_size_in_bytes)
+                key_objects_address.append(key_obj.address)
+                value_obj = plasma_client.create(value_object_info.object_ids[i], value_block_size_in_bytes)
+                value_objects_address.append(value_obj.address)
+                
             key_layer_objects_address.append(key_objects_address)
+            value_layer_objects_address.append(value_objects_address)
+            
         print("key_layer ", key_layer_objects_address)
+        print("value_layer ", value_layer_objects_address)
         
         src_to_dst_copy = {}
-        for key, value in src_to_dst.items():
+        for key, _ in src_to_dst.items():
             src_to_dst_copy[key] = 0
 
         # ##allocate key, value to objects and com by layer, lack swap value, (init version)
@@ -240,6 +251,7 @@ class CacheEngine:
                 src_key_cache, src_value_cache = src[i]
                 # dst_key_object = object_swap_lists[i]
                 cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy)
+                cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy)
                 
         #seal object after swap data
         # for object_address_lists in key_layer_object_address_lists:

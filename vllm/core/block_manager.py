@@ -86,8 +86,7 @@ class PlasmaAllocator:
             # print("obj: ", obj)
             # block.objects_info.append(pickle.loads(obj))
             block.objects_info = pickle.loads(obj)
-            print("block objects info:", block.objects_info)
-        return block.objects_info[0]
+        return block.objects_info
     ##todo 
     def free(self, block: PhysicalTokenBlock) -> None:
         return 
