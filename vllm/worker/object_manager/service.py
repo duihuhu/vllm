@@ -10,14 +10,14 @@ class RPCService(object):
   def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
     block_object = {}
     for block_num in gpu_block_nums:
-      objects_id = ObjectInfo(request_id, seq_id, block_num, num_layers, device_id, ip_address)
-      objects_id.object_ids = objects_id.allocate_objects_id(num_layers)
-      for object_id in objects_id.object_ids:
+      object_info = ObjectInfo(request_id, seq_id, block_num, num_layers, device_id, ip_address)
+      object_info.object_ids = object_info.allocate_objects_id(num_layers)
+      for object_id in object_info.object_ids:
         print(block_num, object_id.binary().hex())
       if seq_id in self.seq_table_:
-        self.seq_table_[seq_id].append(objects_id)
+        self.seq_table_[seq_id].append(object_info)
       else:
-        self.seq_table_[seq_id] = [objects_id]
-      block_object[block_num] = objects_id
+        self.seq_table_[seq_id] = [object_info]
+      block_object[block_num] = object_info
     ser_block_object = pickle.dumps(block_object)
     return ser_block_object

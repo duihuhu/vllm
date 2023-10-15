@@ -83,12 +83,16 @@ class PlasmaAllocator:
         #     # object_id = plasma.ObjectID(np.random.bytes(20))
         #     object_id = plasma.ObjectID.from_random()
         #     block.object_id.append(object_id)
+        key_object_info = []
+        value_object_info = []
         for i in range(self.parallel_config.tensor_parallel_size):
             #  def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
             obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, [gpu_block.block_number], self.num_layers, i, i)
             # print("obj: ", obj)
-            block.objects_info.append(pickle.loads(obj))
-        return block
+            # block.objects_info.append(pickle.loads(obj))
+            block.objects_info = pickle.loads(obj)
+            print("block objects info:", block.objects_info)
+        return block.objects_info[0]
     ##todo 
     def free(self, block: PhysicalTokenBlock) -> None:
         return 

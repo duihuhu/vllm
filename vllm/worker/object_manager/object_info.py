@@ -13,7 +13,14 @@ class ObjectInfo:
   
   def allocate_objects_id(self, num_layers) -> List[plasma_object.ObjectID]:
     object_ids = []
+    key_object_ids = []  
+    value_object_ids = [] 
     for i in range(num_layers):
-      obj_id = plasma_object.ObjectID.from_random()
-      object_ids.append(obj_id)
+      key_obj_id = plasma_object.ObjectID.from_random()
+      key_object_ids.append(key_obj_id)
+      value_obj_id = plasma_object.ObjectID.from_random()
+      value_object_ids.append(value_obj_id)
+    
+    object_ids.append(key_object_ids)
+    object_ids.append(value_object_ids)
     return object_ids
