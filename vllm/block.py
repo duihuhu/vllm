@@ -64,6 +64,8 @@ class PhysicalTokenBlock:
         self.block_size = block_size
 
         self.ref_count = 0
+        self.objects_info = objects_info
+        
         #to reprsent plasma object_id    
         # self.object_id = object_id
         
