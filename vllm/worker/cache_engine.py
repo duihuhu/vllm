@@ -195,14 +195,14 @@ class CacheEngine:
         
         key_layer_object_address_lists = []
         for key, value in src_to_dst.items():
-            print(value)
-            object_info = value[rank].object_ids
-            key_object_address_lists = []
-            for object_id in object_info:
-                obj = plasma_client.create(object_id, key_block_size_in_bytes)
-                print("object and address" , obj, obj.address, rank)
-                key_object_address_lists.append(obj.address)
-            key_layer_object_address_lists.append(key_object_address_lists)
+            # object_info = value[rank].object_ids
+            for gpu_block_num, object_info in value[rank].items():
+                key_object_address_lists = []
+                for object_id in object_info:
+                    obj = plasma_client.create(object_id, key_block_size_in_bytes)
+                    print("object and address" , obj, obj.address, rank)
+                    key_object_address_lists.append(obj.address)
+                key_layer_object_address_lists.append(key_object_address_lists)
             
         # ##allocate key, value to objects and com by layer, lack swap value
         # key_layer_object_swap_lists = []
