@@ -213,46 +213,46 @@ class CacheEngine:
             value_objects_address = []
             
             for key, obj_info in src_to_dst.items():
-                print("obj_info[rank][key]: ", obj_info[rank][key])
-                key_object_info = obj_info[rank][key][0]
-                value_object_info = obj_info[rank][key][1]
-                key_obj = plasma_client.create(key_object_info.object_ids[i], key_block_size_in_bytes)
-                key_objects_address.append(key_obj.address)
-                value_obj = plasma_client.create(value_object_info.object_ids[i], value_block_size_in_bytes)
-                value_objects_address.append(value_obj.address)
+                print("obj info ", obj_info)
+        #         key_object_info = obj_info[rank][key][0]
+        #         value_object_info = obj_info[rank][key][1]
+        #         key_obj = plasma_client.create(key_object_info.object_ids[i], key_block_size_in_bytes)
+        #         key_objects_address.append(key_obj.address)
+        #         value_obj = plasma_client.create(value_object_info.object_ids[i], value_block_size_in_bytes)
+        #         value_objects_address.append(value_obj.address)
                 
-            key_layer_objects_address.append(key_objects_address)
-            value_layer_objects_address.append(value_objects_address)
-            
-        print("key_layer ", key_layer_objects_address)
-        print("value_layer ", value_layer_objects_address)
-        
-        src_to_dst_copy = {}
-        for key, _ in src_to_dst.items():
-            src_to_dst_copy[key] = 0
-
-        # ##allocate key, value to objects and com by layer, lack swap value, (init version)
-        # key_layer_objects_swap = []
-        # key_layer_objects_address = []
-        # key_buf2obj = {}
-        # for i in range(self.num_layers):
-        #     key_objects_swap = []
-        #     key_objects_address = []
-        #     for key, value in src_to_dst.items():
-        #         obj_id = plasma_client.allocate_object_id()
-        #         obj = plasma_client.create(obj_id, key_block_size_in_bytes)
-        #         key_objects_swap.append(obj)
-        #         key_objects_address.append(obj.address)
-        #         key_buf2obj[obj.address] = obj_id
-        #     key_layer_objects_swap.append(key_objects_swap)
         #     key_layer_objects_address.append(key_objects_address)
+        #     value_layer_objects_address.append(value_objects_address)
+            
+        # print("key_layer ", key_layer_objects_address)
+        # print("value_layer ", value_layer_objects_address)
+        
+        # src_to_dst_copy = {}
+        # for key, _ in src_to_dst.items():
+        #     src_to_dst_copy[key] = 0
 
-        with torch.cuda.stream(self.cache_stream):
-            for i in range(self.num_layers):
-                src_key_cache, src_value_cache = src[i]
-                # dst_key_object = object_swap_lists[i]
-                cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy)
-                cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy)
+        # # ##allocate key, value to objects and com by layer, lack swap value, (init version)
+        # # key_layer_objects_swap = []
+        # # key_layer_objects_address = []
+        # # key_buf2obj = {}
+        # # for i in range(self.num_layers):
+        # #     key_objects_swap = []
+        # #     key_objects_address = []
+        # #     for key, value in src_to_dst.items():
+        # #         obj_id = plasma_client.allocate_object_id()
+        # #         obj = plasma_client.create(obj_id, key_block_size_in_bytes)
+        # #         key_objects_swap.append(obj)
+        # #         key_objects_address.append(obj.address)
+        # #         key_buf2obj[obj.address] = obj_id
+        # #     key_layer_objects_swap.append(key_objects_swap)
+        # #     key_layer_objects_address.append(key_objects_address)
+
+        # with torch.cuda.stream(self.cache_stream):
+        #     for i in range(self.num_layers):
+        #         src_key_cache, src_value_cache = src[i]
+        #         # dst_key_object = object_swap_lists[i]
+        #         cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy)
+        #         cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy)
                 
         #seal object after swap data
         # for object_address_lists in key_layer_object_address_lists:
