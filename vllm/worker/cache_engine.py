@@ -194,14 +194,14 @@ class CacheEngine:
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
         
         key_layer_object_address_lists = []
-        for key, value in src_to_dst:
+        for key, value in src_to_dst.items():
             object_info = value[rank].object_ids
             key_object_address_lists = []
             for object_id in object_info:
-                obj = plasma_client.create(obj_id, key_block_size_in_bytes)
+                obj = plasma_client.create(object_id, key_block_size_in_bytes)
+                print("object and address" , obj, obj.address, rank)
                 key_object_address_lists.append(obj.address)
             key_layer_object_address_lists.append(key_object_address_lists)
-            
             
         # ##allocate key, value to objects and com by layer, lack swap value
         # key_layer_object_swap_lists = []
