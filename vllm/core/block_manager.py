@@ -69,6 +69,7 @@ class PlasmaAllocator:
         self.block_size = block_size
         ##get_cache_block_size??
         self.num_layers = model_config.get_num_layers(parallel_config)
+        self.parallel_config = parallel_config
         
     ##only allocate object id 
     def allocate(self, request_id, seq_id, gpu_block) -> PhysicalTokenBlock:
