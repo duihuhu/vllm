@@ -85,7 +85,7 @@ class PlasmaAllocator:
             obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, [gpu_block.block_number], self.num_layers, i, i)
             # print("obj: ", obj)
             # block.objects_info.append(pickle.loads(obj))
-            block.objects_info = pickle.loads(obj)
+            block.objects_info.append(pickle.loads(obj))
         return block.objects_info
     ##todo 
     def free(self, block: PhysicalTokenBlock) -> None:
