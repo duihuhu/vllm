@@ -198,7 +198,7 @@ class CacheEngine:
             # object_info = value[rank].object_ids
             for gpu_block_num, object_info in value[rank].items():
                 key_object_address_lists = []
-                for object_id in object_info:
+                for object_id in object_info.object_ids:
                     obj = plasma_client.create(object_id, key_block_size_in_bytes)
                     print("object and address" , obj, obj.address, rank)
                     key_object_address_lists.append(obj.address)
