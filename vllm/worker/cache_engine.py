@@ -192,18 +192,29 @@ class CacheEngine:
 
         key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
+    
+        #by gpu block num compose
+        # key_layer_object_address_lists = []
+        # for key, value in src_to_dst.items():
+        #     # object_info = value[rank].object_ids
+        #     for gpu_block_num, object_info in value[rank].items():
+        #         key_object_address_lists = []
+        #         for object_id in object_info.object_ids:
+        #             obj = plasma_client.create(object_id, key_block_size_in_bytes)
+        #             key_object_address_lists.append(obj.address)
+        #         key_layer_object_address_lists.append(key_object_address_lists)
         
+        #by layers compose
         key_layer_object_address_lists = []
-        for key, value in src_to_dst.items():
-            # object_info = value[rank].object_ids
-            for gpu_block_num, object_info in value[rank].items():
-                key_object_address_lists = []
-                for object_id in object_info.object_ids:
-                    obj = plasma_client.create(object_id, key_block_size_in_bytes)
-                    print("object and address" , obj, obj.address, rank)
-                    key_object_address_lists.append(obj.address)
-                key_layer_object_address_lists.append(key_object_address_lists)
-            
+        for i in range(self.num_layers):
+            key_object_address_lists = []
+            for key, value in src_to_dst.items():
+                object_info = value[rank][key]
+                obj = plasma_client.create(object_info[i], key_block_size_in_bytes)
+                key_object_address_lists.append(obj.address)
+            key_layer_object_address_lists.append(key_object_address_lists)
+        
+        print("key_layer ", key_layer_object_address_lists)
         # ##allocate key, value to objects and com by layer, lack swap value
         # key_layer_object_swap_lists = []
         # key_layer_object_address_lists = []
