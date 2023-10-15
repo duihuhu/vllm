@@ -78,7 +78,6 @@ class PlasmaAllocator:
         block = PhysicalTokenBlock(device = self.device,
                     block_number = -1,
                     block_size = self.block_size,
-                    # num_layer_object = self.num_layers)
                     objects_info = [])
         # for i in range(self.num_layers):
         #     # object_id = plasma.ObjectID(np.random.bytes(20))
