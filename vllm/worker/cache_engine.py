@@ -213,6 +213,7 @@ class CacheEngine:
             value_objects_address = []
             
             for key, obj_info in src_to_dst.items():
+                print("obj_info[rank][key]: ", obj_info[rank][key])
                 key_object_info = obj_info[rank][key][0]
                 value_object_info = obj_info[rank][key][1]
                 key_obj = plasma_client.create(key_object_info.object_ids[i], key_block_size_in_bytes)

@@ -78,8 +78,6 @@ class PlasmaAllocator:
                     block_number = -1,
                     block_size = self.block_size,
                     objects_info = [])
-        key_object_info = []
-        value_object_info = []
         for i in range(self.parallel_config.tensor_parallel_size):
             #  def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
             obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, [gpu_block.block_number], self.num_layers, i, i)
