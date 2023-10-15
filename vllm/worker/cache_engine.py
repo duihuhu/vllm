@@ -194,28 +194,27 @@ class CacheEngine:
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
     
         #by gpu block num compose
-        # key_layer_object_address_lists = []
+        # key_layer_object_address = []
         # for key, value in src_to_dst.items():
         #     # object_info = value[rank].object_ids
         #     for gpu_block_num, object_info in value[rank].items():
-        #         key_object_address_lists = []
+        #         key_object_address = []
         #         for object_id in object_info.object_ids:
         #             obj = plasma_client.create(object_id, key_block_size_in_bytes)
-        #             key_object_address_lists.append(obj.address)
-        #         key_layer_object_address_lists.append(key_object_address_lists)
+        #             key_object_address.append(obj.address)
+        #         key_layer_object_address.append(key_object_address)
         
         #by layers compose
-        key_layer_object_address_lists = []
+        key_layer_objects_address = []
         for i in range(self.num_layers):
-            key_object_address_lists = []
+            key_objects_address = []
             for key, value in src_to_dst.items():
                 object_info = value[rank][key]
                 obj = plasma_client.create(object_info.object_ids[i], key_block_size_in_bytes)
-                key_object_address_lists.append(obj.address)
-            key_layer_object_address_lists.append(key_object_address_lists)
+                key_objects_address.append(obj.address)
+            key_layer_objects_address.append(key_objects_address)
         
-        print("key_layer ", key_layer_object_address_lists)
-        # ##allocate key, value to objects and com by layer, lack swap value
+        # ##allocate key, value to objects and com by layer, lack swap value, (init version)
         # key_layer_object_swap_lists = []
         # key_layer_object_address_lists = []
         # key_buf2obj = {}
@@ -232,13 +231,13 @@ class CacheEngine:
         #     key_layer_object_address_lists.append(key_object_address_lists)
             
 
-        # with torch.cuda.stream(self.cache_stream):
-        #     for i in range(self.num_layers):
-        #         src_key_cache, src_value_cache = src[i]
-        #         # dst_key_object = object_swap_lists[i]
-        #         cache_ops.swap_blocks_to_object(src_key_cache, key_layer_object_address_lists[i], src_to_dst)
+        with torch.cuda.stream(self.cache_stream):
+            for i in range(self.num_layers):
+                src_key_cache, src_value_cache = src[i]
+                # dst_key_object = object_swap_lists[i]
+                cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst)
                 
-        # #seal object after swap data
+        #seal object after swap data
         # for object_address_lists in key_layer_object_address_lists:
         #     for addr in object_address_lists:
         #         plasma_client.seal(key_buf2obj[addr])
