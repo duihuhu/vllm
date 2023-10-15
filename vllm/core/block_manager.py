@@ -74,15 +74,10 @@ class PlasmaAllocator:
         self.object_client = ObjectClient()
     ##only allocate object id 
     def allocate(self, request_id, seq_id, gpu_block) -> PhysicalTokenBlock:
-        # print("num_layers: ", self.num_layers)
         block = PhysicalTokenBlock(device = self.device,
                     block_number = -1,
                     block_size = self.block_size,
                     objects_info = [])
-        # for i in range(self.num_layers):
-        #     # object_id = plasma.ObjectID(np.random.bytes(20))
-        #     object_id = plasma.ObjectID.from_random()
-        #     block.object_id.append(object_id)
         key_object_info = []
         value_object_info = []
         for i in range(self.parallel_config.tensor_parallel_size):
