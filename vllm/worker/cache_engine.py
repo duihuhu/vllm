@@ -205,31 +205,32 @@ class CacheEngine:
         #         key_layer_object_address.append(key_object_address)
         
         #by layers compose
-        key_layer_objects_address = []
-        for i in range(self.num_layers):
-            key_objects_address = []
-            for key, value in src_to_dst.items():
-                object_info = value[rank][key]
-                obj = plasma_client.create(object_info.object_ids[i], key_block_size_in_bytes)
-                key_objects_address.append(obj.address)
-            key_layer_objects_address.append(key_objects_address)
+        # key_layer_objects_address = []
+        # for i in range(self.num_layers):
+        #     key_objects_address = []
+        #     for key, value in src_to_dst.items():
+        #         object_info = value[rank][key]
+        #         obj = plasma_client.create(object_info.object_ids[i], key_block_size_in_bytes)
+        #         key_objects_address.append(obj.address)
+        #     key_layer_objects_address.append(key_objects_address)
+        # print("key_layer ", key_layer_objects_address)
         
         # ##allocate key, value to objects and com by layer, lack swap value, (init version)
-        # key_layer_object_swap_lists = []
-        # key_layer_object_address_lists = []
-        # key_buf2obj = {}
-        # for i in range(self.num_layers):
-        #     key_object_swap_lists = []
-        #     key_object_address_lists = []
-        #     for key, value in src_to_dst.items():
-        #         obj_id = plasma_client.allocate_object_id()
-        #         obj = plasma_client.create(obj_id, key_block_size_in_bytes)
-        #         key_object_swap_lists.append(obj)
-        #         key_object_address_lists.append(obj.address)
-        #         key_buf2obj[obj.address] = obj_id
-        #     key_layer_object_swap_lists.append(key_object_swap_lists)
-        #     key_layer_object_address_lists.append(key_object_address_lists)
-            
+        key_layer_objects_swap = []
+        key_layer_objects_address = []
+        key_buf2obj = {}
+        for i in range(self.num_layers):
+            key_objects_swap = []
+            key_objects_address = []
+            for key, value in src_to_dst.items():
+                obj_id = plasma_client.allocate_object_id()
+                obj = plasma_client.create(obj_id, key_block_size_in_bytes)
+                key_objects_swap.append(obj)
+                key_objects_address.append(obj.address)
+                key_buf2obj[obj.address] = obj_id
+            key_layer_objects_swap.append(key_objects_swap)
+            key_layer_objects_address.append(key_objects_address)
+        print("init key_layer_objects_address ", key_layer_objects_address)
 
         with torch.cuda.stream(self.cache_stream):
             for i in range(self.num_layers):
