@@ -163,26 +163,6 @@ class CacheEngine:
                 
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                
-                # mem_ops.print_blocks(src_value_cache, dst_value_cache, src_to_dst)
-                # print("dst_value_cache: ", dst_value_cache)
-                ##
-                # print("element_size " ,src_key_cache.element_size(), src_key_cache[0].numel(), src_key_cache[0].shape, src_key_cache[0].dtype)
-                
-                # print(dst_value_cache[src_to_dst[0]])
-                # for ks, ds in src_to_dst.items():
-                #     print("ks, ds : ", dst_value_cache[ds].shape)
-                # print(src_to_dst)
-                # print(src_key_cache)
-                # dst_value_cache_address = hex(id(dst_value_cache))
-                ###
-                # print("cpu blocks: ", self.num_cpu_blocks)
-                # print("gpu blocks: ", self.num_gpu_blocks)
-                # print("get_key_block_shape: ", self.get_key_block_shape())
-                # print("get_value_block_shape: ", self.get_value_block_shape())
-                
-                # dst_value_cache_address = dst_value_cache.numpy().__array_interface__["data"][0]
-                # print("dst_key_cache_address: ", hex(dst_value_cache_address))
 
     def _swap_out_prefilled_to_plasma(
        self,
@@ -222,29 +202,26 @@ class CacheEngine:
                 
             key_layer_objects_address.append(key_objects_address)
             value_layer_objects_address.append(value_objects_address)
-            
-        # print("key_layer ", key_layer_objects_address)
-        # print("value_layer ", value_layer_objects_address)
         
         src_to_dst_copy = {}
         for key, _ in src_to_dst.items():
             src_to_dst_copy[key] = 0
 
-        # # ##allocate key, value to objects and com by layer, lack swap value, (init version)
-        # # key_layer_objects_swap = []
-        # # key_layer_objects_address = []
-        # # key_buf2obj = {}
-        # # for i in range(self.num_layers):
-        # #     key_objects_swap = []
-        # #     key_objects_address = []
-        # #     for key, value in src_to_dst.items():
-        # #         obj_id = plasma_client.allocate_object_id()
-        # #         obj = plasma_client.create(obj_id, key_block_size_in_bytes)
-        # #         key_objects_swap.append(obj)
-        # #         key_objects_address.append(obj.address)
-        # #         key_buf2obj[obj.address] = obj_id
-        # #     key_layer_objects_swap.append(key_objects_swap)
-        # #     key_layer_objects_address.append(key_objects_address)
+        # ##allocate key, value to objects and com by layer, lack swap value, (init version)
+        # key_layer_objects_swap = []
+        # key_layer_objects_address = []
+        # key_buf2obj = {}
+        # for i in range(self.num_layers):
+        #     key_objects_swap = []
+        #     key_objects_address = []
+        #     for key, value in src_to_dst.items():
+        #         obj_id = plasma_client.allocate_object_id()
+        #         obj = plasma_client.create(obj_id, key_block_size_in_bytes)
+        #         key_objects_swap.append(obj)
+        #         key_objects_address.append(obj.address)
+        #         key_buf2obj[obj.address] = obj_id
+        #     key_layer_objects_swap.append(key_objects_swap)
+        #     key_layer_objects_address.append(key_objects_address)
 
         with torch.cuda.stream(self.cache_stream):
             for i in range(self.num_layers):
@@ -252,7 +229,13 @@ class CacheEngine:
                 # dst_key_object = object_swap_lists[i]
                 cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy)
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy)
-                
+
+        for key, obj_info in src_to_dst.items():
+            key_object_info = (obj_info[rank][key].object_ids)[0]
+            value_object_info = (obj_info[rank][key].object_ids)[1]
+            for key_addr, value_addr in key_object_info, value_object_info:            
+                plasma_client.seal(key_addr)
+                plasma_client.seal(value_addr)
         #seal object after swap data
         # for object_address_lists in key_layer_object_address_lists:
         #     for addr in object_address_lists:
@@ -262,7 +245,6 @@ class CacheEngine:
         #         # self.client.create(object_id, object_size)
         #         # memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
         #         # print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
-
         return
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
@@ -271,6 +253,10 @@ class CacheEngine:
     def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst, rank)
     
+    def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
+        return 
+    def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[List[ObjectInfo], int], rank) -> None:
+        self._swap_in_prefilled_from_plasma(self.gpu_cache, src_to_dst, rank)
     
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         key_caches = [key_cache for key_cache, _ in self.gpu_cache]

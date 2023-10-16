@@ -162,7 +162,7 @@ class BlockSpaceManager:
         """Allocate a physical slot for a new token."""
         logical_blocks = seq.logical_token_blocks
         block_table = self.block_tables[seq.seq_id]
-
+    
         if len(block_table) < len(logical_blocks):
             # The sequence has a new logical block.
             # Allocate a new physical block.
@@ -192,6 +192,19 @@ class BlockSpaceManager:
         for block in src_block_table:
             block.ref_count += 1
 
+    def _get_object_physical_blocks(
+            self, seq_group: SequenceGroup) -> List[PhysicalTokenBlock]:
+        # NOTE: Here, we assume that the physical blocks are only shared by
+        # the sequences in the same group.
+        blocks: Set[PhysicalTokenBlock] = set()
+        for seq in seq_group.get_seqs():
+            if seq.is_finished():
+                continue
+            block_table = self.block_tables_object[seq.seq_id]
+            for block in block_table:
+                blocks.add(block)
+        return list(blocks)
+
     def _get_physical_blocks(
             self, seq_group: SequenceGroup) -> List[PhysicalTokenBlock]:
         # NOTE: Here, we assume that the physical blocks are only shared by
@@ -205,6 +218,16 @@ class BlockSpaceManager:
                 blocks.add(block)
         return list(blocks)
 
+    def can_swap_prefilled_object_in(self, seq_group: SequenceGroup) -> bool:
+        blocks = self._get_object_physical_blocks(seq_group)
+        num_prefilled_seqs = seq_group.num_seqs(status=SequenceStatus.PREFILLED)
+        num_free_blocks = self.gpu_allocator.get_num_free_blocks()
+        # NOTE: Conservatively, we assume that every sequence will allocate
+        # at least one free block right after the swap-in.
+        # NOTE: This should match the logic in can_append_slot().
+        num_required_blocks = len(blocks) + num_prefilled_seqs
+        return num_free_blocks - num_required_blocks >= self.watermark_blocks
+    
     def can_swap_prefilled_in(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
         num_swapped_seqs = seq_group.num_seqs(status=SequenceStatus.PREFILLED)
@@ -251,6 +274,32 @@ class BlockSpaceManager:
             for cpu_block, gpu_block in mapping.items()
         }
         return block_number_mapping
+
+    def swap_in_from_plasma(self, seq_group: SequenceGroup) -> Dict[List[ObjectInfo], int]:
+        # Object block -> GPU block.
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+        for seq in seq_group.get_seqs():
+            if seq.is_finished():
+                continue
+            new_block_table: BlockTable = []
+            object_block_table = self.block_tables_object[seq.seq_id]
+            for object_block in object_block_table:
+                if object_block in mapping:
+                    gpu_block = mapping[object_block]
+                    gpu_block.ref_count += 1
+                else:
+                    gpu_block = self.gpu_allocator.allocate()
+                    mapping[object_block] = gpu_block
+                new_block_table.append(gpu_block)
+                #to do free object in plasma, not in there , freeing object after swap in 
+                self.plasma_allocator.free(object_block)
+            self.block_tables_object[seq.seq_id] = new_block_table
+
+        block_number_object_id_mapping = {
+            object_block.objects_info: gpu_block.block_number
+            for object_block, gpu_block in mapping.items()
+        }
+        return block_number_object_id_mapping
 
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)

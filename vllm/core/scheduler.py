@@ -361,7 +361,7 @@ class Scheduler:
                 seq_id = seq.seq_id
                 print("watch running queue ", seq_id, seq.data)
             break 
-        
+    
     #swap prompt kv_cache, this needs revise 
     def swap_in_prompt_kv_cache(
         self
@@ -399,7 +399,42 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
         )
         return scheduler_outputs
+    
+    def swap_in_prompt_object_kv_cache(
+        self
+    ) -> SchedulerOutputs:
+        blocks_to_swap_out: Dict[int, List[ObjectInfo]] = {}
+        blocks_to_swap_in: Dict[List[ObjectInfo], int] = {}
+        blocks_to_copy: Dict[int, List[int]] = {}
         
+        while self.prefilled:
+            seq_group = self.prefilled[0]
+            # If the sequence group cannot be swapped in, stop.
+            if not self.block_manager.can_swap_prefilled_object_in(seq_group):
+                break
+
+            # The total number of seqzuences in the RUNNING state should not
+            # exceed the maximum number of sequences.
+            num_new_seqs = seq_group.num_seqs(status=SequenceStatus.PREFILLED)
+            num_curr_seqs = sum(
+                seq_group.num_seqs(status=SequenceStatus.RUNNING)
+                for seq_group in self.running)
+            if (num_curr_seqs + num_new_seqs >
+                    self.scheduler_config.max_num_seqs):
+                break
+
+            seq_group = self.prefilled.pop(0)
+            self._swap_prefilled_object_in(seq_group, blocks_to_swap_in)
+            self._append_slot(seq_group, blocks_to_copy)
+            self.running.append(seq_group)
+            
+        scheduler_outputs = SchedulerOutputs(
+            blocks_to_swap_in=blocks_to_swap_in,
+            blocks_to_swap_out=blocks_to_swap_out,
+            blocks_to_copy=blocks_to_copy,
+        )
+        return scheduler_outputs
+    
     def schedule(
         self
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
@@ -543,6 +578,18 @@ class Scheduler:
             seq.status = SequenceStatus.SWAPPED
         self._swap_out(seq_group, blocks_to_swap_out)
         self.swapped.append(seq_group)
+
+
+    def _swap_prefilled_object_in(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_in: Dict[List[ObjectInfo], int],
+    ) -> None:
+        mapping = self.block_manager.swap_in_from_plasma(seq_group)
+        blocks_to_swap_in.update(mapping)
+        for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
+            seq.status = SequenceStatus.RUNNING
+
 
     def _swap_prefilled_in(
         self,
