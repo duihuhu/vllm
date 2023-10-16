@@ -74,4 +74,5 @@ class PhysicalTokenBlock:
     def __repr__(self) -> str:
         return (f'PhysicalTokenBlock(device={self.device}, '
                 f'block_number={self.block_number}, '
-                f'ref_count={self.ref_count})')
+                f'ref_count={self.ref_count}, '
+                f'objects_info={self.objects_info})')

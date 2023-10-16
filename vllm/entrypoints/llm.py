@@ -172,20 +172,20 @@ class LLM:
         #swap kv cache from object before decode
         self.llm_engine.convert_prefilled_object_to_running()
         
-        while self.llm_engine.has_unfinished_requests():
-            step_outputs = self.llm_engine.step_decoder()
+        # while self.llm_engine.has_unfinished_requests():
+        #     step_outputs = self.llm_engine.step_decoder()
             
-            for output in step_outputs:
-                if output.finished:
-                    outputs.append(output)
-                    # print(output)
-                    if use_tqdm:
-                        pbar.update(1)
+        #     for output in step_outputs:
+        #         if output.finished:
+        #             outputs.append(output)
+        #             # print(output)
+        #             if use_tqdm:
+        #                 pbar.update(1)
 
-        if use_tqdm:
-            pbar.close()
-        # Sort the outputs by request ID.
-        # This is necessary because some requests may be finished earlier than
-        # its previous requests.
-        outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        return outputs
+        # if use_tqdm:
+        #     pbar.close()
+        # # Sort the outputs by request ID.
+        # # This is necessary because some requests may be finished earlier than
+        # # its previous requests.
+        # outputs = sorted(outputs, key=lambda x: int(x.request_id))
+        # return outputs
