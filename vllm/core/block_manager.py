@@ -329,18 +329,29 @@ class BlockSpaceManager:
                 if gpu_block in mapping:
                     object_block = mapping[gpu_block]
                     object_block.ref_count += 1
+                    if object_block.plasma_objects_ids is None:
+                        generated_worker_ids = []
+                        for _ in range(self.cpu_allocator.num_tps):
+                            generated_layer_ids: PlasmaObjectIDS = []
+                            for _ in range(self.cpu_allocator.num_layers):
+                                k_id = plasma_client.allocate_object_id()
+                                v_id = plasma_client.allocate_object_id()
+                                generated_layer_ids.append((k_id, v_id))
+                            generated_worker_ids.append(generated_layer_ids)
+                        object_block.plasma_objects_ids = generated_worker_ids
                 else:
                     ##todo 
                     object_block = self.cpu_allocator.allocate()
-                    generated_worker_ids = []
-                    for _ in range(self.cpu_allocator.num_tps):
-                        generated_layer_ids: PlasmaObjectIDS = []
-                        for _ in range(self.cpu_allocator.num_layers):
-                            k_id = plasma_client.allocate_object_id()
-                            v_id = plasma_client.allocate_object_id()
-                            generated_layer_ids.append((k_id, v_id))
-                        generated_worker_ids.append(generated_layer_ids)
-                    object_block.plasma_objects_ids = generated_worker_ids
+                    if object_block.plasma_objects_ids is None:
+                        generated_worker_ids = []
+                        for _ in range(self.cpu_allocator.num_tps):
+                            generated_layer_ids: PlasmaObjectIDS = []
+                            for _ in range(self.cpu_allocator.num_layers):
+                                k_id = plasma_client.allocate_object_id()
+                                v_id = plasma_client.allocate_object_id()
+                                generated_layer_ids.append((k_id, v_id))
+                            generated_worker_ids.append(generated_layer_ids)
+                        object_block.plasma_objects_ids = generated_worker_ids
                     mapping[gpu_block] = object_block
                     # cpu_block = self.cpu_allocator.allocate()
                     # mapping[gpu_block] = cpu_block

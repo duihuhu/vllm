@@ -260,13 +260,13 @@ class Worker:
         blocks_to_copy: Dict[int, List[int]],
         objects_to_swap_in: Dict[int, List[PlasmaObjectIDS]])  -> None:
 
-        issued_cache_op = False
         if blocks_to_swap_in:
             self.cache_engine.swap_in(blocks_to_swap_in)
             issued_cache_op = True
 
         if objects_to_swap_in:
             self.cache_engine.swap_in_prefilled_from_plasma(objects_to_swap_in, self.device_id)
+            issued_cache_op = True
 
         if blocks_to_swap_out:
             self.cache_engine.swap_out(blocks_to_swap_out)
@@ -297,6 +297,8 @@ class Worker:
         if blocks_to_object_swap_out:
             for key, value in blocks_to_object_swap_out.items():
                 self.cache_engine.swap_out_prefilled_to_plasma(value, self.device_id)
+            issued_cache_op = True
+
         if issued_cache_op:
             cache_events = self.cache_events
         else:
