@@ -287,9 +287,11 @@ class BlockSpaceManager:
                 if object_block in mapping:
                     gpu_block = mapping[object_block]
                     gpu_block.ref_count += 1
+                    print('already exist gpu block: ', gpu_block.block_number)
                 else:
                     gpu_block = self.gpu_allocator.allocate()
                     mapping[object_block] = gpu_block
+                    print('new allocate gpu block: ', gpu_block.block_number)
                 new_block_table.append(gpu_block)
                 #to do free object in plasma, not in there , freeing object after swap in 
                 self.plasma_allocator.free(object_block)
