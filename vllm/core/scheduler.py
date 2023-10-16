@@ -330,11 +330,11 @@ class Scheduler:
             #test for plasma
             mapping_object = self.block_manager.swap_out_to_plasma(seq_group)
             
-            mapping = self.block_manager.swap_out(seq_group)
+            ##mapping = self.block_manager.swap_out(seq_group)
             # print("mapping:",  mapping_object, mapping)
             # blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)
-            seq_to_swap_out[seq_group] = mapping
+            ##seq_to_swap_out[seq_group] = mapping
             seq_to_swap_out_object[seq_group] = mapping_object
 
         # while self.prefilled:
@@ -551,9 +551,9 @@ class Scheduler:
         blocks_to_swap_in: Dict[int, int],
         objects_to_swap_in: Dict[int, List[PlasmaObjectIDS]]
     ) -> None:
-        mapping = self.block_manager.swap_in(seq_group)
+        #mapping = self.block_manager.swap_in(seq_group)
         objects_mapping = self.block_manager.plasma_swap_in(seq_group)
-        blocks_to_swap_in.update(mapping)
+        #blocks_to_swap_in.update(mapping)
         objects_to_swap_in.update(objects_mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
             seq.status = SequenceStatus.RUNNING

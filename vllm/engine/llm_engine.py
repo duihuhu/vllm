@@ -235,7 +235,7 @@ class LLMEngine:
 
     def covert_prefilled_to_running(self) -> List[SequenceGroupMetadata]:
         scheduler_outputs, objects_to_swap_in = self.scheduler.swap_in_prompt_kv_cache()
-        if not scheduler_outputs.is_empty():
+        if not scheduler_outputs.is_empty() or objects_to_swap_in:
             # Execute the swap prefill cache.
             self._run_workers(
                 "swap_in_prefilled_cache",
@@ -329,7 +329,7 @@ class LLMEngine:
         
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
-        if prefill_blocks_to_swap_out:
+        if prefill_blocks_to_object_swap_out:
             # Execute the swap prefill cache.
             self._run_workers(
                 "swap_out_prefilled_cache",
