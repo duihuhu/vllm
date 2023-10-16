@@ -220,7 +220,6 @@ class BlockSpaceManager:
 
     def can_swap_prefilled_object_in(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_object_physical_blocks(seq_group)
-        print("can_swap_prefilled_object_in: ", blocks)
         num_prefilled_seqs = seq_group.num_seqs(status=SequenceStatus.PREFILLED)
         num_free_blocks = self.gpu_allocator.get_num_free_blocks()
         # NOTE: Conservatively, we assume that every sequence will allocate
@@ -297,7 +296,7 @@ class BlockSpaceManager:
             self.block_tables_object[seq.seq_id] = new_block_table
 
         block_number_object_id_mapping = {
-            object_block.objects_info: gpu_block.block_number
+            gpu_block.block_number: object_block.objects_info
             for object_block, gpu_block in mapping.items()
         }
         return block_number_object_id_mapping
