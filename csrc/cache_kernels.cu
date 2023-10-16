@@ -25,7 +25,7 @@ void swap_blocks_to_object(
   if (plasma == 0) {
     memcpy_type = cudaMemcpyDeviceToHost;
   } else {
-    memcpy_type = cudaMemcpyHostToDevice
+    memcpy_type = cudaMemcpyHostToDevice;
   }
   
   void *src_ptr = src.data_ptr();

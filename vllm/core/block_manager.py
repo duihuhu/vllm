@@ -252,8 +252,9 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
-    def plasma_swap_in(self, seq_group: SequenceGroup) -> Dict[List[PlasmaObjectIDS], int]:
+    def plasma_swap_in(self, seq_group: SequenceGroup) -> Dict[int, List[PlasmaObjectIDS]]:
         # plasma object -> GPU block
+        # GPU block(in) : PlasmaObjectIDS(out)
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         for seq in seq_group.get_seqs():
             if seq.is_finished():
@@ -274,7 +275,7 @@ class BlockSpaceManager:
             self.block_tables[seq.seq_id] = new_block_table
         
         plasma_object_block_number_mapping = {
-            cpu_block.plasma_objects_ids: gpu_block.block_number
+            gpu_block.block_number : cpu_block.plasma_objects_ids
             for cpu_block, gpu_block in mapping.items()
         }
 

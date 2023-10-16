@@ -365,13 +365,13 @@ class Scheduler:
     #swap prompt kv_cache, this needs revise 
     def swap_in_prompt_kv_cache(
         self
-    ) -> Tuple[SchedulerOutputs, Dict[List[PlasmaObjectIDS], int]]:
+    ) -> Tuple[SchedulerOutputs, Dict[int, List[PlasmaObjectIDS]]]:
         # seq_group_metadata_list: List[SequenceGroupMetadata] = []
 
         blocks_to_swap_out: Dict[int, int] = {}
         blocks_to_swap_in: Dict[int, int] = {}
         blocks_to_copy: Dict[int, List[int]] = {}
-        objects_to_swap_in: Dict[List[PlasmaObjectIDS], int] = {}
+        objects_to_swap_in: Dict[int, List[PlasmaObjectIDS]] = {}
         
         while self.prefilled:
             seq_group = self.prefilled[0]
@@ -549,7 +549,7 @@ class Scheduler:
         self,
         seq_group: SequenceGroup,
         blocks_to_swap_in: Dict[int, int],
-        objects_to_swap_in: Dict[List[PlasmaObjectIDS], int]
+        objects_to_swap_in: Dict[int, List[PlasmaObjectIDS]]
     ) -> None:
         mapping = self.block_manager.swap_in(seq_group)
         objects_mapping = self.block_manager.plasma_swap_in(seq_group)

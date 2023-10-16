@@ -11,7 +11,8 @@ void swap_blocks(
 void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,
-  const std::map<int64_t, int64_t>& block_mapping
+  const std::vector<int64_t> &gpu_blocks,
+  const int64_t &plasma
 );
 
 void copy_blocks(

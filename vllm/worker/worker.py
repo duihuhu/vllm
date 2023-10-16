@@ -258,7 +258,7 @@ class Worker:
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
-        objects_to_swap_in: Dict[List[PlasmaObjectIDS], int])  -> None:
+        objects_to_swap_in: Dict[int, List[PlasmaObjectIDS]])  -> None:
 
         issued_cache_op = False
         if blocks_to_swap_in:

@@ -280,7 +280,7 @@ class CacheEngine:
     def _swap_in_prefilled_from_plasma(
         self,
         src: List[KVCache],
-        src_to_dst: Dict[List[PlasmaObjectIDS], int],
+        src_to_dst: Dict[int, List[PlasmaObjectIDS]],
         device_id: int) -> None:
         
         key_layer_object_address_lists = []
@@ -290,8 +290,8 @@ class CacheEngine:
             key_object_address_lists = []
             value_object_address_lists = []
 
-            for key, _ in src_to_dst.items():
-                plasma_to_blocks_this_worker = key[device_id]
+            for _, value in src_to_dst.items():
+                plasma_to_blocks_this_worker = value[device_id]
                 k_id = plasma_to_blocks_this_worker[i][0]
                 v_id = plasma_to_blocks_this_worker[i][1]
 
@@ -304,7 +304,7 @@ class CacheEngine:
             key_layer_object_address_lists.append(key_object_address_lists)
             value_layer_object_address_lists.append(value_object_address_lists)
         
-        blocks_in_gpu = [value for _, value in src_to_dst.items()]
+        blocks_in_gpu = [key for key, _ in src_to_dst.items()]
 
         with torch.cuda.stream(self.cache_stream):
             for i in range(self.num_layers):
@@ -312,8 +312,8 @@ class CacheEngine:
                 cache_ops.swap_blocks_to_object(src_key_cache, key_layer_object_address_lists[i], blocks_in_gpu, 1)
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_object_address_lists[i], blocks_in_gpu, 1)
         
-        for key, _ in src_to_dst.items():
-            plasma_to_blocks_this_worker = key[device_id]
+        for _, value in src_to_dst.items():
+            plasma_to_blocks_this_worker = value[device_id]
             k_ids = [ids[0] for ids in plasma_to_blocks_this_worker]
             v_ids = [ids[1] for ids in plasma_to_blocks_this_worker]
 
@@ -322,7 +322,7 @@ class CacheEngine:
             for id in v_ids:
                 plasma_client.delete(id)
     
-    def swap_in_prefilled_from_plasma(self, src_to_dst: Dict[List[PlasmaObjectIDS], int], device_id: int) -> None:
+    def swap_in_prefilled_from_plasma(self, src_to_dst: Dict[int, List[PlasmaObjectIDS]], device_id: int) -> None:
         self._swap_in_prefilled_from_plasma(self.gpu_cache, src_to_dst, device_id)
 
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
