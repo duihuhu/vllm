@@ -14,7 +14,7 @@ void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,
   const std::map<int64_t, int64_t>& block_mapping, 
-  int data_direction,
+  int data_direction
 ) {
   cudaMemcpyKind memcpy_type;
   if (data_direction == 0) {
