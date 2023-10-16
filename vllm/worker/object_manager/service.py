@@ -20,4 +20,5 @@ class RPCService(object):
         self.seq_table_[seq_id] = [object_info]
       block_object[block_num] = object_info
     ser_block_object = pickle.dumps(block_object)
+    print("ser_block_object ", ser_block_object)
     return ser_block_object

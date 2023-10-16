@@ -23,5 +23,4 @@ class ObjectInfo:
     
     object_ids.append(key_object_ids)
     object_ids.append(value_object_ids)
-    print("object ids", object_ids)
     return object_ids
