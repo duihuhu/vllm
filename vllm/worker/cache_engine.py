@@ -159,7 +159,7 @@ class CacheEngine:
                 # # Copy the key blocks.
                 cache_ops.swap_blocks(src_key_cache, dst_key_cache, src_to_dst)
                 # Copy the value blocks.
-                # cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
+                cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
                 
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
@@ -240,12 +240,7 @@ class CacheEngine:
         # for object_address_lists in key_layer_object_address_lists:
         #     for addr in object_address_lists:
         #         plasma_client.seal(key_buf2obj[addr])
-        #         # buffer = plasma_client.get_buffers(buf2obj[addr])
-                    
-        #         # self.client.create(object_id, object_size)
-        #         # memory_buffer = np.frombuffer(self.client.create(object_id, object_size), dtype=self.dtype)
-        #         # print("src_key_cache, memory_buffer ", len(src_key_cache), len(memory_buffer))
-        return
+        
     
     def swap_out_prefilled(self, src_to_dst: Dict[int, int]) -> None:
         self._swap_prefilled(self.gpu_cache, self.cpu_cache, src_to_dst)

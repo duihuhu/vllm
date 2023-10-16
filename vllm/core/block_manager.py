@@ -162,7 +162,7 @@ class BlockSpaceManager:
         """Allocate a physical slot for a new token."""
         logical_blocks = seq.logical_token_blocks
         block_table = self.block_tables[seq.seq_id]
-    
+
         if len(block_table) < len(logical_blocks):
             # The sequence has a new logical block.
             # Allocate a new physical block.
@@ -220,6 +220,7 @@ class BlockSpaceManager:
 
     def can_swap_prefilled_object_in(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_object_physical_blocks(seq_group)
+        print("can_swap_prefilled_object_in: ", blocks)
         num_prefilled_seqs = seq_group.num_seqs(status=SequenceStatus.PREFILLED)
         num_free_blocks = self.gpu_allocator.get_num_free_blocks()
         # NOTE: Conservatively, we assume that every sequence will allocate
