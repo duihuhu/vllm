@@ -426,6 +426,7 @@ class Scheduler:
             seq_group = self.prefilled.pop(0)
             self._swap_prefilled_object_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
+            print("blocks_to_copy: ", blocks_to_copy)
             self.running.append(seq_group)
             
         scheduler_outputs = SchedulerOutputs(
