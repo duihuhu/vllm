@@ -1,5 +1,5 @@
 import zerorpc
-from vllm.worker.service import RPCService
+from vllm.worker.object_manager.service import RPCService
 
 class ObjectServer:
   def listen(self) -> None:
