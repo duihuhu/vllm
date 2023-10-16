@@ -81,7 +81,8 @@ class PlasmaAllocator:
         for i in range(self.parallel_config.tensor_parallel_size):
             #  def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
             obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, [gpu_block.block_number], self.num_layers, i, i)
-            # print("obj: ", obj)
+            de_obj = pickle.loads(de_obj)
+            print("de_obj ids: ", de_obj[gpu_block.block_number].object_ids)
             # block.objects_info.append(pickle.loads(obj))
             block.objects_info.append(pickle.loads(obj))
         return block
