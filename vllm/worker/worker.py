@@ -291,7 +291,7 @@ class Worker:
         issued_cache_op = False
         if blocks_to_swap_in:
             print("swap_in_prefilled_object_cache: ", blocks_to_swap_in)
-            self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in)
+            self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in, self.rank)
             issued_cache_op = True
         if blocks_to_swap_out:
             self.cache_engine.swap_out(blocks_to_swap_out)
