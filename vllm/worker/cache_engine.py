@@ -233,7 +233,7 @@ class CacheEngine:
         for key, obj_info in src_to_dst.items():
             key_object_info = (obj_info[rank][key].object_ids)[0]
             value_object_info = (obj_info[rank][key].object_ids)[1]
-            for key_addr, value_addr in key_object_info, value_object_info:            
+            for key_addr, value_addr in zip(key_object_info, value_object_info):            
                 plasma_client.seal(key_addr)
                 plasma_client.seal(value_addr)
         #seal object after swap data
