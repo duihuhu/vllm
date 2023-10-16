@@ -235,7 +235,6 @@ class SequenceGroup:
                 f"sampling_params={self.sampling_params}, "
                 f"num_seqs={len(self.seqs)})")
 
-
 class SequenceGroupMetadata:
     """Metadata for a sequence group. Used to create `InputMetadata`.
 

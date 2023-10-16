@@ -146,6 +146,141 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
+    def _obj_schedule(
+            self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
+        # Blocks that need to be swaped or copied before model execution.
+        blocks_to_swap_in: Dict[int, List[ObjectInfo]] = {}
+        blocks_to_swap_out: Dict[int, int] = {}
+        blocks_to_copy: Dict[int, List[int]] = {}
+        ignored_seq_groups: List[SequenceGroup] = []
+
+        # Fix the current time.
+        now = time.time()
+
+        # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
+        # in order to minimize the preemption overheads.
+        # Preemption happens only when there is no available slot to keep all
+        # the sequence groups in the RUNNING state.
+        # In this case, the policy is responsible for deciding which sequence
+        # groups to preempt.
+        self.running = self.policy.sort_by_priority(now, self.running)
+
+        # Reserve new token slots for the running sequence groups.
+        running: List[SequenceGroup] = []
+        preempted: List[SequenceGroup] = []
+        while self.running:
+            seq_group = self.running.pop(0)
+            while not self.block_manager.can_append_slot(seq_group):
+                if self.running:
+                    # Preempt the lowest-priority sequence groups.
+                    victim_seq_group = self.running.pop(-1)
+                    self._preempt(victim_seq_group, blocks_to_swap_out)
+                    preempted.append(victim_seq_group)
+                else:
+                    # No other sequence groups can be preempted.
+                    # Preempt the current sequence group.
+                    self._preempt(seq_group, blocks_to_swap_out)
+                    preempted.append(seq_group)
+                    break
+            else:
+                # Append new slots to the sequence group.
+                self._append_slot(seq_group, blocks_to_copy)
+                running.append(seq_group)
+        self.running = running
+
+        # Swap in the sequence groups in the SWAPPED state if possible.
+        self.swapped = self.policy.sort_by_priority(now, self.swapped)
+        while self.swapped and not blocks_to_swap_out:
+            seq_group = self.swapped[0]
+            # If the sequence group has been preempted in this step, stop.
+            if seq_group in preempted:
+                break
+            # If the sequence group cannot be swapped in, stop.
+            if not self.block_manager.can_swap_prefilled_object_in(seq_group):
+                break
+
+            # The total number of sequences in the RUNNING state should not
+            # exceed the maximum number of sequences.
+            num_new_seqs = seq_group.num_seqs(status=SequenceStatus.SWAPPED)
+            num_curr_seqs = sum(
+                seq_group.num_seqs(status=SequenceStatus.RUNNING)
+                for seq_group in self.running)
+            if (num_curr_seqs + num_new_seqs >
+                    self.scheduler_config.max_num_seqs):
+                break
+
+            seq_group = self.swapped.pop(0)
+            self._swap_prefilled_object_in(seq_group, blocks_to_swap_in)
+            self._append_slot(seq_group, blocks_to_copy)
+            self.running.append(seq_group)
+
+        num_batched_tokens = sum(
+            seq_group.num_seqs(status=SequenceStatus.RUNNING)
+            for seq_group in self.running)
+
+        # Join waiting sequences if possible.
+        prompt_group_ids: List[str] = []
+        # NOTE(woosuk): The sequence groups in the SWAPPED state are strictly
+        # prioritized over the sequence groups in the WAITING state.
+        # This is because we want to bound the amount of CPU memory taken by
+        # the swapped sequence groups.
+        if not self.swapped:
+            # Optimization: We do not sort the waiting queue since the preempted
+            # sequence groups are added to the front and the new sequence groups
+            # are added to the back.
+            while self.waiting:
+                seq_group = self.waiting[0]
+                # If the sequence group has been preempted in this step, stop.
+                if seq_group in preempted:
+                    break
+
+                num_prompt_tokens = seq_group.get_seqs()[0].get_len()
+                if num_prompt_tokens >= self.scheduler_config.max_seq_len:
+                    logger.warning(
+                        f"Input prompt ({num_prompt_tokens} tokens) is too long"
+                        " and exceeds limit of "
+                        f"{self.scheduler_config.max_seq_len}")
+                    for seq in seq_group.get_seqs():
+                        seq.status = SequenceStatus.FINISHED_IGNORED
+                    ignored_seq_groups.append(seq_group)
+                    self.waiting.pop(0)
+                    break
+
+                # If the sequence group cannot be allocated, stop.
+                if not self.block_manager.can_allocate(seq_group):
+                    break
+
+                # If the number of batched tokens exceeds the limit, stop.
+                if (num_batched_tokens + num_prompt_tokens >
+                        self.scheduler_config.max_num_batched_tokens):
+                    break
+
+                # The total number of sequences in the RUNNING state should not
+                # exceed the maximum number of sequences.
+                num_new_seqs = seq_group.num_seqs(
+                    status=SequenceStatus.WAITING)
+                num_curr_seqs = sum(
+                    seq_group.num_seqs(status=SequenceStatus.RUNNING)
+                    for seq_group in self.running)
+                if (num_curr_seqs + num_new_seqs >
+                        self.scheduler_config.max_num_seqs):
+                    break
+
+                seq_group = self.waiting.pop(0)
+                self._allocate(seq_group)
+                self.running.append(seq_group)
+                num_batched_tokens += num_prompt_tokens
+                prompt_group_ids.append(seq_group.request_id)
+
+        scheduler_outputs = SchedulerOutputs(
+            blocks_to_swap_in=blocks_to_swap_in,
+            blocks_to_swap_out=blocks_to_swap_out,
+            blocks_to_copy=blocks_to_copy,
+        )
+        if not self.log_stats:
+            return scheduler_outputs, prompt_group_ids, ignored_seq_groups
+        return scheduler_outputs, prompt_group_ids, ignored_seq_groups
+    
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
         # Blocks that need to be swaped or copied before model execution.
@@ -471,6 +606,38 @@ class Scheduler:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
+
+            seq_group_metadata = SequenceGroupMetadata(
+                request_id=seq_group.request_id,
+                is_prompt=is_prompt,
+                seq_data=seq_data,
+                sampling_params=seq_group.sampling_params,
+                block_tables=block_tables,
+            )
+            seq_group_metadata_list.append(seq_group_metadata)
+        return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups
+
+    def obj_schedule(
+        self
+    ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
+               List[SequenceGroup]]:
+        
+                # Schedule sequence groups.
+        # This function call changes the internal states of the scheduler
+        # such as self.running, self.swapped, and self.waiting.
+        (scheduler_outputs, prompt_group_ids,
+         ignored_seq_groups) = self._obj_schedule()
+
+        # Create input data structures.
+        seq_group_metadata_list: List[SequenceGroupMetadata] = []
+        for seq_group in self.running:
+            is_prompt = seq_group.request_id in prompt_group_ids
+            seq_data: Dict[int, List[SequenceData]] = {}
+            block_tables: Dict[int, List[List[ObjectInfo]]] = {}
+            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                seq_id = seq.seq_id
+                seq_data[seq_id] = seq.data
+                block_tables[seq_id] = self.block_manager.get_object_block_table(seq)
 
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
