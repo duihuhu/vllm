@@ -274,8 +274,8 @@ class CacheEngine:
             value_objects_address = []
             j = 0
             for key, obj_info in src_to_dst.items():                
-                key_objects_address.append(key_object_address[j][i].address)
-                value_objects_address.append(value_object_address[j][i].address)
+                key_objects_address.append(key_object_address[j][i])
+                value_objects_address.append(value_object_address[j][i])
                 j = j + 1
             key_layer_objects_address.append(key_objects_address)
             value_layer_objects_address.append(value_objects_address)
