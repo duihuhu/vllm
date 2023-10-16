@@ -251,7 +251,17 @@ class CacheEngine:
     def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
         key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
+        src_to_dst_copy = {}
         
+        for key, obj_info in src_to_dst.items():
+            src_to_dst_copy[key] = 0
+            key_obj_info = (obj_info[rank].object_ids)[0]
+            value_obj_info = (obj_info[rank].object_ids)[1]
+            key_obj_addr = plasma_client.get_buffers(key_obj_info)
+            value_obj_addr = plasma_client.get_buffers(value_obj_info)
+            print("key_object_addr ", key_obj_addr)
+            print("value_obj_addr ", value_obj_addr)
+            
         return 
     def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:
         self._swap_in_prefilled_from_plasma(self.gpu_cache, src_to_dst, rank)
