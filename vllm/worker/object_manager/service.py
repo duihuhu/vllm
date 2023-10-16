@@ -12,8 +12,8 @@ class RPCService(object):
     for block_num in gpu_block_nums:
       object_info = ObjectInfo(request_id, seq_id, block_num, num_layers, device_id, ip_address)
       object_info.object_ids = object_info.allocate_objects_id(num_layers)
-      for object_id in object_info.object_ids:
-        print(block_num, object_id.binary().hex())
+      # for object_id in object_info.object_ids:
+      #   print(block_num, object_id.binary().hex())
       if seq_id in self.seq_table_:
         self.seq_table_[seq_id].append(object_info)
       else:
