@@ -247,14 +247,14 @@ class LLMEngine:
     
     def convert_prefilled_object_to_running(self) -> List[SequenceGroupMetadata]:
         scheduler_outputs = self.scheduler.swap_in_prompt_object_kv_cache()
-        # if not scheduler_outputs.is_empty():
-        #     # Execute the swap prefill cache.
-        #     self._run_workers(
-        #         "swap_in_prefilled_object_cache",
-        #         blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
-        #         blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
-        #         blocks_to_copy=scheduler_outputs.blocks_to_copy,
-        #     )
+        if not scheduler_outputs.is_empty():
+            # Execute the swap prefill cache.
+            self._run_workers(
+                "swap_in_prefilled_object_cache",
+                blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
+                blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
+                blocks_to_copy=scheduler_outputs.blocks_to_copy,
+            )
             
     def convert_prefilled_to_swapped(self) -> None:
         self.scheduler.convert_prefilled_to_swapped_seqs()

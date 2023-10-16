@@ -75,12 +75,12 @@ class PlasmaAllocator:
     ##only allocate object id 
     def allocate(self, request_id, seq_id, gpu_block) -> PhysicalTokenBlock:
         block = PhysicalTokenBlock(device = self.device,
-                    block_number = -1,
+                    block_number = gpu_block.block_number,
                     block_size = self.block_size,
                     objects_info = [])
         for i in range(self.parallel_config.tensor_parallel_size):
             #  def create_objects_id(self, request_id, seq_id, gpu_block_nums, num_layers, device_id, ip_address):
-            obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, [gpu_block.block_number], self.num_layers, i, i)
+            obj = self.object_client.socket_client_.create_objects_id(request_id, seq_id, gpu_block.block_number, self.num_layers, i, i)
             # de_obj = pickle.loads(obj)
             # print("de_obj ids: ", de_obj[gpu_block.block_number].object_ids)
             block.objects_info.append(pickle.loads(obj))

@@ -193,8 +193,8 @@ class CacheEngine:
             value_objects_address = []
             
             for key, obj_info in src_to_dst.items():
-                key_object_info = (obj_info[rank][key].object_ids)[0]
-                value_object_info = (obj_info[rank][key].object_ids)[1]
+                key_object_info = (obj_info[rank].object_ids)[0]
+                value_object_info = (obj_info[rank].object_ids)[1]
                 key_obj = plasma_client.create(key_object_info[i], key_block_size_in_bytes)
                 key_objects_address.append(key_obj.address)
                 value_obj = plasma_client.create(value_object_info[i], value_block_size_in_bytes)
@@ -231,8 +231,8 @@ class CacheEngine:
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy)
 
         for key, obj_info in src_to_dst.items():
-            key_object_info = (obj_info[rank][key].object_ids)[0]
-            value_object_info = (obj_info[rank][key].object_ids)[1]
+            key_object_info = (obj_info[rank].object_ids)[0]
+            value_object_info = (obj_info[rank].object_ids)[1]
             for key_addr, value_addr in zip(key_object_info, value_object_info):            
                 plasma_client.seal(key_addr)
                 plasma_client.seal(value_addr)
@@ -249,8 +249,11 @@ class CacheEngine:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst, rank)
     
     def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
+        key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
+        value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
+        
         return 
-    def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[List[ObjectInfo], int], rank) -> None:
+    def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:
         self._swap_in_prefilled_from_plasma(self.gpu_cache, src_to_dst, rank)
     
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:

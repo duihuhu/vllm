@@ -29,6 +29,22 @@ class PreemptionMode(enum.Enum):
     SWAP = enum.auto()
     RECOMPUTE = enum.auto()
 
+class SchedulerObjectOutputs:
+    def __init__(
+        self,
+        blocks_to_swap_in: Dict[int, List[ObjectInfo]],
+        blocks_to_swap_out: Dict[int, List[ObjectInfo]],
+        blocks_to_copy: Dict[int, List[int]],
+    ) -> None:
+        self.blocks_to_swap_in = blocks_to_swap_in
+        self.blocks_to_swap_out = blocks_to_swap_out
+        self.blocks_to_copy = blocks_to_copy
+        # Swap in and swap out should never happen at the same time.
+        assert not (blocks_to_swap_in and blocks_to_swap_out)
+
+    def is_empty(self) -> bool:
+        return (not self.blocks_to_swap_in and not self.blocks_to_swap_out
+                and not self.blocks_to_copy)
 
 class SchedulerOutputs:
 
@@ -402,9 +418,9 @@ class Scheduler:
     
     def swap_in_prompt_object_kv_cache(
         self
-    ) -> SchedulerOutputs:
+    ) -> SchedulerObjectOutputs:
         blocks_to_swap_out: Dict[int, List[ObjectInfo]] = {}
-        blocks_to_swap_in: Dict[List[ObjectInfo], int] = {}
+        blocks_to_swap_in: Dict[int, List[ObjectInfo]] = {}
         blocks_to_copy: Dict[int, List[int]] = {}
         
         while self.prefilled:
@@ -426,10 +442,9 @@ class Scheduler:
             seq_group = self.prefilled.pop(0)
             self._swap_prefilled_object_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
-            print("blocks_to_copy: ", blocks_to_copy)
             self.running.append(seq_group)
             
-        scheduler_outputs = SchedulerOutputs(
+        scheduler_outputs = SchedulerObjectOutputs(
             blocks_to_swap_in=blocks_to_swap_in,
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,

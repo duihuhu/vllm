@@ -284,12 +284,13 @@ class Worker:
 
     def swap_in_prefilled_object_cache(
         self,
-        blocks_to_swap_in: Dict[List[ObjectInfo], int],
+        blocks_to_swap_in: Dict[int, List[ObjectInfo]],
         blocks_to_swap_out: Dict[int, List[ObjectInfo]],
         blocks_to_copy: Dict[int, List[int]])  -> None:
 
         issued_cache_op = False
         if blocks_to_swap_in:
+            print("swap_in_prefilled_object_cache: ", blocks_to_swap_in)
             self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in)
             issued_cache_op = True
         if blocks_to_swap_out:
