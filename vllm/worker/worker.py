@@ -294,7 +294,6 @@ class Worker:
             
         if blocks_to_object_swap_out:
             for key, value in blocks_to_object_swap_out.items():
-                print("value ", value)
                 self.cache_engine.swap_out_prefilled_to_plasma(value, self.rank)
         if issued_cache_op:
             cache_events = self.cache_events
