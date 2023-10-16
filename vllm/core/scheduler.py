@@ -586,7 +586,6 @@ class Scheduler:
         blocks_to_swap_in: Dict[int, List[ObjectInfo]],
     ) -> None:
         mapping = self.block_manager.swap_in_from_plasma(seq_group)
-        print("_swap_prefilled_object_in mapping ", mapping)
         blocks_to_swap_in.update(mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
             seq.status = SequenceStatus.RUNNING

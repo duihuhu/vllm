@@ -161,7 +161,7 @@ class BlockSpaceManager:
     def append_slot(self, seq: Sequence) -> Optional[Tuple[int, int]]:
         """Allocate a physical slot for a new token."""
         logical_blocks = seq.logical_token_blocks
-        block_table = self.block_tables[seq.seq_id]
+        block_table = self.block_tables_object[seq.seq_id]
 
         if len(block_table) < len(logical_blocks):
             # The sequence has a new logical block.
@@ -275,7 +275,7 @@ class BlockSpaceManager:
         }
         return block_number_mapping
 
-    def swap_in_from_plasma(self, seq_group: SequenceGroup) -> Dict[List[ObjectInfo], int]:
+    def swap_in_from_plasma(self, seq_group: SequenceGroup) -> Dict[int, List[ObjectInfo]]:
         # Object block -> GPU block.
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         for seq in seq_group.get_seqs():
@@ -287,11 +287,9 @@ class BlockSpaceManager:
                 if object_block in mapping:
                     gpu_block = mapping[object_block]
                     gpu_block.ref_count += 1
-                    print('already exist gpu block: ', gpu_block.block_number)
                 else:
                     gpu_block = self.gpu_allocator.allocate()
                     mapping[object_block] = gpu_block
-                    print('new allocate gpu block: ', gpu_block.block_number)
                 new_block_table.append(gpu_block)
                 #to do free object in plasma, not in there , freeing object after swap in 
                 self.plasma_allocator.free(object_block)
