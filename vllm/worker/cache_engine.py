@@ -249,20 +249,41 @@ class CacheEngine:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst, rank)
     
     def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
-        key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
-        value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
         src_to_dst_copy = {}
-        
+        key_object_address = []
+        value_object_address = []
         for key, obj_info in src_to_dst.items():
             src_to_dst_copy[key] = 0
             key_obj_info = (obj_info[rank].object_ids)[0]
             value_obj_info = (obj_info[rank].object_ids)[1]
-            key_obj_addr = plasma_client.get_buffers(key_obj_info)
-            value_obj_addr = plasma_client.get_buffers(value_obj_info)
-            print("key_object_addr ", key_obj_addr)
-            print("value_obj_addr ", value_obj_addr)
+            key_obj_buf = plasma_client.get_buffers(key_obj_info)
+            value_obj_buf = plasma_client.get_buffers(value_obj_info)
+            key_obj_addr = []
+            value_obj_addr = []
+            for k_addr, v_addr in zip(key_obj_buf, value_obj_buf):
+                key_obj_addr.append(k_addr.address)
+                value_obj_addr.append(v_addr.address)
+            key_object_address.append(key_obj_addr)
+            value_object_address.append(value_obj_addr)
+        
+        #by layers compose
+        key_layer_objects_address = []
+        value_layer_objects_address = []
+        for i in range(self.num_layers):
+            key_objects_address = []
+            value_objects_address = []
+            j = 0
+            for key, obj_info in src_to_dst.items():                
+                key_objects_address.append(key_object_address[j][i].address)
+                value_objects_address.append(value_object_address[j][i].address)
+                j = j + 1
+            key_layer_objects_address.append(key_objects_address)
+            value_layer_objects_address.append(value_objects_address)
             
+        print("key_layer_objects_address ", key_layer_objects_address)
+        print("value_layer_objects_address ", value_layer_objects_address)
         return 
+    
     def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:
         self._swap_in_prefilled_from_plasma(self.gpu_cache, src_to_dst, rank)
     
