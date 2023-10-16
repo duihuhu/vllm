@@ -9,21 +9,29 @@
 #include <cuda_fp16.h>
 
 // swap kv cahe to plasma object address, if ensure data pass, use cudaMemcpy instead of cudaMemcpyAsync or check stream status
+// data_direction = 0 , swap src to dst object; data_direction = 1 , swap dst object to src
 void swap_blocks_to_object(
   torch::Tensor& src,
   std::vector<long long> &dst_address,
-  const std::map<int64_t, int64_t>& block_mapping
+  const std::map<int64_t, int64_t>& block_mapping, 
+  int data_direction,
 ) {
+  cudaMemcpyKind memcpy_type;
+  if (data_direction == 0) {
+    memcpy_type = cudaMemcpyDeviceToHost;
+  } else if (data_direction == 1) {
+    memcpy_type = cudaMemcpyHostToDevice;
+  }
   // 获取张量的数据类型
   // torch::ScalarType dtype = src.scalar_type();
 
   // // 打印数据类型
   // std::cout << "数据类型: " << torch::toString(dtype) << std::endl;
 
-  cudaMemcpyKind memcpy_type;
-  memcpy_type = cudaMemcpyDeviceToHost;
-  void *src_ptr = src.data_ptr();
+  // cudaMemcpyKind memcpy_type;
+  // memcpy_type = cudaMemcpyDeviceToHost;
 
+  void *src_ptr = src.data_ptr();
   const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
 
   int i = 0;
@@ -34,15 +42,25 @@ void swap_blocks_to_object(
     int64_t src_block_number = pair.first;
     // int64_t dst_block_number = pair.second;
     void *dst_ptr = (void*)dst_address[i];
-    at::Half *f_dst_ptr = (at::Half*)dst_address[i];
+    // at::Half *f_dst_ptr = (at::Half*)dst_address[i];
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
-    cudaMemcpyAsync(
-      dst_ptr,
-      src_ptr + src_offset,
-      block_size_in_bytes,
-      memcpy_type,
-      stream);
+    if(data_direction == 0) {
+      cudaMemcpyAsync(
+        dst_ptr,
+        src_ptr + src_offset,
+        block_size_in_bytes,
+        memcpy_type,
+        stream);
+    } else {
+      cudaMemcpyAsync(
+        src_ptr + src_offset,
+        dst_ptr,
+        block_size_in_bytes,
+        memcpy_type,
+        stream);
+    }
+
     // for compared swap data with original data
     // printf("src_block_number %lld, object\n",src_block_number);
     // for (int j = 0; j < 10; j++) {

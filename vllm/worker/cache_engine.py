@@ -226,9 +226,8 @@ class CacheEngine:
         with torch.cuda.stream(self.cache_stream):
             for i in range(self.num_layers):
                 src_key_cache, src_value_cache = src[i]
-                # dst_key_object = object_swap_lists[i]
-                cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy)
-                cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy)
+                cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy, 0)
+                cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 0)
 
         for key, obj_info in src_to_dst.items():
             key_object_info = (obj_info[rank].object_ids)[0]
@@ -280,8 +279,11 @@ class CacheEngine:
             key_layer_objects_address.append(key_objects_address)
             value_layer_objects_address.append(value_objects_address)
             
-        print("key_layer_objects_address ", key_layer_objects_address)
-        print("value_layer_objects_address ", value_layer_objects_address)
+        with torch.cuda.stream(self.cache_stream):
+            for i in range(self.num_layers):
+                src_key_cache, src_value_cache = src[i]
+                cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy, 1)
+                cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 1)
         return 
     
     def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:
