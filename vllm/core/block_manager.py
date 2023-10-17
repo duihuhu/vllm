@@ -180,7 +180,6 @@ class BlockSpaceManager:
     def append_object_slot(self, seq: Sequence) -> Optional[Tuple[int, int]]:
         """Allocate a physical slot for a new token."""
         logical_blocks = seq.logical_token_blocks
-        print("append_object_slot: " ,  self.block_tables_object)
         block_table = self.block_tables_object[seq.seq_id]
 
         if len(block_table) < len(logical_blocks):
