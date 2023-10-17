@@ -278,7 +278,13 @@ class BlockSpaceManager:
             gpu_block.block_number : cpu_block.plasma_objects_ids
             for cpu_block, gpu_block in mapping.items()
         }
-
+        for cpu_block, gpu_block in mapping.items():
+            print(f"The {gpu_block.block_number} gpu block wants to be swapped in/n")
+            print(f"The {cpu_block.block_number} cpu block is going to handle it/n")
+            print("The plasma.ObjectID lists of cpu block are following")
+            for array in cpu_block.plasma_objects_ids:
+                for tmp in array:
+                    print(tmp)
         for cpu_block, _ in mapping.items():
             cpu_block.plasma_objects_ids.clear()
         
@@ -313,6 +319,13 @@ class BlockSpaceManager:
             gpu_block.block_number: cpu_block.block_number
             for gpu_block, cpu_block in mapping.items()
         }
+        for gpu_block, cpu_block in mapping.items():
+            print(f"The {gpu_block.block_number} gpu block wants to be swapped out/n")
+            print(f"The {cpu_block.block_number} cpu block is going to handle it/n")
+            print("The plasma.ObjectID lists of cpu block are following")
+            for array in cpu_block.plasma_objects_ids:
+                for tmp in array:
+                    print(tmp)
         return block_number_mapping
 
     def swap_out_to_plasma(self, seq_group: SequenceGroup) -> Dict[int, List[PlasmaObjectIDS]]:
