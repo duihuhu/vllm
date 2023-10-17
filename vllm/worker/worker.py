@@ -266,6 +266,9 @@ class Worker:
             issued_cache_op = True
 
         if objects_to_swap_in:
+            print(f"The self.device_id is {self.device_id}")
+            for _, ids in objects_to_swap_in:
+                print(f"The length of ids's lists is {len(ids)}")
             self.cache_engine.swap_in_prefilled_from_plasma(objects_to_swap_in, self.device_id)
             issued_cache_op = True
 
