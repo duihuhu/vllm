@@ -286,7 +286,7 @@ class Worker:
         blocks_to_swap_in: Dict[int, List[ObjectInfo]],
         blocks_to_swap_out: Dict[int, List[ObjectInfo]],
         blocks_to_copy: Dict[int, List[int]])  -> None:
-
+        print("111")
         issued_cache_op = False
         if blocks_to_swap_in:
             self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in, self.rank)
