@@ -98,6 +98,8 @@ def initialize_cluster(
             if distributed_init_method is None:
                 ip = node_resource.split("node:")[-1]
                 port = random.randint(10000, 20000)
+                if master_port:
+                    port = master_port
                 distributed_init_method = f"tcp://{ip}:{port}"
                 print("distributed_init_method", distributed_init_method)
             rank += 1
