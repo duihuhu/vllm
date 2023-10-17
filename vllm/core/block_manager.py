@@ -442,7 +442,7 @@ class BlockSpaceManager:
         block_table = self.block_tables[seq.seq_id]
         return [block.block_number for block in block_table]
 
-    def get_object_block_table(self, seq: Sequence) -> List[List[ObjectInfo]]:
+    def get_object_block_table(self, seq: Sequence) -> List[int]:
         block_table = self.block_tables_object[seq.seq_id]
         return [block.block_number for block in block_table]
 
