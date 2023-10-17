@@ -247,6 +247,7 @@ class LLMEngine:
     
     def convert_prefilled_object_to_running(self) -> List[SequenceGroupMetadata]:
         scheduler_outputs = self.scheduler.swap_in_prompt_object_kv_cache()
+        print("scheduler outputs ", scheduler_outputs)
         if not scheduler_outputs.is_empty():
             # Execute the swap prefill cache.
             self._run_workers(
@@ -314,13 +315,6 @@ class LLMEngine:
         (seq_group_metadata_list, scheduler_outputs,
          ignored_seq_groups) = self.scheduler.obj_schedule()
     
-            
-        for seq_group_metadata in seq_group_metadata_list:
-            seq_ids = list(seq_group_metadata.seq_data.keys())
-            # Use any sequence in the group.
-            seq_id = seq_ids[0]
-            print("seq_group_metadata block_tables seq_id: ", seq_group_metadata.block_tables[seq_id], seq_id)
-            
         if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
                 and (not ignored_seq_groups)):
             # Nothing to do.
