@@ -276,7 +276,7 @@ class BlockSpaceManager:
             self.block_tables[seq.seq_id] = new_block_table
         
         plasma_object_block_number_mapping = {
-            gpu_block.block_number : cpu_block.plasma_objects_ids
+            gpu_block.block_number : cpu_block.plasma_objects_ids.copy()
             for cpu_block, gpu_block in mapping.items()
         }
         for cpu_block, gpu_block in mapping.items():
@@ -289,7 +289,6 @@ class BlockSpaceManager:
                     print(tmp)
         for cpu_block, _ in mapping.items():
             cpu_block.plasma_objects_ids.clear()
-        
         return plasma_object_block_number_mapping
 
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
