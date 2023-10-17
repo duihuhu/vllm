@@ -295,8 +295,8 @@ class CacheEngine:
                 k_id = plasma_to_blocks_this_worker[i][0]
                 v_id = plasma_to_blocks_this_worker[i][1]
 
-                k_obj = plasma_client.get_buffers(k_id)
-                v_obj = plasma_client.get_buffers(v_id)
+                k_obj = plasma_client.get_buffers([k_id])[0]
+                v_obj = plasma_client.get_buffers([v_id])[0]
 
                 key_object_address_lists.append(k_obj.address)
                 value_object_address_lists.append(v_obj.address)
