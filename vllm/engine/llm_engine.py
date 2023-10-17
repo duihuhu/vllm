@@ -247,7 +247,6 @@ class LLMEngine:
     
     def convert_prefilled_object_to_running(self) -> List[SequenceGroupMetadata]:
         scheduler_outputs = self.scheduler.swap_in_prompt_object_kv_cache()
-        print("scheduler outputs ", scheduler_outputs)
         if not scheduler_outputs.is_empty():
             # Execute the swap prefill cache.
             self._run_workers(

@@ -291,22 +291,25 @@ class Worker:
         if blocks_to_swap_in:
             self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in, self.rank)
             issued_cache_op = True
+        print("aaa")
         if blocks_to_swap_out:
             self.cache_engine.swap_out(blocks_to_swap_out)
             issued_cache_op = True
+        print("bbb")
         if blocks_to_copy:
             self.cache_engine.copy(blocks_to_copy)
             issued_cache_op = True
-
+        print("ccc")
         if issued_cache_op:
             cache_events = self.cache_events
         else:
             cache_events = None
-
+        print("ddd")
         if cache_events is not None:
             for event in cache_events:
                 event.wait()
-                
+        print("eee")
+        
     def swap_out_prefilled_cache(
         self,
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
