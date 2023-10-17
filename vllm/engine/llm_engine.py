@@ -237,8 +237,8 @@ class LLMEngine:
         scheduler_outputs, objects_to_swap_in = self.scheduler.swap_in_prompt_kv_cache()
         if not scheduler_outputs.is_empty() or objects_to_swap_in:
             # Execute the swap prefill cache.
-            if objects_to_swap_in is None:
-                print(f"In llm_engine.py's covert_prefilled_to_running the objects_to_swap_in is None")
+            #if objects_to_swap_in is None:
+            #    print(f"In llm_engine.py's covert_prefilled_to_running the objects_to_swap_in is None")
             self._run_workers(
                 "swap_in_prefilled_cache",
                 blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,

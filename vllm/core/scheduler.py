@@ -399,8 +399,8 @@ class Scheduler:
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,
         )
-        if objects_to_swap_in is None:
-            print(f"In scheduler.py's swap_in_prompt_kv_cache the objects_to_swap_in is None")
+        #if objects_to_swap_in is None:
+        #    print(f"In scheduler.py's swap_in_prompt_kv_cache the objects_to_swap_in is None")
         return (scheduler_outputs, objects_to_swap_in)
         
     def schedule(
@@ -555,8 +555,8 @@ class Scheduler:
     ) -> None:
         #mapping = self.block_manager.swap_in(seq_group)
         objects_mapping = self.block_manager.plasma_swap_in(seq_group)
-        if objects_mapping:
-            print(f"The return of block_manager.py's plasma_swap_in is not None")
+        #if objects_mapping:
+        #    print(f"The return of block_manager.py's plasma_swap_in is not None")
         #blocks_to_swap_in.update(mapping)
         objects_to_swap_in.update(objects_mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):

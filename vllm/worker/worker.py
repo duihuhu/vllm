@@ -266,9 +266,9 @@ class Worker:
             issued_cache_op = True
 
         if objects_to_swap_in:
-            print(f"The self.device_id is {self.device_id}")
-            if objects_to_swap_in is None:
-                print(f"In worker.py's swap_in_prefilled_cache the objects_to_swap in is None")
+            #print(f"The self.device_id is {self.device_id}")
+            #if objects_to_swap_in is None:
+            #    print(f"In worker.py's swap_in_prefilled_cache the objects_to_swap in is None")
             self.cache_engine.swap_in_prefilled_from_plasma(objects_to_swap_in, self.device_id)
             issued_cache_op = True
 

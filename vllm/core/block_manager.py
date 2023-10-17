@@ -279,14 +279,14 @@ class BlockSpaceManager:
             gpu_block.block_number : cpu_block.plasma_objects_ids.copy()
             for cpu_block, gpu_block in mapping.items()
         }
-        for cpu_block, gpu_block in mapping.items():
+        '''for cpu_block, gpu_block in mapping.items():
             print(f"The {gpu_block.block_number} gpu block wants to be swapped in")
             print(f"The {cpu_block.block_number} cpu block is going to handle it")
             print("The plasma.ObjectID lists of cpu block are following")
             for i, array in enumerate(cpu_block.plasma_objects_ids):
                 print(f"This is device {i}")
                 for tmp in array:
-                    print(tmp)
+                    print(tmp)'''
         for cpu_block, _ in mapping.items():
             cpu_block.plasma_objects_ids.clear()
         return plasma_object_block_number_mapping
@@ -361,14 +361,14 @@ class BlockSpaceManager:
             gpu_block.block_number: object_block.plasma_objects_ids
             for gpu_block, object_block in mapping.items()
         }
-        for gpu_block, cpu_block in mapping.items():
+        '''for gpu_block, cpu_block in mapping.items():
             print(f"The {gpu_block.block_number} gpu block wants to be swapped out")
             print(f"The {cpu_block.block_number} cpu block is going to handle it")
             print("The plasma.ObjectID lists of cpu block are following")
             for i, array in enumerate(cpu_block.plasma_objects_ids):
                 print(f"This is device {i}")
                 for tmp in array:
-                    print(tmp)
+                    print(tmp)'''
         return block_number_object_id_mapping
 
     def _free_block_table(self, block_table: BlockTable) -> None:
