@@ -318,7 +318,6 @@ class LLMEngine:
             # Nothing to do.
             return []
         # Execute the model.
-        print("seq_group_metadata_list " , seq_group_metadata_list)
         output = self._run_workers(
             "execute_model",
             seq_group_metadata_list=seq_group_metadata_list,
