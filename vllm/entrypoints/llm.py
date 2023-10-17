@@ -49,6 +49,7 @@ class LLM:
         tensor_parallel_size: int = 1,
         dtype: str = "auto",
         seed: int = 0,
+        master_port: Optional[int] = None,
         **kwargs,
     ) -> None:
         if "disable_log_stats" not in kwargs:
@@ -63,7 +64,7 @@ class LLM:
             seed=seed,
             **kwargs,
         )
-        self.llm_engine = LLMEngine.from_engine_args(engine_args)
+        self.llm_engine = LLMEngine.from_engine_args(engine_args, master_port)
         self.request_counter = Counter()
 
     def get_tokenizer(

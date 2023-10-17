@@ -145,13 +145,13 @@ class LLMEngine:
         self._run_workers("init_cache_engine", cache_config=self.cache_config)
 
     @classmethod
-    def from_engine_args(cls, engine_args: EngineArgs) -> "LLMEngine":
+    def from_engine_args(cls, engine_args: EngineArgs, master_port: Optional[int]) -> "LLMEngine":
         """Creates an LLM engine from the engine arguments."""
         # Create the engine configs.
         engine_configs = engine_args.create_engine_configs()
         parallel_config = engine_configs[2]
         # Initialize the cluster.
-        distributed_init_method, devices = initialize_cluster(parallel_config)
+        distributed_init_method, devices = initialize_cluster(parallel_config, master_port)
         # Create the LLM engine.
         engine = cls(*engine_configs,
                      distributed_init_method,
