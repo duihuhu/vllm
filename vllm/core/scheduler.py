@@ -165,10 +165,10 @@ class Scheduler:
         # groups to preempt.
         self.running = self.policy.sort_by_priority(now, self.running)
 
+        print("self.running ", self.running)
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
-        print("before running")
         while self.running:
             print("_obj_schedule running exists ")
             seq_group = self.running.pop(0)
@@ -193,7 +193,6 @@ class Scheduler:
                 self._append_object_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
         self.running = running
-        print("after running")
 
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
