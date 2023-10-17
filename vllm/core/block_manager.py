@@ -409,7 +409,7 @@ class BlockSpaceManager:
                     # mapping[gpu_block] = cpu_block
                 new_block_table.append(object_block)
                 # Free the GPU block swapped out to CPU.
-                # self.gpu_allocator.free(gpu_block)
+                self.gpu_allocator.free(gpu_block)
             self.block_tables_object[seq.seq_id] = new_block_table
 
         block_number_object_id_mapping = {
