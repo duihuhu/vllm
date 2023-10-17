@@ -169,6 +169,7 @@ class Scheduler:
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
         while self.running:
+            print("_obj_schedule running exists ")
             seq_group = self.running.pop(0)
             while not self.block_manager.can_append_slot(seq_group):
                 print("not ")
