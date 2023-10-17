@@ -165,15 +165,12 @@ class Scheduler:
         # groups to preempt.
         self.running = self.policy.sort_by_priority(now, self.running)
 
-        print("self.running ", self.running)
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
         while self.running:
-            print("_obj_schedule running exists ")
             seq_group = self.running.pop(0)
             while not self.block_manager.can_append_slot(seq_group):
-                print("not ")
                 if self.running:
                     # Preempt the lowest-priority sequence groups.
                     victim_seq_group = self.running.pop(-1)
@@ -188,7 +185,6 @@ class Scheduler:
                     preempted.append(seq_group)
                     break
             else:
-                print("yes ")
                 # Append new slots to the sequence group.
                 self._append_object_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
@@ -271,7 +267,7 @@ class Scheduler:
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
                     break
-
+                print("first to process waiting ")
                 seq_group = self.waiting.pop(0)
                 self._allocate_object(seq_group)
                 self.running.append(seq_group)
