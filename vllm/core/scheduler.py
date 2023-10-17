@@ -174,17 +174,19 @@ class Scheduler:
                 if self.running:
                     # Preempt the lowest-priority sequence groups.
                     victim_seq_group = self.running.pop(-1)
-                    self._preempt(victim_seq_group, blocks_to_swap_out)
+                    # self._preempt(victim_seq_group, blocks_to_swap_out)
+                    self._preempt_object(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
-                    self._preempt(seq_group, blocks_to_swap_out)
+                    # self._preempt(seq_group, blocks_to_swap_out)
+                    self._preempt_object(victim_seq_group, blocks_to_swap_out)
                     preempted.append(seq_group)
                     break
             else:
                 # Append new slots to the sequence group.
-                self._append_slot(seq_group, blocks_to_copy)
+                self._append_object_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
         self.running = running
 
@@ -196,7 +198,7 @@ class Scheduler:
             if seq_group in preempted:
                 break
             # If the sequence group cannot be swapped in, stop.
-            if not self.block_manager.can_swap_prefilled_object_in(seq_group):
+            if not self.block_manager.can_swap_object_in(seq_group):
                 break
 
             # The total number of sequences in the RUNNING state should not
@@ -210,8 +212,8 @@ class Scheduler:
                 break
 
             seq_group = self.swapped.pop(0)
-            self._swap_prefilled_object_in(seq_group, blocks_to_swap_in)
-            self._append_slot(seq_group, blocks_to_copy)
+            self._swap_object_in(seq_group, blocks_to_swap_in)
+            self._append_object_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
 
         num_batched_tokens = sum(
@@ -267,7 +269,7 @@ class Scheduler:
                     break
 
                 seq_group = self.waiting.pop(0)
-                self._allocate(seq_group)
+                self._allocate_object(seq_group)
                 self.running.append(seq_group)
                 num_batched_tokens += num_prompt_tokens
                 prompt_group_ids.append(seq_group.request_id)
@@ -472,7 +474,7 @@ class Scheduler:
 
         while self.running:
             seq_group = self.running.pop(0)
-            blocks = self.block_manager._get_physical_blocks(seq_group)
+            # blocks = self.block_manager._get_physical_blocks(seq_group)
             
             # print("request_id: ", seq_group.request_id, blocks)
             for seq in seq_group.get_seqs():
@@ -576,7 +578,7 @@ class Scheduler:
 
             seq_group = self.prefilled.pop(0)
             self._swap_prefilled_object_in(seq_group, blocks_to_swap_in)
-            self._append_slot(seq_group, blocks_to_copy)
+            self._append_object_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
             
         scheduler_outputs = SchedulerObjectOutputs(
@@ -688,12 +690,32 @@ class Scheduler:
             seq_group for seq_group in self.running
             if not seq_group.is_finished()
         ]
-
+    def _allocate_object(self, seq_group: SequenceGroup) -> None:
+        self.block_manager.allocate_object(seq_group)
+        for seq in seq_group.get_seqs():
+            seq.status = SequenceStatus.RUNNING
+            
+            
     def _allocate(self, seq_group: SequenceGroup) -> None:
         self.block_manager.allocate(seq_group)
         for seq in seq_group.get_seqs():
             seq.status = SequenceStatus.RUNNING
 
+
+    def _append_object_slot(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_copy: Dict[int, List[int]],
+    ) -> None:
+        for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            ret = self.block_manager.append_object_slot(seq)
+            if ret is not None:
+                src_block, dst_block = ret
+                if src_block in blocks_to_copy:
+                    blocks_to_copy[src_block].append(dst_block)
+                else:
+                    blocks_to_copy[src_block] = [dst_block]
+                    
     def _append_slot(
         self,
         seq_group: SequenceGroup,
@@ -707,6 +729,25 @@ class Scheduler:
                     blocks_to_copy[src_block].append(dst_block)
                 else:
                     blocks_to_copy[src_block] = [dst_block]
+
+    def _preempt_object(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: Dict[int, int],
+        preemption_mode: Optional[PreemptionMode] = None,
+    ) -> None:
+        if preemption_mode is None:
+            seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+            if len(seqs) == 1:
+                preemption_mode = PreemptionMode.RECOMPUTE
+            else:
+                preemption_mode = PreemptionMode.SWAP
+        if preemption_mode == PreemptionMode.RECOMPUTE:
+            self._preempt_by_recompute(seq_group)
+        elif preemption_mode == PreemptionMode.SWAP:
+            self._preempt_object_by_swap(seq_group, blocks_to_swap_out)
+        else:
+            assert False, "Invalid preemption mode."
 
     def _preempt(
         self,
@@ -751,6 +792,17 @@ class Scheduler:
         # of the waiting queue.
         self.waiting.insert(0, seq_group)
 
+    def _preempt_object_by_swap(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: Dict[int, int],
+    ) -> None:
+        seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+        for seq in seqs:
+            seq.status = SequenceStatus.SWAPPED
+        self._swap_object_out(seq_group, blocks_to_swap_out)
+        self.swapped.append(seq_group)
+        
     def _preempt_by_swap(
         self,
         seq_group: SequenceGroup,
@@ -783,7 +835,17 @@ class Scheduler:
         blocks_to_swap_in.update(mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.PREFILLED):
             seq.status = SequenceStatus.RUNNING
-
+    
+    def _swap_object_in(        
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_in: Dict[int, List[ObjectInfo]],
+    ) -> None:
+        mapping = self.block_manager.swap_in_from_plasma(seq_group)
+        blocks_to_swap_in.update(mapping)
+        for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
+            seq.status = SequenceStatus.RUNNING
+        
     def _swap_in(
         self,
         seq_group: SequenceGroup,
@@ -794,6 +856,22 @@ class Scheduler:
         for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
             seq.status = SequenceStatus.RUNNING
 
+    def _swap_object_out(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: Dict[int, int],
+    ) -> None:
+        if not self.block_manager.can_swap_out(seq_group):
+            # FIXME(woosuk): Abort the sequence group instead of aborting the
+            # entire engine.
+            raise RuntimeError(
+                "Aborted due to the lack of CPU swap space. Please increase "
+                "the swap space to avoid this error.")
+        mapping = self.block_manager.swap_out_to_plasma(seq_group)
+        blocks_to_swap_out.update(mapping)
+        for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            seq.status = SequenceStatus.SWAPPED
+    
     def _swap_out(
         self,
         seq_group: SequenceGroup,
