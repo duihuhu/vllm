@@ -399,6 +399,7 @@ class BlockSpaceManager:
 
             for gpu_block in block_table:
                 if gpu_block in mapping:
+                    print("exist ", gpu_block)
                     object_block = mapping[gpu_block]
                     object_block.ref_count += 1
                 else:
@@ -416,6 +417,7 @@ class BlockSpaceManager:
             gpu_block.block_number: object_block.objects_info
             for gpu_block, object_block in mapping.items()
         }
+        print("block_number_object_id_mapping ", block_number_object_id_mapping)
         return block_number_object_id_mapping
 
     def _free_block_table(self, block_table: BlockTable) -> None:
