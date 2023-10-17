@@ -483,11 +483,12 @@ class Scheduler:
             #test for plasma
             mapping_object = self.block_manager.swap_out_to_plasma(seq_group)
             
-            mapping = self.block_manager.swap_out(seq_group)
+            # mapping = self.block_manager.swap_out(seq_group)
+            
             # print("mapping:",  mapping_object, mapping)
             # blocks_to_swap_out.update(mapping)
             self.prefilled.append(seq_group)
-            seq_to_swap_out[seq_group] = mapping
+            # seq_to_swap_out[seq_group] = mapping
             seq_to_swap_out_object[seq_group] = mapping_object
 
         # while self.prefilled:
@@ -496,7 +497,6 @@ class Scheduler:
         #         seq_id = seq.seq_id
         #         print("prefilled queue ", seq_id, seq.data)
         return seq_to_swap_out, seq_to_swap_out_object
-    
     def watch_prefilled_queue(self) -> None:
         while self.prefilled:
             seq_group = self.prefilled[0]
