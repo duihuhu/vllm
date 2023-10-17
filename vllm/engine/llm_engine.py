@@ -275,14 +275,6 @@ class LLMEngine:
             # Nothing to do.
             return []
         
-        for seq_group_metadata in seq_group_metadata_list:
-            if not seq_group_metadata.is_prompt:
-                continue
-            seq_ids = list(seq_group_metadata.seq_data.keys())
-            # Use any sequence in the group.
-            seq_id = seq_ids[0]
-            print("seq_group_metadata block_tables seq_id: ", seq_group_metadata.block_tables[seq_id], seq_id)
-        
         # Execute the model.
         output = self._run_workers(
             "execute_model",
@@ -325,6 +317,15 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
+        
+        for seq_group_metadata in seq_group_metadata_list:
+            if not seq_group_metadata.is_prompt:
+                continue
+            seq_ids = list(seq_group_metadata.seq_data.keys())
+            # Use any sequence in the group.
+            seq_id = seq_ids[0]
+            print("seq_group_metadata block_tables seq_id: ", seq_group_metadata.block_tables[seq_id], seq_id)
+        
         # Execute the model.
         output = self._run_workers(
             "execute_model",
