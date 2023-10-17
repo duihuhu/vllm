@@ -171,6 +171,7 @@ class Scheduler:
         while self.running:
             seq_group = self.running.pop(0)
             while not self.block_manager.can_append_slot(seq_group):
+                print("not ")
                 if self.running:
                     # Preempt the lowest-priority sequence groups.
                     victim_seq_group = self.running.pop(-1)
@@ -185,6 +186,7 @@ class Scheduler:
                     preempted.append(seq_group)
                     break
             else:
+                print("yes ")
                 # Append new slots to the sequence group.
                 self._append_object_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
