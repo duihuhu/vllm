@@ -44,6 +44,7 @@ def initialize_cluster(
     if not parallel_config.worker_use_ray:
         # Initialize cluster locally.
         port = random.randint(10000, 20000)
+        print("master port ", master_port)
         if master_port !=None:
             port = master_port
         # We need to setup the distributed init method to make sure
