@@ -715,6 +715,7 @@ class Scheduler:
                     blocks_to_copy[src_block].append(dst_block)
                 else:
                     blocks_to_copy[src_block] = [dst_block]
+            print("_append_object_slot ", seq.seq_id, blocks_to_copy)
                     
     def _append_slot(
         self,

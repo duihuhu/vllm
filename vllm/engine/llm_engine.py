@@ -308,8 +308,8 @@ class LLMEngine:
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups) = self.scheduler.schedule()
+        # (seq_group_metadata_list, scheduler_outputs,
+        #  ignored_seq_groups) = self.scheduler.schedule()
         
         (seq_group_metadata_list, scheduler_outputs,
          ignored_seq_groups) = self.scheduler.obj_schedule()
