@@ -263,6 +263,7 @@ class BlockSpaceManager:
             block_table = self.block_tables[seq.seq_id]
 
             for cpu_block in block_table:
+                print(f"This is the {seq.seq_id} seq and the {cpu_block.block_number} cpu block is belongs to it")
                 if cpu_block in mapping:
                     gpu_block = mapping[cpu_block]
                     gpu_block.ref_count += 1
@@ -279,10 +280,11 @@ class BlockSpaceManager:
             for cpu_block, gpu_block in mapping.items()
         }
         for cpu_block, gpu_block in mapping.items():
-            print(f"The {gpu_block.block_number} gpu block wants to be swapped in/n")
-            print(f"The {cpu_block.block_number} cpu block is going to handle it/n")
+            print(f"The {gpu_block.block_number} gpu block wants to be swapped in")
+            print(f"The {cpu_block.block_number} cpu block is going to handle it")
             print("The plasma.ObjectID lists of cpu block are following")
-            for array in cpu_block.plasma_objects_ids:
+            for i, array in enumerate(cpu_block.plasma_objects_ids):
+                print(f"This is device {i}")
                 for tmp in array:
                     print(tmp)
         for cpu_block, _ in mapping.items():
@@ -320,10 +322,11 @@ class BlockSpaceManager:
             for gpu_block, cpu_block in mapping.items()
         }
         for gpu_block, cpu_block in mapping.items():
-            print(f"The {gpu_block.block_number} gpu block wants to be swapped out/n")
-            print(f"The {cpu_block.block_number} cpu block is going to handle it/n")
+            print(f"The {gpu_block.block_number} gpu block wants to be swapped out")
+            print(f"The {cpu_block.block_number} cpu block is going to handle it")
             print("The plasma.ObjectID lists of cpu block are following")
-            for array in cpu_block.plasma_objects_ids:
+            for i, array in enumerate(cpu_block.plasma_objects_ids):
+                print(f"This is device {i}")
                 for tmp in array:
                     print(tmp)
         return block_number_mapping
