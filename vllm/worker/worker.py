@@ -180,7 +180,6 @@ class Worker:
             
             # Compute the slot mapping.
             block_table = seq_group_metadata.block_tables[seq_id]
-            print("block table ", block_table)
             for i in range(prompt_len):
                 block_number = block_table[i // self.block_size]
                 block_offset = i % self.block_size
