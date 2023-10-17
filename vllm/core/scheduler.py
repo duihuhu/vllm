@@ -267,13 +267,12 @@ class Scheduler:
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
                     break
-                print("first to process waiting ")
                 seq_group = self.waiting.pop(0)
                 self._allocate_object(seq_group)
                 self.running.append(seq_group)
                 num_batched_tokens += num_prompt_tokens
                 prompt_group_ids.append(seq_group.request_id)
-
+                        
         scheduler_outputs = SchedulerOutputs(
             blocks_to_swap_in=blocks_to_swap_in,
             blocks_to_swap_out=blocks_to_swap_out,
@@ -633,16 +632,13 @@ class Scheduler:
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
         for seq_group in self.running:
-            print("obj_schedule ", seq_group)
             is_prompt = seq_group.request_id in prompt_group_ids
             seq_data: Dict[int, List[SequenceData]] = {}
             block_tables: Dict[int, List[List[ObjectInfo]]] = {}
             for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-                print("obj_schedule in running ", seq.seq_id)
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_object_block_table(seq)
-                print("obj_schedule in running ", seq.seq_id, block_tables[seq_id])
 
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,

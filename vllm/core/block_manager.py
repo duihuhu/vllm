@@ -150,7 +150,7 @@ class BlockSpaceManager:
         # Assign the block table for each sequence.
         for seq in seq_group.get_seqs():
             self.block_tables_object[seq.seq_id] = block_table.copy()
-            
+        print("block_tables_object ", self.block_tables_object)
 
     def allocate(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
