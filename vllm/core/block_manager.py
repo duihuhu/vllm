@@ -443,9 +443,8 @@ class BlockSpaceManager:
         return [block.block_number for block in block_table]
 
     def get_object_block_table(self, seq: Sequence) -> List[List[ObjectInfo]]:
-        print("self.block_tables_object ", self.block_tables_object, seq.seq_id)
         block_table = self.block_tables_object[seq.seq_id]
-        return [block.objects_info for block in block_table]
+        return [block.block_number for block in block_table]
 
     def get_num_free_gpu_blocks(self) -> int:
         return self.gpu_allocator.get_num_free_blocks()
