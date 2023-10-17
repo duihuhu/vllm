@@ -633,13 +633,16 @@ class Scheduler:
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
         for seq_group in self.running:
+            print("obj_schedule ", seq_group)
             is_prompt = seq_group.request_id in prompt_group_ids
             seq_data: Dict[int, List[SequenceData]] = {}
             block_tables: Dict[int, List[List[ObjectInfo]]] = {}
             for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                print("obj_schedule in running ", seq.seq_id)
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_object_block_table(seq)
+                print("obj_schedule in running ", seq.seq_id, block_tables[seq_id])
 
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
@@ -649,13 +652,7 @@ class Scheduler:
                 block_tables=block_tables,
             )
             seq_group_metadata_list.append(seq_group_metadata)
-                    
-        for seq_group_metadata in seq_group_metadata_list:
-            seq_ids = list(seq_group_metadata.seq_data.keys())
-            # Use any sequence in the group.
-            seq_id = seq_ids[0]
-            print("in obj schedule seq_group_metadata block_tables seq_id: ", seq_group_metadata.block_tables[seq_id], seq_id)
-            
+
         return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups
 
     def update(
