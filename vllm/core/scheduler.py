@@ -170,6 +170,7 @@ class Scheduler:
         preempted: List[SequenceGroup] = []
         while self.running:
             seq_group = self.running.pop(0)
+            print("self.block_manager.can_append_slot(seq_group) ", self.block_manager.can_append_slot(seq_group))
             while not self.block_manager.can_append_slot(seq_group):
                 if self.running:
                     # Preempt the lowest-priority sequence groups.
@@ -715,8 +716,7 @@ class Scheduler:
                     blocks_to_copy[src_block].append(dst_block)
                 else:
                     blocks_to_copy[src_block] = [dst_block]
-            print("_append_object_slot ", seq.seq_id, blocks_to_copy)
-                    
+                                        
     def _append_slot(
         self,
         seq_group: SequenceGroup,
