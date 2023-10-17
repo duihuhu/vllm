@@ -317,42 +317,42 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
-        # Execute the model.
-        output = self._run_workers(
-            "execute_model",
-            seq_group_metadata_list=seq_group_metadata_list,
-            blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
-            blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
-            blocks_to_copy=scheduler_outputs.blocks_to_copy,
-        )
-        # Update the scheduler with the model outputs.
-        seq_groups = self.scheduler.update(output)
+        # # Execute the model.
+        # output = self._run_workers(
+        #     "execute_model",
+        #     seq_group_metadata_list=seq_group_metadata_list,
+        #     blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
+        #     blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
+        #     blocks_to_copy=scheduler_outputs.blocks_to_copy,
+        # )
+        # # Update the scheduler with the model outputs.
+        # seq_groups = self.scheduler.update(output)
 
-        # Decode the sequences.
-        self._decode_sequences(seq_groups)
-        # Stop the sequences that meet the stopping criteria.
-        self._stop_sequences(seq_groups)
-        # Free the finished sequence groups.
-        self.scheduler.free_finished_seq_groups()
-        # Create the outputs.
-        request_outputs: List[RequestOutput] = []
-        for seq_group in seq_groups + ignored_seq_groups:
-            request_output = RequestOutput.from_seq_group(seq_group)
-            request_outputs.append(request_output)
+        # # Decode the sequences.
+        # self._decode_sequences(seq_groups)
+        # # Stop the sequences that meet the stopping criteria.
+        # self._stop_sequences(seq_groups)
+        # # Free the finished sequence groups.
+        # self.scheduler.free_finished_seq_groups()
+        # # Create the outputs.
+        # request_outputs: List[RequestOutput] = []
+        # for seq_group in seq_groups + ignored_seq_groups:
+        #     request_output = RequestOutput.from_seq_group(seq_group)
+        #     request_outputs.append(request_output)
         
-        #find prefill blocks to swap out 
-        prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
-        if prefill_blocks_to_swap_out:
-            # Execute the swap prefill cache.
-            self._run_workers(
-                "swap_out_prefilled_cache",
-                blocks_to_swap_out = prefill_blocks_to_swap_out,
-                blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
-            )
+        # #find prefill blocks to swap out 
+        # prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
+        # if prefill_blocks_to_swap_out:
+        #     # Execute the swap prefill cache.
+        #     self._run_workers(
+        #         "swap_out_prefilled_cache",
+        #         blocks_to_swap_out = prefill_blocks_to_swap_out,
+        #         blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
+        #     )
             
-        # self.scheduler.watch_cpu_kv_cache()
+        # # self.scheduler.watch_cpu_kv_cache()
         
-        return request_outputs
+        # return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
         """Decodes the sequence outputs."""
