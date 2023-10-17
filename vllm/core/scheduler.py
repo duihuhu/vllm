@@ -608,7 +608,7 @@ class Scheduler:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
-
+                print("schedule seq id block tables ", seq_id, block_tables[seq_id])
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
                 is_prompt=is_prompt,
@@ -640,8 +640,8 @@ class Scheduler:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_object_block_table(seq)
-                print("block tables ", block_tables[seq_id])
-                
+                print("obj_schedule seq id block tables ", seq_id, block_tables[seq_id])
+
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
                 is_prompt=is_prompt,
