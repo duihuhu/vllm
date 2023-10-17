@@ -382,6 +382,7 @@ def _init_distributed_environment(
     distributed_init_method: str,
 ) -> None:
     """Initialize the distributed environment."""
+    print("_init_distributed_environment ", distributed_init_method)
     torch.distributed.init_process_group(
         backend="nccl",
         world_size=parallel_config.world_size,
