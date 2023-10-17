@@ -310,6 +310,7 @@ class Worker:
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],
         blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, List[ObjectInfo]]],
     )  -> None:
+        issued_cache_op = False
         if blocks_to_swap_out:
             for key, value in blocks_to_swap_out.items():
                 self.cache_engine.swap_out_prefilled(value)
