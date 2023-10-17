@@ -18,7 +18,6 @@ def initialize_cluster(
     ray_address: Optional[str] = None,
     master_port: Optional[int] = None
 ) -> Tuple[str, List[List[DeviceID]]]:
-    print("master port ", master_port)
     """Initialize the distributed cluster probably with Ray.
 
     Args:
@@ -45,8 +44,6 @@ def initialize_cluster(
     if not parallel_config.worker_use_ray:
         # Initialize cluster locally.
         port = random.randint(10000, 20000)
-        if master_port !=None:
-            port = master_port
         # We need to setup the distributed init method to make sure
         # the distributed megatron code (e.g., get world size) works correctly.
         distributed_init_method = f"tcp://localhost:{port}"
@@ -102,6 +99,7 @@ def initialize_cluster(
                 ip = node_resource.split("node:")[-1]
                 port = random.randint(10000, 20000)
                 distributed_init_method = f"tcp://{ip}:{port}"
+                print("distributed_init_method", distributed_init_method)
             rank += 1
             current_device_id += 1
             if current_device_id >= num_devices_per_node:
