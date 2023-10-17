@@ -160,7 +160,8 @@ class Worker:
 
             # Use any sequence in the group.
             seq_id = seq_ids[0]
-            
+            print("inner _prepare_input seq_group_metadata block_tables seq_id: ", seq_group_metadata.block_tables[seq_id], seq_id)
+
             seq_data = seq_group_metadata.seq_data[seq_id]
             prompt_tokens = seq_data.get_token_ids()
             prompt_len = len(prompt_tokens)
