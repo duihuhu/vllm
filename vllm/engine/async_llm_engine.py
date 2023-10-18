@@ -133,13 +133,16 @@ class AsyncLLMEngine:
                                         sampling_params,
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
+        
+        start = time.time()
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_requests():
+            print("step")
             step_outputs = self.engine.step()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                    print("output ", output)
+        end = time.time()
 
 
        
