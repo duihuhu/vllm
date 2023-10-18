@@ -16,7 +16,7 @@ TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
 @app.post("/mul_generate")
-def mul_generate(request: Request) -> Response:
+async def mul_generate(request: Request) -> Response:
     """Generate completion for the request, containing a list of prompts.
 
     The request should be a JSON object with the following fields:
@@ -24,8 +24,8 @@ def mul_generate(request: Request) -> Response:
     - stream: whether to stream the results or not.
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
-    request_dict = request.json()
-    prompt = request_dict["prompt"]
+    request_dict = await request.json()
+    prompt = request_dict.pop("prompt")
     print("prompt ",prompt)
     # stream = request_dict.pop("stream", False)
     # sampling_params = SamplingParams(**request_dict)
