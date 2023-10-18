@@ -263,7 +263,7 @@ class BlockSpaceManager:
             block_table = self.block_tables[seq.seq_id]
 
             for cpu_block in block_table:
-                print(f"This is the {seq.seq_id} seq and the {cpu_block.block_number} cpu block is belongs to it")
+                #print(f"This is the {seq.seq_id} seq and the {cpu_block.block_number} cpu block is belongs to it")
                 if cpu_block in mapping:
                     gpu_block = mapping[cpu_block]
                     gpu_block.ref_count += 1

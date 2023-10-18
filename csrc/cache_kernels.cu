@@ -43,12 +43,22 @@ void swap_blocks_to_object(
     // at::Half *f_dst_ptr = (at::Half*)dst_address[i];
     int64_t src_offset = src_block_number * block_size_in_bytes;
     // int64_t dst_offset = dst_block_number * block_size_in_bytes;
-    cudaMemcpyAsync(
+    if (plasma == 0) {
+      cudaMemcpyAsync(
       dst_ptr,
       src_ptr + src_offset,
       block_size_in_bytes,
       memcpy_type,
       stream);
+    } else {
+      cudaMemcpyAsync(
+      src_ptr + src_offset,
+      dst_ptr,
+      block_size_in_bytes,
+      memcpy_type,
+      stream);
+    }
+    
     // for compared swap data with original data
     // printf("src_block_number %lld, object\n",src_block_number);
     // for (int j = 0; j < 10; j++) {
