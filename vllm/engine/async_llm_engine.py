@@ -46,15 +46,15 @@ class AsyncLLMEngine:
         self.worker_use_ray = worker_use_ray
         self.engine_use_ray = engine_use_ray
         self.log_requests = log_requests
-        print("self.worker_use_ray, self.engine_use_ray ", self.worker_use_ray, self.engine_use_ray)
         if not self.engine_use_ray:
             engine_class = LLMEngine
         elif self.worker_use_ray:
             engine_class = ray.remote(num_cpus=0)(LLMEngine).remote
         else:
             engine_class = ray.remote(num_gpus=1)(LLMEngine).remote
-        print("after ")
+        print("before engine_class ")
         self.engine = engine_class(*args, **kwargs)
+        print("after engine_class ")
         # Request id -> request output.
         self.request_outputs: Dict[str, RequestOutput] = {}
         # Request id -> event to notify that there is new output.
