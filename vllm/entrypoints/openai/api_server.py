@@ -564,22 +564,22 @@ if __name__ == "__main__":
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=args.allowed_origins,
-        allow_credentials=args.allow_credentials,
-        allow_methods=args.allowed_methods,
-        allow_headers=args.allowed_headers,
-    )
+    # app.add_middleware(
+    #     CORSMiddleware,
+    #     allow_origins=args.allowed_origins,
+    #     allow_credentials=args.allow_credentials,
+    #     allow_methods=args.allowed_methods,
+    #     allow_headers=args.allowed_headers,
+    # )
 
-    logger.info(f"args: {args}")
+    # logger.info(f"args: {args}")
 
-    if args.served_model_name is not None:
-        served_model = args.served_model_name
-    else:
-        served_model = args.model
+    # if args.served_model_name is not None:
+    #     served_model = args.served_model_name
+    # else:
+    #     served_model = args.model
 
-    engine_args = AsyncEngineArgs.from_cli_args(args)
+    # engine_args = AsyncEngineArgs.from_cli_args(args)
     # engine = AsyncLLMEngine.from_engine_args(engine_args)
     # engine_model_config = asyncio.run(engine.get_model_config())
 
