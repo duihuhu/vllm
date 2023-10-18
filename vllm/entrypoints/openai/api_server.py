@@ -581,14 +581,14 @@ if __name__ == "__main__":
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args)
-    engine_model_config = asyncio.run(engine.get_model_config())
+    # engine_model_config = asyncio.run(engine.get_model_config())
 
-    # A separate tokenizer to map token IDs to strings.
-    tokenizer = get_tokenizer(engine_args.tokenizer,
-                              tokenizer_mode=engine_args.tokenizer_mode)
+    # # A separate tokenizer to map token IDs to strings.
+    # tokenizer = get_tokenizer(engine_args.tokenizer,
+    #                           tokenizer_mode=engine_args.tokenizer_mode)
 
-    uvicorn.run(app,
-                host=args.host,
-                port=args.port,
-                log_level="info",
-                timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
+    # uvicorn.run(app,
+    #             host=args.host,
+    #             port=args.port,
+    #             log_level="info",
+    #             timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
