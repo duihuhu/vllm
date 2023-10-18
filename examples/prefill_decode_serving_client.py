@@ -11,7 +11,6 @@ from transformers import PreTrainedTokenizerBase
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import requests
 import random
-import threading
 
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -23,32 +22,18 @@ def clear_line(n: int = 1) -> None:
 def post_http_request(prompt: List[str],
                       api_url: str,
                       n: int = 1,
-                      stream: bool = False,
-                      tid: Optional[int] = 0,
-                      num_servers: Optional[int] = 1) -> requests.Response:
-    if num_servers == 1:
-        headers = {"User-Agent": "Test Client"}
-        pload = {
-            "prompt": prompt,
-            "n": n,
-            "use_beam_search": True,
-            "temperature": 0.0,
-            "max_tokens": 16,
-            "stream": stream,
-        }
-        response = requests.post(api_url, headers=headers, json=pload, stream=True)
-    else:
-        num_prompt = int(len(prompt)/num_servers)
-        headers = {"User-Agent": "Test Client"}
-        pload = {
-            "prompt": prompt[tid*num_prompt:(tid+1)*num_prompt],
-            "n": n,
-            "use_beam_search": True,
-            "temperature": 0.0,
-            "max_tokens": 16,
-            "stream": stream,
-        }
-        response = requests.post(api_url, headers=headers, json=pload, stream=True)
+                      stream: bool = False) -> requests.Response:
+    headers = {"User-Agent": "Test Client"}
+    pload = {
+        "prompt": prompt,
+        "n": n,
+        "use_beam_search": True,
+        "temperature": 0.0,
+        "max_tokens": 16,
+        "stream": stream,
+    }
+    response = requests.post(api_url, headers=headers, json=pload, stream=True)
+
     return response
 
 
@@ -131,7 +116,6 @@ if __name__ == "__main__":
                         help="Number of prompts to process.")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="facebook/opt-125m")
-    parser.add_argument("--num-servers", type=int, default=1)
 
       
     args = parser.parse_args()
@@ -144,20 +128,9 @@ if __name__ == "__main__":
     # prompt = args.prompt
     n = args.n
     stream = args.stream
-    if args.num_servers == 1:
-        api_url = f"http://{args.host}:{args.port}/mul_generate"
-        response = post_http_request(prompts, api_url, n, stream)
-    else:
-    # num_prompts = len(prompts)/(args.num_server)
-    # print(f"Prompt: {prompts!r}\n", flush=True)
-        threads = []
-        for i in range(args.num_servers):
-            api_url = f"http://{args.host}:{(args.port+i)}/mul_generate"
-            threads.append(threading.Thread(target=post_http_request, args=(prompts, api_url, n, stream, i, args.num_servers)))
-        for td in threads:
-            td.start()
-        for td in threads:
-            td.join()
+    api_url = f"http://{args.host}:{args.port}/mul_generate"
+    response = post_http_request(prompts, api_url, n, stream)
+
     # if stream:
     #     num_printed_lines = 0
     #     for h in get_streaming_response(response):
