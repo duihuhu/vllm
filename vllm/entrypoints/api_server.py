@@ -25,8 +25,8 @@ def mul_generate(request: Request) -> Response:
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = request.json()
-    print("request_dict ",request_dict)
-    # prompt = request_dict.pop("prompt")
+    prompt = request_dict["prompt"]
+    print("prompt ",prompt)
     # stream = request_dict.pop("stream", False)
     # sampling_params = SamplingParams(**request_dict)
     # # request_id = random_uuid()
