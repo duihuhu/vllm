@@ -33,6 +33,7 @@ def initialize_cluster(
         each worker in each pipeline stage. Each device ID is a tuple of
         (rank, node resource, device id).
     """
+    print("before ray init ")
     if parallel_config.worker_use_ray or engine_use_ray:
         if ray is None:
             raise ImportError(
