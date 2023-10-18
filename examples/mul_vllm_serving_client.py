@@ -6,6 +6,7 @@ from typing import Iterable, List, Tuple
 
 from transformers import PreTrainedTokenizerBase
 
+from vllm.transformers_utils.tokenizer import get_tokenizer
 import requests
 import random
 
@@ -52,6 +53,7 @@ def get_response(response: requests.Response) -> List[str]:
 def sample_requests(
     dataset_path: str,
     num_requests: int,
+    tokenizer: PreTrainedTokenizerBase,
 ) -> List[Tuple[str, int, int]]:
     # Load the dataset.
     with open(dataset_path) as f:
@@ -69,30 +71,30 @@ def sample_requests(
 
     # Tokenize the prompts and completions.
     prompts = [prompt for prompt, _ in dataset]
-    print("prompts " ,prompts)
-    # prompt_token_ids = tokenizer(prompts).input_ids
-    # completions = [completion for _, completion in dataset]
-    # completion_token_ids = tokenizer(completions).input_ids
-    # tokenized_dataset = []
-    # for i in range(len(dataset)):
-    #     output_len = len(completion_token_ids[i])
-    #     tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
+    prompt_token_ids = tokenizer(prompts).input_ids
+    completions = [completion for _, completion in dataset]
+    completion_token_ids = tokenizer(completions).input_ids
+    tokenized_dataset = []
+    for i in range(len(dataset)):
+        output_len = len(completion_token_ids[i])
+        tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
 
-    # # Filter out too long sequences.
-    # filtered_dataset: List[Tuple[str, int, int]] = []
-    # for prompt, prompt_token_ids, output_len in tokenized_dataset:
-    #     prompt_len = len(prompt_token_ids)
-    #     if prompt_len < 4 or output_len < 4:
-    #         # Prune too short sequences.
-    #         continue
-    #     if prompt_len > 1024 or prompt_len + output_len > 2048:
-    #         # Prune too long sequences.
-    #         continue
-    #     filtered_dataset.append((prompt, prompt_len, output_len))
+    # Filter out too long sequences.
+    filtered_dataset: List[Tuple[str, int, int]] = []
+    for prompt, prompt_token_ids, output_len in tokenized_dataset:
+        prompt_len = len(prompt_token_ids)
+        if prompt_len < 4 or output_len < 4:
+            # Prune too short sequences.
+            continue
+        if prompt_len > 1024 or prompt_len + output_len > 2048:
+            # Prune too long sequences.
+            continue
+        filtered_dataset.append((prompt, prompt_len, output_len))
 
-    # # Sample the requests.
-    # sampled_requests = random.sample(filtered_dataset, num_requests)
-    # return sampled_requests
+    # Sample the requests.
+    sampled_requests = random.sample(filtered_dataset, num_requests)
+    print("sample_requests ", sample_requests)
+    return sampled_requests
 
 
 if __name__ == "__main__":
@@ -106,29 +108,34 @@ if __name__ == "__main__":
                         help="Path to the dataset.")
     parser.add_argument("--num-prompts", type=int, default=1000,
                         help="Number of prompts to process.")
+    parser.add_argument("--tokenizer", type=str, default=None)
+    parser.add_argument("--model", type=str, default="facebook/opt-125m")
 
       
     args = parser.parse_args()
-    prompts = sample_requests(args.dataset, args.num_prompts)
     
-    # prompt = args.prompt
-    # api_url = f"http://{args.host}:{args.port}/generate"
-    # n = args.n
-    # stream = args.stream
+    if args.tokenizer is None:
+      args.tokenizer = args.model
+    tokenizer = get_tokenizer(args.tokenizer)
+    prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    prompt = args.prompt
+    api_url = f"http://{args.host}:{args.port}/generate"
+    n = args.n
+    stream = args.stream
 
-    # print(f"Prompt: {prompt!r}\n", flush=True)
-    # response = post_http_request(prompt, api_url, n, stream)
+    print(f"Prompt: {prompt!r}\n", flush=True)
+    response = post_http_request(prompt, api_url, n, stream)
 
-    # if stream:
-    #     num_printed_lines = 0
-    #     for h in get_streaming_response(response):
-    #         clear_line(num_printed_lines)
-    #         num_printed_lines = 0
-    #         for i, line in enumerate(h):
-    #             num_printed_lines += 1
-    #             print(f"Beam candidate {i}: {line!r}", flush=True)
-    # else:
-    #     output = get_response(response)
-    #     for i, line in enumerate(output):
-    #         print(f"Beam candidate {i}: {line!r}", flush=True)
+    if stream:
+        num_printed_lines = 0
+        for h in get_streaming_response(response):
+            clear_line(num_printed_lines)
+            num_printed_lines = 0
+            for i, line in enumerate(h):
+                num_printed_lines += 1
+                print(f"Beam candidate {i}: {line!r}", flush=True)
+    else:
+        output = get_response(response)
+        for i, line in enumerate(output):
+            print(f"Beam candidate {i}: {line!r}", flush=True)
 
