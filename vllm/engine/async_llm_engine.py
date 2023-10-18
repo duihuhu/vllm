@@ -9,6 +9,7 @@ from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.logger import init_logger
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
+from vllm.utils import random_uuid
 
 logger = init_logger(__name__)
 
@@ -80,6 +81,107 @@ class AsyncLLMEngine:
             request_id = request_output.request_id
             self.request_outputs[request_id] = request_output
             self.request_events[request_id].set()
+
+
+    async def mul_generate(
+            self,
+            prompts: Optional[List[str]],
+            sampling_params: SamplingParams,
+            prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
+        """Generate outputs for a request.
+
+        Generate outputs for a request. This method is a coroutine. It adds the
+        request into the waiting queue of the LLMEngine and streams the outputs
+        from the LLMEngine to the caller.
+
+        Args:
+            prompt: The prompt string. Can be None if prompt_token_ids is
+                provided.
+            sampling_params: The sampling parameters of the request.
+            request_id: The unique id of the request.
+            prompt_token_ids: The token IDs of the prompt. If None, we
+                use the tokenizer to convert the prompts to token IDs.
+
+        Yields:
+            The output `RequestOutput` objects from the LLMEngine for the
+            request.
+        """
+        # Preprocess the request.
+        arrival_time = time.time()
+
+        # Create an event to notify us that there is new output from the
+        # vLLM engine.
+        for prompt in prompts:
+            request_event = asyncio.Event()
+            request_id = random_uuid()
+            self.request_events[request_id] = request_event
+
+            if self.log_requests:
+                logger.info(f"Received request {request_id}: "
+                            f"prompt: {prompt!r}, "
+                            f"sampling params: {sampling_params}, "
+                            f"prompt token ids: {prompt_token_ids}.")
+
+            # Add the request into the vLLM engine's waiting queue.
+            if self.engine_use_ray:
+                await self.engine.add_request.remote(
+                    request_id,
+                    prompt,
+                    sampling_params,
+                    prompt_token_ids=prompt_token_ids,
+                    arrival_time=arrival_time)
+            else:
+                self.engine.add_request(request_id,
+                                        prompt,
+                                        sampling_params,
+                                        prompt_token_ids=prompt_token_ids,
+                                        arrival_time=arrival_time)
+
+        # The vLLM engine does not have a background loop that keeps
+        # processing incoming requests. Therefore, we need to keep kicking
+        # the engine to process the requests.
+        while True:
+            if request_id not in self.request_events:
+                # The request has been aborted.
+                return
+
+            # Kick the engine if the engine is not running.
+            if not self.is_engine_running:
+                try:
+                    await self.engine_step(request_id)
+                except RuntimeError as e:
+                    await self.abort(request_id)
+                    raise e
+
+            # Wait for new output. The group_event will be set in engine_step
+            # when there is new output available for the sequence group.
+            # Added a timeout to prevent deadlock.
+            try:
+                await asyncio.wait_for(request_event.wait(),
+                                       timeout=TIMEOUT_TO_PREVENT_DEADLOCK)
+            except asyncio.TimeoutError:
+                continue
+            # Reset the event to wait for the next output.
+            request_event.clear()
+
+            # Decode and return new outputs.
+            request_output = self.request_outputs[request_id]
+            yield request_output
+
+            # Once finished, release the resources of the sequence group.
+            if request_output.finished:
+                if self.log_requests:
+                    logger.info(f"Finished request {request_id}.")
+
+                del self.request_outputs[request_id]
+                del self.request_events[request_id]
+                # Kick the engine if the engine is not running. This is to
+                # prevent that there are still requests in engine's waiting
+                # queue to be executed.
+                if not self.is_engine_running:
+                    await self.engine_step()
+                break
+
 
     async def generate(
             self,
