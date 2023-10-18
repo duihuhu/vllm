@@ -9,6 +9,7 @@ from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.logger import init_logger
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
+from vllm.utils import random_uuid
 
 logger = init_logger(__name__)
 
@@ -80,6 +81,75 @@ class AsyncLLMEngine:
             request_id = request_output.request_id
             self.request_outputs[request_id] = request_output
             self.request_events[request_id].set()
+
+    def mul_generate(
+            self,
+            prompts: Optional[List[str]],
+            sampling_params: SamplingParams,
+            prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
+        """Generate outputs for a request.
+
+        Generate outputs for a request. This method is a coroutine. It adds the
+        request into the waiting queue of the LLMEngine and streams the outputs
+        from the LLMEngine to the caller.
+
+        Args:
+            prompt: The prompt string. Can be None if prompt_token_ids is
+                provided.
+            sampling_params: The sampling parameters of the request.
+            request_id: The unique id of the request.
+            prompt_token_ids: The token IDs of the prompt. If None, we
+                use the tokenizer to convert the prompts to token IDs.
+
+        Yields:
+            The output `RequestOutput` objects from the LLMEngine for the
+            request.
+        """
+        # Preprocess the request.
+        arrival_time = time.time()
+
+        # Create an event to notify us that there is new output from the
+        # vLLM engine.
+        for prompt in prompts:
+            request_id = random_uuid()
+            # if self.log_requests:
+            #     logger.info(f"Received request {request_id}: "
+            #                 f"prompt: {prompt!r}, "
+            #                 f"sampling params: {sampling_params}, "
+            #                 f"prompt token ids: {prompt_token_ids}.")
+
+            # Add the request into the vLLM engine's waiting queue.
+            if self.engine_use_ray:
+                self.engine.add_request.remote(
+                    request_id,
+                    prompt,
+                    sampling_params,
+                    prompt_token_ids=prompt_token_ids,
+                    arrival_time=arrival_time)
+            else:
+                self.engine.add_request(request_id,
+                                        prompt,
+                                        sampling_params,
+                                        prompt_token_ids=prompt_token_ids,
+                                        arrival_time=arrival_time)
+        
+        start = time.time()
+        outputs: List[RequestOutput] = []
+        while self.engine.has_unfinished_requests():
+            step_outputs = self.engine.step()
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+        end = time.time()
+
+        elapsed_time = end-start
+        total_num_tokens = sum(
+            len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
+            for output in outputs
+        )
+        print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
+            f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+
 
     async def generate(
             self,
