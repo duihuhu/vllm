@@ -52,9 +52,7 @@ class AsyncLLMEngine:
             engine_class = ray.remote(num_cpus=0)(LLMEngine).remote
         else:
             engine_class = ray.remote(num_gpus=1)(LLMEngine).remote
-        print("before engine_class ")
         self.engine = engine_class(*args, **kwargs)
-        print("after engine_class ")
         # Request id -> request output.
         self.request_outputs: Dict[str, RequestOutput] = {}
         # Request id -> event to notify that there is new output.
@@ -228,17 +226,16 @@ class AsyncLLMEngine:
         engine_configs = engine_args.create_engine_configs()
         parallel_config = engine_configs[2]
         # Initialize the cluster.
-        # distributed_init_method, devices = initialize_cluster(
-        #     parallel_config=parallel_config, engine_use_ray=engine_args.engine_use_ray)
+        distributed_init_method, devices = initialize_cluster(
+            parallel_config=parallel_config, engine_use_ray=engine_args.engine_use_ray)
         # Create the async LLM engine.
         print("before Async LLM eigine ")
-        # engine = cls(engine_args.worker_use_ray,
-        #              engine_args.engine_use_ray,
-        #              *engine_configs,
-        #              distributed_init_method,
-        #              devices,
-        #              log_requests=not engine_args.disable_log_requests,
-        #              log_stats=not engine_args.disable_log_stats)
-        # print("after AsyncLLMEngine initialize_cluster")
-        # return engine
-        return 1
+        engine = cls(engine_args.worker_use_ray,
+                     engine_args.engine_use_ray,
+                     *engine_configs,
+                     distributed_init_method,
+                     devices,
+                     log_requests=not engine_args.disable_log_requests,
+                     log_stats=not engine_args.disable_log_stats)
+        print("after AsyncLLMEngine initialize_cluster")
+        return engine
