@@ -101,7 +101,6 @@ def initialize_cluster(
                 if master_port:
                     port = master_port
                 distributed_init_method = f"tcp://{ip}:{port}"
-                print("distributed_init_method", distributed_init_method)
             rank += 1
             current_device_id += 1
             if current_device_id >= num_devices_per_node:
