@@ -2,7 +2,7 @@
 
 import argparse
 import json
-from typing import Iterable, List, Tuple
+from typing import Iterable, List, Tuple, Optional
 
 from transformers import PreTrainedTokenizerBase
 
@@ -22,19 +22,31 @@ def post_http_request(prompt: str,
                       api_url: str,
                       n: int = 1,
                       stream: bool = False,
-                      tid: int = 0,
-                      num_servers: int = 1) -> requests.Response:
-    num_prompt = len(prompt)/num_servers
-    headers = {"User-Agent": "Test Client"}
-    pload = {
-        "prompt": prompt[tid*num_prompt:(tid+1)*num_prompt],
-        "n": n,
-        "use_beam_search": True,
-        "temperature": 0.0,
-        "max_tokens": 16,
-        "stream": stream,
-    }
-    response = requests.post(api_url, headers=headers, json=pload, stream=True)
+                      tid: Optional[int] = 0,
+                      num_servers: Optional[int] = 1) -> requests.Response:
+    if num_servers == 1:
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+            "prompt": prompt,
+            "n": n,
+            "use_beam_search": True,
+            "temperature": 0.0,
+            "max_tokens": 16,
+            "stream": stream,
+        }
+        response = requests.post(api_url, headers=headers, json=pload, stream=True)
+    else:
+        num_prompt = len(prompt)/num_servers
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+            "prompt": prompt[tid*num_prompt:(tid+1)*num_prompt],
+            "n": n,
+            "use_beam_search": True,
+            "temperature": 0.0,
+            "max_tokens": 16,
+            "stream": stream,
+        }
+        response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
 
@@ -123,7 +135,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.tokenizer is None:
-      args.tokenizer = args.model
+        args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
     prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
@@ -131,15 +143,19 @@ if __name__ == "__main__":
     n = args.n
     stream = args.stream
     if args.num_server == 1:
-      api_url = f"http://{args.host}:{args.port}/mul_generate"
-      response = post_http_request(prompts, api_url, n, stream)
+        api_url = f"http://{args.host}:{args.port}/mul_generate"
+        response = post_http_request(prompts, api_url, n, stream)
     else:
     # num_prompts = len(prompts)/(args.num_server)
     # print(f"Prompt: {prompts!r}\n", flush=True)
-      for i in range(args.num_server):
-        api_url = f"http://{args.host}:{(args.port+i)}/mul_generate"
-        threading.Thread(target=post_http_request, args=(prompts, api_url, n, stream, i, args.num_server))
-
+        threads = []
+        for i in range(args.num_server):
+            api_url = f"http://{args.host}:{(args.port+i)}/mul_generate"
+            threads.append(threading.Thread(target=post_http_request, args=(prompts, api_url, n, stream, i, args.num_server)))
+        for td in threads:
+            td.start()
+        for td in threads:
+            td.join()
     # if stream:
     #     num_printed_lines = 0
     #     for h in get_streaming_response(response):
