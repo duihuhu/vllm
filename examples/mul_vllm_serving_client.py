@@ -55,6 +55,7 @@ def sample_requests(
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
 ) -> List[str]:
+    random.seed(0)
     # Load the dataset.
     with open(dataset_path) as f:
         dataset = json.load(f)
