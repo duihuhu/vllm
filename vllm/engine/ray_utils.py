@@ -39,7 +39,7 @@ def initialize_cluster(
                 "Ray is not installed. Please install Ray to use distributed "
                 "serving.")
         # Connect to a ray cluster.
-        ray.init(address=ray_address,dashboard_host="127.0.0.1")
+        ray.init(address=ray_address)
 
     if not parallel_config.worker_use_ray:
         # Initialize cluster locally.

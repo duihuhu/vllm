@@ -227,7 +227,7 @@ class AsyncLLMEngine:
         parallel_config = engine_configs[2]
         # Initialize the cluster.
         distributed_init_method, devices = initialize_cluster(
-            parallel_config=parallel_config, ray_address='127.0.0.1', engine_use_ray=engine_args.engine_use_ray)
+            parallel_config=parallel_config, engine_use_ray=engine_args.engine_use_ray)
         # Create the async LLM engine.
         engine = cls(engine_args.worker_use_ray,
                      engine_args.engine_use_ray,
