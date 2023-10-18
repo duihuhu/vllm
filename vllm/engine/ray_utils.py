@@ -16,6 +16,7 @@ def initialize_cluster(
     parallel_config: ParallelConfig,
     engine_use_ray: bool = False,
     ray_address: Optional[str] = None,
+    master_port: Optional[int] = None
 ) -> Tuple[str, List[List[DeviceID]]]:
     """Initialize the distributed cluster probably with Ray.
 
@@ -97,6 +98,8 @@ def initialize_cluster(
             if distributed_init_method is None:
                 ip = node_resource.split("node:")[-1]
                 port = random.randint(10000, 20000)
+                if master_port:
+                    port = master_port
                 distributed_init_method = f"tcp://{ip}:{port}"
             rank += 1
             current_device_id += 1

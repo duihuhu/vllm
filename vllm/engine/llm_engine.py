@@ -146,13 +146,13 @@ class LLMEngine:
         self._run_workers("init_cache_engine", cache_config=self.cache_config)
 
     @classmethod
-    def from_engine_args(cls, engine_args: EngineArgs) -> "LLMEngine":
+    def from_engine_args(cls, engine_args: EngineArgs, master_port: Optional[int]) -> "LLMEngine":
         """Creates an LLM engine from the engine arguments."""
         # Create the engine configs.
         engine_configs = engine_args.create_engine_configs()
         parallel_config = engine_configs[2]
         # Initialize the cluster.
-        distributed_init_method, devices = initialize_cluster(parallel_config)
+        distributed_init_method, devices = initialize_cluster(parallel_config=parallel_config, master_port=master_port)
         # Create the LLM engine.
         engine = cls(*engine_configs,
                      distributed_init_method,
@@ -261,9 +261,7 @@ class LLMEngine:
         request_outputs: List[RequestOutput] = []
         for seq_group in seq_groups + ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
-            request_outputs.append(request_output)
-            
-        self.scheduler.store_prompt_kv_cache()
+            request_outputs.append(request_output)            
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:

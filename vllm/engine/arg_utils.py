@@ -28,7 +28,6 @@ class EngineArgs:
     max_num_batched_tokens: int = 2560
     max_num_seqs: int = 256
     disable_log_stats: bool = False
-
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
