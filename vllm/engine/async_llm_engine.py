@@ -46,12 +46,14 @@ class AsyncLLMEngine:
         self.worker_use_ray = worker_use_ray
         self.engine_use_ray = engine_use_ray
         self.log_requests = log_requests
+        print("self.worker_use_ray, self.engine_use_ray ", self.worker_use_ray, self.engine_use_ray)
         if not self.engine_use_ray:
             engine_class = LLMEngine
         elif self.worker_use_ray:
             engine_class = ray.remote(num_cpus=0)(LLMEngine).remote
         else:
             engine_class = ray.remote(num_gpus=1)(LLMEngine).remote
+        print("after ")
         self.engine = engine_class(*args, **kwargs)
         # Request id -> request output.
         self.request_outputs: Dict[str, RequestOutput] = {}
@@ -229,7 +231,7 @@ class AsyncLLMEngine:
         distributed_init_method, devices = initialize_cluster(
             parallel_config=parallel_config, engine_use_ray=engine_args.engine_use_ray)
         # Create the async LLM engine.
-        print("after initialize_cluster")
+        print("before Async LLM eigine ")
         engine = cls(engine_args.worker_use_ray,
                      engine_args.engine_use_ray,
                      *engine_configs,
