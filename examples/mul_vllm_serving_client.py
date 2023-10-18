@@ -117,10 +117,11 @@ if __name__ == "__main__":
       
     args = parser.parse_args()
     
-    if args.tokenizer is None:
-      args.tokenizer = args.model
-    tokenizer = get_tokenizer(args.tokenizer)
-    prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    # if args.tokenizer is None:
+    #   args.tokenizer = args.model
+    # tokenizer = get_tokenizer(args.tokenizer)
+    # prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
     # prompt = args.prompt
     api_url = f"http://{args.host}:{args.port}/mul_generate"
     n = args.n
