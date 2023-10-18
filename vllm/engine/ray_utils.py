@@ -109,3 +109,4 @@ def initialize_cluster(
     #             current_device_id = 0
     #     all_stage_devices.append(stage_devices)
     # return distributed_init_method, all_stage_devices
+    return 1,1
