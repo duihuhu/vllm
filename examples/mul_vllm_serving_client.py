@@ -54,7 +54,7 @@ def sample_requests(
     dataset_path: str,
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
-) -> List[Tuple[str, int, int]]:
+) -> List[str]:
     # Load the dataset.
     with open(dataset_path) as f:
         dataset = json.load(f)
@@ -80,7 +80,7 @@ def sample_requests(
         tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
 
     # Filter out too long sequences.
-    filtered_dataset: List[Tuple[str, int, int]] = []
+    # filtered_dataset: List[Tuple[str, int, int]] = []
     filtered_prompts: List[str] = [] 
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
@@ -90,13 +90,12 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue
-        filtered_dataset.append((prompt, prompt_len, output_len))
+        # filtered_dataset.append((prompt, prompt_len, output_len))
         filtered_prompts.append(prompt)
     
     # Sample the requests.
-    sampled_requests = random.sample(filtered_dataset, num_requests)
-    for req in sampled_requests:
-      print(len(req[0]), req[1], req[2])
+    # sampled_requests = random.sample(filtered_dataset, num_requests)
+
     sampled_prompts = random.sample(filtered_prompts, num_requests)
     return sampled_prompts
 
