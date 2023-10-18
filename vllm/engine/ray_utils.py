@@ -33,7 +33,6 @@ def initialize_cluster(
         each worker in each pipeline stage. Each device ID is a tuple of
         (rank, node resource, device id).
     """
-    print("before ray init ")
     if parallel_config.worker_use_ray or engine_use_ray:
         if ray is None:
             raise ImportError(
@@ -43,7 +42,6 @@ def initialize_cluster(
         # ray.init(address=ray_address)
         ray.init(address='127.0.0.1:6379',dashboard_host='127.0.0.1')
 
-    print("after ray init ")
     if not parallel_config.worker_use_ray:
         # Initialize cluster locally.
         port = random.randint(10000, 20000)
@@ -110,5 +108,6 @@ def initialize_cluster(
                 current_node_id += 1
                 current_device_id = 0
         all_stage_devices.append(stage_devices)
+    print("after ray init ")
 
     return distributed_init_method, all_stage_devices
