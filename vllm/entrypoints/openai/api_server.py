@@ -583,7 +583,6 @@ if __name__ == "__main__":
     engine = AsyncLLMEngine.from_engine_args(engine_args)
     print("before AsyncLLMEngine run")
     engine_model_config = asyncio.run(engine.get_model_config())
-    print("AsyncLLMEngine run")
 
     # A separate tokenizer to map token IDs to strings.
     tokenizer = get_tokenizer(engine_args.tokenizer,
