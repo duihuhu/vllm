@@ -81,6 +81,7 @@ def sample_requests(
 
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[str, int, int]] = []
+    filtered_prompts: List[str] = [] 
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
         if prompt_len < 4 or output_len < 4:
@@ -89,13 +90,13 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue
-        filtered_dataset.append((prompt, prompt_len, output_len))
+        # filtered_dataset.append((prompt, prompt_len, output_len))
+        filtered_prompts.append(prompt)
 
     # Sample the requests.
-    sampled_requests = random.sample(filtered_dataset, num_requests)
-    for req in sampled_requests:
-      print(req[0], req[1], req[2])
-    return sampled_requests
+    # sampled_requests = random.sample(filtered_dataset, num_requests)
+    sampled_prompts = random.sample(filtered_prompts, num_requests)
+    return sampled_prompts
 
 
 if __name__ == "__main__":
@@ -120,12 +121,12 @@ if __name__ == "__main__":
     tokenizer = get_tokenizer(args.tokenizer)
     prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
     # prompt = args.prompt
-    # api_url = f"http://{args.host}:{args.port}/generate"
-    # n = args.n
-    # stream = args.stream
+    api_url = f"http://{args.host}:{args.port}/generate"
+    n = args.n
+    stream = args.stream
 
-    # print(f"Prompt: {prompt!r}\n", flush=True)
-    # response = post_http_request(prompt, api_url, n, stream)
+    print(f"Prompt: {prompts!r}\n", flush=True)
+    response = post_http_request(prompts, api_url, n, stream)
 
     # if stream:
     #     num_printed_lines = 0
