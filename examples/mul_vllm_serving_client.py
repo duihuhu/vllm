@@ -90,11 +90,13 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue
-        # filtered_dataset.append((prompt, prompt_len, output_len))
+        filtered_dataset.append((prompt, prompt_len, output_len))
         filtered_prompts.append(prompt)
-
+    
     # Sample the requests.
-    # sampled_requests = random.sample(filtered_dataset, num_requests)
+    sampled_requests = random.sample(filtered_dataset, num_requests)
+    for req in sampled_requests:
+      print(len(req[0]), req[1], req[2])
     sampled_prompts = random.sample(filtered_prompts, num_requests)
     return sampled_prompts
 
