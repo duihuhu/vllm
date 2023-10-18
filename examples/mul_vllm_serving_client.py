@@ -94,7 +94,7 @@ def sample_requests(
     # Sample the requests.
     sampled_requests = random.sample(filtered_dataset, num_requests)
     for req in sampled_requests:
-      print(req.prompt, req.prompt_len, req.output_len)
+      print(req[0], req[1], req[2])
     return sampled_requests
 
 
