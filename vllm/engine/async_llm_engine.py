@@ -113,11 +113,11 @@ class AsyncLLMEngine:
         # vLLM engine.
         for prompt in prompts:
             request_id = random_uuid()
-            if self.log_requests:
-                logger.info(f"Received request {request_id}: "
-                            f"prompt: {prompt!r}, "
-                            f"sampling params: {sampling_params}, "
-                            f"prompt token ids: {prompt_token_ids}.")
+            # if self.log_requests:
+            #     logger.info(f"Received request {request_id}: "
+            #                 f"prompt: {prompt!r}, "
+            #                 f"sampling params: {sampling_params}, "
+            #                 f"prompt token ids: {prompt_token_ids}.")
 
             # Add the request into the vLLM engine's waiting queue.
             if self.engine_use_ray:
