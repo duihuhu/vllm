@@ -49,7 +49,7 @@ class LLM:
         tensor_parallel_size: int = 1,
         dtype: str = "auto",
         seed: int = 0,
-        master_port: Optional[int] = None
+        master_port: Optional[int] = None,
         **kwargs,
     ) -> None:
         if "disable_log_stats" not in kwargs:
