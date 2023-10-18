@@ -143,7 +143,7 @@ if __name__ == "__main__":
     # prompt = args.prompt
     n = args.n
     stream = args.stream
-    if args.num_server == 1:
+    if args.num_servers == 1:
         api_url = f"http://{args.host}:{args.port}/mul_generate"
         response = post_http_request(prompts, api_url, n, stream)
     else:
