@@ -108,6 +108,4 @@ def initialize_cluster(
                 current_node_id += 1
                 current_device_id = 0
         all_stage_devices.append(stage_devices)
-    print("after ray init ")
-
     return distributed_init_method, all_stage_devices
