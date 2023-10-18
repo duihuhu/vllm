@@ -228,10 +228,10 @@ class AsyncLLMEngine:
         engine_configs = engine_args.create_engine_configs()
         parallel_config = engine_configs[2]
         # Initialize the cluster.
-        # distributed_init_method, devices = initialize_cluster(
-        #     parallel_config=parallel_config, engine_use_ray=engine_args.engine_use_ray)
-        # # Create the async LLM engine.
-        # print("before Async LLM eigine ")
+        distributed_init_method, devices = initialize_cluster(
+            parallel_config=parallel_config, engine_use_ray=engine_args.engine_use_ray)
+        # Create the async LLM engine.
+        print("before Async LLM eigine ")
         # engine = cls(engine_args.worker_use_ray,
         #              engine_args.engine_use_ray,
         #              *engine_configs,
@@ -240,4 +240,5 @@ class AsyncLLMEngine:
         #              log_requests=not engine_args.disable_log_requests,
         #              log_stats=not engine_args.disable_log_stats)
         # print("after AsyncLLMEngine initialize_cluster")
-        return engine
+        # return engine
+        return 1
