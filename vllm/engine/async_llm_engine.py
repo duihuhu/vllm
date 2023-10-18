@@ -112,9 +112,9 @@ class AsyncLLMEngine:
         # Create an event to notify us that there is new output from the
         # vLLM engine.
         for prompt in prompts:
-            request_event = asyncio.Event()
+            # request_event = asyncio.Event()
             request_id = random_uuid()
-            self.request_events[request_id] = request_event
+            # self.request_events[request_id] = request_event
 
             if self.log_requests:
                 logger.info(f"Received request {request_id}: "
@@ -137,23 +137,60 @@ class AsyncLLMEngine:
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
 
-        # Run the engine.
-        outputs: List[RequestOutput] = []
-        # interation = 0
-        while self.engine.has_unfinished_requests():
-            # print("interation: ", interation)
-            step_outputs = self.engine.step()
-            # interation = interation  + 1
-            for output in step_outputs:
-                if output.finished:
-                    outputs.append(output)
+        # The vLLM engine does not have a background loop that keeps
+        # processing incoming requests. Therefore, we need to keep kicking
+        # the engine to process the requests.
+        while True:
+            # if request_id not in self.request_events:
+            #     # The request has been aborted.
+            #     return
 
-        # Sort the outputs by request ID.
-        # This is necessary because some requests may be finished earlier than
-        # its previous requests.
-        outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        print("outputs ", outputs)
-        return outputs
+            # # Kick the engine if the engine is not running.
+            # if not self.is_engine_running:
+            #     try:
+            #         await self.engine_step(request_id)
+            #     except RuntimeError as e:
+            #         await self.abort(request_id)
+            #         raise e
+
+            # # Wait for new output. The group_event will be set in engine_step
+            # # when there is new output available for the sequence group.
+            # # Added a timeout to prevent deadlock.
+            # try:
+            #     await asyncio.wait_for(request_event.wait(),
+            #                            timeout=TIMEOUT_TO_PREVENT_DEADLOCK)
+            # except asyncio.TimeoutError:
+            #     continue
+            # # Reset the event to wait for the next output.
+            # request_event.clear()
+
+            # # Decode and return new outputs.
+            # request_output = self.request_outputs[request_id]
+            # yield request_output
+
+            # # Once finished, release the resources of the sequence group.
+            # if request_output.finished:
+            #     if self.log_requests:
+            #         logger.info(f"Finished request {request_id}.")
+
+            #     del self.request_outputs[request_id]
+            #     del self.request_events[request_id]
+            #     # Kick the engine if the engine is not running. This is to
+            #     # prevent that there are still requests in engine's waiting
+            #     # queue to be executed.
+            #     if not self.is_engine_running:
+            #         await self.engine_step()
+            #     break
+            outputs: List[RequestOutput] = []
+            while self.llm_engine.has_unfinished_requests():
+                # print("interation: ", interation)
+                step_outputs = self.engine.step()
+                # interation = interation  + 1
+                for output in step_outputs:
+                    if output.finished:
+                        outputs.append(output)
+                        print(outputs)
+
 
     async def generate(
             self,
