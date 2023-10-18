@@ -36,18 +36,17 @@ def post_http_request(prompt: List[str],
         }
         response = requests.post(api_url, headers=headers, json=pload, stream=True)
     else:
-        num_prompt = len(prompt)/num_servers
-        print(num_prompt, tid, tid * num_prompt, (tid+1)*num_prompt)
-        # headers = {"User-Agent": "Test Client"}
-        # pload = {
-        #     "prompt": prompt[tid*num_prompt:(tid+1)*num_prompt],
-        #     "n": n,
-        #     "use_beam_search": True,
-        #     "temperature": 0.0,
-        #     "max_tokens": 16,
-        #     "stream": stream,
-        # }
-        # response = requests.post(api_url, headers=headers, json=pload, stream=True)
+        num_prompt = int(len(prompt)/num_servers)
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+            "prompt": prompt[tid*num_prompt:(tid+1)*num_prompt],
+            "n": n,
+            "use_beam_search": True,
+            "temperature": 0.0,
+            "max_tokens": 16,
+            "stream": stream,
+        }
+        response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
 
