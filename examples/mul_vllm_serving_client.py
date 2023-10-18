@@ -9,7 +9,7 @@ from transformers import PreTrainedTokenizerBase
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import requests
 import random
-
+import threading
 
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -21,10 +21,13 @@ def clear_line(n: int = 1) -> None:
 def post_http_request(prompt: str,
                       api_url: str,
                       n: int = 1,
-                      stream: bool = False) -> requests.Response:
+                      stream: bool = False,
+                      tid: int = 0,
+                      num_servers: int = 1) -> requests.Response:
+    num_prompt = len(prompt)/num_servers
     headers = {"User-Agent": "Test Client"}
     pload = {
-        "prompt": prompt,
+        "prompt": prompt[tid*num_prompt:(tid+1)*num_prompt],
         "n": n,
         "use_beam_search": True,
         "temperature": 0.0,
@@ -114,6 +117,7 @@ if __name__ == "__main__":
                         help="Number of prompts to process.")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="facebook/opt-125m")
+    parser.add_argument("--num-server", type=int, default=1)
 
       
     args = parser.parse_args()
@@ -124,12 +128,17 @@ if __name__ == "__main__":
     prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
     # prompt = args.prompt
-    api_url = f"http://{args.host}:{args.port}/mul_generate"
     n = args.n
     stream = args.stream
-
-    print(f"Prompt: {prompts!r}\n", flush=True)
-    response = post_http_request(prompts, api_url, n, stream)
+    if args.num_server == 1:
+      api_url = f"http://{args.host}:{args.port}/mul_generate"
+      response = post_http_request(prompts, api_url, n, stream)
+    else:
+    # num_prompts = len(prompts)/(args.num_server)
+    # print(f"Prompt: {prompts!r}\n", flush=True)
+      for i in range(args.num_server):
+        api_url = f"http://{args.host}:{(args.port+i)}/mul_generate"
+        threading.Thread(target=post_http_request, args=(prompts, api_url, n, stream, i, args.num_server))
 
     # if stream:
     #     num_printed_lines = 0
