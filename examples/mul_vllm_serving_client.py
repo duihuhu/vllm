@@ -93,7 +93,8 @@ def sample_requests(
 
     # Sample the requests.
     sampled_requests = random.sample(filtered_dataset, num_requests)
-    print("sample_requests ", sample_requests)
+    for req in sampled_requests:
+      print(req.prompt, req.prompt_len, req.output_len)
     return sampled_requests
 
 
@@ -118,24 +119,24 @@ if __name__ == "__main__":
       args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
     prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
-    prompt = args.prompt
-    api_url = f"http://{args.host}:{args.port}/generate"
-    n = args.n
-    stream = args.stream
+    # prompt = args.prompt
+    # api_url = f"http://{args.host}:{args.port}/generate"
+    # n = args.n
+    # stream = args.stream
 
-    print(f"Prompt: {prompt!r}\n", flush=True)
-    response = post_http_request(prompt, api_url, n, stream)
+    # print(f"Prompt: {prompt!r}\n", flush=True)
+    # response = post_http_request(prompt, api_url, n, stream)
 
-    if stream:
-        num_printed_lines = 0
-        for h in get_streaming_response(response):
-            clear_line(num_printed_lines)
-            num_printed_lines = 0
-            for i, line in enumerate(h):
-                num_printed_lines += 1
-                print(f"Beam candidate {i}: {line!r}", flush=True)
-    else:
-        output = get_response(response)
-        for i, line in enumerate(output):
-            print(f"Beam candidate {i}: {line!r}", flush=True)
+    # if stream:
+    #     num_printed_lines = 0
+    #     for h in get_streaming_response(response):
+    #         clear_line(num_printed_lines)
+    #         num_printed_lines = 0
+    #         for i, line in enumerate(h):
+    #             num_printed_lines += 1
+    #             print(f"Beam candidate {i}: {line!r}", flush=True)
+    # else:
+    #     output = get_response(response)
+    #     for i, line in enumerate(output):
+    #         print(f"Beam candidate {i}: {line!r}", flush=True)
 
