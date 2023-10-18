@@ -15,7 +15,7 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
-@app.post("/generates")
+@app.post("/mul_generate")
 async def mul_generate(request: Request) -> Response:
     """Generate completion for the request, containing a list of prompts.
 

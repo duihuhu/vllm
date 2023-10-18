@@ -122,7 +122,7 @@ if __name__ == "__main__":
     tokenizer = get_tokenizer(args.tokenizer)
     prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
     # prompt = args.prompt
-    api_url = f"http://{args.host}:{args.port}/generate"
+    api_url = f"http://{args.host}:{args.port}/mul_generate"
     n = args.n
     stream = args.stream
 
