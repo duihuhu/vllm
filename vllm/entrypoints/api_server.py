@@ -77,8 +77,8 @@ if __name__ == "__main__":
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args)
 
-    # uvicorn.run(app,
-    #             host=args.host,
-    #             port=args.port,
-    #             log_level="debug",
-    #             timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
+    uvicorn.run(app,
+                host=args.host,
+                port=args.port,
+                log_level="debug",
+                timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
