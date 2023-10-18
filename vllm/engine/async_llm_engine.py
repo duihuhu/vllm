@@ -112,10 +112,7 @@ class AsyncLLMEngine:
         # Create an event to notify us that there is new output from the
         # vLLM engine.
         for prompt in prompts:
-            request_event = asyncio.Event()
             request_id = random_uuid()
-            self.request_events[request_id] = request_event
-
             if self.log_requests:
                 logger.info(f"Received request {request_id}: "
                             f"prompt: {prompt!r}, "
