@@ -40,7 +40,7 @@ def initialize_cluster(
                 "serving.")
         # Connect to a ray cluster.
         # ray.init(address=ray_address)
-        ray.init(address='127.0.0.1',dashboard_host='127.0.0.1')
+        ray.init(address='127.0.0.1:6379',dashboard_host='127.0.0.1:6379')
 
     if not parallel_config.worker_use_ray:
         # Initialize cluster locally.
