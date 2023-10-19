@@ -1,18 +1,23 @@
 import threading
 n = 0
+mutex = threading.Lock()
+
 def add_ops():
   global n
   while True:
+    mutex.acquire()
     n = n + 1
-    sleep(1)
-    if n == 10000:
+    mutex.release()
+    if n == 10:
       break
     
 def print_ops():
   global n
   while True:
+    mutex.acquire()
     print(n)
-    if n == 10000:
+    mutex.release()
+    if n == 10:
       break
     
 if __name__ == "__main__":
