@@ -135,16 +135,16 @@ class AsyncLLMEngine:
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
         start = time.time()
-        if status == 'start':
-            outputs: List[RequestOutput] = []
-            while self.engine.has_unfinished_requests():
-                step_outputs = self.engine.step()
-                for output in step_outputs:
-                    if output.finished:
-                        outputs.append(output)
-        elif status == 'prefilled':
-            #todo 
-            print("prefilled")
+        # if status == 'start':
+        outputs: List[RequestOutput] = []
+        while self.engine.has_unfinished_requests():
+            step_outputs = self.engine.step()
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+        # elif status == 'prefilled':
+        #     #todo 
+        #     print("prefilled")
 
         end = time.time()
 
