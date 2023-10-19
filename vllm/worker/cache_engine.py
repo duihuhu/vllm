@@ -228,7 +228,9 @@ class CacheEngine:
                 src_key_cache, src_value_cache = src[i]
                 cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy, 0)
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 0)
-
+                event = self.events[i]
+                event.record(stream=self.cache_stream)
+                
         for key, obj_info in src_to_dst.items():
             key_object_info = (obj_info[rank].object_ids)[0]
             value_object_info = (obj_info[rank].object_ids)[1]
