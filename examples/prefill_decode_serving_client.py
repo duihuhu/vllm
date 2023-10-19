@@ -12,6 +12,18 @@ from vllm.transformers_utils.tokenizer import get_tokenizer
 import requests
 import random
 import threading
+from vllm.utils import random_uuid
+
+import fastapi
+from fastapi import Request
+from fastapi.responses import JSONResponse, Response, StreamingResponse
+
+import uvicorn
+
+request_prompts = {}
+
+app = fastapi.FastAPI()
+TIMEOUT_KEEP_ALIVE = 5  # seconds
 
 def receive_prefilled_request() -> None:
   return
@@ -27,23 +39,38 @@ def clear_line(n: int = 1) -> None:
 
 
 def post_inited_request(prompt: List[str],
+                      request_ids: List[str],
                       api_url: str,
                       n: int = 1,
-                      stream: bool = False) -> requests.Response:
+                      stream: bool = False,
+                      status: str = 'start') -> requests.Response:
     headers = {"User-Agent": "Test Client"}
     pload = {
         "prompt": prompt,
+        "request_ids": request_ids,
         "n": n,
         "use_beam_search": True,
         "temperature": 0.0,
         "max_tokens": 16,
         "stream": stream,
+        "status": status
     }
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
-
     return response
 
+def receive_prefilled_request():
+    uvicorn.run(app,
+              host=args.host,
+              port=args.port,
+              log_level="info",
+              timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
 
+@app.post("/prefilled")
+async def prefilled(request: Request) -> Response:
+    request_dict = await request.json()
+    request_ids = request_dict.pop("request_ids")
+    return
+  
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
     for chunk in response.iter_lines(chunk_size=8192,
                                      decode_unicode=False,
@@ -91,8 +118,11 @@ def sample_requests(
 
     # Filter out too long sequences.
     # filtered_dataset: List[Tuple[str, int, int]] = []
-    filtered_prompts: List[str] = [] 
+    # filtered_prompts: List[str] = [] 
+    # filtered_tokenids: List[str] = []
+    filtered_dataset: List[Tuple[str, str, str]]
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
+        request_id = random_uuid()
         prompt_len = len(prompt_token_ids)
         if prompt_len < 4 or output_len < 4:
             # Prune too short sequences.
@@ -100,17 +130,18 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue
-        # filtered_dataset.append((prompt, prompt_len, output_len))
-        filtered_prompts.append(prompt)
-    
+        filtered_dataset.append((prompt, prompt_token_ids, request_id))
+        # filtered_prompts.append(prompt)
+        # filtered_tokenids.append(prompt_token_ids)
     # Sample the requests.
     # sampled_requests = random.sample(filtered_dataset, num_requests)
 
-    sampled_prompts = random.sample(filtered_prompts, num_requests)
+    sampled_prompts = random.sample(filtered_dataset, num_requests)
     return sampled_prompts
 
 
 if __name__ == "__main__":
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=8000)
@@ -123,25 +154,37 @@ if __name__ == "__main__":
                         help="Number of prompts to process.")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="facebook/opt-125m")
-
       
     args = parser.parse_args()
     
     if args.tokenizer is None:
         args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
-    prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    
+    request_prompts_id = random_uuid()
+    sampled_prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    prompts = []
+    request_ids = []
+    for prompt in sampled_prompts:
+      request_prompts[prompt[-1]] = prompt
+      prompts.append(prompt[0])
+      request_ids.append(prompt[-1])
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
     # prompt = args.prompt
     n = args.n
     stream = args.stream
     api_url = f"http://{args.host}:{args.port}/mul_generate"
-    response = post_inited_request(prompts, api_url, n, stream)
+    # response = post_inited_request(prompts, api_url, n, stream)
 
     task_td = []
-    task_td.append(threading.Thread(target=post_inited_request, args=(prompts, api_url, n, stream)))
+    task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
     
-    task_td.append(threading.Thread(target=receive_prefilled_request, args=()))
+    for td in task_td:
+      td.start()
+    for td in task_td:
+      td.join()
+      
+    # task_td.append(threading.Thread(target=receive_prefilled_request, args=()))
     
     # task_td.append(pk_td = threading.Thread(post_prefilled_request, args=()))
     

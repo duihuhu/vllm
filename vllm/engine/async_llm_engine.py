@@ -85,7 +85,9 @@ class AsyncLLMEngine:
     def mul_generate(
             self,
             prompts: Optional[List[str]],
+            request_ids: Optional[List[str]],
             sampling_params: SamplingParams,
+            status: str,
             prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
         """Generate outputs for a request.
 
@@ -110,8 +112,8 @@ class AsyncLLMEngine:
 
         # Create an event to notify us that there is new output from the
         # vLLM engine.
-        for prompt in prompts:
-            request_id = random_uuid()
+        for prompt, request_id in zip(prompts,request_ids):
+            # request_id = random_uuid()
             # if self.log_requests:
             #     logger.info(f"Received request {request_id}: "
             #                 f"prompt: {prompt!r}, "
@@ -132,14 +134,18 @@ class AsyncLLMEngine:
                                         sampling_params,
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
-        
         start = time.time()
-        outputs: List[RequestOutput] = []
-        while self.engine.has_unfinished_requests():
-            step_outputs = self.engine.step()
-            for output in step_outputs:
-                if output.finished:
-                    outputs.append(output)
+        if status == 'start':
+            outputs: List[RequestOutput] = []
+            while self.engine.has_unfinished_requests():
+                step_outputs = self.engine.step()
+                for output in step_outputs:
+                    if output.finished:
+                        outputs.append(output)
+        elif status == 'prefilled':
+            #todo 
+            print("prefilled")
+
         end = time.time()
 
         elapsed_time = end-start
