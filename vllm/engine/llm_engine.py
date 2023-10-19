@@ -297,6 +297,11 @@ class LLMEngine:
         for seq_group in seq_groups + ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
+        for output in request_outputs:
+            print("step decoder output ", output)
+        
+        for seq in seq_groups:
+            print("step decoder seq ", seq)
         return request_outputs
 
     def step(self) -> List[RequestOutput]:
@@ -343,10 +348,10 @@ class LLMEngine:
             request_outputs.append(request_output)
 
         for output in request_outputs:
-            print("output ", output)
+            print("step output ", output)
         
         for seq in seq_groups:
-            print("seq ", seq)
+            print("step seq ", seq)
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
         if prefill_blocks_to_object_swap_out:
