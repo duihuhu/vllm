@@ -108,9 +108,9 @@ class AsyncLLMEngine:
             request.
         """
         start = time.time()
+        arrival_time = time.time()
         if status == 'start':
             # Preprocess the request.
-            arrival_time = time.time()
             print("prefilling ")
             # Create an event to notify us that there is new output from the
             # vLLM engine.
