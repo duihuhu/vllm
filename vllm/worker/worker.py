@@ -305,7 +305,6 @@ class Worker:
             for event in cache_events:
                 event.wait()
                 
-    @torch.inference_mode()
     def swap_out_prefilled_cache(
         self,
         blocks_to_swap_out: Dict[SequenceGroup, Dict[int, int]],

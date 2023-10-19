@@ -237,6 +237,7 @@ class CacheEngine:
             for key_addr, value_addr in zip(key_object_info, value_object_info):            
                 plasma_client.seal(key_addr)
                 plasma_client.seal(value_addr)
+            
         #seal object after swap data
         # for object_address_lists in key_layer_object_address_lists:
         #     for addr in object_address_lists:
