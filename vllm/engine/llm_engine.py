@@ -328,7 +328,7 @@ class LLMEngine:
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )
         # Update the scheduler with the model outputs.
-        seq_groups = self.scheduler.update(output)
+        seq_groups = self.scheduler.update_object(output)
 
         # Decode the sequences.
         self._decode_sequences(seq_groups)

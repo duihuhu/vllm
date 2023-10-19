@@ -668,6 +668,34 @@ class Scheduler:
 
         return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups
 
+    def update_object(
+        self,
+        seq_outputs: Dict[int, SequenceOutputs],
+    ) -> List[SequenceGroup]:
+        # Update the running sequences and free blocks.
+        for seq_group in self.running:
+            # Process beam search results before processing the new tokens.
+            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                output = seq_outputs[seq.seq_id]
+                if seq.seq_id != output.parent_seq_id:
+                    # The sequence is a fork of the parent sequence (beam
+                    # search). Free the current sequence.
+                    self.block_manager.free(seq)
+                    # Fork the parent sequence.
+                    parent_seq = seq_group.find(output.parent_seq_id)
+                    parent_seq.fork(seq)
+                    self.block_manager.fork_object(parent_seq, seq)
+
+            # Process the new tokens.
+            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                # Append a new token to the sequence.
+                output = seq_outputs[seq.seq_id]
+                seq.append_token_id(output.output_token, output.logprobs)
+        # Return a shallow copy of the running queue to prevent the queue
+        # from being modified by the caller.
+        return self.running.copy()
+
+
     def update(
         self,
         seq_outputs: Dict[int, SequenceOutputs],

@@ -237,6 +237,15 @@ class BlockSpaceManager:
         for block in src_block_table:
             block.ref_count += 1
 
+
+    def fork_object(self, parent_seq: Sequence, child_seq: Sequence) -> None:
+        # NOTE: fork does not allocate a new physical block.
+        # Thus, it is always safe from OOM.
+        src_block_table = self.block_tables_object[parent_seq.seq_id]
+        self.block_tables[child_seq.seq_id] = src_block_table.copy()
+        for block in src_block_table:
+            block.ref_count += 1
+
     def _get_object_physical_blocks(
             self, seq_group: SequenceGroup) -> List[PhysicalTokenBlock]:
         # NOTE: Here, we assume that the physical blocks are only shared by
