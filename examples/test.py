@@ -11,6 +11,8 @@ def print_ops():
   global n
   while True:
     print(n)
+    if n == 10:
+      break
     
 if __name__ == "__main__":
   task_tds = []
