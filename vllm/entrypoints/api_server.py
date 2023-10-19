@@ -37,7 +37,7 @@ async def mul_generate(request: Request) -> Response:
     if status == 'start':
         results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,status=status)
     elif status == 'prefilled':
-        results_generator = engine.mul_generate(request_ids=request_ids, sampling_params=sampling_params, status=status, prompt_token_ids=prompt_token_ids)
+        results_generator = engine.mul_generate(prompts=[], request_ids=request_ids, sampling_params=sampling_params, status=status, prompt_token_ids=prompt_token_ids)
         
     # # Streaming case
     # async def stream_results() -> AsyncGenerator[bytes, None]:
