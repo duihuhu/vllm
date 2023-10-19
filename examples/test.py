@@ -4,6 +4,7 @@ def add_ops():
   global n
   while True:
     n = n + 1
+    sleep(1)
     if n == 10000:
       break
     
