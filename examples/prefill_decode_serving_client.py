@@ -174,7 +174,7 @@ if __name__ == "__main__":
     # prompt = args.prompt
     n = args.n
     stream = args.stream
-    api_url = f"http://{args.host}:{args.port}/mul_generate"
+    api_url = f"http://{args.host}:{args.port-1000}/mul_generate"
     # response = post_inited_request(prompts, api_url, n, stream)
 
     task_td = []
