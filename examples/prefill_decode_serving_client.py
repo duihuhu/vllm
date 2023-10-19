@@ -58,10 +58,10 @@ def post_inited_request(prompt: List[str],
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
-def receive_prefilled_request():
+def receive_prefilled_request(host, port):
     uvicorn.run(app,
-              host=args.host,
-              port=args.port,
+              host=host,
+              port=port,
               log_level="info",
               timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--port", type=int, default=9000)
+    parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--n", type=int, default=4)
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     task_td = []
     task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
       
-    task_td.append(threading.Thread(target=receive_prefilled_request))
+    task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
   
     for td in task_td:
       td.start()
