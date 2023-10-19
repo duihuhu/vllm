@@ -297,11 +297,7 @@ class LLMEngine:
         for seq_group in seq_groups + ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
-        for output in request_outputs:
-            print("step decoder output ", output)
-        
-        for seq in seq_groups:
-            print("step decoder seq ", seq)
+
         return request_outputs
 
     def step(self) -> List[RequestOutput]:
