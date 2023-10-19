@@ -1,5 +1,5 @@
 import threading
-
+n = 0
 def add_ops(n):
   while True:
     n = n + 1
@@ -12,7 +12,7 @@ def print_ops(n):
     
 if __name__ == "__main__":
   task_tds = []
-  n = 0
+
   task_tds.append(threading.Thread(target=add_ops, args=(n,)))
   task_tds.append(threading.Thread(target=print_ops, args=(n,)))
   for td in task_tds:
