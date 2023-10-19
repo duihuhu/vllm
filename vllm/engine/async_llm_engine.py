@@ -150,13 +150,13 @@ class AsyncLLMEngine:
                 if self.engine_use_ray:
                     self.engine.add_request.remote(
                         request_id,
-                        prompt,
+                        None,
                         sampling_params,
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
                 else:
                     self.engine.add_request(request_id,
-                                            prompt,
+                                            None,
                                             sampling_params,
                                             prompt_token_ids=prompt_token_id,
                                             arrival_time=arrival_time)
