@@ -17,7 +17,7 @@ def print_ops():
     mutex.acquire()
     print(n)
     mutex.release()
-    if n == 10:
+    if n == 100:
       break
     
 if __name__ == "__main__":
