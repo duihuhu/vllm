@@ -139,9 +139,9 @@ if __name__ == "__main__":
     response = post_inited_request(prompts, api_url, n, stream)
 
     task_td = []
-    task_td.append(threading.Thread(post_inited_request, args=(prompts, api_url, n, stream)))
+    task_td.append(threading.Thread(target=post_inited_request, args=(prompts, api_url, n, stream)))
     
-    task_td.append(threading.Thread(receive_prefilled_request, args=()))
+    task_td.append(threading.Thread(target=receive_prefilled_request, args=()))
     
     # task_td.append(pk_td = threading.Thread(post_prefilled_request, args=()))
     
