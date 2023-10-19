@@ -107,44 +107,67 @@ class AsyncLLMEngine:
             The output `RequestOutput` objects from the LLMEngine for the
             request.
         """
-        # Preprocess the request.
-        arrival_time = time.time()
-
-        # Create an event to notify us that there is new output from the
-        # vLLM engine.
-        for prompt, request_id in zip(prompts,request_ids):
-            # request_id = random_uuid()
-            # if self.log_requests:
-            #     logger.info(f"Received request {request_id}: "
-            #                 f"prompt: {prompt!r}, "
-            #                 f"sampling params: {sampling_params}, "
-            #                 f"prompt token ids: {prompt_token_ids}.")
-
-            # Add the request into the vLLM engine's waiting queue.
-            if self.engine_use_ray:
-                self.engine.add_request.remote(
-                    request_id,
-                    prompt,
-                    sampling_params,
-                    prompt_token_ids=prompt_token_ids,
-                    arrival_time=arrival_time)
-            else:
-                self.engine.add_request(request_id,
-                                        prompt,
-                                        sampling_params,
-                                        prompt_token_ids=prompt_token_ids,
-                                        arrival_time=arrival_time)
         start = time.time()
-        # if status == 'start':
-        outputs: List[RequestOutput] = []
-        while self.engine.has_unfinished_requests():
-            step_outputs = self.engine.step()
-            for output in step_outputs:
-                if output.finished:
-                    outputs.append(output)
-        # elif status == 'prefilled':
-        #     #todo 
-        #     print("prefilled")
+        if status == 'start':
+            # Preprocess the request.
+            arrival_time = time.time()
+            print("prefilling ")
+            # Create an event to notify us that there is new output from the
+            # vLLM engine.
+            for prompt, request_id in zip(prompts,request_ids):
+                # request_id = random_uuid()
+                # if self.log_requests:
+                #     logger.info(f"Received request {request_id}: "
+                #                 f"prompt: {prompt!r}, "
+                #                 f"sampling params: {sampling_params}, "
+                #                 f"prompt token ids: {prompt_token_ids}.")
+
+                # Add the request into the vLLM engine's waiting queue.
+                if self.engine_use_ray:
+                    self.engine.add_request.remote(
+                        request_id,
+                        prompt,
+                        sampling_params,
+                        prompt_token_ids=prompt_token_ids,
+                        arrival_time=arrival_time)
+                else:
+                    self.engine.add_request(request_id,
+                                            prompt,
+                                            sampling_params,
+                                            prompt_token_ids=prompt_token_ids,
+                                            arrival_time=arrival_time)
+                outputs: List[RequestOutput] = []
+                while self.engine.has_unfinished_requests():
+                    step_outputs = self.engine.step()
+                    for output in step_outputs:
+                        if output.finished:
+                            outputs.append(output)
+                            
+        elif status == 'prefilled':
+            #todo 
+            print("decode ")
+            for prompt_token_id, request_id in zip(prompt_token_ids, request_ids):
+                if self.engine_use_ray:
+                    self.engine.add_request.remote(
+                        request_id,
+                        prompt,
+                        sampling_params,
+                        prompt_token_ids=prompt_token_id,
+                        arrival_time=arrival_time)
+                else:
+                    self.engine.add_request(request_id,
+                                            prompt,
+                                            sampling_params,
+                                            prompt_token_ids=prompt_token_id,
+                                            arrival_time=arrival_time)
+                    
+                    outputs: List[RequestOutput] = []
+                    while self.engine.has_unfinished_requests():
+                        step_outputs = self.engine.step_decoder()
+                        for output in step_outputs:
+                            if output.finished:
+                                outputs.append(output)
+            
 
         end = time.time()
 

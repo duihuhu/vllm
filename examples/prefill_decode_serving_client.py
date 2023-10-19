@@ -70,6 +70,25 @@ async def prefilled(request: Request) -> Response:
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
     print("request ids: " , request_ids)
+    prompt_token_ids = []
+    for request_id in request_ids:
+      prompt_token_ids.append(request_prompts.get(request_id))
+    
+    headers = {"User-Agent": "Test Client"}
+    host = '127.0.0.1'
+    port = 8001
+    api_url = f"http://{host}:{port}/mul_generate"
+    pload = {
+        "request_ids": request_ids,
+        "prompt_token_ids": prompt_token_ids,
+        "n": n,
+        "use_beam_search": True,
+        "temperature": 0.0,
+        "max_tokens": 16,
+        "stream": False,
+        "status": 'prefilled'
+    }
+    response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return
   
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
@@ -91,7 +110,7 @@ def sample_requests(
     dataset_path: str,
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
-) -> List[str]:
+) -> List[Tuple[str, List[int], str]] :
     random.seed(0)
     # Load the dataset.
     with open(dataset_path) as f:
@@ -121,7 +140,7 @@ def sample_requests(
     # filtered_dataset: List[Tuple[str, int, int]] = []
     # filtered_prompts: List[str] = [] 
     # filtered_tokenids: List[str] = []
-    filtered_dataset: List[Tuple[str, str, str]] = []
+    filtered_dataset: List[Tuple[str, List[int], str]] = []
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         request_id = random_uuid()
         prompt_len = len(prompt_token_ids)
