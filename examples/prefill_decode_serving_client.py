@@ -69,7 +69,9 @@ def receive_prefilled_request(host, port):
 async def prefilled(request: Request) -> Response:
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
-    print("request ids: " , request_ids)
+    prefilled_token_ids =  request_dict.pop("prefilled_token_ids")
+    prefilled_text = request_dict.pop("prefilled_text")
+    
     prompt_token_ids = []
     for request_id in request_ids:
       prompt_token_ids.append(request_prompts.get(request_id))
@@ -81,6 +83,8 @@ async def prefilled(request: Request) -> Response:
     pload = {
         "request_ids": request_ids,
         "prompt_token_ids": prompt_token_ids,
+        "prefilled_token_ids": prefilled_token_ids,
+        "prefilled_text" : prefilled_text,
         "n": n,
         "use_beam_search": False,
         "temperature": 0.0,

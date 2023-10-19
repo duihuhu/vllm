@@ -32,12 +32,16 @@ async def mul_generate(request: Request) -> Response:
         prompts = request_dict.pop("prompt")
     elif status == 'prefilled':
         prompt_token_ids = request_dict.pop("prompt_token_ids")
+        prefilled_token_ids = request_dict.pop("prefilled_token_ids")
+        prefilled_text = request_dict.pop("prefilled_text")
+
     sampling_params = SamplingParams(**request_dict)
     # # request_id = random_uuid()
     if status == 'start':
         results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,status=status)
     elif status == 'prefilled':
-        results_generator = engine.mul_generate(prompts=[], request_ids=request_ids, sampling_params=sampling_params, status=status, prompt_token_ids=prompt_token_ids)
+        results_generator = engine.mul_generate(prompts=[], request_ids=request_ids, sampling_params=sampling_params, status=status, prompt_token_ids=prompt_token_ids,\
+            prefilled_token_ids=prefilled_token_ids, prefilled_text=prefilled_text)
         
     # # Streaming case
     # async def stream_results() -> AsyncGenerator[bytes, None]:

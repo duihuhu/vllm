@@ -88,7 +88,9 @@ class AsyncLLMEngine:
             request_ids: Optional[List[str]],
             sampling_params: SamplingParams,
             status: str,
-            prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
+            prompt_token_ids: Optional[List[List[int]]] = None,
+            prefilled_token_ids: Optional[List[int]] = None,
+            prefilled_text: Optional[List[str]]=None) -> RequestOutput:
         """Generate outputs for a request.
 
         Generate outputs for a request. This method is a coroutine. It adds the

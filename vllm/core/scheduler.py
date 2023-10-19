@@ -12,6 +12,7 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
 import pyarrow._plasma as plasma_object
 from vllm.worker.object_manager.object_info import ObjectInfo
 import requests
+from vllm.outputs import RequestOutput
 
 logger = init_logger(__name__)
 
@@ -466,16 +467,24 @@ class Scheduler:
 
     def post_prefilled_to_controller(self) -> None:
         request_ids = []
+        prefilled_token_ids = []
+        prefilled_text = []
+        cumulative_logprob = []
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
-            request_ids.append(seq_group.request_id)
-
+            request_output = RequestOutput.from_seq_group(seq_group)
+            request_ids.append(request_output.request_id)
+            prefilled_token_ids.append(request_output.outputs[-1].token_ids)
+            prefilled_text.append(request_output.outputs[-1].text)
+            cumulative_logprob.append(request_output.outputs[-1].cumulative_logprob)
         host='127.0.0.1'
         port = '9000'
         api_url = f"http://{host}:{port}/prefilled"
         headers = {"User-Agent": "Test Client"}
         pload = {
             "request_ids": request_ids,
+            "produce_token_ids": prefilled_token_ids,
+            "produce_text": prefilled_text
         }
         response = requests.post(api_url, headers=headers, json=pload)
         # self.scheduler.watch_cpu_kv_cache()

@@ -348,10 +348,17 @@ class LLMEngine:
             request_outputs.append(request_output)
 
         for output in request_outputs:
-            print("step output ", output)
+            print("step output ", output,)
         
-        for seq in seq_groups:
-            print("step seq ", seq)
+        for seq_group in seq_groups:
+            print("step seq_groups ", seq_group)
+            seqs = seq_group.get_seqs()
+            for seq in seqs:
+                print("seq seq ", seq)
+                print("seq.output_logprobs ", seq.output_logprobs)
+                print("seq.output_tokens ", seq.output_tokens)
+                print("seq.output_text ", seq.output_text)
+                
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
         if prefill_blocks_to_object_swap_out:
