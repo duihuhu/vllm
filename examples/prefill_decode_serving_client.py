@@ -69,6 +69,7 @@ def receive_prefilled_request():
 async def prefilled(request: Request) -> Response:
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
+    print(request_ids)
     return
   
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
@@ -144,7 +145,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--port", type=int, default=9000)
     parser.add_argument("--n", type=int, default=4)
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
@@ -178,14 +179,14 @@ if __name__ == "__main__":
 
     task_td = []
     task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
-    
+      
+    task_td.append(threading.Thread(target=receive_prefilled_request))
+  
     for td in task_td:
       td.start()
     for td in task_td:
-      td.join()
+      td.join()  
       
-    # task_td.append(threading.Thread(target=receive_prefilled_request, args=()))
-    
     # task_td.append(pk_td = threading.Thread(post_prefilled_request, args=()))
     
     

@@ -351,8 +351,8 @@ class LLMEngine:
                 blocks_to_swap_out = prefill_blocks_to_swap_out,
                 blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
             )
-            
-        # self.scheduler.watch_cpu_kv_cache()
+        
+        self.scheduler.post_prefilled_to_controller()
         
         return request_outputs
 

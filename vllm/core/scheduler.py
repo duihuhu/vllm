@@ -11,6 +11,7 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceStatus)
 import pyarrow._plasma as plasma_object
 from vllm.worker.object_manager.object_info import ObjectInfo
+import requests
 
 logger = init_logger(__name__)
 
@@ -462,7 +463,23 @@ class Scheduler:
             seq_group = self.prefilled.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
             print("request_id: ", seq_group.request_id, blocks)
-            
+
+    def post_prefilled_to_controller(self) -> None:
+        request_ids = []
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            request_ids.append(seq_group.request_id)
+
+        host='127.0.0.1'
+        port = '9000'
+        api_url = f"http://{host}:{port}/prefilled"
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+            "request_ids": request_ids,
+        }
+        response = requests.post(api_url, headers=headers, json=pload)
+        # self.scheduler.watch_cpu_kv_cache()
+        
     def store_prompt_kv_cache(
         self
     ) -> Tuple[Dict[SequenceGroup, Dict[int, int]], Dict[SequenceGroup, Dict[int, int]]]:
