@@ -4,14 +4,14 @@ def add_ops():
   global n
   while True:
     n = n + 1
-    if n == 10:
+    if n == 10000:
       break
     
 def print_ops():
   global n
   while True:
     print(n)
-    if n == 10:
+    if n == 10000:
       break
     
 if __name__ == "__main__":
