@@ -69,7 +69,7 @@ def receive_prefilled_request(host, port):
 async def prefilled(request: Request) -> Response:
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
-    print(request_ids)
+    print("request ids: " , request_ids)
     return
   
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
@@ -178,9 +178,10 @@ if __name__ == "__main__":
     # response = post_inited_request(prompts, api_url, n, stream)
 
     task_td = []
+    task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
+
     task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
       
-    task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
   
     for td in task_td:
       td.start()
