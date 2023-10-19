@@ -120,7 +120,7 @@ def sample_requests(
     # filtered_dataset: List[Tuple[str, int, int]] = []
     # filtered_prompts: List[str] = [] 
     # filtered_tokenids: List[str] = []
-    filtered_dataset: List[Tuple[str, str, str]]
+    filtered_dataset: List[Tuple[str, str, str]] = []
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         request_id = random_uuid()
         prompt_len = len(prompt_token_ids)
