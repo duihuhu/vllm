@@ -169,7 +169,8 @@ class CacheEngine:
         src: List[KVCache],
         src_to_dst: Dict[int, List[ObjectInfo]],
         rank) -> None:
-
+        print("_swap_out_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
+        rank = rank % self.parallel_config.tensor_parallel_size
         key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
     
