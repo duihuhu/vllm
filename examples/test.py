@@ -13,8 +13,8 @@ def print_ops(n):
 if __name__ == "__main__":
   task_tds = []
   n = 0
-  task_tds.append(add_ops, args=(n))
-  task_tds.append(print_ops, args=(n))
+  task_tds.append(threading.Thread(add_ops, args=(n)))
+  task_tds.append(threading.Thread(print_ops, args=(n)))
   for td in task_tds:
     td.start()
     
