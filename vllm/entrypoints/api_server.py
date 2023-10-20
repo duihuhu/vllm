@@ -42,6 +42,7 @@ async def mul_generate(request: Request) -> Response:
     if status == 'start':
         results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,status=status)
     elif status == 'prefilled':
+        print("decode ")
         results_generator = engine.mul_generate(prompts=[], request_ids=request_ids, sampling_params=sampling_params,
                                                 status=status, seq_ids=seq_ids, prompt_token_ids=prompt_token_ids, prefilled_token_ids=prefilled_token_ids,
                                                 prefilled_texts=prefilled_texts, cumulative_logprobs=cumulative_logprobs)
