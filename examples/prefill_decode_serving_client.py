@@ -19,6 +19,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 import uvicorn
+import time
 
 request_prompts = {}
 
@@ -212,6 +213,7 @@ if __name__ == "__main__":
   
     for td in task_td:
       td.start()
+      time.sleep(2)
     for td in task_td:
       td.join()  
       
