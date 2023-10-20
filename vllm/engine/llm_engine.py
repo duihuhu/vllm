@@ -249,6 +249,7 @@ class LLMEngine:
             seq = Sequence(seq_id, prompt, prompt_token_id, block_size)
             seq.output_text = prefilled_text
             logprobs = {}
+            print("prefilled_token_id cumulative_logprob: ", int(prefilled_token_id[-1]), cumulative_logprob)
             logprobs[int(prefilled_token_id[-1])] = float(cumulative_logprob)
             seq.append_token_id(int(prefilled_token_id[-1]), logprobs)
             seqs.append(seq)
