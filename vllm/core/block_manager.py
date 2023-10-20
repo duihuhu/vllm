@@ -149,7 +149,7 @@ class BlockSpaceManager:
                     block_num_to_token_block[obj_info.gpu_block_num] = token_block
                     
             block_table: BlockTable = []
-            for block_num, token_block in block_num_to_token_block:
+            for block_num, token_block in block_num_to_token_block.items():
                 block_table.append(token_block)
             self.block_tables_object[seq.seq_id] = block_table
             
