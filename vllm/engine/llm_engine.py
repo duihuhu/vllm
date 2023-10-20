@@ -349,14 +349,18 @@ class LLMEngine:
                       k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
  
         
-        # Execute the model.
+        print("scheduler_outputs.blocks_to_swap_in", scheduler_outputs.blocks_to_swap_in)
+        print("scheduler_outputs.blocks_to_swap_out", scheduler_outputs.blocks_to_swap_out)
+        print("scheduler_outputs.blocks_to_copy", scheduler_outputs.blocks_to_copy)
+
         output = self._run_workers(
-            "execute_model",
+            "execute_model_decode",
             seq_group_metadata_list=seq_group_metadata_list,
             blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
             blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )
+        
         # Update the scheduler with the model outputs.
         seq_groups = self.scheduler.update(output)
 
