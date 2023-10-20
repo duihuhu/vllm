@@ -146,7 +146,7 @@ class BlockSpaceManager:
                     token_block.objects_info.append(obj_info)
                 else:
                     token_block = PhysicalTokenBlock(Device.CPU, obj_info.gpu_block_num, self.block_size, [obj_info])
-                    block_num_to_token_block = token_block
+                    block_num_to_token_block[obj_info.gpu_block_num] = token_block
                     
             block_table: BlockTable = []
             for _, token_block in block_num_to_token_block:
