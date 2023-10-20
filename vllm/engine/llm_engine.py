@@ -201,7 +201,6 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, seqs, sampling_params,
                                   arrival_time)
 
-        self.scheduler.restruct_block_table(seq_group)
         # Add the sequence group to the scheduler.
         self.scheduler.add_seq_group(seq_group)
 
@@ -261,6 +260,8 @@ class LLMEngine:
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, seqs, sampling_params,
                                   arrival_time)
+
+        self.scheduler.restruct_block_table(seq_group)
 
         # Add the sequence group to the scheduler.
         self.scheduler.add_prefilled_seq_group(seq_group)

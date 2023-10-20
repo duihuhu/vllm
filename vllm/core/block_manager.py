@@ -136,7 +136,7 @@ class BlockSpaceManager:
 
     def restruct_block_table(self, seq_group: SequenceGroup) -> None:
         for seq in seq_group.get_seqs():
-            object_info = self.plasma_allocator.object_client.get_object_info_by_seq_id(seq.seq_id)
+            object_info = self.plasma_allocator.object_client.socket_client_.get_object_info_by_seq_id(seq.seq_id)
             print("object_info by seq id ", object_info)
             # self.block_tables_object[seq.seq_id] = 
         return
