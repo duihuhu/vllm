@@ -194,7 +194,7 @@ if __name__ == "__main__":
     prompts = []
     request_ids = []
     for prompt in sampled_prompts:
-      request_prompts[prompt[-1]] = prompt
+      request_prompts[prompt[-1]] = prompt[-2]
       prompts.append(prompt[0])
       request_ids.append(prompt[-1])
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
