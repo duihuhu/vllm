@@ -51,11 +51,12 @@ def post_inited_request(prompt: List[str],
         "request_ids": request_ids,
         "n": n,
         "use_beam_search": False,
-        "temperature": 0.0,
+        "temperature": 1.0,
         # "max_tokens": 16,
         "stream": stream,
         "status": status
     }
+    
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
@@ -92,7 +93,7 @@ async def prefilled(request: Request) -> Response:
         "cumulative_logprobs": cumulative_logprobs,
         "n": n,
         "use_beam_search": False,
-        "temperature": 0.0,
+        "temperature": 1.0,
         # "max_tokens": 16,
         "stream": False,
         "status": 'prefilled'
