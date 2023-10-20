@@ -220,12 +220,14 @@ class Worker:
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
 
+
         # Optimization: Pad the input length to be a multiple of 8.
         # This is required for utilizing the Tensor Cores in NVIDIA GPUs.
         input_tokens = _pad_to_alignment(input_tokens, multiple_of=8)
         input_positions = _pad_to_alignment(input_positions, multiple_of=8)
 
         # Convert to tensors.
+        
         tokens_tensor = torch.cuda.LongTensor(input_tokens)
         positions_tensor = torch.cuda.LongTensor(input_positions)
         slot_mapping_tensor = torch.cuda.IntTensor(slot_mapping)

@@ -213,7 +213,7 @@ class LLMEngine:
         seq_ids: List[int],
         prefilled_token_ids: List[int],
         prefilled_texts: List[str],
-        cumulative_logprobs: List[int],
+        cumulative_logprobs: List[float],
         prompt_token_ids: Optional[List[int]] = None,
         arrival_time: Optional[float] = None,
     ) -> None:
@@ -244,10 +244,13 @@ class LLMEngine:
         seqs: List[Sequence] = []
         
         for seq_id, prefilled_token_id, prefilled_text, cumulative_logprob in zip(seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
-            seq = Sequence(seq_id, prompt, prompt_token_ids, block_size)
+            prompt_token_id = [int(token_id) for token_id in prompt_token_ids]
+            
+            seq = Sequence(seq_id, prompt, prompt_token_id, block_size)
+            seq.output_text = prefilled_text
             logprobs = {}
-            logprobs[prefilled_token_id[-1]] = cumulative_logprob
-            seq.append_token_id(prefilled_token_id[-1], logprobs)
+            logprobs[int(prefilled_token_id[-1])] = float(cumulative_logprob)
+            seq.append_token_id(int(prefilled_token_id[-1]), logprobs)
             seqs.append(seq)
             
         # for _ in range(sampling_params.best_of):
