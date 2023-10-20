@@ -387,11 +387,11 @@ class LLMEngine:
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        # (seq_group_metadata_list, scheduler_outputs,
-        #  ignored_seq_groups) = self.scheduler.schedule()
-        
         (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups) = self.scheduler.obj_schedule()
+         ignored_seq_groups) = self.scheduler.schedule()
+        
+        # (seq_group_metadata_list, scheduler_outputs,
+        #  ignored_seq_groups) = self.scheduler.obj_schedule()
         
         for seq_group_metadata in seq_group_metadata_list:
             print("request_id sampling_params is_prmopt: ", \
@@ -438,7 +438,7 @@ class LLMEngine:
                 blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
             )
         
-        self.scheduler.post_prefilled_to_controller()
+        # self.scheduler.post_prefilled_to_controller()
         
         return request_outputs
 
