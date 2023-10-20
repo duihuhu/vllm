@@ -195,12 +195,15 @@ class Worker:
                 continue
 
             seq_ids = list(seq_group_metadata.seq_data.keys())
+            
             sampling_params = seq_group_metadata.sampling_params
             seq_groups.append((seq_ids, sampling_params))
 
             for seq_id in seq_ids:
                 seq_data = seq_group_metadata.seq_data[seq_id]
+                print("seq_data ", seq_data )
                 generation_token = seq_data.get_last_token_id()
+                print("generation_token ", generation_token )
                 input_tokens.append(generation_token)
 
                 context_len = seq_data.get_len()
@@ -419,10 +422,6 @@ class Worker:
         input_tokens, input_positions, input_metadata = self._prepare_inputs(
             seq_group_metadata_list)
                 
-        print("input_tokens ", input_tokens)
-        print("input_positions " , input_positions)
-        print("input_metadata ", input_metadata)
-        print("\n")
         # Execute the model.
         output = self.model(
             input_ids=input_tokens,
