@@ -180,7 +180,7 @@ class LLM:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                    print("decode output"output)
+                    print("decode output:" , output)
                     if use_tqdm:
                         pbar.update(1)
 
