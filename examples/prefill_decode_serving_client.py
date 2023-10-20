@@ -79,7 +79,7 @@ async def prefilled(request: Request) -> Response:
     
     headers = {"User-Agent": "Test Client"}
     host = '127.0.0.1'
-    port = 8001
+    port = '8001'
     api_url = f"http://{host}:{port}/mul_generate"
     
     pload = {
