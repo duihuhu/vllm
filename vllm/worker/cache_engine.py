@@ -251,6 +251,7 @@ class CacheEngine:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst, rank)
     
     def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
+        rank = rank % self.parallel_config.tensor_parallel_size
         src_to_dst_copy = {}
         key_object_address = []
         value_object_address = []

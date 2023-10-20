@@ -341,10 +341,10 @@ class Worker:
         # Issue cache operations.
         issued_cache_op = False
         if blocks_to_swap_in:
-            self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in)
+            self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in, self.rank)
             issued_cache_op = True
         if blocks_to_swap_out:
-            self.cache_engine.swap_out_prefilled_to_plasma(blocks_to_swap_out)
+            self.cache_engine.swap_out_prefilled_to_plasma(blocks_to_swap_out, self.rank)
             issued_cache_op = True
         if blocks_to_copy:
             self.cache_engine.copy(blocks_to_copy)
