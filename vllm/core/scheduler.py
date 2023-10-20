@@ -698,6 +698,39 @@ class Scheduler:
 
         return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups
 
+    def obj_decode_schedule(
+        self
+    ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
+               List[SequenceGroup]]:
+        
+                # Schedule sequence groups.
+        # This function call changes the internal states of the scheduler
+        # such as self.running, self.swapped, and self.waiting.
+        (scheduler_outputs, prompt_group_ids,
+         ignored_seq_groups) = self._obj_schedule()
+
+        # Create input data structures.
+        seq_group_metadata_list: List[SequenceGroupMetadata] = []
+        for seq_group in self.running:
+            is_prompt = seq_group.request_id in prompt_group_ids
+            seq_data: Dict[int, List[SequenceData]] = {}
+            block_tables: Dict[int, List[List[ObjectInfo]]] = {}
+            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                seq_id = seq.seq_id
+                seq_data[seq_id] = seq.data
+                block_tables[seq_id] = self.block_manager.get_object_block_table(seq)
+
+            seq_group_metadata = SequenceGroupMetadata(
+                request_id=seq_group.request_id,
+                is_prompt=False,
+                seq_data=seq_data,
+                sampling_params=seq_group.sampling_params,
+                block_tables=block_tables,
+            )
+            seq_group_metadata_list.append(seq_group_metadata)
+
+        return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups
+
     def update_object(
         self,
         seq_outputs: Dict[int, SequenceOutputs],
