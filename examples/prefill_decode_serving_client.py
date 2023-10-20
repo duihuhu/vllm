@@ -213,7 +213,7 @@ if __name__ == "__main__":
   
     for td in task_td:
       td.start()
-      time.sleep(2)
+      time.sleep(5)
     for td in task_td:
       td.join()  
       
