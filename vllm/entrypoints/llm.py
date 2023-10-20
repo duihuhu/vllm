@@ -154,7 +154,8 @@ class LLM:
             # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
             # interation = interation  + 1
-            # for output in step_outputs:
+            for output in step_outputs:
+                print("prefilll output: ", output)
             #     if output.finished:
             #         outputs.append(output)
                     # if use_tqdm:
@@ -179,7 +180,7 @@ class LLM:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                    # print(output)
+                    print("decode output"output)
                     if use_tqdm:
                         pbar.update(1)
 
