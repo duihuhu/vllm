@@ -87,7 +87,7 @@ async def prefilled(request: Request) -> Response:
         "seq_ids": seq_ids,
         "prompt_token_ids": prompt_token_ids,
         "prefilled_token_ids": prefilled_token_ids,
-        "prefilled_text" : prefilled_text,
+        "prefilled_texts" : prefilled_text,
         "cumulative_logprobs": cumulative_logprobs,
         "n": n,
         "use_beam_search": False,

@@ -503,7 +503,7 @@ class Scheduler:
             "request_ids": request_ids,
             "seq_ids": seq_ids,
             "prefilled_token_ids": prefilled_token_ids,
-            "prefilled_text": prefilled_texts,
+            "prefilled_texts": prefilled_texts,
             "cumulative_logprobs": cumulative_logprobs
         }
         response = requests.post(api_url, headers=headers, json=pload)
