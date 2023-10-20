@@ -157,20 +157,21 @@ class AsyncLLMEngine:
                         request_id,
                         None,
                         sampling_params,
-                        seq_id=seq_id,
+                        seq_ids=seq_id,
                         prefilled_token_ids=prefilled_token_id,
-                        prefilled_text=prefilled_text,
-                        cumulative_logprob=cumulative_logprob,
+                        prefilled_texts=prefilled_text,
+                        cumulative_logprobs=cumulative_logprob,
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
                 else:
-                    self.engine.add_prefilled_request(request_id,
+                    self.engine.add_prefilled_request(
+                                            request_id,
                                             None,
                                             sampling_params,
-                                            seq_id=seq_id,
+                                            seq_ids=seq_id,
                                             prefilled_token_ids=prefilled_token_id,
-                                            prefilled_text=prefilled_text,
-                                            cumulative_logprob=cumulative_logprob,
+                                            prefilled_texts=prefilled_text,
+                                            cumulative_logprobs=cumulative_logprob,
                                             prompt_token_ids=prompt_token_id,
                                             arrival_time=arrival_time,)
                     
