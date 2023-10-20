@@ -138,8 +138,9 @@ class BlockSpaceManager:
         for seq in seq_group.get_seqs():
             object_info = self.plasma_allocator.object_client.socket_client_.get_object_info_by_seq_id(seq.seq_id)
             de_object_info = pickle.loads(object_info)
-            print("object_info by seq id ", de_object_info)
-            
+            for obj_info in de_object_info:
+                print("obj_info ", obj_info.seq_id, obj_info.gpu_block_num, obj_info.device_id, obj_info.object_ids)
+
             # token_block = PhysicalTokenBlock(de_object_info.gpu_block_num, Device.CPU, self.block_size, de_object_info.object_ids)
             
         return
