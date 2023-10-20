@@ -148,6 +148,11 @@ class Worker:
         input_positions: List[int] = []
         slot_mapping: List[int] = []
 
+        for seq_group_metadata in seq_group_metadata_list:
+            print("seq_group_metadata.is_prompt: ", seq_group_metadata.is_prompt)
+            seq_ids = list(seq_group_metadata.seq_data.keys())
+            print("seq_ids", seq_ids)
+
         # Add prompt tokens.
         prompt_lens: List[int] = []
         for seq_group_metadata in seq_group_metadata_list:
@@ -201,9 +206,7 @@ class Worker:
 
             for seq_id in seq_ids:
                 seq_data = seq_group_metadata.seq_data[seq_id]
-                print("seq_data ", seq_data )
                 generation_token = seq_data.get_last_token_id()
-                print("generation_token ", generation_token )
                 input_tokens.append(generation_token)
 
                 context_len = seq_data.get_len()
