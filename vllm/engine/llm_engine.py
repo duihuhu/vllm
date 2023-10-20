@@ -403,8 +403,8 @@ class LLMEngine:
         request_outputs: List[RequestOutput] = []
         for seq_group in seq_groups + ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
+            print("request_output ", request_output)
             request_outputs.append(request_output)
-
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
         if prefill_blocks_to_object_swap_out:
