@@ -262,7 +262,7 @@ class LLMEngine:
                                   arrival_time)
 
         # Add the sequence group to the scheduler.
-        self.scheduler.add_seq_group(seq_group)
+        self.scheduler.add_prefilled_seq_group(seq_group)
 
     def abort_request(self, request_id: str) -> None:
         """Aborts a request with the given ID.
