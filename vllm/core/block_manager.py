@@ -134,6 +134,13 @@ class BlockSpaceManager:
         return (num_free_gpu_blocks - num_required_blocks >=
                 self.watermark_blocks)
 
+    def restruct_block_table(self, seq_group: SequenceGroup) -> None:
+        for seq in seq_group.get_seqs():
+            object_info = self.plasma_allocator.object_client.get_object_info_by_seq_id(seq.seq_id)
+            print("object_info by seq id ", object_info)
+            # self.block_tables_object[seq.seq_id] = 
+        return
+    
     def allocate_object(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.

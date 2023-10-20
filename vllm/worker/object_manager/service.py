@@ -16,7 +16,11 @@ class RPCService(object):
       self.seq_table_[seq_id] = [object_info]
     ser_object_info = pickle.dumps(object_info)
     return ser_object_info
-    
+  
+  def get_object_info_by_seq_id(self, seq_id):
+     ser_object_info = pickle.dumps(self.seq_table_[seq_id])
+     return ser_object_info
+     
     # block_object = {}
     # for block_num in gpu_block_nums:
     #   object_info = ObjectInfo(request_id, seq_id, block_num, num_layers, device_id, ip_address)
