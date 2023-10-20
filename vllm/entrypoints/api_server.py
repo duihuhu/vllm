@@ -44,7 +44,7 @@ async def mul_generate(request: Request) -> Response:
     elif status == 'prefilled':
         results_generator = engine.mul_generate(prompts=[], request_ids=request_ids, sampling_params=sampling_params,
                                                 status=status, seq_ids=seq_ids, prompt_token_ids=prompt_token_ids, prefilled_token_ids=prefilled_token_ids,
-                                                prefilled_text=prefilled_texts, cumulative_logprobs=cumulative_logprobs)
+                                                prefilled_texts=prefilled_texts, cumulative_logprobs=cumulative_logprobs)
         
     # # Streaming case
     # async def stream_results() -> AsyncGenerator[bytes, None]:
