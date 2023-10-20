@@ -88,9 +88,11 @@ class AsyncLLMEngine:
             request_ids: Optional[List[str]],
             sampling_params: SamplingParams,
             status: str,
+            seq_ids: Optional[List[List[int]]] = None,
             prompt_token_ids: Optional[List[List[int]]] = None,
             prefilled_token_ids: Optional[List[int]] = None,
-            prefilled_text: Optional[List[str]]=None) -> RequestOutput:
+            prefilled_texts: Optional[List[str]]=None,
+            cumulative_logprobs: Optional[List[float]]=None) -> RequestOutput:
         """Generate outputs for a request.
 
         Generate outputs for a request. This method is a coroutine. It adds the
@@ -148,20 +150,29 @@ class AsyncLLMEngine:
         elif status == 'prefilled':
             #todo 
             print("decode ")
-            for prompt_token_id, request_id in zip(prompt_token_ids, request_ids):
+            for prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
+                in zip(prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
                 if self.engine_use_ray:
-                    self.engine.add_request.remote(
+                    self.engine.add_prefilled_request.remote(
                         request_id,
                         None,
                         sampling_params,
+                        seq_id=seq_id,
+                        prefilled_token_ids=prefilled_token_id,
+                        prefilled_text=prefilled_text,
+                        cumulative_logprob=cumulative_logprob,
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
                 else:
-                    self.engine.add_request(request_id,
+                    self.engine.add_prefilled_request(request_id,
                                             None,
                                             sampling_params,
+                                            seq_id=seq_id,
+                                            prefilled_token_ids=prefilled_token_id,
+                                            prefilled_text=prefilled_text,
+                                            cumulative_logprob=cumulative_logprob,
                                             prompt_token_ids=prompt_token_id,
-                                            arrival_time=arrival_time)
+                                            arrival_time=arrival_time,)
                     
                     outputs: List[RequestOutput] = []
                     while self.engine.has_unfinished_requests():

@@ -204,6 +204,64 @@ class LLMEngine:
         # Add the sequence group to the scheduler.
         self.scheduler.add_seq_group(seq_group)
 
+
+    def add_prefilled_request(
+        self,
+        request_id: str,
+        prompt: Optional[str],
+        sampling_params: SamplingParams,
+        seq_ids: List[int],
+        prefilled_token_ids: List[int],
+        prefilled_texts: List[str],
+        cumulative_logprobs: List[int],
+        prompt_token_ids: Optional[List[int]] = None,
+        arrival_time: Optional[float] = None,
+    ) -> None:
+        """Add a request to the engine's request pool.
+
+        The request is added to the request pool and will be processed by the
+        scheduler as `engine.step()` is called. The exact scheduling policy is
+        determined by the scheduler.
+
+        Args:
+            request_id: The unique ID of the request.
+            prompt: The prompt string. Can be None if prompt_token_ids is
+                provided.
+            sampling_params: The sampling parameters for text generation.
+            prompt_token_ids: The token IDs of the prompt. If None, we
+                use the tokenizer to convert the prompts to token IDs.
+            arrival_time: The arrival time of the request. If None, we use
+                the current time.
+        """
+        if arrival_time is None:
+            arrival_time = time.time()
+        if prompt_token_ids is None:
+            assert prompt is not None
+            prompt_token_ids = self.tokenizer.encode(prompt)
+
+        # Create the sequences.
+        block_size = self.cache_config.block_size
+        seqs: List[Sequence] = []
+        
+        for seq_id, prefilled_token_id, prefilled_text, cumulative_logprob in zip(seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
+            seq = Sequence(seq_id, prompt, prompt_token_ids, block_size)
+            logprobs = {}
+            logprobs[prefilled_token_id[-1]] = cumulative_logprob
+            seq.append_token_id(prefilled_token_id[-1], logprobs)
+            seqs.append(seq)
+            
+        # for _ in range(sampling_params.best_of):
+        #     seq_id = next(self.seq_counter)
+        #     seq = Sequence(seq_id, prompt, prompt_token_ids, block_size)
+        #     seqs.append(seq)
+
+        # Create the sequence group.
+        seq_group = SequenceGroup(request_id, seqs, sampling_params,
+                                  arrival_time)
+
+        # Add the sequence group to the scheduler.
+        self.scheduler.add_seq_group(seq_group)
+
     def abort_request(self, request_id: str) -> None:
         """Aborts a request with the given ID.
 
@@ -343,18 +401,6 @@ class LLMEngine:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
 
-        for output in request_outputs:
-            print("step output ", output,)
-        
-        for seq_group in seq_groups:
-            print("step seq_groups ", seq_group)
-            seqs = seq_group.get_seqs()
-            for seq in seqs:
-                print("seq seq ", seq)
-                print("seq.output_logprobs ", seq.output_logprobs)
-                print("seq.output_tokens ", seq.output_tokens)
-                print("seq.output_text ", seq.output_text)
-                
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
         if prefill_blocks_to_object_swap_out:
@@ -365,7 +411,7 @@ class LLMEngine:
                 blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
             )
         
-        # self.scheduler.post_prefilled_to_controller()
+        self.scheduler.post_prefilled_to_controller()
         
         return request_outputs
 

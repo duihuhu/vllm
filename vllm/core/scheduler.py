@@ -466,29 +466,49 @@ class Scheduler:
             print("request_id: ", seq_group.request_id, blocks)
 
     def post_prefilled_to_controller(self) -> None:
+        
+        self.output_logprobs: List[Dict[int, float]] = []
+        self.output_tokens: List[str] = []
+        self.output_text = ""
+        
         request_ids = []
+        seq_ids = []
         prefilled_token_ids = []
-        prefilled_text = []
-        cumulative_logprob = []
+        prefilled_texts = []
+        cumulative_logprobs = []
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
-            request_output = RequestOutput.from_seq_group(seq_group)
-            request_ids.append(request_output.request_id)
-            prefilled_token_ids.append(request_output.outputs[-1].token_ids)
-            prefilled_text.append(request_output.outputs[-1].text)
-            cumulative_logprob.append(request_output.outputs[-1].cumulative_logprob)
+            request_outputs = RequestOutput.from_seq_group(seq_group)
+            request_ids.append(request_outputs.request_id)
+            seq_ids_pre_req = []
+            prefilled_token_ids_in_req = []
+            prefilled_text_in_req = []
+            cumulative_logprob_in_req = []
+            for output in request_outputs.outputs:
+                seq_ids_pre_req.append(output.index)
+                prefilled_token_ids_in_req.append(output.token_ids)
+                prefilled_text_in_req.append(output.text)
+                cumulative_logprob_in_req.append(output.cumulative_logprob)
+            seq_ids.append(seq_ids_pre_req)
+            prefilled_token_ids.append(prefilled_token_ids_in_req)
+            prefilled_texts.append(prefilled_text_in_req)
+            cumulative_logprobs.append(cumulative_logprob_in_req)
+    
+        
         host='127.0.0.1'
         port = '9000'
         api_url = f"http://{host}:{port}/prefilled"
         headers = {"User-Agent": "Test Client"}
         pload = {
             "request_ids": request_ids,
-            "produce_token_ids": prefilled_token_ids,
-            "produce_text": prefilled_text
+            "seq_ids": seq_ids,
+            "prefilled_token_ids": prefilled_token_ids,
+            "prefilled_text": prefilled_texts,
+            "cumulative_logprobs": cumulative_logprobs
         }
         response = requests.post(api_url, headers=headers, json=pload)
         # self.scheduler.watch_cpu_kv_cache()
-        
+
     def store_prompt_kv_cache(
         self
     ) -> Tuple[Dict[SequenceGroup, Dict[int, int]], Dict[SequenceGroup, Dict[int, int]]]:

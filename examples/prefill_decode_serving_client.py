@@ -69,9 +69,10 @@ def receive_prefilled_request(host, port):
 async def prefilled(request: Request) -> Response:
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
+    seq_ids = request_dict.pop("seq_ids")
     prefilled_token_ids =  request_dict.pop("prefilled_token_ids")
-    prefilled_text = request_dict.pop("prefilled_text")
-    
+    prefilled_text = request_dict.pop("prefilled_texts")
+    cumulative_logprobs = request_dict.pop("cumulative_logprobs")
     prompt_token_ids = []
     for request_id in request_ids:
       prompt_token_ids.append(request_prompts.get(request_id))
@@ -80,11 +81,14 @@ async def prefilled(request: Request) -> Response:
     host = '127.0.0.1'
     port = 8001
     api_url = f"http://{host}:{port}/mul_generate"
+    
     pload = {
         "request_ids": request_ids,
+        "seq_ids": seq_ids,
         "prompt_token_ids": prompt_token_ids,
         "prefilled_token_ids": prefilled_token_ids,
         "prefilled_text" : prefilled_text,
+        "cumulative_logprobs": cumulative_logprobs,
         "n": n,
         "use_beam_search": False,
         "temperature": 0.0,
