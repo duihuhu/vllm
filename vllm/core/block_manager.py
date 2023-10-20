@@ -135,12 +135,24 @@ class BlockSpaceManager:
                 self.watermark_blocks)
 
     def restruct_block_table(self, seq_group: SequenceGroup) -> None:
+        block_num_to_token_block: Dict[int, PhysicalTokenBlock] = {}
         for seq in seq_group.get_seqs():
+            block_table: BlockTable = []
             object_info = self.plasma_allocator.object_client.socket_client_.get_object_info_by_seq_id(seq.seq_id)
             de_object_info = pickle.loads(object_info)
             for obj_info in de_object_info:
-                print("obj_info ", obj_info.seq_id, obj_info.gpu_block_num, obj_info.device_id, obj_info.object_ids)
-
+                if obj_info.gpu_block_num in block_num_to_token_block:
+                    token_block = block_num_to_token_block[obj_info.gpu_block_num]
+                    token_block.objects_info.append(obj_info)
+                else:
+                    token_block = PhysicalTokenBlock(Device.CPU, obj_info.gpu_block_num, self.block_size, 1, [obj_info])
+                    block_num_to_token_block = token_block
+                    
+            block_table: BlockTable = []
+            for _, token_block in block_num_to_token_block:
+                block_table.append(token_block)
+            self.block_tables_object[seq.seq_id] = block_table
+            
             # token_block = PhysicalTokenBlock(de_object_info.gpu_block_num, Device.CPU, self.block_size, de_object_info.object_ids)
             
         return
