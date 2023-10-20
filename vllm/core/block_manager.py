@@ -137,8 +137,11 @@ class BlockSpaceManager:
     def restruct_block_table(self, seq_group: SequenceGroup) -> None:
         for seq in seq_group.get_seqs():
             object_info = self.plasma_allocator.object_client.socket_client_.get_object_info_by_seq_id(seq.seq_id)
-            print("object_info by seq id ", object_info)
-            # self.block_tables_object[seq.seq_id] = 
+            de_object_info = pickle.loads(object_info)
+            print("object_info by seq id ", de_object_info)
+            
+            # token_block = PhysicalTokenBlock(de_object_info.gpu_block_num, Device.CPU, self.block_size, de_object_info.object_ids)
+            
         return
     
     def allocate_object(self, seq_group: SequenceGroup) -> None:
