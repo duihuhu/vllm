@@ -257,9 +257,10 @@ class Worker:
             max_context_len=max_context_len,
             block_tables=block_tables_tensor,
         )
-        # print("tokens_tensor: ", tokens_tensor)
-        # print("positions_tensor: ", positions_tensor)
-        # print("block_tables_tensor: ", block_tables_tensor)
+        
+        print("tokens_tensor: ", tokens_tensor)
+        print("positions_tensor: ", positions_tensor)
+        print("input_metadata: ", input_metadata)
 
         return tokens_tensor, positions_tensor, input_metadata
 
@@ -371,10 +372,6 @@ class Worker:
         # Prepare input tensors.
         input_tokens, input_positions, input_metadata = self._prepare_inputs(
             seq_group_metadata_list)
-        
-        print("input_tokens ", input_tokens)
-        print("input_positions " , input_positions)
-        print("input_metadata ", input_metadata)
 
         # Execute the model.
         output = self.model(
