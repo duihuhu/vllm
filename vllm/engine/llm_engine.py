@@ -263,7 +263,7 @@ class LLMEngine:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
             
-        self.scheduler.store_prompt_kv_cache()
+        # self.scheduler.store_prompt_kv_cache()
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
