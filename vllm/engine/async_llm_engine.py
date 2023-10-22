@@ -178,10 +178,9 @@ class AsyncLLMEngine:
                     outputs: List[RequestOutput] = []
                     while self.engine.has_unfinished_requests():
                         step_outputs = self.engine.step_decoder()
-                        break
-                        # for output in step_outputs:
-                        #     if output.finished:
-                        #         outputs.append(output)
+                        for output in step_outputs:
+                            if output.finished:
+                                outputs.append(output)
 
         end = time.time()
 
