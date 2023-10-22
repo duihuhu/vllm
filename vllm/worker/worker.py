@@ -148,10 +148,10 @@ class Worker:
         input_positions: List[int] = []
         slot_mapping: List[int] = []
 
-        for seq_group_metadata in seq_group_metadata_list:
-            print("seq_group_metadata.is_prompt: ", seq_group_metadata.is_prompt)
-            seq_ids = list(seq_group_metadata.seq_data.keys())
-            print("seq_ids", seq_ids)
+        # for seq_group_metadata in seq_group_metadata_list:
+        #     print("seq_group_metadata.is_prompt: ", seq_group_metadata.is_prompt)
+        #     seq_ids = list(seq_group_metadata.seq_data.keys())
+        #     print("seq_ids", seq_ids)
 
         # Add prompt tokens.
         prompt_lens: List[int] = []
@@ -384,8 +384,7 @@ class Worker:
             input_metadata=input_metadata,
             cache_events=cache_events,
         )
-        for seq_group_metadata in seq_group_metadata_list:
-            print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
+
         return output
 
 
