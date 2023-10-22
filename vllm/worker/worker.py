@@ -377,16 +377,16 @@ class Worker:
         print("input_metadata ", input_metadata)
 
         # Execute the model.
-        # output = self.model(
-        #     input_ids=input_tokens,
-        #     positions=input_positions,
-        #     kv_caches=self.gpu_cache,
-        #     input_metadata=input_metadata,
-        #     cache_events=cache_events,
-        # )
-        # for seq_group_metadata in seq_group_metadata_list:
-        #     print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
-        # return output
+        output = self.model(
+            input_ids=input_tokens,
+            positions=input_positions,
+            kv_caches=self.gpu_cache,
+            input_metadata=input_metadata,
+            cache_events=cache_events,
+        )
+        for seq_group_metadata in seq_group_metadata_list:
+            print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
+        return output
 
 
     @torch.inference_mode()
