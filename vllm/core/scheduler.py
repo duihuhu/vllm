@@ -118,6 +118,8 @@ class Scheduler:
         self.waiting.append(seq_group)
 
     def add_prefilled_seq_group(self, seq_group: SequenceGroup) -> None:
+        for seq in seq_group.get_seqs():
+            seq.status = SequenceStatus.SWAPPED
         self.swapped.append(seq_group)
 
     def abort_seq_group(self, request_id: str) -> None:
