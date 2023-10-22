@@ -345,7 +345,7 @@ class LLMEngine:
             print("request_id sampling_params is_prmopt: ", \
                   seq_group_metadata.request_id, seq_group_metadata.sampling_params, seq_group_metadata.is_prompt)
             for k, seq_data in seq_group_metadata.seq_data.items():
-                print("key seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
+                print("seq id, seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
                       k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
  
         output = self._run_workers(
