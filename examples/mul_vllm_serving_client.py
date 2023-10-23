@@ -159,16 +159,16 @@ if __name__ == "__main__":
             td.start()
         for td in threads:
             td.join()
-    # if stream:
-    #     num_printed_lines = 0
-    #     for h in get_streaming_response(response):
-    #         clear_line(num_printed_lines)
-    #         num_printed_lines = 0
-    #         for i, line in enumerate(h):
-    #             num_printed_lines += 1
-    #             print(f"Beam candidate {i}: {line!r}", flush=True)
-    # else:
-    #     output = get_response(response)
-    #     for i, line in enumerate(output):
-    #         print(f"Beam candidate {i}: {line!r}", flush=True)
+    if stream:
+        num_printed_lines = 0
+        for h in get_streaming_response(response):
+            clear_line(num_printed_lines)
+            num_printed_lines = 0
+            for i, line in enumerate(h):
+                num_printed_lines += 1
+                print(f"Beam candidate {i}: {line!r}", flush=True)
+    else:
+        output = get_response(response)
+        for i, line in enumerate(output):
+            print(f"Beam candidate {i}: {line!r}", flush=True)
 

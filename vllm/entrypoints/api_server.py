@@ -92,7 +92,6 @@ async def generate(request: Request) -> Response:
                 prompt + output.text for output in request_output.outputs
             ]
             ret = {"text": text_outputs}
-            print("ret: " ,ret)
             yield (json.dumps(ret) + "\0").encode("utf-8")
 
     async def abort_request() -> None:
