@@ -30,8 +30,9 @@ async def mul_generate(request: Request) -> Response:
     stream = request_dict.pop("stream", False)
     print("status ", status)
     if status == 'start':
-        prompts = request_dict.pop("prompt")
+        prompts = request_dict.pop("prompts")
     elif status == 'prefilled':
+        prompts = request_dict.pop("prompts")
         seq_ids = request_dict.pop("seq_ids")
         prompt_token_ids = request_dict.pop("prompt_token_ids")
         prefilled_token_ids = request_dict.pop("prefilled_token_ids")
@@ -43,7 +44,7 @@ async def mul_generate(request: Request) -> Response:
     if status == 'start':
         results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,status=status)
     elif status == 'prefilled':
-        results_generator = engine.mul_generate(prompts=[], request_ids=request_ids, sampling_params=sampling_params,
+        results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,
                                                 status=status, seq_ids=seq_ids, prompt_token_ids=prompt_token_ids, prefilled_token_ids=prefilled_token_ids,
                                                 prefilled_texts=prefilled_texts, cumulative_logprobs=cumulative_logprobs)
         

@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
 import time
 
+request_prompts_token_ids = {}
 request_prompts = {}
 
 app = fastapi.FastAPI()
@@ -39,7 +40,7 @@ def clear_line(n: int = 1) -> None:
         print(LINE_UP, end=LINE_CLEAR, flush=True)
 
 
-def post_inited_request(prompt: List[str],
+def post_inited_request(prompts: List[str],
                       request_ids: List[str],
                       api_url: str,
                       n: int = 1,
@@ -47,7 +48,7 @@ def post_inited_request(prompt: List[str],
                       status: str = 'start') -> requests.Response:
     headers = {"User-Agent": "Test Client"}
     pload = {
-        "prompt": prompt,
+        "prompts": prompts,
         "request_ids": request_ids,
         "n": 1,
         "use_beam_search": False,
@@ -76,16 +77,19 @@ async def prefilled(request: Request) -> Response:
     prefilled_token_ids =  request_dict.pop("prefilled_token_ids")
     prefilled_text = request_dict.pop("prefilled_texts")
     cumulative_logprobs = request_dict.pop("cumulative_logprobs")
+    prompts = []
     prompt_token_ids = []
     for request_id in request_ids:
-      prompt_token_ids.append(request_prompts.get(request_id))
-    
+        prompt_token_ids.append(request_prompts_token_ids.get(request_id))
+        prompts.append(request_prompts.get(request_id))
+        
     headers = {"User-Agent": "Test Client"}
     host = '127.0.0.1'
     port = '8001'
     api_url = f"http://{host}:{port}/mul_generate"
     
     pload = {
+        "prompts": prompts,
         "request_ids": request_ids,
         "seq_ids": seq_ids,
         "prompt_token_ids": prompt_token_ids,
@@ -202,7 +206,8 @@ if __name__ == "__main__":
     prompts = []
     request_ids = []
     for prompt in sampled_prompts:
-      request_prompts[prompt[-1]] = prompt[-2]
+      request_prompts[prompt[-1]] = prompt[0]
+      request_prompts_token_ids[prompt[-1]] = prompt[-2]
       prompts.append(prompt[0])
       request_ids.append(prompt[-1])
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]

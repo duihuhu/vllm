@@ -157,12 +157,12 @@ class AsyncLLMEngine:
         elif status == 'prefilled':
             #todo 
             print("decode ")
-            for prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
-                in zip(prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
+            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
+                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
                 if self.engine_use_ray:
                     self.engine.add_prefilled_request.remote(
                         request_id,
-                        None,
+                        prompt,
                         sampling_params,
                         seq_ids=seq_id,
                         prefilled_token_ids=prefilled_token_id,
@@ -173,7 +173,7 @@ class AsyncLLMEngine:
                 else:
                     self.engine.add_prefilled_request(
                                             request_id,
-                                            None,
+                                            prompt,
                                             sampling_params,
                                             seq_ids=seq_id,
                                             prefilled_token_ids=prefilled_token_id,
