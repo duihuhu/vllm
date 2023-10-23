@@ -52,7 +52,7 @@ def post_inited_request(prompt: List[str],
         "n": n,
         "use_beam_search": False,
         "temperature": 1.0,
-        # "max_tokens": 16,
+        "max_tokens": 16,
         'ignore_eos': True,
         "stream": stream,
         "status": status
@@ -95,7 +95,7 @@ async def prefilled(request: Request) -> Response:
         "n": n,
         "use_beam_search": False,
         "temperature": 1.0,
-        # "max_tokens": 16,
+        "max_tokens": 16,
         'ignore_eos': True,
         "stream": False,
         "status": 'prefilled'
