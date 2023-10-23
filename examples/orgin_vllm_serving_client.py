@@ -25,7 +25,7 @@ def post_http_request(prompt: str,
         "use_beam_search": False,
         "temperature": 1.0,
         "max_tokens": 16,
-        'ignore_eos': False,
+        'ignore_eos': True,
         "stream": stream,
     }
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
