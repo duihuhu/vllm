@@ -289,9 +289,7 @@ class Scheduler:
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,
         )
-        print("scheduler_outputs blocks_to_swap_in ", scheduler_outputs.blocks_to_swap_in)
-        print("scheduler_outputs blocks_to_swap_out ", scheduler_outputs.blocks_to_swap_out)
-        print("scheduler_outputs blocks_to_copy", scheduler_outputs.blocks_to_copy)
+
         if not self.log_stats:
             return scheduler_outputs, prompt_group_ids, ignored_seq_groups
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
