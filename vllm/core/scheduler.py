@@ -349,8 +349,8 @@ class Scheduler:
         self.block_manager.free(seq)
 
     def free_finished_seq_groups(self) -> None:
-        for seq_group in self.running:
-            print("finished ", seq_group.is_finished())
+        # for seq_group in self.running:
+        #     print("finished ", seq_group.is_finished())
             
         self.running = [
             seq_group for seq_group in self.running
