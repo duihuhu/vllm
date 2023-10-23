@@ -30,10 +30,11 @@ def post_http_request(prompt: List[str],
         headers = {"User-Agent": "Test Client"}
         pload = {
             "prompt": prompt,
-            "n": n,
-            "use_beam_search": True,
+            "n": 1,
+            "use_beam_search": False,
             "temperature": 0.0,
             "max_tokens": 16,
+            'ignore_eos': True,
             "stream": stream,
         }
         response = requests.post(api_url, headers=headers, json=pload, stream=True)
