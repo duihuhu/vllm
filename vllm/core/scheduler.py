@@ -731,7 +731,7 @@ class Scheduler:
 
                 print("seq info: ", seq.seq_id, seq.prompt, seq.block_size, seq.data, seq.output_tokens, seq.output_text)
                 for ogprobs in seq.output_logprobs:
-                    for key, value in ogprobs:
+                    for key, value in ogprobs.items():
                         print("output probs ", key, value)
             print("\n")
             seq_group_metadata = SequenceGroupMetadata(
