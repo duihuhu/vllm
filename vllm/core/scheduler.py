@@ -495,7 +495,7 @@ class Scheduler:
             prefilled_text_in_req = []
             cumulative_logprob_in_req = []
             for output in request_outputs.outputs:
-                seq_ids_pre_req.append(output.index)
+                seq_ids_pre_req.append(output.seq_id)
                 prefilled_token_ids_in_req.append(output.token_ids)
                 prefilled_text_in_req.append(output.text)
                 cumulative_logprob_in_req.append(output.cumulative_logprob)

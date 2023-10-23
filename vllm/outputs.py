@@ -25,6 +25,7 @@ class CompletionOutput:
         cumulative_logprob: float,
         logprobs: Optional[List[Dict[int, float]]],
         finish_reason: Optional[str] = None,
+        seq_id: Optional[int] = None,
     ) -> None:
         self.index = index
         self.text = text
@@ -32,7 +33,7 @@ class CompletionOutput:
         self.cumulative_logprob = cumulative_logprob
         self.logprobs = logprobs
         self.finish_reason = finish_reason
-
+        self.seq_id = seq_id
     def finished(self) -> bool:
         return self.finish_reason is not None
 
@@ -94,7 +95,7 @@ class RequestOutput:
             output = CompletionOutput(seqs.index(seq), seq.output_text,
                                       seq.get_output_token_ids(),
                                       seq.get_cumulative_logprob(), logprobs,
-                                      finshed_reason)
+                                      finshed_reason, seq.seq_id)
             outputs.append(output)
 
         # Every sequence in the sequence group should have the same prompt.
