@@ -374,6 +374,8 @@ class LLMEngine:
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )
         
+        for seq_id , seq_output in output.items():
+            print("seq_id, seq_output: ", seq_id, seq_output )
         # Update the scheduler with the model outputs.
         seq_groups = self.scheduler.update_object(output)
 
@@ -417,7 +419,8 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
-
+        for seq_id , seq_output in output.items():
+            print("seq_id, seq_output: ", seq_id, seq_output )
         # Execute the model.
         output = self._run_workers(
             "execute_model",
