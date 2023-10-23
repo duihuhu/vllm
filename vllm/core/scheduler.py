@@ -52,7 +52,7 @@ class SchedulerOutputs:
 
     def __init__(
         self,
-        blocks_to_swap_in: Dict[int, int],
+        blocks_to_swap_in: Dict[int, List[ObjectInfo]],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
     ) -> None:

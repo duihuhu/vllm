@@ -362,7 +362,7 @@ class LLMEngine:
         #               k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
 
         for key, obj_info in scheduler_outputs.blocks_to_swap_in.items():
-            print("decode swap_in: ", obj_info[0].object_ids[0][0])
+            print("decode swap_in: ", obj_info[0].seq_id, obj_info[0].object_ids[0][0])
             
         output = self._run_workers(
             "execute_model_decode",
