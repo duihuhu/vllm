@@ -152,9 +152,7 @@ class BlockSpaceManager:
             for block_num, token_block in block_num_to_token_block.items():
                 block_table.append(token_block)
             self.block_tables_object[seq.seq_id] = block_table
-            
-            # token_block = PhysicalTokenBlock(de_object_info.gpu_block_num, Device.CPU, self.block_size, de_object_info.object_ids)
-            
+                        
         return
     
     def allocate_object(self, seq_group: SequenceGroup) -> None:
