@@ -521,7 +521,7 @@ class Scheduler:
 
     def store_prompt_kv_cache(
         self
-    ) -> Tuple[Dict[SequenceGroup, Dict[int, int]], Dict[SequenceGroup, Dict[int, int]]]:
+    ) -> Tuple[Dict[SequenceGroup, Dict[int, int]], Dict[SequenceGroup, Dict[int,  List[ObjectInfo]]]]:
         # blocks_to_swap_out: Dict[int, int] = {}
         seq_to_swap_out: Dict[SequenceGroup, Dict[int, int]] = {}
         
