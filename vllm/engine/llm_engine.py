@@ -256,7 +256,7 @@ class LLMEngine:
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )
         
-        for seq_id , seq_output in output:
+        for seq_id , seq_output in output.items():
             print("seq_id, seq_output: ", seq_id, seq_output )
         # Update the scheduler with the model outputs.
         seq_groups = self.scheduler.update(output)
