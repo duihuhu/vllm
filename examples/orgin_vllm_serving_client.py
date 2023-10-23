@@ -48,7 +48,7 @@ def post_inited_request(prompt: List[str],
     headers = {"User-Agent": "Test Client"}
     pload = {
         "prompt": prompt,
-        "request_ids": request_ids,
+        # "request_ids": request_ids,
         "n": n,
         "use_beam_search": False,
         "temperature": 1.0,
