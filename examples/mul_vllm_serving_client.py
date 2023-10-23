@@ -38,18 +38,7 @@ def post_http_request(prompt: List[str],
             "stream": stream,
         }
         response = requests.post(api_url, headers=headers, json=pload, stream=True)
-        if stream:
-            num_printed_lines = 0
-            for h in get_streaming_response(response):
-                clear_line(num_printed_lines)
-                num_printed_lines = 0
-                for i, line in enumerate(h):
-                    num_printed_lines += 1
-                    print(f"Beam candidate {i}: {line!r}", flush=True)
-        else:
-            output = get_response(response)
-            for i, line in enumerate(output):
-                print(f"Beam candidate {i}: {line!r}", flush=True)
+    
     else:
         num_prompt = int(len(prompt)/num_servers)
         headers = {"User-Agent": "Test Client"}
@@ -62,18 +51,6 @@ def post_http_request(prompt: List[str],
             "stream": stream,
         }
         response = requests.post(api_url, headers=headers, json=pload, stream=True)
-        if stream:
-            num_printed_lines = 0
-            for h in get_streaming_response(response):
-                clear_line(num_printed_lines)
-                num_printed_lines = 0
-                for i, line in enumerate(h):
-                    num_printed_lines += 1
-                    print(f"Beam candidate {i}: {line!r}", flush=True)
-        else:
-            output = get_response(response)
-            for i, line in enumerate(output):
-                print(f"Beam candidate {i}: {line!r}", flush=True)
     return response
 
 
