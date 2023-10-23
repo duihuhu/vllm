@@ -181,7 +181,10 @@ class AsyncLLMEngine:
                                             cumulative_logprobs=cumulative_logprob,
                                             prompt_token_ids=prompt_token_id,
                                             arrival_time=arrival_time,)
-                    
+            
+            self.engine.watch_block_table()
+
+               
             outputs: List[RequestOutput] = []
             while self.engine.has_unfinished_requests():
                 step_outputs = self.engine.step_decoder()

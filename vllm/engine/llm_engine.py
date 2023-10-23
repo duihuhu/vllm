@@ -279,6 +279,11 @@ class LLMEngine:
         # Add the sequence group to the scheduler.
         self.scheduler.add_prefilled_seq_group(seq_group)
 
+    def watch_block_table(self):
+        for key, value in self.scheduler.block_manager.block_tables_object.items():
+            print("watch_block_table seq id: ", key, value[0].objects_info[0].object_ids[0])
+            
+        return 
     def abort_request(self, request_id: str) -> None:
         """Aborts a request with the given ID.
 
@@ -361,9 +366,7 @@ class LLMEngine:
         #         print("seq id, seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
         #               k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
 
-        for key, obj_info in scheduler_outputs.blocks_to_swap_in.items():
-            print("decode swap_in: ", obj_info[0].seq_id, obj_info[0].object_ids[0][0])
-            
+
         output = self._run_workers(
             "execute_model_decode",
             seq_group_metadata_list=seq_group_metadata_list,
