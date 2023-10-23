@@ -140,6 +140,7 @@ class BlockSpaceManager:
             block_table: BlockTable = []
             object_info = self.plasma_allocator.object_client.socket_client_.get_object_info_by_seq_id(seq.seq_id)
             de_object_info = pickle.loads(object_info)
+            print("restruct_block_table: ", seq.seq_id, de_object_info)
             for obj_info in de_object_info:
                 if obj_info.gpu_block_num in block_num_to_token_block:
                     token_block = block_num_to_token_block[obj_info.gpu_block_num]
