@@ -448,7 +448,7 @@ class LLMEngine:
                 blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
             )
         
-        # self.scheduler.post_prefilled_to_controller()
+        self.scheduler.post_prefilled_to_controller()
         
         return request_outputs
 
