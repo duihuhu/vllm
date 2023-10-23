@@ -282,7 +282,6 @@ class LLMEngine:
     def watch_block_table(self):
         for key, value in self.scheduler.block_manager.block_tables_object.items():
             print("watch_block_table seq id: ", key, value[0].objects_info[0].object_ids[0])
-            
         return 
     def abort_request(self, request_id: str) -> None:
         """Aborts a request with the given ID.
