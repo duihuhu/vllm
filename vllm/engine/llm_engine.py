@@ -253,6 +253,8 @@ class LLMEngine:
             # for prefilled_token in prefilled_token_id:
             #     seq.output_tokens.append(prefilled_token)
             
+
+            seq.append_token_id(int(prefilled_token_id[-1]), logprobs)
             new_token, new_output_text = detokenize_incrementally(
                 self.tokenizer,
                 seq.output_tokens,
@@ -261,7 +263,6 @@ class LLMEngine:
             )
             seq.output_tokens.append(new_token)
                 
-            seq.append_token_id(int(prefilled_token_id[-1]), logprobs)
             seqs.append(seq)
             
         # for _ in range(sampling_params.best_of):
@@ -369,7 +370,7 @@ class LLMEngine:
         )
         
         # Update the scheduler with the model outputs.
-        seq_groups = self.scheduler.update(output)
+        seq_groups = self.scheduler.update_object(output)
 
         # Decode the sequences.
         self._decode_sequences(seq_groups)
