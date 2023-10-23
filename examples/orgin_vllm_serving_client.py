@@ -54,8 +54,8 @@ def post_inited_request(prompt: List[str],
         "temperature": 1.0,
         # "max_tokens": 16,
         'ignore_eos': True,
-        "stream": stream,
-        "status": status
+        "stream": stream
+        # "status": status
     }
     
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
