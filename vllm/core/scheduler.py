@@ -488,7 +488,7 @@ class Scheduler:
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
             request_outputs = RequestOutput.from_seq_group(seq_group)
-            print("request_output ", request_outputs)
+            # print("request_output ", request_outputs)
             request_ids.append(request_outputs.request_id)
             seq_ids_pre_req = []
             prefilled_token_ids_in_req = []
@@ -728,6 +728,10 @@ class Scheduler:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_object_block_table(seq)
+
+                print("seq info: ", seq.seq_id, seq.prompt, seq.block_size, seq.data, seq.output_tokens, seq.output_text)
+                for key, value in seq.output_logprobs:
+                    print("output probs ", key, value)
 
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
