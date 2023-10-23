@@ -360,7 +360,10 @@ class LLMEngine:
         #     for k, seq_data in seq_group_metadata.seq_data.items():
         #         print("seq id, seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
         #               k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
- 
+
+        for key, obj_info in scheduler_outputs.blocks_to_swap_in.items():
+            print("decode swap_in: ", value[0].object_ids[0])
+            
         output = self._run_workers(
             "execute_model_decode",
             seq_group_metadata_list=seq_group_metadata_list,
@@ -443,9 +446,8 @@ class LLMEngine:
 
         for seq_group, value in prefill_blocks_to_object_swap_out.items():
             for key, obj_info in value.items():
-                print("seq info ", seq_group.request_id, seq_group.seqs[0].seq_id, obj_info[0].object_ids[0])
+                print("prefilled seq info ", seq_group.request_id, seq_group.seqs[0].seq_id, obj_info[0].object_ids[0])
 
-            
         if prefill_blocks_to_object_swap_out:
             # Execute the swap prefill cache.
             self._run_workers(
