@@ -144,9 +144,16 @@ class AsyncLLMEngine:
             while self.engine.has_unfinished_requests():
                 step_outputs = self.engine.step()
                 for output in step_outputs:
-                    if output.finished:
-                        outputs.append(output)
-                            
+                    # if output.finished:
+                    outputs.append(output)
+            end = time.time()
+            elapsed_time = end-start
+            total_num_tokens = sum(
+                len(output.prompt_token_ids)
+                for output in outputs
+            )
+            print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
+                f"{total_num_tokens / elapsed_time:.2f} tokens/s")   
         elif status == 'prefilled':
             #todo 
             print("decode ")
@@ -183,15 +190,19 @@ class AsyncLLMEngine:
                         print("output: ", output)
                         outputs.append(output)
 
-        end = time.time()
+            end = time.time()
 
-        elapsed_time = end-start
-        total_num_tokens = sum(
-            len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
-            for output in outputs
-        )
-        print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
-            f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+            elapsed_time = end-start
+            # total_num_tokens = sum(
+            #     len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
+            #     for output in outputs
+            # )
+            total_num_tokens = sum(
+                len(output.outputs[0].token_ids)
+                for output in outputs
+            )
+            print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
+                f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 
 
     async def generate(
