@@ -729,11 +729,6 @@ class Scheduler:
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_object_block_table(seq)
 
-                print("seq info: ", seq.seq_id, seq.prompt, seq.block_size, seq.data, seq.output_tokens, seq.output_text)
-                for ogprobs in seq.output_logprobs:
-                    for key, value in ogprobs.items():
-                        print("output probs ", key, value)
-            print("\n")
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
                 is_prompt=False,
