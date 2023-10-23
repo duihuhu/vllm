@@ -258,9 +258,9 @@ class Worker:
             block_tables=block_tables_tensor,
         )
         
-        print("tokens_tensor: ", tokens_tensor)
-        print("positions_tensor: ", positions_tensor)
-        print("input_metadata: ", input_metadata)
+        # print("tokens_tensor: ", tokens_tensor)
+        # print("positions_tensor: ", positions_tensor)
+        # print("input_metadata: ", input_metadata)
 
         return tokens_tensor, positions_tensor, input_metadata
 
