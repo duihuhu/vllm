@@ -252,6 +252,14 @@ class LLMEngine:
             
             # for prefilled_token in prefilled_token_id:
             #     seq.output_tokens.append(prefilled_token)
+            
+            new_token, new_output_text = detokenize_incrementally(
+                self.tokenizer,
+                seq.output_tokens,
+                seq.get_last_token_id(),
+                skip_special_tokens=True,
+            )
+            seq.output_tokens.append(new_token)
                 
             seq.append_token_id(int(prefilled_token_id[-1]), logprobs)
             seqs.append(seq)
