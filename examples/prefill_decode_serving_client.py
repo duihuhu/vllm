@@ -139,10 +139,11 @@ def sample_requests(
     ]
 
     # Tokenize the prompts and completions.
-    prompts = []
-    for prompt, _ in dataset:
-        prompts.append("San Francisco is a")
-    # prompts = [prompt for prompt, _ in dataset]
+    # prompts = []
+    # for prompt, _ in dataset:
+    #     prompts.append("San Francisco is a")
+    
+    prompts = [prompt for prompt, _ in dataset]
     prompt_token_ids = tokenizer(prompts).input_ids
     completions = [completion for _, completion in dataset]
     completion_token_ids = tokenizer(completions).input_ids
