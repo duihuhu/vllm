@@ -249,6 +249,9 @@ class LLMEngine:
             seq.output_text = prefilled_text
             logprobs = {}
             logprobs[int(prefilled_token_id[-1])] = float(cumulative_logprob)
+            
+            for prefilled_token in prefilled_token_ids:
+                seq.output_tokens.append(prefilled_token)
             seq.append_token_id(int(prefilled_token_id[-1]), logprobs)
             seqs.append(seq)
             
