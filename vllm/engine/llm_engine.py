@@ -365,6 +365,7 @@ class LLMEngine:
         #         print("seq id, seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
         #               k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
 
+        print("decode blocks_to_swap_out ", scheduler_outputs.blocks_to_swap_out)
 
         output = self._run_workers(
             "execute_model_decode",
@@ -406,12 +407,12 @@ class LLMEngine:
         (seq_group_metadata_list, scheduler_outputs,
          ignored_seq_groups) = self.scheduler.obj_schedule()
         
-        for seq_group_metadata in seq_group_metadata_list:
-            print("request_id sampling_params is_prmopt: ", \
-                  seq_group_metadata.request_id, seq_group_metadata.sampling_params, seq_group_metadata.is_prompt)
-            for k, seq_data in seq_group_metadata.seq_data.items():
-                print("key seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
-                      k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
+        # for seq_group_metadata in seq_group_metadata_list:
+        #     print("request_id sampling_params is_prmopt: ", \
+        #           seq_group_metadata.request_id, seq_group_metadata.sampling_params, seq_group_metadata.is_prompt)
+        #     for k, seq_data in seq_group_metadata.seq_data.items():
+        #         print("key seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
+        #               k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
     
         if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
                 and (not ignored_seq_groups)):
@@ -448,6 +449,7 @@ class LLMEngine:
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
 
+        print("prefill_blocks_to_object_swap_out ", prefill_blocks_to_object_swap_out)
         # for seq_group, value in prefill_blocks_to_object_swap_out.items():
         #     for key, obj_info in value.items():
         #         print("prefilled seq info ", seq_group.request_id, seq_group.seqs[0].seq_id, obj_info[0].object_ids[0][0])
