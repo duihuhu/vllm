@@ -446,21 +446,21 @@ class LLMEngine:
             request_outputs.append(request_output)
         
         #find prefill blocks to swap out 
-        # prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
+        prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
 
-        # # for seq_group, value in prefill_blocks_to_object_swap_out.items():
-        # #     for key, obj_info in value.items():
-        # #         print("prefilled seq info ", seq_group.request_id, seq_group.seqs[0].seq_id, obj_info[0].object_ids[0][0])
+        # for seq_group, value in prefill_blocks_to_object_swap_out.items():
+        #     for key, obj_info in value.items():
+        #         print("prefilled seq info ", seq_group.request_id, seq_group.seqs[0].seq_id, obj_info[0].object_ids[0][0])
 
-        # if prefill_blocks_to_object_swap_out:
-        #     # Execute the swap prefill cache.
-        #     self._run_workers(
-        #         "swap_out_prefilled_cache",
-        #         blocks_to_swap_out = prefill_blocks_to_swap_out,
-        #         blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
-        #     )
+        if prefill_blocks_to_object_swap_out:
+            # Execute the swap prefill cache.
+            self._run_workers(
+                "swap_out_prefilled_cache",
+                blocks_to_swap_out = prefill_blocks_to_swap_out,
+                blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
+            )
         
-        # self.scheduler.post_prefilled_to_controller()
+        self.scheduler.post_prefilled_to_controller()
         
         return request_outputs
 
