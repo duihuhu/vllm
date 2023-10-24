@@ -400,11 +400,11 @@ class LLMEngine:
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups) = self.scheduler.schedule()
-        
         # (seq_group_metadata_list, scheduler_outputs,
-        #  ignored_seq_groups) = self.scheduler.obj_schedule()
+        #  ignored_seq_groups) = self.scheduler.schedule()
+        
+        (seq_group_metadata_list, scheduler_outputs,
+         ignored_seq_groups) = self.scheduler.obj_schedule()
         
         for seq_group_metadata in seq_group_metadata_list:
             print("request_id sampling_params is_prmopt: ", \
@@ -428,8 +428,8 @@ class LLMEngine:
         )
         
         # Update the scheduler with the model outputs.
-        seq_groups = self.scheduler.update(output)
-        # seq_groups = self.scheduler.update_object(output)
+        # seq_groups = self.scheduler.update(output)
+        seq_groups = self.scheduler.update_object(output)
 
         # Decode the sequences.
         self._decode_sequences(seq_groups)
