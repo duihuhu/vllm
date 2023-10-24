@@ -680,7 +680,7 @@ class Scheduler:
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
                List[SequenceGroup]]:
         
-                # Schedule sequence groups.
+        # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
         (scheduler_outputs, prompt_group_ids,
