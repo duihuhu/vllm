@@ -365,7 +365,7 @@ class LLMEngine:
         #         print("seq id, seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
         #               k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
 
-        print("decode blocks_to_swap_out ", scheduler_outputs.blocks_to_swap_out)
+        print("decode blocks_to_swap_in ", scheduler_outputs.blocks_to_swap_in)
 
         output = self._run_workers(
             "execute_model_decode",
