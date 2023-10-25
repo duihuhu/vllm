@@ -200,6 +200,8 @@ class PagedAttention(nn.Module):
                 "key_cache and value_cache must be provided when "
                 "generating tokens.")
             # Compute the attention op for generation tokens.
+            print("single_query_cached_kv_attention ", output[num_prompt_tokens:num_valid_tokens],query[num_prompt_tokens:num_valid_tokens], key_cache,
+                value_cache, input_metadata)
             self.single_query_cached_kv_attention(
                 output[num_prompt_tokens:num_valid_tokens],
                 query[num_prompt_tokens:num_valid_tokens], key_cache,
