@@ -351,7 +351,7 @@ class LLMEngine:
         #  ignored_seq_groups) = self.scheduler.obj_schedule()
         
         (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups) = self.scheduler.obj_decode_schedule()
+         ignored_seq_groups, blocks_to_object_swap_in) = self.scheduler.obj_decode_schedule()
 
         if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
                 and (not ignored_seq_groups)):
@@ -371,7 +371,7 @@ class LLMEngine:
         output = self._run_workers(
             "execute_model_decode",
             seq_group_metadata_list=seq_group_metadata_list,
-            blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
+            blocks_to_swap_in=blocks_to_object_swap_in,
             blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )

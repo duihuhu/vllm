@@ -230,8 +230,8 @@ class CacheEngine:
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 0)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                print("swap out layer i ", i, key_layer_objects_address[i])
-                print("swap out layer i ", i, value_layer_objects_address[i])
+                print("swap out layer i, key ", i, key_layer_objects_address[i])
+                print("swap out layer i, value ", i, value_layer_objects_address[i])
 
         for event in self.events:
             event.wait()
@@ -296,8 +296,8 @@ class CacheEngine:
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 1)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-                print("swap in layer i ", i, key_layer_objects_address[i])
-                print("swap in layer i ", i, value_layer_objects_address[i])
+                print("swap in layer i, key ", i, key_layer_objects_address[i])
+                print("swap in layer i, value ", i, value_layer_objects_address[i])
         return 
     
     def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:

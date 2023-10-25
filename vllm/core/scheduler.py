@@ -165,6 +165,8 @@ class Scheduler:
         blocks_to_copy: Dict[int, List[int]] = {}
         ignored_seq_groups: List[SequenceGroup] = []
 
+        blocks_to_object_swap_in: Dict[SequenceGroup, Dict[int, List[ObjectInfo]]] = {}
+
         # Fix the current time.
         now = time.time()
 
@@ -226,6 +228,8 @@ class Scheduler:
             self._swap_object_in(seq_group, blocks_to_swap_in)
             self._append_object_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
+            blocks_to_object_swap_in[seq_group] = blocks_to_swap_in
+            blocks_to_swap_in = {}
 
         num_batched_tokens = sum(
             seq_group.num_seqs(status=SequenceStatus.RUNNING)
@@ -291,8 +295,8 @@ class Scheduler:
         )
 
         if not self.log_stats:
-            return scheduler_outputs, prompt_group_ids, ignored_seq_groups
-        return scheduler_outputs, prompt_group_ids, ignored_seq_groups
+            return scheduler_outputs, prompt_group_ids, ignored_seq_groups, blocks_to_object_swap_in
+        return scheduler_outputs, prompt_group_ids, ignored_seq_groups, blocks_to_object_swap_in
     
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
@@ -684,7 +688,7 @@ class Scheduler:
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
         (scheduler_outputs, prompt_group_ids,
-         ignored_seq_groups) = self._obj_schedule()
+         ignored_seq_groups, blocks_to_object_swap_in) = self._obj_schedule()
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
@@ -710,7 +714,7 @@ class Scheduler:
             )
             seq_group_metadata_list.append(seq_group_metadata)
 
-        return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups
+        return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups, blocks_to_object_swap_in
 
     def obj_decode_schedule(
         self
@@ -721,7 +725,7 @@ class Scheduler:
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
         (scheduler_outputs, prompt_group_ids,
-         ignored_seq_groups) = self._obj_schedule()
+         ignored_seq_groups, blocks_to_object_swap_in) = self._obj_schedule()
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
@@ -747,7 +751,7 @@ class Scheduler:
             )
             seq_group_metadata_list.append(seq_group_metadata)
 
-        return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups
+        return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups, blocks_to_object_swap_in
 
     def update_object(
         self,
