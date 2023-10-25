@@ -296,9 +296,9 @@ class Scheduler:
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
                 
-                print("seq_group_metadata ", seq.seq_id, seq_data[seq_id], 
-                    seq.data.prompt_token_ids, seq.data.output_token_ids, seq.data.cumulative_logprob,
-                    block_tables)
+                # print("seq_group_metadata ", seq.seq_id, seq_data[seq_id], 
+                #     seq.data.prompt_token_ids, seq.data.output_token_ids, seq.data.cumulative_logprob,
+                #     block_tables)
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
                 is_prompt=is_prompt,
