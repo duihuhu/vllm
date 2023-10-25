@@ -213,7 +213,7 @@ class Worker:
                 block_offset = position % self.block_size
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
-            print("seq_id_t input_tokens: ", seq_id_t, input_tokens)
+            # print("seq_id_t input_tokens: ", seq_id_t, input_tokens)
         # Optimization: Pad the input length to be a multiple of 8.
         # This is required for utilizing the Tensor Cores in NVIDIA GPUs.
         input_tokens = _pad_to_alignment(input_tokens, multiple_of=8)
@@ -285,7 +285,7 @@ class Worker:
         # Prepare input tensors.
         input_tokens, input_positions, input_metadata = self._prepare_inputs(
             seq_group_metadata_list)
-        print("model input input_tokens, input_positions, input_metadata ",  input_tokens, input_positions, input_metadata)       
+        # print("model input input_tokens, input_positions, input_metadata ",  input_tokens, input_positions, input_metadata)       
         # Execute the model.
         output = self.model(
             input_ids=input_tokens,
@@ -295,7 +295,7 @@ class Worker:
             cache_events=cache_events,
         )
         
-        print("model output ",  output)
+        # print("model output ",  output)
         # for seq_group_metadata in seq_group_metadata_list:
         #     print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
         return output
