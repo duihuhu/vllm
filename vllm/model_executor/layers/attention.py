@@ -161,8 +161,8 @@ class PagedAttention(nn.Module):
         value = value.view(-1, self.num_heads, self.head_size)
 
         # Pre-allocate the output tensor.
-        output = torch.empty_like(query)
-
+        # output = torch.empty_like(query)
+        output = torch.zeros_like(query)
         # Compute the attention op for prompts.
         num_prompt_tokens = input_metadata.num_prompt_tokens
         print("num_prompt_tokens", num_prompt_tokens, input_metadata.num_generation_tokens)
