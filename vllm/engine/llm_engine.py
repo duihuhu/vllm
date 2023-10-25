@@ -371,7 +371,7 @@ class LLMEngine:
         output = self._run_workers(
             "execute_model_decode",
             seq_group_metadata_list=seq_group_metadata_list,
-            blocks_to_swap_in=blocks_to_object_swap_in,
+            blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
             blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )

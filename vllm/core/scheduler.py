@@ -228,8 +228,8 @@ class Scheduler:
             self._swap_object_in(seq_group, blocks_to_swap_in)
             self._append_object_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
-            blocks_to_object_swap_in[seq_group] = blocks_to_swap_in
-            blocks_to_swap_in = {}
+            # blocks_to_object_swap_in[seq_group] = blocks_to_swap_in
+            # blocks_to_swap_in = {}
 
         num_batched_tokens = sum(
             seq_group.num_seqs(status=SequenceStatus.RUNNING)
