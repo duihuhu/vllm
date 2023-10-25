@@ -243,6 +243,9 @@ class Worker:
             max_context_len=max_context_len,
             block_tables=block_tables_tensor,
         )
+        print("tokens_tensor ", )
+        print("positions_tensor ", )
+        print("input_metadata ", )
         return tokens_tensor, positions_tensor, input_metadata
 
     @torch.inference_mode()

@@ -241,12 +241,12 @@ class LLMEngine:
             # Nothing to do.
             return []
         
-        for seq_group_metadata in seq_group_metadata_list:
-            print("request_id sampling_params is_prmopt: ", \
-                  seq_group_metadata.request_id, seq_group_metadata.sampling_params, seq_group_metadata.is_prompt)
-            for k, seq_data in seq_group_metadata.seq_data.items():
-                print("key seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
-                      k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
+        # for seq_group_metadata in seq_group_metadata_list:
+        #     print("request_id sampling_params is_prmopt: ", \
+        #           seq_group_metadata.request_id, seq_group_metadata.sampling_params, seq_group_metadata.is_prompt)
+        #     for k, seq_data in seq_group_metadata.seq_data.items():
+        #         print("key seq_data_prompt_token_id, output_token_ids cumulative_logprob: ", 
+        #               k, seq_data.prompt_token_ids, seq_data.output_token_ids, seq_data.cumulative_logprob)
         # Execute the model.
         output = self._run_workers(
             "execute_model",
@@ -256,8 +256,8 @@ class LLMEngine:
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )
         
-        for seq_id , seq_output in output.items():
-            print("seq_id, seq_output: ", seq_id, seq_output )
+        # for seq_id , seq_output in output.items():
+        #     print("seq_id, seq_output: ", seq_id, seq_output )
         # Update the scheduler with the model outputs.
         seq_groups = self.scheduler.update(output)
 
