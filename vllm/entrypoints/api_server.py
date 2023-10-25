@@ -32,7 +32,7 @@ async def mul_generate(request: Request) -> Response:
     sampling_params = SamplingParams(**request_dict)
     # # request_id = random_uuid()
     
-    results_generator = engine.mul_generate(prompts, sampling_params)
+    results_generator = engine.mul_generate(prompts, output_lens, sampling_params)
 
     # # Streaming case
     # async def stream_results() -> AsyncGenerator[bytes, None]:
