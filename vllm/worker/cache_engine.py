@@ -230,7 +230,9 @@ class CacheEngine:
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 0)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
-    
+                print("swap out layer i ", i, key_layer_objects_address[i])
+                print("swap out layer i ", i, value_layer_objects_address[i])
+
         for event in self.events:
             event.wait()
 
@@ -255,6 +257,7 @@ class CacheEngine:
     
     def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
         rank = rank % self.parallel_config.tensor_parallel_size
+        print("_swap_out_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
         src_to_dst_copy = {}
         key_object_address = []
         value_object_address = []
@@ -293,6 +296,8 @@ class CacheEngine:
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 1)
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
+                print("swap in layer i ", i, key_layer_objects_address[i])
+                print("swap in layer i ", i, value_layer_objects_address[i])
         return 
     
     def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:

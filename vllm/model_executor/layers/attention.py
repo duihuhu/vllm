@@ -166,7 +166,7 @@ class PagedAttention(nn.Module):
         output = torch.zeros_like(query)
         # Compute the attention op for prompts.
         num_prompt_tokens = input_metadata.num_prompt_tokens
-        print("num_prompt_tokens ", num_prompt_tokens, input_metadata.num_generation_tokens)
+        # print("num_prompt_tokens ", num_prompt_tokens, input_metadata.num_generation_tokens)
         if num_prompt_tokens > 0:
             self.set_attn_bias(input_metadata)
             self.multi_query_kv_attention(
@@ -201,12 +201,12 @@ class PagedAttention(nn.Module):
                 "key_cache and value_cache must be provided when "
                 "generating tokens.")
             # Compute the attention op for generation tokens.
-            print("single_query_cached_kv_attention parameter ", num_prompt_tokens, num_valid_tokens)
-            print("single_query_cached_kv_attention output ", output[num_prompt_tokens:num_valid_tokens])
-            print("single_query_cached_kv_attention query ", query[num_prompt_tokens:num_valid_tokens])
-            print("single_query_cached_kv_attention key_cache ", key_cache)
-            print("single_query_cached_kv_attention value_cache ", value_cache)
-            print("single_query_cached_kv_attention input_metadata ", input_metadata)
+            # print("single_query_cached_kv_attention parameter ", num_prompt_tokens, num_valid_tokens)
+            # print("single_query_cached_kv_attention output ", output[num_prompt_tokens:num_valid_tokens])
+            # print("single_query_cached_kv_attention query ", query[num_prompt_tokens:num_valid_tokens])
+            # print("single_query_cached_kv_attention key_cache ", key_cache)
+            # print("single_query_cached_kv_attention value_cache ", value_cache)
+            # print("single_query_cached_kv_attention input_metadata ", input_metadata)
             self.single_query_cached_kv_attention(
                 output[num_prompt_tokens:num_valid_tokens],
                 query[num_prompt_tokens:num_valid_tokens], key_cache,
