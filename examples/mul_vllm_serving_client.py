@@ -46,6 +46,7 @@ def post_http_request(prompt: List[str],
         headers = {"User-Agent": "Test Client"}
         pload = {
             "prompt": prompt[tid*num_prompt:(tid+1)*num_prompt],
+            "output_lens": output_lens[tid*num_prompt:(tid+1)*num_prompt],
             "n": 1,
             "use_beam_search": False,
             "temperature": 0.0,
