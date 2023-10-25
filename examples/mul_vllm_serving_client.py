@@ -147,9 +147,9 @@ if __name__ == "__main__":
     prompts = []
     output_lens = []
     sampled_prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
-    for prompt, len in sampled_prompts:
-        prompts.append(prompt)
-        output_lens.append(len) 
+    for sampled_prompt in sampled_prompts:
+        prompts.append(sampled_prompt[0])
+        output_lens.append(sampled_prompt[-1]) 
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
     # prompt = args.prompt
     n = args.n
