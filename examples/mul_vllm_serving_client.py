@@ -151,6 +151,7 @@ if __name__ == "__main__":
     for sampled_prompt in sampled_prompts:
         prompts.append(sampled_prompt[0])
         output_lens.append(sampled_prompt[-1]) 
+    print(output_lens)
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
     # prompt = args.prompt
     n = args.n
