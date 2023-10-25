@@ -406,7 +406,7 @@ class LLMEngine:
         #  ignored_seq_groups) = self.scheduler.schedule()
         
         (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups) = self.scheduler.obj_schedule()
+         ignored_seq_groups, blocks_to_object_swap_in) = self.scheduler.obj_schedule()
         
         # for seq_group_metadata in seq_group_metadata_list:
         #     print("request_id sampling_params is_prmopt: ", \
