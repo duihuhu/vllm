@@ -189,7 +189,7 @@ class AsyncLLMEngine:
                 step_outputs = self.engine.step_decoder()
                 for output in step_outputs:
                     if output.finished:
-                        # print("output: ", output)
+                        print("output: ", output)
                         outputs.append(output)
 
             end = time.time()
