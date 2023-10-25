@@ -326,6 +326,7 @@ class Worker:
         if blocks_to_object_swap_out:
             for key, value in blocks_to_object_swap_out.items():
                 self.cache_engine.swap_out_prefilled_to_plasma(value, self.rank)
+            issued_cache_op = True
         if issued_cache_op:
             cache_events = self.cache_events
         else:
