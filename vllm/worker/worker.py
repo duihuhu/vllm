@@ -370,7 +370,7 @@ class Worker:
         # Prepare input tensors.
         input_tokens, input_positions, input_metadata = self._prepare_inputs(
             seq_group_metadata_list)
-        print("model input input_tokens, input_positions, input_metadata ",  input_tokens, input_positions, input_metadata)
+        # print("model input input_tokens, input_positions, input_metadata ",  input_tokens, input_positions, input_metadata)
         # Execute the model.
         output = self.model(
             input_ids=input_tokens,
@@ -379,7 +379,7 @@ class Worker:
             input_metadata=input_metadata,
             cache_events=cache_events,
         )
-        print("model output ",  output)
+        # print("model output ",  output)
         
         return output
 
@@ -420,7 +420,7 @@ class Worker:
         input_tokens, input_positions, input_metadata = self._prepare_inputs(
             seq_group_metadata_list)
 
-        print("model input input_tokens, input_positions, input_metadata ",  input_tokens, input_positions, input_metadata)      
+        # print("model input input_tokens, input_positions, input_metadata ",  input_tokens, input_positions, input_metadata)      
         # Execute the model.
         output = self.model(
             input_ids=input_tokens,
@@ -429,7 +429,7 @@ class Worker:
             input_metadata=input_metadata,
             cache_events=cache_events,
         )
-        print("model output ",  output)
+        # print("model output ",  output)
         
         # for seq_group_metadata in seq_group_metadata_list:
         #     print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)

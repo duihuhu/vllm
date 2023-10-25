@@ -284,6 +284,7 @@ class OPTForCausalLM(nn.Module):
     ) -> Dict[int, SequenceOutputs]:
         hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
+        print("hidden_states ", hidden_states)
         next_tokens = self.sampler(self.lm_head_weight, hidden_states,
                                    input_metadata)
         return next_tokens
