@@ -230,6 +230,8 @@ class Worker:
         # Optimization: Pad the input length to be a multiple of 8.
         # This is required for utilizing the Tensor Cores in NVIDIA GPUs.
         input_tokens = _pad_to_alignment(input_tokens, multiple_of=8)
+        print("input_tokens: ", input_tokens)
+        
         input_positions = _pad_to_alignment(input_positions, multiple_of=8)
 
         # Convert to tensors.
@@ -258,9 +260,6 @@ class Worker:
             block_tables=block_tables_tensor,
         )
         
-        print("tokens_tensor: ", tokens_tensor)
-        print("positions_tensor: ", positions_tensor)
-        print("input_metadata: ", input_metadata)
 
         return tokens_tensor, positions_tensor, input_metadata
 
