@@ -288,6 +288,8 @@ class CacheEngine:
                 src_key_cache, src_value_cache = src[i]
                 cache_ops.swap_blocks_to_object(src_key_cache, key_layer_objects_address[i], src_to_dst_copy, 1)
                 cache_ops.swap_blocks_to_object(src_value_cache, value_layer_objects_address[i], src_to_dst_copy, 1)
+                event = self.events[i]
+                event.record(stream=self.cache_stream)
         return 
     
     def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:
