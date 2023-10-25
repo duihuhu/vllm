@@ -347,8 +347,8 @@ class Worker:
         # Issue cache operations.
         issued_cache_op = False
         if blocks_to_swap_in:
-            # for key, value in blocks_to_swap_in.items():
-            self.cache_engine.swap_in_prefilled_from_plasma(blocks_to_swap_in, self.rank)
+            for key, value in blocks_to_swap_in.items():
+                self.cache_engine.swap_in_prefilled_from_plasma(value, self.rank)
             issued_cache_op = True
         if blocks_to_swap_out:
             self.cache_engine.swap_out_prefilled_to_plasma(blocks_to_swap_out, self.rank)
