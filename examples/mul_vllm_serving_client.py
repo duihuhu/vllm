@@ -21,6 +21,7 @@ def clear_line(n: int = 1) -> None:
 
 
 def post_http_request(prompt: List[str],
+                      output_lens: List[int],
                       api_url: str,
                       n: int = 1,
                       stream: bool = False,
@@ -30,6 +31,7 @@ def post_http_request(prompt: List[str],
         headers = {"User-Agent": "Test Client"}
         pload = {
             "prompt": prompt,
+            "output_lens": output_lens,
             "n": 1,
             "use_beam_search": False,
             "temperature": 0.0,
@@ -102,7 +104,7 @@ def sample_requests(
 
     # Filter out too long sequences.
     # filtered_dataset: List[Tuple[str, int, int]] = []
-    filtered_prompts: List[str] = [] 
+    filtered_prompts: List[Tuple[str,int]] = [] 
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
         if prompt_len < 4 or output_len < 4:
@@ -112,7 +114,7 @@ def sample_requests(
             # Prune too long sequences.
             continue
         # filtered_dataset.append((prompt, prompt_len, output_len))
-        filtered_prompts.append(prompt)
+        filtered_prompts.append((prompt, output_len))
     
     # Sample the requests.
     # sampled_requests = random.sample(filtered_dataset, num_requests)
@@ -142,21 +144,26 @@ if __name__ == "__main__":
     if args.tokenizer is None:
         args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
-    prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    prompts = []
+    output_lens = []
+    sampled_prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    for prompt, len in sampled_prompts:
+        prompts.append(prompt)
+        output_lens.append(len) 
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
     # prompt = args.prompt
     n = args.n
     stream = args.stream
     if args.num_servers == 1:
         api_url = f"http://{args.host}:{args.port}/mul_generate"
-        response = post_http_request(prompts, api_url, n, stream)
+        response = post_http_request(prompts, output_lens, api_url, n, stream)
     else:
     # num_prompts = len(prompts)/(args.num_server)
     # print(f"Prompt: {prompts!r}\n", flush=True)
         threads = []
         for i in range(args.num_servers):
             api_url = f"http://{args.host}:{(args.port+i)}/mul_generate"
-            threads.append(threading.Thread(target=post_http_request, args=(prompts, api_url, n, stream, i, args.num_servers)))
+            threads.append(threading.Thread(target=post_http_request, args=(prompts, output_lens, api_url, n, stream, i, args.num_servers)))
         for td in threads:
             td.start()
         for td in threads:

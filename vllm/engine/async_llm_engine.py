@@ -86,6 +86,7 @@ class AsyncLLMEngine:
     def mul_generate(
             self,
             prompts: Optional[List[str]],
+            output_lens: Optional[List[int]],
             sampling_params: SamplingParams,
             prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
         """Generate outputs for a request.
@@ -111,7 +112,7 @@ class AsyncLLMEngine:
 
         # Create an event to notify us that there is new output from the
         # vLLM engine.
-        for prompt in prompts:
+        for prompt, output_len in zip(prompts, output_lens):
             request_id = random_uuid()
             # if self.log_requests:
             #     logger.info(f"Received request {request_id}: "
@@ -120,6 +121,7 @@ class AsyncLLMEngine:
             #                 f"prompt token ids: {prompt_token_ids}.")
 
             # Add the request into the vLLM engine's waiting queue.
+            sampling_params.max_tokens = int(output_len)
             if self.engine_use_ray:
                 self.engine.add_request.remote(
                     request_id,

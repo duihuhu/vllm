@@ -25,12 +25,14 @@ async def mul_generate(request: Request) -> Response:
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = await request.json()
-    prompt = request_dict.pop("prompt")
+    prompts = request_dict.pop("prompt")
+    output_lens = request_dict.pop("output_lens")
+    
     stream = request_dict.pop("stream", False)
     sampling_params = SamplingParams(**request_dict)
     # # request_id = random_uuid()
     
-    results_generator = engine.mul_generate(prompt, sampling_params)
+    results_generator = engine.mul_generate(prompts, sampling_params)
 
     # # Streaming case
     # async def stream_results() -> AsyncGenerator[bytes, None]:
