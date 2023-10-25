@@ -191,7 +191,7 @@ class Worker:
             seq_ids = list(seq_group_metadata.seq_data.keys())
             sampling_params = seq_group_metadata.sampling_params
             seq_groups.append((seq_ids, sampling_params))
-
+            seq_id_t = seq_ids[0]
             for seq_id in seq_ids:
                 seq_data = seq_group_metadata.seq_data[seq_id]
                 generation_token = seq_data.get_last_token_id()
@@ -213,11 +213,11 @@ class Worker:
                 block_offset = position % self.block_size
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
-
+            print("seq_id_t input_tokens: ", input_tokens)
         # Optimization: Pad the input length to be a multiple of 8.
         # This is required for utilizing the Tensor Cores in NVIDIA GPUs.
         input_tokens = _pad_to_alignment(input_tokens, multiple_of=8)
-        print("input_tokens: ", input_tokens)
+
         
         input_positions = _pad_to_alignment(input_positions, multiple_of=8)
 
