@@ -213,7 +213,7 @@ class Worker:
                 block_offset = position % self.block_size
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
-            print("seq_id_t input_tokens: ", input_tokens)
+            print("seq_id_t input_tokens: ", seq_id_t, input_tokens)
         # Optimization: Pad the input length to be a multiple of 8.
         # This is required for utilizing the Tensor Cores in NVIDIA GPUs.
         input_tokens = _pad_to_alignment(input_tokens, multiple_of=8)
