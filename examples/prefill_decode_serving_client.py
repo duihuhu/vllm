@@ -40,6 +40,11 @@ def clear_line(n: int = 1) -> None:
     for _ in range(n):
         print(LINE_UP, end=LINE_CLEAR, flush=True)
 
+def start_execute(api_url) -> requests.Response:
+    headers = {"User-Agent": "Start Job"}
+    pload = {}
+    response = requests.post(api_url, headers=headers, json=pload, stream=True)
+    return response
 
 def post_inited_request(prompts: List[str],
                       request_ids: List[str],
@@ -87,8 +92,9 @@ async def prefilled(request: Request) -> Response:
     headers = {"User-Agent": "Test Client"}
     host = '127.0.0.1'
     port = '8001'
-    api_url = f"http://{host}:{port}/mul_generate"
-    
+    # api_url = f"http://{host}:{port}/mul_generate" 
+    api_url = f"http://{host}:{port}/continuous_batching"
+
     pload = {
         "prompts": prompts,
         "request_ids": request_ids,
@@ -216,11 +222,12 @@ if __name__ == "__main__":
     n = args.n
     stream = args.stream
     api_url = f"http://{args.host}:{args.port-1000}/mul_generate"
+    api_url2 = f"http://{args.host}:{args.port-1000+1}/execute"
     # response = post_inited_request(prompts, api_url, n, stream)
 
     task_td = []
     task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
-
+    task_td.append(threading.Thread(target=start_execute, args=(api_url2)))
     task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
       
   

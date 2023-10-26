@@ -1,19 +1,83 @@
 import argparse
 import json
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List
 
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
+import time
 
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.sampling_params import SamplingParams
 from vllm.utils import random_uuid
+from vllm.outputs import RequestOutput
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
+
+@app.post("/execute")
+async def execute(request: Request):
+    while True:
+        outputs: List[RequestOutput] = []
+        while engine.engine.has_unfinished_requests():
+            step_outputs = engine.engine.step_decoder()
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+        for output in outputs:
+            prompt = output.prompt
+            generated_text = output.outputs[0].text
+            print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
+
+@app.post("/continuous_batching")
+async def continous_batching(request: Request) -> Response:
+    request_dict = await request.json()
+    request_ids = request_dict.pop("request_ids")
+    status = request_dict.pop("status")
+    stream = request_dict.pop("stream", False)
+
+    ret = {"text": 'Job Done'}
+
+    if status == "prefilled":
+        prompts = request_dict.pop("prompts")
+        seq_ids = request_dict.pop("seq_ids")
+        prompt_token_ids = request_dict.pop("prompt_token_ids")
+        prefilled_token_ids = request_dict.pop("prefilled_token_ids")
+        prefilled_texts = request_dict.pop("prefilled_texts")
+        cumulative_logprobs = request_dict.pop("cumulative_logprobs")
+        sampling_params = SamplingParams(**request_dict)
+        arrival_time = time.time()
+
+        for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
+                in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
+            if engine.engine.engine_use_ray:
+                    engine.add_prefilled_request.remote(
+                        request_id,
+                        prompt,
+                        sampling_params,
+                        seq_ids=seq_id,
+                        prefilled_token_ids=prefilled_token_id,
+                        prefilled_texts=prefilled_text,
+                        cumulative_logprobs=cumulative_logprob,
+                        prompt_token_ids=prompt_token_id,
+                        arrival_time=arrival_time)
+            else:
+                    engine.engine.add_prefilled_request(
+                        request_id,
+                        prompt,
+                        sampling_params,
+                        seq_ids=seq_id,
+                        prefilled_token_ids=prefilled_token_id,
+                        prefilled_texts=prefilled_text,
+                        cumulative_logprobs=cumulative_logprob,
+                        prompt_token_ids=prompt_token_id,
+                        arrival_time=arrival_time)
+
+        return JSONResponse(ret)    
+    else:
+        return JSONResponse(ret)
 
 @app.post("/mul_generate")
 async def mul_generate(request: Request) -> Response:
