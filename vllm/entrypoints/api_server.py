@@ -31,9 +31,9 @@ def background_execute():
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
-        if start_time_record == 0:
-            start_time_record = start_time
         while engine.engine.has_unfinished_requests():
+            if start_time_record == 0:
+                start_time_record = start_time
             step_outputs = engine.engine.step_decoder()
             for output in step_outputs:
                 if output.finished:
