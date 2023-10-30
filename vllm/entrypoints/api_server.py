@@ -27,6 +27,7 @@ async def front_execute() -> Response:
 @app.post("/background_execute")
 async def background_execute():
     while True:
+        print("aaa")
         outputs: List[RequestOutput] = []
         start_time = time.time()
         while engine.engine.has_unfinished_requests():
