@@ -31,16 +31,15 @@ def background_execute():
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
+        if start_time_record == 0:
+            start_time_record = start_time
         while engine.engine.has_unfinished_requests():
             step_outputs = engine.engine.step_decoder()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
         end_time = time.time()
-        if len(outputs) != 0:
-            if start_time_record == 0:
-                start_time_record = start_time
-        if len(outputs) == 0 and end_time_record == 0 and start_time_record !=0:
+        if not engine.engine.has_unfinished_requests() and end_time_record == 0 and start_time_record !=0:
             end_time_record = end_time
             elapsed_time = end_time_record - start_time_record
             print(end_time_record, start_time_record)
