@@ -25,9 +25,8 @@ async def front_execute(background_tasks: BackgroundTasks) -> Response:
 
 # @app.post("/background_execute")
 def background_execute():
+    print("start background execute ")
     while True:
-        with open("/workspace/a.txt") as fd:
-            fd.write("a\n")
         outputs: List[RequestOutput] = []
         start_time = time.time()
         while engine.engine.has_unfinished_requests():
