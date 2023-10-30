@@ -40,13 +40,16 @@ def clear_line(n: int = 1) -> None:
     for _ in range(n):
         print(LINE_UP, end=LINE_CLEAR, flush=True)
 
-def start_execute():
+def start_execute() -> requests.Response:
     url = "http://127.0.0.1:8001/execute"
-    response = requests.get(url)
+    headers = {"User-Agent": "Start Job"}
+    pload = {}
+    response = requests.post(url, headers=headers, json=pload, stream=True)
     if response.status_code == 200:
         print("Start Decoding Successfully")
     else:
         print("Error:", response.status_code, response.text)
+    return response
     #headers = {"User-Agent": "Start Job"}
     #pload = {}
     #response = requests.post(api_url, headers=headers, json=pload, stream=True)

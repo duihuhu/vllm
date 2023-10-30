@@ -17,8 +17,8 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
-@app.get("/execute")
-async def execute():
+@app.post("/execute")
+async def execute(request: Request):
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
