@@ -28,11 +28,6 @@ request_prompts = {}
 app = fastapi.FastAPI()
 TIMEOUT_KEEP_ALIVE = 5  # seconds
 
-def receive_prefilled_request() -> None:
-  return
-
-def post_prefilled_request() -> None:
-  return 
 
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -87,7 +82,7 @@ async def prefilled(request: Request) -> Response:
     headers = {"User-Agent": "Test Client"}
     host = '127.0.0.1'
     port = '8001'
-    api_url = f"http://{host}:{port}/mul_generate"
+    api_url = f"http://{host}:{port}/continuous_batching"
     
     pload = {
         "prompts": prompts,
@@ -217,9 +212,7 @@ if __name__ == "__main__":
     stream = args.stream
     api_url = f"http://{args.host}:{args.port-1000}/mul_generate"
     
-    host = '127.0.0.1'
-    port = '8001'
-    api_url = f"http://{host}:{port}/continuous_batching"
+    # api_url = f"http://{args.host}:{args.port-1000}/continuous_batching"
     # response = post_inited_request(prompts, api_url, n, stream)
     
 
