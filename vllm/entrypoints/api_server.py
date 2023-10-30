@@ -17,19 +17,28 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
-@app.post("/execute")
-async def execute(request: Request):
+@app.get("/execute")
+async def execute():
     while True:
+        start_time = time.time()
         outputs: List[RequestOutput] = []
         while engine.engine.has_unfinished_requests():
             step_outputs = engine.engine.step_decoder()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-        for output in outputs:
-            prompt = output.prompt
-            generated_text = output.outputs[0].text
-            print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        total_num_tokens = sum(
+                len(output.outputs[0].token_ids)
+                for output in outputs
+            )
+        print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
+                f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+        #for output in outputs:
+        #    prompt = output.prompt
+        #    generated_text = output.outputs[0].text
+        #    print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
 
 @app.post("/continuous_batching")
 async def continous_batching(request: Request) -> Response:
