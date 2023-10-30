@@ -16,11 +16,11 @@ from vllm.outputs import RequestOutput
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
+backgroundtasks = BackgroundTasks()
 
 @app.post("/front_execute")
 async def front_execute() -> Response:
     ret = {"text": 'Start Decode'}
-    backgroundtasks = BackgroundTasks()
     backgroundtasks.add_task(background_execute)
     return JSONResponse(ret)
 
