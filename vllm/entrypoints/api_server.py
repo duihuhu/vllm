@@ -26,6 +26,7 @@ async def front_execute() -> Response:
 
 # @app.post("/background_execute")
 def background_execute():
+    print("Background task execute ")
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
@@ -50,6 +51,7 @@ def background_execute():
         #    prompt = output.prompt
         #    generated_text = output.outputs[0].text
         #    print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
+    print("Background task out ")
 
 @app.post("/continuous_batching")
 async def continous_batching(request: Request) -> Response:
