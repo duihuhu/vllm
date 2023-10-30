@@ -92,7 +92,8 @@ class AsyncLLMEngine:
             prompt_token_ids: Optional[List[List[int]]] = None,
             prefilled_token_ids: Optional[List[int]] = None,
             prefilled_texts: Optional[List[str]]=None,
-            cumulative_logprobs: Optional[List[float]]=None) -> RequestOutput:
+            cumulative_logprobs: Optional[List[float]]=None,
+            output_lens: Optional[List[int]]=None) -> RequestOutput:
         """Generate outputs for a request.
 
         Generate outputs for a request. This method is a coroutine. It adds the
@@ -118,7 +119,7 @@ class AsyncLLMEngine:
             print("prefilling ")
             # Create an event to notify us that there is new output from the
             # vLLM engine.
-            for prompt, request_id in zip(prompts,request_ids):
+            for prompt, request_id, output_len in zip(prompts,request_ids, output_lens):
                 # request_id = random_uuid()
                 # if self.log_requests:
                 #     logger.info(f"Received request {request_id}: "
@@ -127,6 +128,7 @@ class AsyncLLMEngine:
                 #                 f"prompt token ids: {prompt_token_ids}.")
 
                 # Add the request into the vLLM engine's waiting queue.
+                sampling_params.max_tokens = output_len
                 if self.engine_use_ray:
                     self.engine.add_request.remote(
                         request_id,
@@ -157,8 +159,9 @@ class AsyncLLMEngine:
         elif status == 'prefilled':
             #todo 
             print("decode ")
-            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
-                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
+            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len \
+                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens):
+                sampling_params.max_tokens = output_len
                 if self.engine_use_ray:
                     self.engine.add_prefilled_request.remote(
                         request_id,
