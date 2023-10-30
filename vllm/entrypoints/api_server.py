@@ -24,6 +24,7 @@ async def front_execute(background_tasks: BackgroundTasks) -> Response:
     return JSONResponse(ret)
 
 async def background_execute():
+    print("start background execute")
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
