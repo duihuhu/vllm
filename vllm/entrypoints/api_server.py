@@ -18,10 +18,9 @@ TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
 @app.post("/front_execute")
-async def front_execute() -> Response:
+async def front_execute(background_tasks: BackgroundTasks) -> Response:
     ret = {"text": 'Start Decode'}
-    backgroundtasks = BackgroundTasks()
-    backgroundtasks.add_task(background_execute)
+    background_tasks.add_task(background_execute)
     return JSONResponse(ret)
 
 async def background_execute():
@@ -41,6 +40,7 @@ async def background_execute():
                     for output in outputs
                 )
             print(f"Total {len(outputs)} requests")
+            print(f"Total {total_num_tokens} tokens")
             print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
                     f"{total_num_tokens / elapsed_time:.2f} tokens/s")
             #ret = {"text": 'Job Done'}
