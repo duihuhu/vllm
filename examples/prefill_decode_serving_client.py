@@ -235,7 +235,7 @@ if __name__ == "__main__":
     task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
     #task_td.append(threading.Thread(target=start_execute, args=(api_url2)))
     task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
-    task_td.append(threading.Thread(target=start_execute))
+    #task_td.append(threading.Thread(target=start_execute))
       
   
     for td in task_td:
