@@ -40,9 +40,10 @@ def background_execute():
         if len(outputs) != 0:
             if start_time_record == 0:
                 start_time_record = start_time
-        if len(outputs) == 0 and end_time_record == 0 and start_time_record != 0:
+        if len(outputs) == 0 and end_time_record == 0 and start_time_record !=0:
             end_time_record = end_time
             elapsed_time = end_time_record - start_time_record
+            print(end_time_record, start_time_record)
             total_num_tokens = sum(
                     len(output.outputs[0].token_ids)
                     for output in outputs
