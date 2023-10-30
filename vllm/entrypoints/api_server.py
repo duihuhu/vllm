@@ -18,7 +18,7 @@ TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
 @app.post("/execute")
-async def execute(request: Request):
+async def execute(request: Request) -> Response:
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
@@ -34,8 +34,11 @@ async def execute(request: Request):
                     len(output.outputs[0].token_ids)
                     for output in outputs
                 )
+            print(f"Total {len(outputs)} requests")
             print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
                     f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+            ret = {"text": 'Job Done'}
+            return ret
         #for output in outputs:
         #    prompt = output.prompt
         #    generated_text = output.outputs[0].text
