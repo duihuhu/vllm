@@ -26,6 +26,8 @@ async def front_execute(background_tasks: BackgroundTasks) -> Response:
 # @app.post("/background_execute")
 def background_execute():
     print("start background execute ")
+    start_time_record = 0
+    end_time_record = 0
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
@@ -36,7 +38,11 @@ def background_execute():
                     outputs.append(output)
         end_time = time.time()
         if len(outputs) != 0:
-            elapsed_time = end_time - start_time
+            if start_time_record == 0:
+                start_time_record = start_time
+        if len(outputs) == 0 and end_time_record == 0 and start_time_record != 0:
+            end_time_record = end_time
+            elapsed_time = end_time_record - start_time_record
             total_num_tokens = sum(
                     len(output.outputs[0].token_ids)
                     for output in outputs
