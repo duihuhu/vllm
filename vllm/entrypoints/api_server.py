@@ -52,8 +52,8 @@ async def continous_batching(request: Request) -> Response:
 
         for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
                 in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
-            if engine.engine.engine_use_ray:
-                    engine.add_prefilled_request.remote(
+            if engine.engine_use_ray:
+                    engine.engine.add_prefilled_request.remote(
                         request_id,
                         prompt,
                         sampling_params,
