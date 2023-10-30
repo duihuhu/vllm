@@ -216,7 +216,12 @@ if __name__ == "__main__":
     n = args.n
     stream = args.stream
     api_url = f"http://{args.host}:{args.port-1000}/mul_generate"
+    
+    host = '127.0.0.1'
+    port = '8001'
+    api_url = f"http://{host}:{port}/continuous_batching"
     # response = post_inited_request(prompts, api_url, n, stream)
+    
 
     task_td = []
     task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
