@@ -24,7 +24,6 @@ async def front_execute() -> Response:
     backgroundtasks.add_task(background_execute)
     return JSONResponse(ret)
 
-@app.post("/background_execute")
 async def background_execute():
     while True:
         outputs: List[RequestOutput] = []
