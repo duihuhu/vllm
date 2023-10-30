@@ -17,8 +17,15 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
-@app.post("/execute")
-async def execute(request: Request) -> Response:
+@app.post("/front_execute")
+async def front_execute() -> Response:
+    ret = {"text": 'Start Decode'}
+    backgroundtasks = BackgroundTasks()
+    backgroundtasks.add_task(background_execute)
+    return JSONResponse(ret)
+
+@app.post("/background_execute")
+async def background_execute():
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
@@ -37,8 +44,8 @@ async def execute(request: Request) -> Response:
             print(f"Total {len(outputs)} requests")
             print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
                     f"{total_num_tokens / elapsed_time:.2f} tokens/s")
-            ret = {"text": 'Job Done'}
-            return ret
+            #ret = {"text": 'Job Done'}
+            #return JSONResponse(ret)
         #for output in outputs:
         #    prompt = output.prompt
         #    generated_text = output.outputs[0].text
