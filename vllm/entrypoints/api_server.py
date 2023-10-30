@@ -20,7 +20,7 @@ app = FastAPI()
 @app.post("/front_execute")
 async def front_execute(background_tasks: BackgroundTasks) -> Response:
     ret = {"text": 'Start Decode'}
-    backgroundtasks.add_task(background_execute)
+    background_tasks.add_task(background_execute)
     return JSONResponse(ret)
 
 # @app.post("/background_execute")
