@@ -91,8 +91,8 @@ async def continous_batching(request: Request) -> Response:
 
         for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len, sampling_param\
                 in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens, sampling_params_list):
+            sampling_param.max_tokens = int(output_len)
             if engine.engine_use_ray:
-                    sampling_param.max_tokens = int(output_len)
                     engine.engine.add_prefilled_request.remote(
                         request_id,
                         prompt,
@@ -104,7 +104,6 @@ async def continous_batching(request: Request) -> Response:
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
             else:
-                    sampling_param.max_tokens = int(output_len)
                     engine.engine.add_prefilled_request(
                         request_id,
                         prompt,
