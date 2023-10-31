@@ -146,7 +146,7 @@ def sample_requests(
     dataset_path: str,
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
-) -> List[Tuple[str, List[int], str]] :
+) -> List[Tuple[str, List[int], str, int]] :
     random.seed(0)
     # Load the dataset.
     with open(dataset_path) as f:
@@ -180,7 +180,7 @@ def sample_requests(
     # filtered_dataset: List[Tuple[str, int, int]] = []
     # filtered_prompts: List[str] = [] 
     # filtered_tokenids: List[str] = []
-    filtered_dataset: List[Tuple[str, List[int], str]] = []
+    filtered_dataset: List[Tuple[str, List[int], str, int]] = []
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         request_id = random_uuid()
         prompt_len = len(prompt_token_ids)

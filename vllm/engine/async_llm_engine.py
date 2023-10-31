@@ -117,6 +117,7 @@ class AsyncLLMEngine:
         if status == 'start':
             # Preprocess the request.
             print("prefilling ")
+            print(f"start time is {start}")
             # Create an event to notify us that there is new output from the
             # vLLM engine.
             for prompt, request_id, output_len in zip(prompts,request_ids, output_lens):

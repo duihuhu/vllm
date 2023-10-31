@@ -18,32 +18,47 @@ TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
 @app.post("/front_execute")
-async def front_execute(background_tasks: BackgroundTasks) -> Response:
-    ret = {"text": 'Start Decode'}
-    background_tasks.add_task(background_execute)
+async def front_execute(request:Request, background_tasks: BackgroundTasks) -> Response:
+    request_dict = await request.json()
+    num_req = request_dict.pop("num")
+    ret = {"text": 'Start Decode',
+           "num_req": num_req}
+    background_tasks.add_task(background_execute, int(num_req))
     return JSONResponse(ret)
 
-async def background_execute():
-    print("start background execute")
+async def background_execute(num_req: int):
+    print("start background execute ")
+    start_time_record = 0
+    end_time_record = 0
+    total_num_tokens = 0
+    total_requests_compute = num_req
+    total_requests = total_requests_compute
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
         while engine.engine.has_unfinished_requests():
+            if start_time_record == 0:
+                start_time_record = start_time
             step_outputs = engine.engine.step_decoder()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
         end_time = time.time()
-        if len(outputs) != 0:
-            elapsed_time = end_time - start_time
-            total_num_tokens = sum(
+        if len(outputs) !=0:
+            total_requests = total_requests - len(outputs)
+            total_num_tokens = total_num_tokens + sum(
                     len(output.outputs[0].token_ids)
                     for output in outputs
                 )
-            print(f"Total {len(outputs)} requests")
-            print(f"Total {total_num_tokens} tokens")
-            print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
-                    f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+            if total_requests == 0:
+                end_time_record = end_time
+                elapsed_time = end_time_record - start_time_record
+                print("decode start time ", start_time_record)
+                print("decode end time ", end_time_record)
+                #print(end_time_record, start_time_record)
+                print(f"Total {total_requests_compute} requests")
+                print(f"Throughput: {total_requests_compute / elapsed_time:.2f} requests/s, "
+                        f"{total_num_tokens / elapsed_time:.2f} tokens/s")
             #ret = {"text": 'Job Done'}
             #return JSONResponse(ret)
         #for output in outputs:
