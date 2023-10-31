@@ -138,15 +138,19 @@ class AsyncLLMEngine:
         end_add_request_time = time.time()
         print("start_add_request_time, end_add_request_time ", start_add_request_time, end_add_request_time)
         start = time.time()
+        prefill_execute_time = 0 
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_requests():
             step_outputs = self.engine.step()
+            if prefill_execute_time == 0:
+                prefill_execute_time = time.time()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
                     print("output: ", output )
         end = time.time()
 
+        print("start time, prefill_execute_time, end time ", start, prefill_execute_time, end)
         elapsed_time = end-start
         total_num_tokens = sum(
             len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
