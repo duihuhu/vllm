@@ -493,13 +493,13 @@ class Scheduler:
         prefilled_token_ids = []
         prefilled_texts = []
         cumulative_logprobs = []
-        output_lens = []
+        #output_lens = []
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
             request_outputs = RequestOutput.from_seq_group(seq_group)
             # print("request_output ", request_outputs)
             request_ids.append(request_outputs.request_id)
-            output_lens.append(seq_group.sampling_params.max_tokens)
+            #output_lens.append(seq_group.sampling_params.max_tokens)
             seq_ids_pre_req = []
             prefilled_token_ids_in_req = []
             prefilled_text_in_req = []
@@ -514,7 +514,7 @@ class Scheduler:
             prefilled_texts.append(prefilled_text_in_req)
             cumulative_logprobs.append(cumulative_logprob_in_req)
     
-        print(output_lens)
+        #print(output_lens)
         host='127.0.0.1'
         port = '9000'
         api_url = f"http://{host}:{port}/prefilled"
@@ -524,8 +524,8 @@ class Scheduler:
             "seq_ids": seq_ids,
             "prefilled_token_ids": prefilled_token_ids,
             "prefilled_texts": prefilled_texts,
-            "cumulative_logprobs": cumulative_logprobs,
-            "output_lens": output_lens
+            "cumulative_logprobs": cumulative_logprobs
+            #"output_lens": output_lens
         }
         response = requests.post(api_url, headers=headers, json=pload)
         # self.scheduler.watch_cpu_kv_cache()

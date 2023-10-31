@@ -120,7 +120,7 @@ class AsyncLLMEngine:
             print(f"start time is {start}")
             # Create an event to notify us that there is new output from the
             # vLLM engine.
-            for prompt, request_id, output_len in zip(prompts,request_ids, output_lens):
+            for prompt, request_id in zip(prompts,request_ids):
                 # request_id = random_uuid()
                 # if self.log_requests:
                 #     logger.info(f"Received request {request_id}: "
@@ -129,7 +129,7 @@ class AsyncLLMEngine:
                 #                 f"prompt token ids: {prompt_token_ids}.")
 
                 # Add the request into the vLLM engine's waiting queue.
-                sampling_params.max_tokens = output_len
+                #sampling_params.max_tokens = output_len
                 if self.engine_use_ray:
                     self.engine.add_request.remote(
                         request_id,
@@ -155,14 +155,15 @@ class AsyncLLMEngine:
                 len(output.prompt_token_ids)
                 for output in outputs
             )
+            print(f"Total {total_num_tokens} tokens")
             print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
                 f"{total_num_tokens / elapsed_time:.2f} tokens/s")   
         elif status == 'prefilled':
             #todo 
             print("decode ")
-            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len \
-                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens):
-                sampling_params.max_tokens = output_len
+            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
+                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
+                #sampling_params.max_tokens = output_len
                 if self.engine_use_ray:
                     self.engine.add_prefilled_request.remote(
                         request_id,
