@@ -51,7 +51,7 @@ def background_execute():
                 end_time_record = end_time
                 elapsed_time = end_time_record - start_time_record
                 print(end_time_record, start_time_record)
-                print(f"Total {len(outputs)} requests")
+                print(f"Total {len(total_requests_compute)} requests")
                 print(f"Throughput: {total_requests_compute / elapsed_time:.2f} requests/s, "
                         f"{total_num_tokens / elapsed_time:.2f} tokens/s")
             #ret = {"text": 'Job Done'}
