@@ -490,11 +490,13 @@ class Scheduler:
         prefilled_token_ids = []
         prefilled_texts = []
         cumulative_logprobs = []
+        output_lens = []
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
             request_outputs = RequestOutput.from_seq_group(seq_group)
             # print("request_output ", request_outputs)
             request_ids.append(request_outputs.request_id)
+            output_lens.append(seq_group.sampling_params.max_tokens)
             seq_ids_pre_req = []
             prefilled_token_ids_in_req = []
             prefilled_text_in_req = []
@@ -516,6 +518,7 @@ class Scheduler:
         headers = {"User-Agent": "Test Client"}
         pload = {
             "request_ids": request_ids,
+            "output_lens": output_lens,
             "seq_ids": seq_ids,
             "prefilled_token_ids": prefilled_token_ids,
             "prefilled_texts": prefilled_texts,

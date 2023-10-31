@@ -68,8 +68,10 @@ async def continous_batching(request: Request) -> Response:
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
     status = request_dict.pop("status")
+    output_lens = request_dict.pop("output_lens")
+    
     stream = request_dict.pop("stream", False)
-
+    
     ret = {"text": 'Job Done'}
     start_add_prefilled_request = time.time()
     print("start_add_prefilled_request ", start_add_prefilled_request)
@@ -83,9 +85,10 @@ async def continous_batching(request: Request) -> Response:
         sampling_params = SamplingParams(**request_dict)
         arrival_time = time.time()
 
-        for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
-                in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
+        for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len\
+                in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens):
             if engine.engine_use_ray:
+                    sampling_params.max_tokens = int(output_len)
                     engine.engine.add_prefilled_request.remote(
                         request_id,
                         prompt,
@@ -97,6 +100,7 @@ async def continous_batching(request: Request) -> Response:
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
             else:
+                    sampling_params.max_tokens = int(output_len)
                     engine.engine.add_prefilled_request(
                         request_id,
                         prompt,

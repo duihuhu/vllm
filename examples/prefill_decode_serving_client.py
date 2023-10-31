@@ -45,6 +45,7 @@ def post_inited_request(prompts: List[str],
     headers = {"User-Agent": "Test Client"}
     pload = {
         "prompts": prompts,
+        "output_lens": output_lens,
         "request_ids": request_ids,
         "n": 1,
         "use_beam_search": False,
@@ -73,6 +74,8 @@ async def prefilled(request: Request) -> Response:
     prefilled_token_ids =  request_dict.pop("prefilled_token_ids")
     prefilled_text = request_dict.pop("prefilled_texts")
     cumulative_logprobs = request_dict.pop("cumulative_logprobs")
+    output_lens = request_dict.pop("output_lens")
+
     prompts = []
     prompt_token_ids = []
     for request_id in request_ids:
@@ -86,6 +89,7 @@ async def prefilled(request: Request) -> Response:
     
     pload = {
         "prompts": prompts,
+        "output_lens": output_lens,
         "request_ids": request_ids,
         "seq_ids": seq_ids,
         "prompt_token_ids": prompt_token_ids,
@@ -156,7 +160,7 @@ def sample_requests(
     # filtered_dataset: List[Tuple[str, int, int]] = []
     # filtered_prompts: List[str] = [] 
     # filtered_tokenids: List[str] = []
-    filtered_dataset: List[Tuple[str, List[int], str]] = []
+    filtered_dataset: List[Tuple[str, List[int], str, int]] = []
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         request_id = random_uuid()
         prompt_len = len(prompt_token_ids)
@@ -166,7 +170,7 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue
-        filtered_dataset.append((prompt, prompt_token_ids, request_id))
+        filtered_dataset.append((prompt, prompt_token_ids, request_id, output_len))
         # filtered_prompts.append(prompt)
         # filtered_tokenids.append(prompt_token_ids)
     # Sample the requests.
@@ -201,11 +205,13 @@ if __name__ == "__main__":
     sampled_prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
     prompts = []
     request_ids = []
+    output_lens = []
     for prompt in sampled_prompts:
-      request_prompts[prompt[-1]] = prompt[0]
-      request_prompts_token_ids[prompt[-1]] = prompt[-2]
+      request_prompts[prompt[-2]] = prompt[0]
+      request_prompts_token_ids[prompt[-2]] = prompt[-3]
       prompts.append(prompt[0])
-      request_ids.append(prompt[-1])
+      request_ids.append(prompt[-2])
+      output_lens.append(prompt[-1])
     # prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
     # prompt = args.prompt
     n = args.n
@@ -219,7 +225,7 @@ if __name__ == "__main__":
     task_td = []
     task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
 
-    task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
+    task_td.append(threading.Thread(target=post_inited_request, args=(prompts, output_lens, request_ids, api_url, n, stream)))
       
   
     for td in task_td:
