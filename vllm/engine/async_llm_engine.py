@@ -128,7 +128,7 @@ class AsyncLLMEngine:
                 #                 f"prompt token ids: {prompt_token_ids}.")
 
                 # Add the request into the vLLM engine's waiting queue.
-                sampling_params.max_tokens = int(output_len)
+                sampling_param.max_tokens = int(output_len)
                 if self.engine_use_ray:
                     self.engine.add_request.remote(
                         request_id,
