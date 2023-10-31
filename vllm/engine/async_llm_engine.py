@@ -109,7 +109,7 @@ class AsyncLLMEngine:
         """
         # Preprocess the request.
         arrival_time = time.time()
-        start_add_request_time = time.time()
+        # start_add_request_time = time.time()
         # Create an event to notify us that there is new output from the
         # vLLM engine.
         for prompt, output_len in zip(prompts, output_lens):
@@ -135,8 +135,8 @@ class AsyncLLMEngine:
                                         sampling_params,
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
-        end_add_request_time = time.time()
-        print("start_add_request_time, end_add_request_time ", start_add_request_time, end_add_request_time)
+        # end_add_request_time = time.time()
+        # print("start_add_request_time, end_add_request_time ", start_add_request_time, end_add_request_time)
         start = time.time()
         prefill_execute_time = 0 
         outputs: List[RequestOutput] = []
@@ -150,12 +150,13 @@ class AsyncLLMEngine:
                     # print("output: ", output )
         end = time.time()
 
-        print("start time, prefill_execute_time, end time ", start, prefill_execute_time, end)
         elapsed_time = end-start
         total_num_tokens = sum(
             len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
             for output in outputs
         )
+        print("arrival_time, start time, prefill_execute_time, end time , total_num_tokens ", arrival_time, start, prefill_execute_time, end, total_num_tokens)
+
         print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
             f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 
