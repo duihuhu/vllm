@@ -47,13 +47,13 @@ def background_execute():
                     len(output.outputs[0].token_ids)
                     for output in outputs
                 )
-            if  total_requests == 0:
+            if total_requests == 0:
                 end_time_record = end_time
                 elapsed_time = end_time_record - start_time_record
                 print("decode start time ", start_time_record)
                 print("decode end time ", end_time_record)
                 print(end_time_record, start_time_record)
-                print(f"Total {len(total_requests_compute)} requests")
+                print(f"Total {total_requests_compute} requests")
                 print(f"Throughput: {total_requests_compute / elapsed_time:.2f} requests/s, "
                         f"{total_num_tokens / elapsed_time:.2f} tokens/s")
             #ret = {"text": 'Job Done'}
@@ -71,7 +71,7 @@ async def continous_batching(request: Request) -> Response:
     stream = request_dict.pop("stream", False)
 
     ret = {"text": 'Job Done'}
-
+    start_add_prefilled_request = time.time()
     if status == "prefilled":
         prompts = request_dict.pop("prompts")
         seq_ids = request_dict.pop("seq_ids")
@@ -106,6 +106,10 @@ async def continous_batching(request: Request) -> Response:
                         cumulative_logprobs=cumulative_logprob,
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
+    
+        end_add_prefilled_request = time.time()
+        print("start_add_prefilled_request ", start_add_prefilled_request)
+        print("end_add_prefilled_request ", end_add_prefilled_request)
 
         return JSONResponse(ret)    
     else:

@@ -111,12 +111,11 @@ class AsyncLLMEngine:
             The output `RequestOutput` objects from the LLMEngine for the
             request.
         """
-        start = time.time()
-        print("start prefill time ", start)
         arrival_time = time.time()
         if status == 'start':
             # Preprocess the request.
-            print("prefilling ")
+            start = time.time()
+            print("start prefill time ", start)
             # Create an event to notify us that there is new output from the
             # vLLM engine.
             for prompt, request_id in zip(prompts,request_ids):

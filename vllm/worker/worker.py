@@ -16,6 +16,7 @@ from vllm.utils import get_gpu_memory
 #
 from vllm.worker.object_manager.client import ObjectClient
 from vllm.worker.object_manager.object_info import ObjectInfo
+import time
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -366,8 +367,9 @@ class Worker:
         if not seq_group_metadata_list:
             if cache_events is not None:
                 for event in cache_events:
-                    event.wait()
+                    event.wait()            
             return {}
+
 
         # Prepare input tensors.
         input_tokens, input_positions, input_metadata = self._prepare_inputs(
