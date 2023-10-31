@@ -274,6 +274,8 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, seqs, sampling_params,
                                   arrival_time)
 
+        start_restruct_block_table = time.time()
+        print("start_restruct_block_table ", start_restruct_block_table)
         self.scheduler.restruct_block_table(seq_group)
 
         # Add the sequence group to the scheduler.
@@ -451,7 +453,8 @@ class LLMEngine:
         print("process request time in prefill ", process_time)
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
-
+        contruct_time = time.time()
+        print("contruct_time swap out object time in prefill ", contruct_time)
         # print("prefill_blocks_to_object_swap_out ", prefill_blocks_to_object_swap_out)
         # for seq_group, value in prefill_blocks_to_object_swap_out.items():
         #     for key, obj_info in value.items():
