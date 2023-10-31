@@ -521,11 +521,11 @@ class Scheduler:
         headers = {"User-Agent": "Test Client"}
         pload = {
             "request_ids": request_ids,
+            "output_lens": output_lens,
             "seq_ids": seq_ids,
             "prefilled_token_ids": prefilled_token_ids,
             "prefilled_texts": prefilled_texts,
-            "cumulative_logprobs": cumulative_logprobs,
-            "output_lens": output_lens
+            "cumulative_logprobs": cumulative_logprobs
         }
         response = requests.post(api_url, headers=headers, json=pload)
         # self.scheduler.watch_cpu_kv_cache()
