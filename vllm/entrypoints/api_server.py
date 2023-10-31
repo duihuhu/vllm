@@ -31,7 +31,7 @@ async def mul_generate(request: Request) -> Response:
     
     stream = request_dict.pop("stream", False)
     sampling_params_list = []
-    for i in range(prompts):
+    for i in range(len(prompts)):
         sampling_params = SamplingParams(**request_dict)
         sampling_params_list.append(sampling_params)
     
