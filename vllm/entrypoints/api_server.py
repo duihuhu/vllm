@@ -28,6 +28,7 @@ async def front_execute(request:Request, background_tasks: BackgroundTasks) -> R
 
 async def background_execute(num_req: int):
     print("start background execute ")
+    print(f"num_req is {num_req}")
     start_time_record = 0
     end_time_record = 0
     total_num_tokens = 0

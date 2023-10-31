@@ -514,7 +514,7 @@ class Scheduler:
             prefilled_texts.append(prefilled_text_in_req)
             cumulative_logprobs.append(cumulative_logprob_in_req)
     
-        
+        print(output_lens)
         host='127.0.0.1'
         port = '9000'
         api_url = f"http://{host}:{port}/prefilled"
