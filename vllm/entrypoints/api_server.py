@@ -52,6 +52,7 @@ def background_execute():
                 elapsed_time = end_time_record - start_time_record
                 print("decode start time ", start_time_record)
                 print("decode end time ", end_time_record)
+                print("total_num_tokens ", total_num_tokens)
                 print(end_time_record, start_time_record)
                 print(f"Total {total_requests_compute} requests")
                 print(f"Throughput: {total_requests_compute / elapsed_time:.2f} requests/s, "
