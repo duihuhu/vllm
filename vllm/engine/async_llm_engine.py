@@ -147,7 +147,7 @@ class AsyncLLMEngine:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                    print("output: ", output )
+                    # print("output: ", output )
         end = time.time()
 
         print("start time, prefill_execute_time, end time ", start, prefill_execute_time, end)
