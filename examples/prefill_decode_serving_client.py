@@ -37,6 +37,7 @@ def clear_line(n: int = 1) -> None:
 
 
 def post_inited_request(prompts: List[str],
+                        output_lens: List[int],
                       request_ids: List[str],
                       api_url: str,
                       n: int = 1,
