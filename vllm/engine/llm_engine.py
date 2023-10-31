@@ -447,6 +447,8 @@ class LLMEngine:
             # print("request_output ", request_output)
             request_outputs.append(request_output)
         
+        process_time = time.time()
+        print("process request time in prefill ", process_time)
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
 
@@ -462,9 +464,14 @@ class LLMEngine:
                 blocks_to_swap_out = prefill_blocks_to_swap_out,
                 blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
             )
-        
+        swap_time = time.time()
+        print("swap out time in prefill ", swap_time)
+
         self.scheduler.post_prefilled_to_controller()
         
+        send_time = time.time()
+        print("send to controller time in prefill ", send_time)
+
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:

@@ -28,7 +28,7 @@ def background_execute():
     start_time_record = 0
     end_time_record = 0
     total_num_tokens = 0
-    total_requests_compute = 32
+    total_requests_compute = 2
     total_requests = total_requests_compute
     while True:
         outputs: List[RequestOutput] = []
@@ -50,6 +50,8 @@ def background_execute():
             if  total_requests == 0:
                 end_time_record = end_time
                 elapsed_time = end_time_record - start_time_record
+                print("decode start time ", start_time_record)
+                print("decode end time ", end_time_record)
                 print(end_time_record, start_time_record)
                 print(f"Total {len(total_requests_compute)} requests")
                 print(f"Throughput: {total_requests_compute / elapsed_time:.2f} requests/s, "

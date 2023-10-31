@@ -112,6 +112,7 @@ class AsyncLLMEngine:
             request.
         """
         start = time.time()
+        print("start prefill time ", start)
         arrival_time = time.time()
         if status == 'start':
             # Preprocess the request.
@@ -140,6 +141,8 @@ class AsyncLLMEngine:
                                             sampling_params,
                                             prompt_token_ids=prompt_token_ids,
                                             arrival_time=arrival_time)
+            add_request_time = time.time()
+            print("add request time in prefill ", add_request_time)
             outputs: List[RequestOutput] = []
             while self.engine.has_unfinished_requests():
                 step_outputs = self.engine.step()

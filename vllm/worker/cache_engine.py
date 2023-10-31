@@ -169,7 +169,7 @@ class CacheEngine:
         src: List[KVCache],
         src_to_dst: Dict[int, List[ObjectInfo]],
         rank) -> None:
-        print("_swap_out_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
+        # print("_swap_out_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
         rank = rank % self.parallel_config.tensor_parallel_size
         key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
@@ -254,7 +254,7 @@ class CacheEngine:
     
     def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
         rank = rank % self.parallel_config.tensor_parallel_size
-        print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
+        # print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
         src_to_dst_copy = {}
         key_object_address = []
         value_object_address = []
