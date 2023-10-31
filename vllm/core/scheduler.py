@@ -236,42 +236,42 @@ class Scheduler:
             return scheduler_outputs, prompt_group_ids, ignored_seq_groups
 
         # TODO(woosuk): Move the below code to the engine.
-        now = time.time()
-        if num_batched_tokens > 0:
-            self.num_input_tokens.append((now, num_batched_tokens))
-        elapsed_time = now - self.last_logging_time
-        if elapsed_time > _LOGGING_INTERVAL_SEC:
-            self.last_logging_time = now
-            self.num_input_tokens = [(t, n) for t, n in self.num_input_tokens
-                                     if now - t < _LOGGING_INTERVAL_SEC]
-            if len(self.num_input_tokens) > 1:
-                total_num_tokens = sum(n
-                                       for _, n in self.num_input_tokens[:-1])
-                window = now - self.num_input_tokens[0][0]
-                avg_throughput = total_num_tokens / window
-            else:
-                avg_throughput = 0.0
+        # now = time.time()
+        # if num_batched_tokens > 0:
+        #     self.num_input_tokens.append((now, num_batched_tokens))
+        # elapsed_time = now - self.last_logging_time
+        # if elapsed_time > _LOGGING_INTERVAL_SEC:
+        #     self.last_logging_time = now
+        #     self.num_input_tokens = [(t, n) for t, n in self.num_input_tokens
+        #                              if now - t < _LOGGING_INTERVAL_SEC]
+        #     if len(self.num_input_tokens) > 1:
+        #         total_num_tokens = sum(n
+        #                                for _, n in self.num_input_tokens[:-1])
+        #         window = now - self.num_input_tokens[0][0]
+        #         avg_throughput = total_num_tokens / window
+        #     else:
+        #         avg_throughput = 0.0
 
-            total_num_gpu_blocks = self.cache_config.num_gpu_blocks
-            num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-            num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
-            gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
+        #     total_num_gpu_blocks = self.cache_config.num_gpu_blocks
+        #     num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+        #     num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
+        #     gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
 
-            total_num_cpu_blocks = self.cache_config.num_cpu_blocks
-            if total_num_cpu_blocks > 0:
-                num_free_cpu_blocks = (
-                    self.block_manager.get_num_free_cpu_blocks())
-                num_used_cpu_blocks = total_num_cpu_blocks - num_free_cpu_blocks
-                cpu_cache_usage = num_used_cpu_blocks / total_num_cpu_blocks
-            else:
-                cpu_cache_usage = 0.0
+        #     total_num_cpu_blocks = self.cache_config.num_cpu_blocks
+        #     if total_num_cpu_blocks > 0:
+        #         num_free_cpu_blocks = (
+        #             self.block_manager.get_num_free_cpu_blocks())
+        #         num_used_cpu_blocks = total_num_cpu_blocks - num_free_cpu_blocks
+        #         cpu_cache_usage = num_used_cpu_blocks / total_num_cpu_blocks
+        #     else:
+        #         cpu_cache_usage = 0.0
 
-            logger.info(f"Throughput: {avg_throughput:.1f} tokens/s, "
-                        f"Running: {len(self.running)} reqs, "
-                        f"Swapped: {len(self.swapped)} reqs, "
-                        f"Pending: {len(self.waiting)} reqs, "
-                        f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%, "
-                        f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
+            # logger.info(f"Throughput: {avg_throughput:.1f} tokens/s, "
+            #             f"Running: {len(self.running)} reqs, "
+            #             f"Swapped: {len(self.swapped)} reqs, "
+            #             f"Pending: {len(self.waiting)} reqs, "
+            #             f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%, "
+            #             f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
                 
     def schedule(
