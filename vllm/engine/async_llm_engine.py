@@ -154,6 +154,7 @@ class AsyncLLMEngine:
                 len(output.prompt_token_ids)
                 for output in outputs
             )
+            print("start prefill time, total num token ", start, total_num_tokens)
             print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
                 f"{total_num_tokens / elapsed_time:.2f} tokens/s")   
         elif status == 'prefilled':
