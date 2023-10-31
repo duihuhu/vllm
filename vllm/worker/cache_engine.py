@@ -175,7 +175,7 @@ class CacheEngine:
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
         
         
-        start_create_prefilled_object = time.time()
+        # start_create_prefilled_object = time.time()
         #by gpu block num compose
         # key_layer_object_address = []
         # for key, value in src_to_dst.items():
@@ -208,8 +208,8 @@ class CacheEngine:
         src_to_dst_copy = {}
         for key, _ in src_to_dst.items():
             src_to_dst_copy[key] = 0
-        end_create_prefilled_object = time.time()
-        print("start_create_prefilled_object, end create_prefilled_object time ", start_create_prefilled_object, end_create_prefilled_object, rank)
+        # end_create_prefilled_object = time.time()
+        # print("start_create_prefilled_object, end create_prefilled_object time ", start_create_prefilled_object, end_create_prefilled_object, rank)
 
         # ##allocate key, value to objects and com by layer, lack swap value, (init version)
         # key_layer_objects_swap = []
@@ -237,15 +237,15 @@ class CacheEngine:
                 # print("swap out layer i, key ", i, key_layer_objects_address[i])
                 # print("swap out layer i, value ", i, value_layer_objects_address[i])
 
-        start_seal_prefilled_object = time.time()
+        # start_seal_prefilled_object = time.time()
         for key, obj_info in src_to_dst.items():
             key_object_info = (obj_info[rank].object_ids)[0]
             value_object_info = (obj_info[rank].object_ids)[1]
             for key_addr, value_addr in zip(key_object_info, value_object_info):            
                 plasma_client.seal(key_addr)
                 plasma_client.seal(value_addr)
-        end_seal_prefilled_object = time.time()
-        print("start_seal_prefilled_object, end_seal_prefilled_object time ", start_seal_prefilled_object, end_seal_prefilled_object, rank)
+        # end_seal_prefilled_object = time.time()
+        # print("start_seal_prefilled_object, end_seal_prefilled_object time ", start_seal_prefilled_object, end_seal_prefilled_object, rank)
         #seal object after swap data
         # for object_address_lists in key_layer_object_address_lists:
         #     for addr in object_address_lists:
