@@ -74,7 +74,7 @@ async def continous_batching(request: Request) -> Response:
     request_ids = request_dict.pop("request_ids")
     status = request_dict.pop("status")
     stream = request_dict.pop("stream", False)
-    #output_lens = request_dict.pop("output_lens")
+    output_lens = request_dict.pop("output_lens")
 
     ret = {"text": 'Job Done'}
 
@@ -88,9 +88,9 @@ async def continous_batching(request: Request) -> Response:
         sampling_params = SamplingParams(**request_dict)
         arrival_time = time.time()
 
-        for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
-                in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
-            #sampling_params.max_tokens = output_len
+        for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len \
+                in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens):
+            sampling_params.max_tokens = int(output_len)
             if engine.engine_use_ray:
                     engine.engine.add_prefilled_request.remote(
                         request_id,
@@ -131,7 +131,7 @@ async def mul_generate(request: Request) -> Response:
     request_ids = request_dict.pop("request_ids")
     status = request_dict.pop("status")
     stream = request_dict.pop("stream", False)
-    #output_lens = request_dict.pop("output_lens")
+    output_lens = request_dict.pop("output_lens")
     print("status ", status)
     if status == 'start':
         prompts = request_dict.pop("prompts")
@@ -146,11 +146,11 @@ async def mul_generate(request: Request) -> Response:
     sampling_params = SamplingParams(**request_dict)
     # # request_id = random_uuid()
     if status == 'start':
-        results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params, status=status)
+        results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params, status=status, output_lens=output_lens)
     elif status == 'prefilled':
         results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,
                                                 status=status, seq_ids=seq_ids, prompt_token_ids=prompt_token_ids, prefilled_token_ids=prefilled_token_ids,
-                                                prefilled_texts=prefilled_texts, cumulative_logprobs=cumulative_logprobs)
+                                                prefilled_texts=prefilled_texts, cumulative_logprobs=cumulative_logprobs, output_lens=output_lens)
         
     # # Streaming case
     # async def stream_results() -> AsyncGenerator[bytes, None]:
