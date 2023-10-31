@@ -28,7 +28,7 @@ def background_execute():
     start_time_record = 0
     end_time_record = 0
     total_num_tokens = 0
-    total_requests_compute = 64
+    total_requests_compute = 128
     total_requests = total_requests_compute
     while True:
         outputs: List[RequestOutput] = []
