@@ -83,17 +83,20 @@ async def continous_batching(request: Request) -> Response:
         prefilled_token_ids = request_dict.pop("prefilled_token_ids")
         prefilled_texts = request_dict.pop("prefilled_texts")
         cumulative_logprobs = request_dict.pop("cumulative_logprobs")
-        sampling_params = SamplingParams(**request_dict)
+        sampling_params_list = []
+        for i in range(len(prompts)):
+            sampling_params = SamplingParams(**request_dict)
+            sampling_params_list.append(sampling_params)
         arrival_time = time.time()
 
-        for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len\
-                in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens):
+        for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len, sampling_param\
+                in zip(prompts, prompt_token_ids, request_ids, seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens, sampling_params_list):
             if engine.engine_use_ray:
-                    sampling_params.max_tokens = int(output_len)
+                    sampling_param.max_tokens = int(output_len)
                     engine.engine.add_prefilled_request.remote(
                         request_id,
                         prompt,
-                        sampling_params,
+                        sampling_param,
                         seq_ids=seq_id,
                         prefilled_token_ids=prefilled_token_id,
                         prefilled_texts=prefilled_text,
@@ -101,11 +104,11 @@ async def continous_batching(request: Request) -> Response:
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
             else:
-                    sampling_params.max_tokens = int(output_len)
+                    sampling_param.max_tokens = int(output_len)
                     engine.engine.add_prefilled_request(
                         request_id,
                         prompt,
-                        sampling_params,
+                        sampling_param,
                         seq_ids=seq_id,
                         prefilled_token_ids=prefilled_token_id,
                         prefilled_texts=prefilled_text,
@@ -145,13 +148,16 @@ async def mul_generate(request: Request) -> Response:
         prefilled_token_ids = request_dict.pop("prefilled_token_ids")
         prefilled_texts = request_dict.pop("prefilled_texts")
         cumulative_logprobs = request_dict.pop("cumulative_logprobs")
-
-    sampling_params = SamplingParams(**request_dict)
+    sampling_params_list = []
+    for i in range(len(prompts))
+        sampling_params = SamplingParams(**request_dict)
+        sampling_params_list.append(sampling_params)
+    # sampling_params = SamplingParams(**request_dict)
     # # request_id = random_uuid()
     if status == 'start':
-        results_generator = engine.mul_generate(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params,status=status)
+        results_generator = engine.mul_generate(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list,status=status)
     elif status == 'prefilled':
-        results_generator = engine.mul_generate(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params,
+        results_generator = engine.mul_generate(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list,
                                                 status=status, seq_ids=seq_ids, prompt_token_ids=prompt_token_ids, prefilled_token_ids=prefilled_token_ids,
                                                 prefilled_texts=prefilled_texts, cumulative_logprobs=cumulative_logprobs)
         

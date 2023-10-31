@@ -87,7 +87,7 @@ class AsyncLLMEngine:
             prompts: Optional[List[str]],
             output_lens: Optional[List[int]],
             request_ids: Optional[List[str]],
-            sampling_params: SamplingParams,
+            sampling_params: List[SamplingParams],
             status: str,
             seq_ids: Optional[List[List[int]]] = None,
             prompt_token_ids: Optional[List[List[int]]] = None,
@@ -119,7 +119,7 @@ class AsyncLLMEngine:
             print("start prefill time ", start)
             # Create an event to notify us that there is new output from the
             # vLLM engine.
-            for prompt, request_id, output_len in zip(prompts,request_ids,output_lens):
+            for prompt, request_id, output_len, sampling_param in zip(prompts,request_ids,output_lens, sampling_params):
                 # request_id = random_uuid()
                 # if self.log_requests:
                 #     logger.info(f"Received request {request_id}: "
@@ -128,18 +128,18 @@ class AsyncLLMEngine:
                 #                 f"prompt token ids: {prompt_token_ids}.")
 
                 # Add the request into the vLLM engine's waiting queue.
-                sampling_params.max_tokens = output_len
+                sampling_param.max_tokens = output_len
                 if self.engine_use_ray:
                     self.engine.add_request.remote(
                         request_id,
                         prompt,
-                        sampling_params,
+                        sampling_param,
                         prompt_token_ids=prompt_token_ids,
                         arrival_time=arrival_time)
                 else:
                     self.engine.add_request(request_id,
                                             prompt,
-                                            sampling_params,
+                                            sampling_param,
                                             prompt_token_ids=prompt_token_ids,
                                             arrival_time=arrival_time)
             # add_request_time = time.time()
@@ -162,13 +162,14 @@ class AsyncLLMEngine:
         elif status == 'prefilled':
             #todo 
             print("decode ")
-            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob \
-                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs):
+            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len, sampling_param \
+                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens, sampling_params):
+                sampling_param.max_tokens = output_len
                 if self.engine_use_ray:
                     self.engine.add_prefilled_request.remote(
                         request_id,
                         prompt,
-                        sampling_params,
+                        sampling_param,
                         seq_ids=seq_id,
                         prefilled_token_ids=prefilled_token_id,
                         prefilled_texts=prefilled_text,
@@ -179,7 +180,7 @@ class AsyncLLMEngine:
                     self.engine.add_prefilled_request(
                                             request_id,
                                             prompt,
-                                            sampling_params,
+                                            sampling_param,
                                             seq_ids=seq_id,
                                             prefilled_token_ids=prefilled_token_id,
                                             prefilled_texts=prefilled_text,
