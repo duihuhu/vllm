@@ -155,7 +155,7 @@ class AsyncLLMEngine:
             len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
             for output in outputs
         )
-        print("arrival_time, start time, prefill_execute_time, end time , total_num_tokens ", arrival_time, start, prefill_execute_time, end, total_num_tokens)
+        print("arrival_time, start time, prefill_execute_time, end time , total_num_tokens, outputs len ", arrival_time, start, prefill_execute_time, end, total_num_tokens, len(outputs))
 
         print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
             f"{total_num_tokens / elapsed_time:.2f} tokens/s")
