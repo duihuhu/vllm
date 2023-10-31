@@ -87,7 +87,7 @@ class AsyncLLMEngine:
             self,
             prompts: Optional[List[str]],
             output_lens: Optional[List[int]],
-            sampling_params: SamplingParams,
+            sampling_params: List[SamplingParams],
             prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
         """Generate outputs for a request.
 
@@ -112,7 +112,7 @@ class AsyncLLMEngine:
         # start_add_request_time = time.time()
         # Create an event to notify us that there is new output from the
         # vLLM engine.
-        for prompt, output_len in zip(prompts, output_lens):
+        for prompt, output_len, sampling_param in zip(prompts, output_lens,sampling_params):
             request_id = random_uuid()
             # if self.log_requests:
             #     logger.info(f"Received request {request_id}: "
@@ -121,18 +121,18 @@ class AsyncLLMEngine:
             #                 f"prompt token ids: {prompt_token_ids}.")
 
             # Add the request into the vLLM engine's waiting queue.
-            sampling_params.max_tokens = int(output_len)
+            sampling_param.max_tokens = int(output_len)
             if self.engine_use_ray:
                 self.engine.add_request.remote(
                     request_id,
                     prompt,
-                    sampling_params,
+                    sampling_param,
                     prompt_token_ids=prompt_token_ids,
                     arrival_time=arrival_time)
             else:
                 self.engine.add_request(request_id,
                                         prompt,
-                                        sampling_params,
+                                        sampling_param,
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
         # end_add_request_time = time.time()
