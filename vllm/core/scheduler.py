@@ -497,7 +497,7 @@ class Scheduler:
             # print("request_output ", request_outputs)
             request_ids.append(request_outputs.request_id)
             output_lens.append(seq_group.sampling_params.max_tokens)
-            print("output_lens ", seq_group.sampling_params.max_tokens)
+            # print("output_lens ", seq_group.sampling_params.max_tokens)
             seq_ids_pre_req = []
             prefilled_token_ids_in_req = []
             prefilled_text_in_req = []

@@ -74,8 +74,8 @@ async def continous_batching(request: Request) -> Response:
     stream = request_dict.pop("stream", False)
     
     ret = {"text": 'Job Done'}
-    start_add_prefilled_request = time.time()
-    print("start_add_prefilled_request ", start_add_prefilled_request)
+    # start_add_prefilled_request = time.time()
+    # print("start_add_prefilled_request ", start_add_prefilled_request)
     if status == "prefilled":
         prompts = request_dict.pop("prompts")
         seq_ids = request_dict.pop("seq_ids")
@@ -115,8 +115,8 @@ async def continous_batching(request: Request) -> Response:
                         prompt_token_ids=prompt_token_id,
                         arrival_time=arrival_time)
     
-        end_add_prefilled_request = time.time()
-        print("end_add_prefilled_request ", end_add_prefilled_request)
+        # end_add_prefilled_request = time.time()
+        # print("end_add_prefilled_request ", end_add_prefilled_request)
 
         return JSONResponse(ret)    
     else:
