@@ -276,7 +276,7 @@ class LLMEngine:
 
         start_restruct_block_table = time.time()
         self.scheduler.restruct_block_table(seq_group)
-        start_restruct_block_table = time.time()
+        end_restruct_block_table = time.time()
         print("start_restruct_block_table, end_restruct_block_table ", start_restruct_block_table, end_restruct_block_table)
 
         # Add the sequence group to the scheduler.
