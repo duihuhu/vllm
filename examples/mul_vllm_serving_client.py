@@ -100,7 +100,8 @@ def sample_requests(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for i in range(len(dataset)):
-        output_len = len(completion_token_ids[i])
+        # output_len = len(completion_token_ids[i])
+        output_len = 16
         tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
 
     # Filter out too long sequences.

@@ -109,7 +109,7 @@ class AsyncLLMEngine:
         """
         # Preprocess the request.
         arrival_time = time.time()
-
+        start_add_request_time = time.time()
         # Create an event to notify us that there is new output from the
         # vLLM engine.
         for prompt, output_len in zip(prompts, output_lens):
@@ -135,7 +135,8 @@ class AsyncLLMEngine:
                                         sampling_params,
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
-        
+        end_add_request_time = time.time()
+        print("start_add_request_time, end_add_request_time ", start_add_request_time, end_add_request_time)
         start = time.time()
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_requests():
