@@ -128,7 +128,7 @@ class AsyncLLMEngine:
                 #                 f"prompt token ids: {prompt_token_ids}.")
 
                 # Add the request into the vLLM engine's waiting queue.
-                sampling_param.max_tokens = output_len
+                sampling_param.max_tokens = int(output_len)
                 if self.engine_use_ray:
                     self.engine.add_request.remote(
                         request_id,
@@ -164,7 +164,7 @@ class AsyncLLMEngine:
             print("decode ")
             for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len, sampling_param \
                 in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens, sampling_params):
-                sampling_param.max_tokens = output_len
+                sampling_param.max_tokens = int(output_len)
                 if self.engine_use_ray:
                     self.engine.add_prefilled_request.remote(
                         request_id,
