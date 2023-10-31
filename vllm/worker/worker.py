@@ -16,6 +16,7 @@ from vllm.utils import get_gpu_memory
 #
 from vllm.worker.object_manager.client import ObjectClient
 from vllm.worker.object_manager.object_info import ObjectInfo
+import time
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -324,8 +325,12 @@ class Worker:
             issued_cache_op = True
             
         if blocks_to_object_swap_out:
+            # start_swap_out_prefilled_cache = time.time()
             for key, value in blocks_to_object_swap_out.items():
                 self.cache_engine.swap_out_prefilled_to_plasma(value, self.rank)
+            # end_swap_out_prefilled_cache = time.time()
+            # print("start_swap_out_prefilled_cache, end_swap_out_prefilled_cache time ", start_swap_out_prefilled_cache, end_swap_out_prefilled_cache, self.rank)
+
             issued_cache_op = True
         if issued_cache_op:
             cache_events = self.cache_events
@@ -366,8 +371,9 @@ class Worker:
         if not seq_group_metadata_list:
             if cache_events is not None:
                 for event in cache_events:
-                    event.wait()
+                    event.wait()            
             return {}
+
 
         # Prepare input tensors.
         input_tokens, input_positions, input_metadata = self._prepare_inputs(

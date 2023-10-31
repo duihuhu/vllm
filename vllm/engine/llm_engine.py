@@ -274,7 +274,10 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, seqs, sampling_params,
                                   arrival_time)
 
+        # start_restruct_block_table = time.time()
         self.scheduler.restruct_block_table(seq_group)
+        # end_restruct_block_table = time.time()
+        # print("start_restruct_block_table, end_restruct_block_table ", start_restruct_block_table, end_restruct_block_table)
 
         # Add the sequence group to the scheduler.
         self.scheduler.add_prefilled_seq_group(seq_group)
@@ -367,7 +370,7 @@ class LLMEngine:
 
         # for key, value in  scheduler_outputs.blocks_to_swap_in.items():
         #     print("decode blocks_to_swap_in ", key, value[0].request_id)
-            
+         
         output = self._run_workers(
             "execute_model_decode",
             seq_group_metadata_list=seq_group_metadata_list,
@@ -447,9 +450,14 @@ class LLMEngine:
             # print("request_output ", request_output)
             request_outputs.append(request_output)
         
+        # process_time = time.time()
+        # print("process request time in prefill ", process_time)
+        
         #find prefill blocks to swap out 
         prefill_blocks_to_swap_out, prefill_blocks_to_object_swap_out = self.scheduler.store_prompt_kv_cache()
-
+        # contruct_time = time.time()
+        # print("contruct_time swap out object time in prefill ", contruct_time)
+        
         # print("prefill_blocks_to_object_swap_out ", prefill_blocks_to_object_swap_out)
         # for seq_group, value in prefill_blocks_to_object_swap_out.items():
         #     for key, obj_info in value.items():
@@ -462,9 +470,14 @@ class LLMEngine:
                 blocks_to_swap_out = prefill_blocks_to_swap_out,
                 blocks_to_object_swap_out = prefill_blocks_to_object_swap_out
             )
-        
+        # swap_time = time.time()
+        # print("swap out time in prefill ", swap_time)
+
         self.scheduler.post_prefilled_to_controller()
         
+        # send_time = time.time()
+        # print("send to controller time in prefill ", send_time)
+
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:

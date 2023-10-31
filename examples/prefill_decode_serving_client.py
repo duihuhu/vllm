@@ -28,11 +28,6 @@ request_prompts = {}
 app = fastapi.FastAPI()
 TIMEOUT_KEEP_ALIVE = 5  # seconds
 
-def receive_prefilled_request() -> None:
-  return
-
-def post_prefilled_request() -> None:
-  return 
 
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -56,8 +51,8 @@ def start_execute() -> requests.Response:
    
 
 def post_inited_request(prompts: List[str],
+                        output_lens: List[int],
                       request_ids: List[str],
-                      output_lens: List[int],
                       api_url: str,
                       n: int = 1,
                       stream: bool = False,
@@ -65,6 +60,7 @@ def post_inited_request(prompts: List[str],
     headers = {"User-Agent": "Test Client"}
     pload = {
         "prompts": prompts,
+        "output_lens": output_lens,
         "request_ids": request_ids,
         "n": 1,
         "use_beam_search": False,
@@ -109,6 +105,7 @@ async def prefilled(request: Request) -> Response:
 
     pload = {
         "prompts": prompts,
+        "output_lens": output_lens,
         "request_ids": request_ids,
         "seq_ids": seq_ids,
         "prompt_token_ids": prompt_token_ids,
@@ -181,7 +178,6 @@ def sample_requests(
     # filtered_dataset: List[Tuple[str, int, int]] = []
     # filtered_prompts: List[str] = [] 
     # filtered_tokenids: List[str] = []
-    #filtered_dataset: List[Tuple[str, List[int], str]] = []
     filtered_dataset: List[Tuple[str, List[int], str, int]] = []
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         request_id = random_uuid()
@@ -192,7 +188,6 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue
-        #filtered_dataset.append((prompt, prompt_token_ids, request_id))
         filtered_dataset.append((prompt, prompt_token_ids, request_id, output_len))
         # filtered_prompts.append(prompt)
         # filtered_tokenids.append(prompt_token_ids)
@@ -231,7 +226,7 @@ if __name__ == "__main__":
     output_lens = []
     for prompt in sampled_prompts:
       request_prompts[prompt[-2]] = prompt[0]
-      request_prompts_token_ids[prompt[-2]] = prompt[1]
+      request_prompts_token_ids[prompt[-2]] = prompt[-3]
       prompts.append(prompt[0])
       request_ids.append(prompt[-2])
       output_lens.append(prompt[-1])
@@ -240,15 +235,15 @@ if __name__ == "__main__":
     n = args.n
     stream = args.stream
     api_url = f"http://{args.host}:{args.port-1000}/mul_generate"
-    #api_url2 = f"http://{args.host}:{args.port-1000+1}/execute"
+    
+    # api_url = f"http://{args.host}:{args.port-1000}/continuous_batching"
     # response = post_inited_request(prompts, api_url, n, stream)
+    
 
     task_td = []
     task_td.append(threading.Thread(target=receive_prefilled_request, args=(args.host, args.port)))
-    #task_td.append(threading.Thread(target=start_execute, args=(api_url2)))
-    task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, output_lens, api_url, n, stream)))
-    #task_td.append(threading.Thread(target=post_inited_request, args=(prompts, request_ids, api_url, n, stream)))
-    #task_td.append(threading.Thread(target=start_execute))
+
+    task_td.append(threading.Thread(target=post_inited_request, args=(prompts, output_lens, request_ids, api_url, n, stream)))
       
   
     for td in task_td:
