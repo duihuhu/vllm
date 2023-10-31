@@ -132,6 +132,7 @@ async def mul_generate(request: Request) -> Response:
     """
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
+    output_lens = request_dict.pop("output_lens")
     status = request_dict.pop("status")
     stream = request_dict.pop("stream", False)
     print("status ", status)
@@ -144,13 +145,13 @@ async def mul_generate(request: Request) -> Response:
         prefilled_token_ids = request_dict.pop("prefilled_token_ids")
         prefilled_texts = request_dict.pop("prefilled_texts")
         cumulative_logprobs = request_dict.pop("cumulative_logprobs")
-        
+
     sampling_params = SamplingParams(**request_dict)
     # # request_id = random_uuid()
     if status == 'start':
-        results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,status=status)
+        results_generator = engine.mul_generate(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params,status=status)
     elif status == 'prefilled':
-        results_generator = engine.mul_generate(prompts=prompts, request_ids=request_ids, sampling_params=sampling_params,
+        results_generator = engine.mul_generate(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params,
                                                 status=status, seq_ids=seq_ids, prompt_token_ids=prompt_token_ids, prefilled_token_ids=prefilled_token_ids,
                                                 prefilled_texts=prefilled_texts, cumulative_logprobs=cumulative_logprobs)
         
