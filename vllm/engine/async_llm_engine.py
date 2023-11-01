@@ -9,7 +9,7 @@ from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.logger import init_logger
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
-
+from vllm.utils import random_uuid
 logger = init_logger(__name__)
 
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds
@@ -80,6 +80,101 @@ class AsyncLLMEngine:
             request_id = request_output.request_id
             self.request_outputs[request_id] = request_output
             self.request_events[request_id].set()
+
+
+    def mul_generate(
+            self,
+            prompts: Optional[List[str]],
+            output_lens: Optional[List[int]],
+            sampling_params: List[SamplingParams],
+            prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
+        """Generate outputs for a request.
+
+        Generate outputs for a request. This method is a coroutine. It adds the
+        request into the waiting queue of the LLMEngine and streams the outputs
+        from the LLMEngine to the caller.
+
+        Args:
+            prompt: The prompt string. Can be None if prompt_token_ids is
+                provided.
+            sampling_params: The sampling parameters of the request.
+            request_id: The unique id of the request.
+            prompt_token_ids: The token IDs of the prompt. If None, we
+                use the tokenizer to convert the prompts to token IDs.
+
+        Yields:
+            The output `RequestOutput` objects from the LLMEngine for the
+            request.
+        """
+        # Preprocess the request.
+        arrival_time = time.time()
+        # start_add_request_time = time.time()
+        # Create an event to notify us that there is new output from the
+        # vLLM engine.
+        for prompt, output_len, sampling_param in zip(prompts, output_lens,sampling_params):
+            request_id = random_uuid()
+            # if self.log_requests:
+            #     logger.info(f"Received request {request_id}: "
+            #                 f"prompt: {prompt!r}, "
+            #                 f"sampling params: {sampling_params}, "
+            #                 f"prompt token ids: {prompt_token_ids}.")
+
+            # Add the request into the vLLM engine's waiting queue.
+            sampling_param.max_tokens = int(output_len)
+            if self.engine_use_ray:
+                self.engine.add_request.remote(
+                    request_id,
+                    prompt,
+                    sampling_param,
+                    prompt_token_ids=prompt_token_ids,
+                    arrival_time=arrival_time)
+            else:
+                self.engine.add_request(request_id,
+                                        prompt,
+                                        sampling_param,
+                                        prompt_token_ids=prompt_token_ids,
+                                        arrival_time=arrival_time)
+        # end_add_request_time = time.time()
+        # print("start_add_request_time, end_add_request_time ", start_add_request_time, end_add_request_time)
+        start_prefill_time = time.time()
+        outputs: List[RequestOutput] = []
+        # interation = 0
+        while self.engine.has_unfinished_requests():
+            # print("interation: ", interation)
+            step_outputs = self.engine.step()
+            # interation = interation  + 1
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+                    # print(output)
+                    # if use_tqdm:
+                    #     pbar.update(1)
+            # if split_two_phase == 1:
+            self.engine.covert_running_to_prefilled()
+        end_prefill_time = time.time()
+
+        # if split_two_phase == 1:
+        self.engine.covert_prefilled_to_running()
+        start_decode_time = time.time()
+        while self.engine.has_unfinished_requests():
+            # print("interation: ", interation)
+            step_outputs = self.engine.step()
+            # interation = interation  + 1
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+                    # print(output)
+        #             if use_tqdm:
+        #                 pbar.update(1)
+        # if use_tqdm:
+        #     pbar.close()
+        # Sort the outputs by request ID.
+        # This is necessary because some requests may be finished earlier than
+        # its previous requests.
+        end_decode_time = time.time()
+        print("start_prefill_time, end_prefill_time, start_decode_time, end_decode_time", start_prefill_time, end_prefill_time, start_decode_time, end_decode_time)
+        # outputs = sorted(outputs, key=lambda x: int(x.request_id))
+
 
     async def generate(
             self,
