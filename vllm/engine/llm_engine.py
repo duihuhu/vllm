@@ -247,11 +247,11 @@ class LLMEngine:
             # Nothing to do.
             return []
         
-        with open('/workspace/vllm/benchmarks/output/count2.txt', 'a') as file:
-            for seq_group_metadata in seq_group_metadata_list:
-                s = "req " + seq_group_metadata.request_id + " is prompt " + str(seq_group_metadata.is_prompt) + "\n"
-                file.write(s)
-            file.write("iter end\n")
+        # with open('/workspace/vllm/benchmarks/output/count2.txt', 'a') as file:
+        #     for seq_group_metadata in seq_group_metadata_list:
+        #         s = "req " + seq_group_metadata.request_id + " is prompt " + str(seq_group_metadata.is_prompt) + "\n"
+        #         file.write(s)
+        #     file.write("iter end\n")
         
         # Execute the model.
         output = self._run_workers(
