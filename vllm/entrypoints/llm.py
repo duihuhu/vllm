@@ -189,7 +189,7 @@ class LLM:
             print(f"End Decode at {ed2}")
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
             print(f"Decode process {total_num_token2} tokens")
-            print(f"{(total_num_token2 / (ed-st)):.2f} tokens/s")
+            print(f"{(total_num_token2 / (ed2-st2)):.2f} tokens/s")
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
