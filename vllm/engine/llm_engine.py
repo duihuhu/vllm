@@ -246,6 +246,8 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
+        for seq_group_metadata in seq_group_metadata_list:
+            print(f"req {seq_group_metadata.request_id} is prompt {seq_group_metadata.is_prompt}")
         # Execute the model.
         output = self._run_workers(
             "execute_model",
