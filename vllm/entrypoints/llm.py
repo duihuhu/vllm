@@ -157,6 +157,7 @@ class LLM:
             interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
+                    print(f"req {output.request_id} is finished")
                     outputs.append(output)
                     # print(output)
                     if use_tqdm:
@@ -181,6 +182,7 @@ class LLM:
                 interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
+                        print(f"req {output.request_id} is finished")
                         outputs.append(output)
                         # print(output)
                         if use_tqdm:
