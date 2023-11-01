@@ -166,7 +166,8 @@ class PagedAttention(nn.Module):
         # Compute the attention op for prompts.
         num_prompt_tokens = input_metadata.num_prompt_tokens
         # print("num_prompt_tokens", num_prompt_tokens, input_metadata.num_generation_tokens)
-        done = 0
+        done_p = 0
+        done_d = 0
         if num_prompt_tokens > 0:
             self.set_attn_bias(input_metadata)
             self.multi_query_kv_attention(
@@ -176,7 +177,7 @@ class PagedAttention(nn.Module):
                 value[:num_prompt_tokens],
                 input_metadata,
             )
-            done += 1
+            done_p += 1
 
         # Wait until the cache op is done.
         if cache_event is not None:
@@ -206,14 +207,16 @@ class PagedAttention(nn.Module):
                 output[num_prompt_tokens:num_valid_tokens],
                 query[num_prompt_tokens:num_valid_tokens], key_cache,
                 value_cache, input_metadata)
-            done += 1
+            done_d += 1
         
         with open('/workspace/vllm/benchmarks/output/2bs.txt', 'a') as file:
-            if done == 0:
+            if done_p == 0 and done_d == 0:
                 file.write("no\n")
-            if done == 1:
+            if done_p == 1 and done_d == 0:
                 file.write("p\n")
-            if done == 2:
+            if done_p == 0 and done_d == 1:
+                file.write("d\n")
+            if done_p == 1 and done_d == 1:
                 file.write("pd\n")
 
         # Reshape the output tensor.
