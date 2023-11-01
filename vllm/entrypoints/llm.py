@@ -165,6 +165,7 @@ class LLM:
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
                 total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
+        print(f"iter is {interation}")
         if split_two_phase == 1:
             ed = time.time()
             print(f"End Prefill at {ed}")
