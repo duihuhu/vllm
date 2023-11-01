@@ -152,7 +152,7 @@ class LLM:
             print(f"Start Prefill at {st}")
             total_num_token = 0
         while self.llm_engine.has_unfinished_requests():
-            print("interation: ", interation)
+            #print("interation: ", interation)
             step_outputs = self.llm_engine.step()
             interation = interation  + 1
             for output in step_outputs:
@@ -176,7 +176,7 @@ class LLM:
             print(f"Start Decode at {st2}")
 
             while self.llm_engine.has_unfinished_requests():
-                print("interation: ", interation)
+                #print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
                 interation = interation  + 1
                 for output in step_outputs:
@@ -186,6 +186,7 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
+            print(f"iteration {interation}")
             print(f"End Decode at {ed2}")
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
             print(f"Decode process {total_num_token2} tokens")
