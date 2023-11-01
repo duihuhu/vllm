@@ -76,6 +76,7 @@ class Scheduler:
         self.swapped: List[SequenceGroup] = []
         self.prefilled: List[SequenceGroup] = []
         
+        self.running_stay: List[SequenceGroup] = []
         self.last_logging_time: float = 0.0
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
@@ -133,6 +134,10 @@ class Scheduler:
         # the sequence groups in the RUNNING state.
         # In this case, the policy is responsible for deciding which sequence
         # groups to preempt.
+        while self.running_stay:
+            seq_group = self.running_stay.pop(0)
+            self.running.append(seq_group)
+            
         self.running = self.policy.sort_by_priority(now, self.running)
 
         # Reserve new token slots for the running sequence groups.
@@ -156,6 +161,11 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
+                if len(running) > self.scheduler_config.max_num_seqs:
+                    while self.running:
+                        seq_group = self.running.pop(0)
+                        self.running_stay.append(seq_group)
+                    break
         self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
