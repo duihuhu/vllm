@@ -209,7 +209,7 @@ class PagedAttention(nn.Module):
                 value_cache, input_metadata)
             done_d += 1
         
-        with open('/workspace/vllm/benchmarks/output/2bs.txt', 'a') as file:
+        with open('/workspace/vllm/benchmarks/output/count.txt', 'a') as file:
             if done_p == 0 and done_d == 0:
                 file.write("no\n")
             if done_p == 1 and done_d == 0:
