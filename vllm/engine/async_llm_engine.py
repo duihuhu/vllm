@@ -172,7 +172,20 @@ class AsyncLLMEngine:
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
         end_decode_time = time.time()
-        print("start_prefill_time, end_prefill_time, start_decode_time, end_decode_time", start_prefill_time, end_prefill_time, start_decode_time, end_decode_time)
+        total_prompt_tokens = sum(
+        len(output.prompt_token_ids)
+            for output in outputs
+        )
+        total_output_tokens = sum( len(output.outputs[0].token_ids)
+            for output in outputs
+        )
+        print("start_prefill_time, end_prefill_time, start_decode_time, end_decode_time", start_prefill_time, end_prefill_time, start_decode_time, end_decode_time, total_prompt_tokens, total_output_tokens)
+
+        # print("total_num_tokens: ", total_num_tokens)
+        # print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
+        #     f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+        
+        
         # outputs = sorted(outputs, key=lambda x: int(x.request_id))
 
 
