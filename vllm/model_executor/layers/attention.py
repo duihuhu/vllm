@@ -208,12 +208,12 @@ class PagedAttention(nn.Module):
                 value_cache, input_metadata)
             done += 1
         
-        with open('', 'a') as file:
+        with open('/workspace/vllm/benchmarks/output/2bs.txt', 'a') as file:
             if done == 0:
                 file.write("no\n")
-            elif done == 1:
+            if done == 1:
                 file.write("p\n")
-            elif done == 2:
+            if done == 2:
                 file.write("pd\n")
 
         # Reshape the output tensor.
