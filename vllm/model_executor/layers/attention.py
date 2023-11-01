@@ -166,6 +166,7 @@ class PagedAttention(nn.Module):
         # Compute the attention op for prompts.
         num_prompt_tokens = input_metadata.num_prompt_tokens
         # print("num_prompt_tokens", num_prompt_tokens, input_metadata.num_generation_tokens)
+        done = 0
         if num_prompt_tokens > 0:
             self.set_attn_bias(input_metadata)
             self.multi_query_kv_attention(
@@ -175,6 +176,7 @@ class PagedAttention(nn.Module):
                 value[:num_prompt_tokens],
                 input_metadata,
             )
+            done += 1
 
         # Wait until the cache op is done.
         if cache_event is not None:
@@ -204,6 +206,15 @@ class PagedAttention(nn.Module):
                 output[num_prompt_tokens:num_valid_tokens],
                 query[num_prompt_tokens:num_valid_tokens], key_cache,
                 value_cache, input_metadata)
+            done += 1
+        
+        with open('', 'a') as file:
+            if done == 0:
+                file.write("no\n")
+            elif done == 1:
+                file.write("p\n")
+            elif done == 2:
+                file.write("pd\n")
 
         # Reshape the output tensor.
         # NOTE(woosuk): The output tensor may include paddings.

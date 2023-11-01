@@ -97,7 +97,7 @@ def run_vllm(
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase)
+    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     end = time.time()
     
     
@@ -106,6 +106,8 @@ def run_vllm(
         len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
         for output in outputs
     )
+    print(f"End start is {start}, End end is {end}")
+    print("total_num_reqs: ", len(outputs))
     print("total_num_tokens: ", total_num_tokens)
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
           f"{total_num_tokens / elapsed_time:.2f} tokens/s")

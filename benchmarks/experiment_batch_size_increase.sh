@@ -1,16 +1,16 @@
 #!/bin/bash
 #note: first need to ensure num_prompts, batch_size
-num_prompts=0
-split_two_phase=0 #0 is not split , 1 is split
-for ((ts=1; ts<=4; ts=ts*4))
+num_prompts=32
+split_two_phase=1 #0 is not split , 1 is split
+for ((ts=2; ts<=2; ts=ts*2))
 do
-  for ((batch_size=2; batch_size<=4; batch_size=batch_size*2))
+  for ((batch_size=2; batch_size<=32; batch_size=batch_size*2))
   do
     if [ $ts -eq 1 ]
     then
-      num_prompts=2
+      num_prompts=32
     else
-      num_prompts=4
+      num_prompts=32
     fi
     echo "current parameter: tensor-parallel-size batch_size num_prompts " $ts $batch_size  $num_prompts
 

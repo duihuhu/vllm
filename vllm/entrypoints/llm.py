@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+import time
 
 from tqdm import tqdm
 from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
@@ -8,7 +9,6 @@ from vllm.engine.llm_engine import LLMEngine
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
 from vllm.utils import Counter
-
 
 class LLM:
     """An LLM for generating texts from given prompts and sampling parameters.
@@ -147,6 +147,9 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         # interation = 0
+        if split_two_phase == 1:
+            st = time.time()
+            print(f"Start Prefill at {st}")
         while self.llm_engine.has_unfinished_requests():
             # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
@@ -158,11 +161,18 @@ class LLM:
                     if use_tqdm:
                         pbar.update(1)
             if split_two_phase == 1:
+                ed = time.time()
+                print(f"End Prefill at {ed}")
+                total_num_token = sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
+                print(f"Prefill process {total_num_token} tokens")
+                print(f"{(total_num_token / (ed-st)):.2f} tokens/s, {(len(step_outputs) / (ed - st)):.2f} reqs/s")
                 self.llm_engine.covert_running_to_prefilled()
                 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
-            
+            st2 = time.time()
+            print(f"Start Decode at {st2}")
+
             while self.llm_engine.has_unfinished_requests():
                 # print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
@@ -173,6 +183,11 @@ class LLM:
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
+            ed2 = time.time()
+            print(f"End Decode at {ed2}")
+            total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
+            print(f"Decode process {total_num_token2} tokens")
+            print(f"{(total_num_token2 / (ed-st)):.2f} tokens/s, {(len(outputs) / (ed - st)):.2f} reqs/s")
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
