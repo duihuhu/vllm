@@ -233,7 +233,7 @@ class Scheduler:
                 # If the number of batched tokens exceeds the limit, stop.
                 if (num_batched_tokens + num_prompt_tokens >
                         self.scheduler_config.max_num_batched_tokens):
-                    # print("no space 3")
+                    print("exceed max_num_batched_tokens")
                     break
 
                 # The total number of sequences in the RUNNING state should not
