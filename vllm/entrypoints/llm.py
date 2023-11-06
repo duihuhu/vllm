@@ -176,6 +176,7 @@ class LLM:
             self.llm_engine.covert_prefilled_to_running()
             st2 = time.time()
             print(f"Start Decode at {st2}")
+            interation = 0
 
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
