@@ -323,6 +323,7 @@ class Scheduler:
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
+        print("schedule self running ", len(self.running))
         for seq_group in self.running:
             is_prompt = seq_group.request_id in prompt_group_ids
 
