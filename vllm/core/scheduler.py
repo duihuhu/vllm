@@ -260,11 +260,11 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
         )
         
-        # total_num_gpu_blocks = self.cache_config.num_gpu_blocks
-        # num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-        # num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
-        # gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
-        # print(f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%")
+        total_num_gpu_blocks = self.cache_config.num_gpu_blocks
+        num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+        num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
+        gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
+        print(f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%")
         
         if not self.log_stats:
             return scheduler_outputs, prompt_group_ids, ignored_seq_groups
