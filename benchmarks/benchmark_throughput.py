@@ -101,7 +101,7 @@ def run_vllm(
     end = time.time()
     
     
-    elapsed_time = end-start 
+    #elapsed_time = end-start 
     total_num_tokens = sum(
         len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
         for output in outputs
