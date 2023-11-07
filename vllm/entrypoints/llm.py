@@ -147,8 +147,8 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         interation = 0
+        st = time.time()
         if split_two_phase == 1:
-            st = time.time()
             print(f"Start Prefill at {st}")
             total_num_token = 0
         while self.llm_engine.has_unfinished_requests():
@@ -157,7 +157,7 @@ class LLM:
             interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
-                    # print(f"req {output.request_id} is finished")
+                    print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
                     # print(output)
                     if use_tqdm:
