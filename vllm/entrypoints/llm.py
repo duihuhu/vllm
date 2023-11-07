@@ -146,7 +146,7 @@ class LLM:
             pbar = tqdm(total=num_requests, desc="Processed prompts")
         # Run the engine.
         outputs: List[RequestOutput] = []
-        interation = 0
+        #interation = 0
         if split_two_phase == 1:
             st = time.time()
             print(f"Start Prefill at {st}")
@@ -154,7 +154,7 @@ class LLM:
         while self.llm_engine.has_unfinished_requests():
             #print("interation: ", interation)
             step_outputs = self.llm_engine.step()
-            interation = interation  + 1
+            #interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
                     # print(f"req {output.request_id} is finished")
@@ -165,7 +165,7 @@ class LLM:
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
                 total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
-        print(f"iter is {interation}")
+        #print(f"iter is {interation}")
         if split_two_phase == 1:
             ed = time.time()
             print(f"End Prefill at {ed}")
@@ -180,7 +180,7 @@ class LLM:
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
-                interation = interation  + 1
+                #interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
                         # print(f"req {output.request_id} is finished")
@@ -189,7 +189,7 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
-            print(f"iteration {interation}")
+            #print(f"iteration {interation}")
             print(f"End Decode at {ed2}")
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
             print(f"Decode process {total_num_token2} tokens")
