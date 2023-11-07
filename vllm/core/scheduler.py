@@ -99,8 +99,8 @@ class Scheduler:
                     return
 
     def has_unfinished_seqs(self) -> bool:
-        # return self.waiting or self.running or self.swapped or self.running_stay
-        return self.waiting or self.running or self.swapped
+        return self.waiting or self.running or self.swapped or self.running_stay
+        # return self.waiting or self.running or self.swapped
 
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
@@ -130,9 +130,9 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        # while self.running_stay:
-        #     seq_group = self.running_stay.pop(0)
-        #     self.running.append(seq_group)
+        while self.running_stay:
+            seq_group = self.running_stay.pop(0)
+            self.running.append(seq_group)
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
         # Preemption happens only when there is no available slot to keep all
@@ -162,10 +162,10 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
-                # if len(running) >= self.scheduler_config.max_num_seqs:
-                #     while self.running:
-                #         seq_group = self.running.pop(0)
-                #         self.running_stay.append(seq_group)
+                if len(running) >= self.scheduler_config.max_num_seqs:
+                    while self.running:
+                        seq_group = self.running.pop(0)
+                        self.running_stay.append(seq_group)
         self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
