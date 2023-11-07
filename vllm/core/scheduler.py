@@ -72,7 +72,7 @@ class Scheduler:
         self.waiting: List[SequenceGroup] = []
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
-        self.running_stay: List[SequenceGroup] = []
+        # self.running_stay: List[SequenceGroup] = []
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
         self.prefilled: List[SequenceGroup] = []
@@ -109,7 +109,7 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
-        self.running.sort(key=lambda x:int(x.request_id))
+        # self.running.sort(key=lambda x:int(x.request_id))
             
     def covert_running_to_prefilled(self):
         while self.running:
@@ -128,9 +128,9 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        while self.running_stay:
-            seq_group = self.running_stay.pop(0)
-            self.running.append(seq_group)
+        # while self.running_stay:
+        #     seq_group = self.running_stay.pop(0)
+        #     self.running.append(seq_group)
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
         # Preemption happens only when there is no available slot to keep all
@@ -233,7 +233,7 @@ class Scheduler:
                 # If the number of batched tokens exceeds the limit, stop.
                 if (num_batched_tokens + num_prompt_tokens >
                         self.scheduler_config.max_num_batched_tokens):
-                    # print("no space 3")
+                    # print("exceed max_num_batched_tokens")
                     break
 
                 # The total number of sequences in the RUNNING state should not
