@@ -119,6 +119,8 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.PREFILLED
             self.prefilled.append(seq_group)
+            print(f"req {seq_group.request_id} is finished prefill ", time.time())
+
 
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
