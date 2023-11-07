@@ -144,7 +144,7 @@ class Scheduler:
         # groups to preempt.
         self.running = self.policy.sort_by_priority(now, self.running)
 
-        self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
+        # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
 
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
