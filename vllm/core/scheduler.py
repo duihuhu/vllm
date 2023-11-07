@@ -141,11 +141,18 @@ class Scheduler:
         # groups to preempt.
         self.running = self.policy.sort_by_priority(now, self.running)
 
+        self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
+
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
+        index = 0
         while self.running:
-            seq_group = self.running.pop(0)
+            if index %2 == 0:
+                seq_group = self.running.pop(0)
+            if index %2 == 1:
+                seq_group = self.running.pop(-1)
+                
             while not self.block_manager.can_append_slot(seq_group):
                 if self.running:
                     # Preempt the lowest-priority sequence groups.
@@ -162,6 +169,7 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
+                index = index + 1
                 if len(running) >= self.scheduler_config.max_num_seqs:
                     while self.running:
                         seq_group = self.running.pop(0)
