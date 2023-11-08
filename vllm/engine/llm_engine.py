@@ -289,10 +289,10 @@ class LLMEngine:
             
         # self.scheduler.store_prompt_kv_cache()
         # stop when first token as been generated
-        for seq_group in seq_groups:
-            if seq_group.request_id in self.first_output:
-                for seq in seq_group.get_seqs():
-                    seq.status = SequenceStatus.FINISHED_STOPPED
+        #for seq_group in seq_groups:
+        #    if seq_group.request_id in self.first_output:
+        #        for seq in seq_group.get_seqs():
+        #            seq.status = SequenceStatus.FINISHED_STOPPED
         return request_outputs
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
