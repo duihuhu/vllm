@@ -111,8 +111,8 @@ def run_vllm(
     print(f"End start is {start}, End end is {end}")
     print("total_num_reqs: ", len(outputs))
     print("total_num_tokens: ", total_num_tokens)
-    #print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-    #      f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+    print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
+         f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 
     return end - start
 

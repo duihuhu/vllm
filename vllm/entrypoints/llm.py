@@ -157,7 +157,7 @@ class LLM:
             interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
-                    print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
+                    # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
                     # print(output)
                     if use_tqdm:
