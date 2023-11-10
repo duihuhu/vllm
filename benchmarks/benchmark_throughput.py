@@ -40,6 +40,7 @@ def sample_requests(
     tokenized_dataset = []
     for i in range(len(dataset)):
         output_len = len(completion_token_ids[0])
+        tokenized_dataset.append((prompts[0], prompt_token_ids[0], 16))
         tokenized_dataset.append((prompts[0]*16, prompt_token_ids[0]*16, 16))
 
     # Filter out too long sequences.
@@ -57,7 +58,8 @@ def sample_requests(
         filtered_dataset.append((prompt, prompt_len, output_len))
 
     # Sample the requests.
-    sampled_requests = random.sample(filtered_dataset, num_requests)
+    sampled_requests = filtered_dataset[:num_requests]
+    # sampled_requests = random.sample(filtered_dataset, num_requests)
     return sampled_requests
 
 
