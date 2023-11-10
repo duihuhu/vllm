@@ -111,7 +111,7 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
-        # self.running.sort(key=lambda x:int(x.request_id))
+        self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
             
     def covert_running_to_prefilled(self):
         while self.running:
