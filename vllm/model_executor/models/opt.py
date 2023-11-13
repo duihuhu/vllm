@@ -259,6 +259,7 @@ class OPTModel(nn.Module):
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
     ) -> torch.Tensor:
+        print(f"positions is {positions}")
         return self.decoder(input_ids, positions, kv_caches, input_metadata,
                             cache_events)
 
