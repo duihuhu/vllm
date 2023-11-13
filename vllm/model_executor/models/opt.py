@@ -259,7 +259,6 @@ class OPTModel(nn.Module):
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
     ) -> torch.Tensor:
-        print(f"positions is {positions}")
         return self.decoder(input_ids, positions, kv_caches, input_metadata,
                             cache_events)
 
@@ -283,6 +282,8 @@ class OPTForCausalLM(nn.Module):
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
     ) -> Dict[int, SequenceOutputs]:
+        print(f"The input_ids is {input_ids}")
+        print(f"The positions is {positions}")
         hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
         next_tokens = self.sampler(self.lm_head_weight, hidden_states,

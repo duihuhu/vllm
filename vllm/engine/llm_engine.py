@@ -111,7 +111,7 @@ class LLMEngine:
         self.scheduler = Scheduler(scheduler_config, cache_config, log_stats)
 
         # log the first output
-        self.first_output = {}
+        #self.first_output = {}
 
     def _verify_args(self) -> None:
         self.model_config.verify_with_parallel_config(self.parallel_config)
@@ -265,12 +265,12 @@ class LLMEngine:
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )
         # print who get the output
-        first_time = time.time()
-        for seq_group_metadata in seq_group_metadata_list:
-            seq_group_id = seq_group_metadata.request_id
-            if seq_group_id not in self.first_output:
-                print(f"seq {seq_group_id} gets its' first token at {first_time}")
-                self.first_output[seq_group_id] = 1
+        #first_time = time.time()
+        #for seq_group_metadata in seq_group_metadata_list:
+        #    seq_group_id = seq_group_metadata.request_id
+        #    if seq_group_id not in self.first_output:
+        #        print(f"seq {seq_group_id} gets its' first token at {first_time}")
+        #        self.first_output[seq_group_id] = 1
 
         # Update the scheduler with the model outputs.
         seq_groups = self.scheduler.update(output)

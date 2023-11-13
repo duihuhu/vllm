@@ -97,7 +97,7 @@ def run_vllm(
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase)
+    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     end = time.time()
     
     
