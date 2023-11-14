@@ -179,8 +179,8 @@ def main(args: argparse.Namespace):
     tokenizer = get_tokenizer(args.tokenizer)
     requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
     # to see what is position
-    for req in requests:
-        print(f"Prompt {req[0]} has {req[1]} vocabs")
+    #for req in requests:
+    #   print(f"Prompt {req[0]} has {req[1]} vocabs")
     if args.backend == "vllm":
         elapsed_time = run_vllm(
             requests, args.model, args.tokenizer, args.tensor_parallel_size,
