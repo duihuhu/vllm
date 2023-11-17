@@ -257,6 +257,10 @@ class LLMEngine:
         for seq_group_metadata in seq_group_metadata_list:
             for _, block_tables in seq_group_metadata.block_tables.items():
                 step_chunked_block_tables.extend(block_tables)
+        
+        # let only the first chunk can be processed
+        if len(seq_group_metadata_list) >=2:
+            seq_group_metadata_list = seq_group_metadata_list[:1]
 
         # log for debug
         #for seq_group_metadata in seq_group_metadata_list:
