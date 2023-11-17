@@ -30,9 +30,9 @@ class InputMetadata:
         max_context_len: int,
         block_tables: torch.Tensor,
         
-        chunked_block_tables: Optional[torch.Tensor],
-        chunked_id: Optional[int],
-        chunked_size: Optional[int]
+        chunked_block_tables: Optional[torch.Tensor]=None,
+        chunked_id: Optional[int]=None,
+        chunked_size: Optional[int]=None
     ) -> None:
         self.seq_groups = seq_groups
         self.seq_data = seq_data
