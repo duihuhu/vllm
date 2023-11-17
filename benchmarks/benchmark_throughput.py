@@ -95,9 +95,16 @@ def run_vllm(
             sampling_params=sampling_params,
         )
 
+    block_tables = []
     start = time.time()
+    chunked_info = (0, 560)
+    chunked_block_tables = []
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    outputs, return_chunked_block_tables = llm._run_engine(use_tqdm=False, split_two_phase = split_two_phase,
+                                                    chunked_info = chunked_info, 
+                                                    chunked_block_tables = chunked_block_tables)
+    #outputs, chunked_block_tables = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    block_tables.extend(return_chunked_block_tables)
     end = time.time()
     
     

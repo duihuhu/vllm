@@ -1,5 +1,6 @@
 import time
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
+import torch
 
 from vllm.config import (CacheConfig, ModelConfig, ParallelConfig,
                          SchedulerConfig)
@@ -234,7 +235,8 @@ class LLMEngine:
     def covert_prefilled_to_running(self):
         self.scheduler.covert_prefilled_to_running()
 
-    def step(self) -> List[RequestOutput]:
+    def step(self, chunked_info: Optional[Tuple[int, int, int]],
+             chunked_block_tables: Optional[List[int]]) -> Tuple[List[RequestOutput], List[int], torch.Tensor]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
@@ -249,11 +251,18 @@ class LLMEngine:
                 and (not ignored_seq_groups)):
             # Nothing to do.
             return []
-        # log for debug
+        
+        # prepare for chunked prefill
+        step_chunked_block_tables = []
         for seq_group_metadata in seq_group_metadata_list:
-            print(f"The blocks of prompt {seq_group_metadata.request_id}")
-            for key, value in seq_group_metadata.block_tables.items():
-                print(f"seq {key}'s blocks are {value}")
+            for _, block_tables in seq_group_metadata.block_tables.items():
+                step_chunked_block_tables.extend(block_tables)
+
+        # log for debug
+        #for seq_group_metadata in seq_group_metadata_list:
+        #    print(f"The blocks of prompt {seq_group_metadata.request_id}")
+        #    for key, value in seq_group_metadata.block_tables.items():
+        #        print(f"seq {key}'s blocks are {value}")
 
         # with open('/workspace/vllm/benchmarks/output/count2.txt', 'a') as file:
         #     for seq_group_metadata in seq_group_metadata_list:
@@ -268,7 +277,10 @@ class LLMEngine:
             blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
             blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
+            chunked_info = chunked_info,
+            chunked_block_tables = chunked_block_tables
         )
+
         # print who get the output
         #first_time = time.time()
         #for seq_group_metadata in seq_group_metadata_list:
@@ -278,7 +290,7 @@ class LLMEngine:
         #        self.first_output[seq_group_id] = 1
 
         # Update the scheduler with the model outputs.
-        seq_groups = self.scheduler.update(output)
+        seq_groups = self.scheduler.update(output[0])
 
         # Decode the sequences.
         self._decode_sequences(seq_groups)
@@ -298,7 +310,7 @@ class LLMEngine:
         #    if seq_group.request_id in self.first_output:
         #        for seq in seq_group.get_seqs():
         #            seq.status = SequenceStatus.FINISHED_STOPPED
-        return request_outputs
+        return (request_outputs, step_chunked_block_tables, output[1])
 
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
         """Decodes the sequence outputs."""

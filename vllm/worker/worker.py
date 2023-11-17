@@ -1,5 +1,5 @@
 """A GPU worker class."""
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 import torch
 
@@ -135,6 +135,7 @@ class Worker:
     def _prepare_inputs(
         self,
         seq_group_metadata_list: List[SequenceGroupMetadata],
+        chunked_info: Optional[Tuple[int, int, int]]
     ) -> Tuple[torch.Tensor, torch.Tensor, InputMetadata]:
         seq_groups: List[Tuple[List[int], SamplingParams]] = []
         input_tokens: List[int] = []
@@ -244,6 +245,12 @@ class Worker:
             max_context_len=max_context_len,
             block_tables=block_tables_tensor,
         )
+
+        if chunked_info is not None:
+            chunked_list = range(chunked_info[2])
+            position_list = [x + chunked_info[0] * chunked_info[1] for x in chunked_list]
+            positions_tensor = torch.cuda.LongTensor(position_list)
+
         return tokens_tensor, positions_tensor, input_metadata
 
     @torch.inference_mode()
@@ -253,7 +260,9 @@ class Worker:
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
-    ) -> Dict[int, SequenceOutputs]:
+        chunked_info: Optional[Tuple[int, int, int]],
+        chunked_block_tables: Optional[List[int]]
+    ) -> Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
         # Issue cache operations.
         issued_cache_op = False
         if blocks_to_swap_in:
@@ -279,17 +288,38 @@ class Worker:
             return {}
 
         # Prepare input tensors.
-        input_tokens, input_positions, input_metadata = self._prepare_inputs(
-            seq_group_metadata_list)
+        #input_tokens, input_positions, input_metadata = self._prepare_inputs(
+        #    seq_group_metadata_list)
         
+        # Prepare input tensors if use chunked prefill
+        if chunked_info is not None:
+            input_tokens, input_positions, input_metadata = self._prepare_inputs(
+            seq_group_metadata_list, chunked_info)
+            input_metadata.chunked_id = chunked_info[0]
+            input_metadata.chunked_size = chunked_info[1]
+        else:
+            input_tokens, input_positions, input_metadata = self._prepare_inputs(seq_group_metadata_list)
+
         # Execute the model.
-        output = self.model(
+        # when it's in chunked mode
+        if chunked_block_tables is not None:
+            chunked_block_tables = torch.cuda.LongTensor(chunked_block_tables)
+            output = self.model(
             input_ids=input_tokens,
             positions=input_positions,
             kv_caches=self.gpu_cache,
             input_metadata=input_metadata,
             cache_events=cache_events,
+            chunked_block_tables=chunked_block_tables
         )
+        else:
+            output = self.model(
+                input_ids=input_tokens,
+                positions=input_positions,
+                kv_caches=self.gpu_cache,
+                input_metadata=input_metadata,
+                cache_events=cache_events,
+            )
         # for seq_group_metadata in seq_group_metadata_list:
         #     print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
         return output

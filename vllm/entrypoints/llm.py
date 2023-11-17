@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple
 import time
 
 from tqdm import tqdm
@@ -9,6 +9,7 @@ from vllm.engine.llm_engine import LLMEngine
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
 from vllm.utils import Counter
+from vllm.sequence import SequenceGroupMetadata
 
 class LLM:
     """An LLM for generating texts from given prompts and sampling parameters.
@@ -139,7 +140,8 @@ class LLM:
         self.llm_engine.add_request(request_id, prompt, sampling_params,
                                     prompt_token_ids)
 
-    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int]) -> List[RequestOutput]:
+    def _run_engine(self, use_tqdm: bool, 
+                    split_two_phase: Optional[int]) -> Tuple[List[RequestOutput], torch.Tensor]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -147,58 +149,87 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         #interation = 0
-        if split_two_phase == 1:
-            st = time.time()
-            print(f"Start Prefill at {st}")
-            total_num_token = 0
         while self.llm_engine.has_unfinished_requests():
             #print("interation: ", interation)
-            step_outputs = self.llm_engine.step()
+            step_outputs, _, total_hidden_states = self.llm_engine.step()
             #interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
-                    # print(f"req {output.request_id} is finished")
                     outputs.append(output)
-                    # print(output)
                     if use_tqdm:
                         pbar.update(1)
+           
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
-                total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
-        #print(f"iter is {interation}")
+               
         if split_two_phase == 1:
-            ed = time.time()
-            print(f"End Prefill at {ed}")
-            print(f"Prefill process {total_num_token} tokens")
-            print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
+            return (outputs, total_hidden_states)
 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
-            st2 = time.time()
-            print(f"Start Decode at {st2}")
 
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
-                step_outputs = self.llm_engine.step()
+                step_outputs, _= self.llm_engine.step()
                 #interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
-                        # print(f"req {output.request_id} is finished")
                         outputs.append(output)
-                        # print(output)
                         if use_tqdm:
                             pbar.update(1)
-            ed2 = time.time()
-            #print(f"iteration {interation}")
-            print(f"End Decode at {ed2}")
-            total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
-            print(f"Decode process {total_num_token2} tokens")
-            print(f"{(total_num_token2 / (ed2-st2)):.2f} tokens/s")
+
         if use_tqdm:
             pbar.close()
+        
         # Sort the outputs by request ID.
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        # print(outputs)            
+        
         return outputs
+    
+    def _run_engine_in_chunk(self, use_tqdm: bool, chunked_num: int,
+                             chunked_size: int, last_slot_num: int) -> Tuple[List[RequestOutput], torch.Tensor]:
+        # Initialize tqdm.
+        if use_tqdm:
+            num_requests = self.llm_engine.get_num_unfinished_requests()
+            pbar = tqdm(total=num_requests, desc="Processed chunked prompts' prefill")
+        
+        outputs = []
+        chunked_block_tables = []
+        iteration = 0
+        hidden_states_list = []
+
+        while self.llm_engine.has_unfinished_requests():
+            if iteration == 0:
+                step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
+                    chunked_info = (iteration, chunked_size, chunked_size))
+            elif iteration > 0 and iteration < chunked_num - 1:
+                step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
+                    chunked_info = (iteration, chunked_size, chunked_size),
+                    chunked_block_tables = chunked_block_tables)
+            else:
+                step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
+                    chunked_info = (iteration, chunked_size, last_slot_num),
+                    chunked_block_tables = chunked_block_tables)
+            
+            for output in step_outputs:
+                    outputs.append(output)
+                    if use_tqdm:
+                        pbar.update(1)
+            
+            chunked_block_tables.extend(step_chunked_block_tables)
+            hidden_states_list.append(hidden_states) 
+
+            self.llm_engine.covert_running_to_prefilled()
+
+            iteration += 1
+            if iteration == chunked_num:
+                break
+
+        outputs = sorted(outputs, key=lambda x: int(x.request_id)) 
+
+        for i in range(1, len(hidden_states_list)):
+            hidden_states_list[0] = torch.cat((hidden_states_list[0], hidden_states_list[i]), 0)
+        
+        return (outputs, hidden_states_list[0])
