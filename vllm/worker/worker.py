@@ -135,7 +135,7 @@ class Worker:
     def _prepare_inputs(
         self,
         seq_group_metadata_list: List[SequenceGroupMetadata],
-        chunked_info: Optional[Tuple[int, int, int]]
+        chunked_info: Optional[Tuple[int, int, int]]=None
     ) -> Tuple[torch.Tensor, torch.Tensor, InputMetadata]:
         seq_groups: List[Tuple[List[int], SamplingParams]] = []
         input_tokens: List[int] = []
@@ -260,8 +260,8 @@ class Worker:
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
-        chunked_info: Optional[Tuple[int, int, int]],
-        chunked_block_tables: Optional[List[int]]
+        chunked_info: Optional[Tuple[int, int, int]]=None,
+        chunked_block_tables: Optional[List[int]]=None
     ) -> Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
         # Issue cache operations.
         issued_cache_op = False

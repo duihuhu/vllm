@@ -119,7 +119,7 @@ class PagedAttention(nn.Module):
             return output
     
     def set_attn_bias(self, input_metadata: InputMetadata,
-                      chunked_info: Optional[Tuple[int, int, int]]) -> None:
+                      chunked_info: Optional[Tuple[int, int, int]]=None) -> None:
         if input_metadata.attn_bias:
             # Already set by a previous layer.
             return
@@ -208,7 +208,7 @@ class PagedAttention(nn.Module):
         value_cache: Optional[torch.Tensor],
         input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
-        chunked_block_tables: Optional[torch.Tensor]
+        chunked_block_tables: Optional[torch.Tensor]=None
     ) -> torch.Tensor:
         """PagedAttention forward pass.
 
