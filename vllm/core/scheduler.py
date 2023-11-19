@@ -160,7 +160,9 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
-                if len(running) >= self.scheduler_config.max_num_seqs:
+                #if len(running) >= self.scheduler_config.max_num_seqs:
+                #in chunked type the bs can only be 1
+                if len(running) >= 1:
                     while self.running:
                         seq_group = self.running.pop(0)
                         self.running_stay.append(seq_group)
