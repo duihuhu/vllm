@@ -260,8 +260,12 @@ class LLMEngine:
         # prepare for chunked prefill
         step_chunked_block_tables = []
         for seq_group_metadata in seq_group_metadata_list:
-            for _, block_tables in seq_group_metadata.block_tables.items():
+            for _, block_tables in seq_group_metadata.block_tables.items(): 
                 step_chunked_block_tables.extend(block_tables)
+            # log for debug
+            for key, vaule in seq_group_metadata.seq_data.items():
+                print(f"req {seq_group_metadata.request_id}'s seq {key} total len is {vaule.get_len()}")
+                print(f"req {seq_group_metadata.request_id}'s seq {key} prompt len is {len(vaule.prompt_token_ids)}")
 
         # log for debug
         #for seq_group_metadata in seq_group_metadata_list:
