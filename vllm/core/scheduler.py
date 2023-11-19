@@ -70,6 +70,7 @@ class Scheduler:
 
         # Sequence groups in the WAITING state.
         self.waiting: List[SequenceGroup] = []
+        self.waiting_stay: List[SequenceGroup] = []
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
         self.running_stay: List[SequenceGroup] = []
@@ -208,6 +209,12 @@ class Scheduler:
             # Optimization: We do not sort the waiting queue since the preempted
             # sequence groups are added to the front and the new sequence groups
             # are added to the back.
+
+            # rebuild the waiting queue
+            while self.waiting_stay:
+                seq_group = self.waiting_stay.pop(0)
+                self.waiting.append(seq_group)
+
             while self.waiting:
                 seq_group = self.waiting[0]
                 # If the sequence group has been preempted in this step, stop.
@@ -254,6 +261,12 @@ class Scheduler:
                 self.running.append(seq_group)
                 num_batched_tokens += num_prompt_tokens
                 prompt_group_ids.append(seq_group.request_id)
+                
+                #make sure the bs can only be 1
+                if len(self.running) >= 1:
+                    while self.waiting:
+                        seq_group = self.waiting.pop(0)
+                        self.waiting_stay.append(seq_group)
 
         scheduler_outputs = SchedulerOutputs(
             blocks_to_swap_in=blocks_to_swap_in,
