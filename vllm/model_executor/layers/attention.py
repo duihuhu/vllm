@@ -61,7 +61,7 @@ class PagedAttention(nn.Module):
         # v cache: [num_blocks, num_heads, head_size, block_size]
         # k cache: [num_blocks, num_heads, head_size/x, block_size, x]
         # output: [num_tokens, num_heads * head_size]
-        shape_length = len(torch.shape)
+        shape_length = len(tensor.shape)
         block_length = len(blocks)
         num_heads = tensor.shape[1]
         block_size = tensor.shape[3]
