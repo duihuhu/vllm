@@ -98,6 +98,8 @@ class PagedAttention(nn.Module):
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
             for i, block_id in enumerate(blocks):
                 block_id_data = block_id.item()
+                print(f"tensor shape is {tensor.shape}")
+                print(f"block_id is {block_id}")
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
