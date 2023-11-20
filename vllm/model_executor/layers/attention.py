@@ -97,9 +97,6 @@ class PagedAttention(nn.Module):
             head_size = split_num * x
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
             for i in range(block_length):
-                if num_tokens == 1680:
-                    blocks = blocks.to("cpu")
-                    print(blocks)
                 block_id_data = blocks[i].item()
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):

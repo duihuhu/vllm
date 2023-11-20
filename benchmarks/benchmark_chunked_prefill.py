@@ -52,7 +52,7 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue'''
-        if prompt_len < 1120:
+        if prompt_len < 560:
             continue
         filtered_dataset.append((prompt_token_ids, prompt_len, output_len))
         num_requests_count += 1
