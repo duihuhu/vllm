@@ -100,7 +100,7 @@ class PagedAttention(nn.Module):
                 if num_tokens == 1680:
                     print(i)
                     print(blocks.shape)
-                #block_id_data = blocks[i].item()
+                block_id_data = blocks[i].item()
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
