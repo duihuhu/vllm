@@ -99,8 +99,10 @@ class PagedAttention(nn.Module):
             for i, block_id in enumerate(blocks):
                 block_id_data = block_id.item()
                 if num_tokens == 1680:
+                    print(block_id_data)
                     t_tensor = tensor.cpu()
                     t_block = t_tensor[block_id_data]
+                    print("success")
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
