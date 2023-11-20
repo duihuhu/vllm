@@ -254,8 +254,8 @@ class LLMEngine:
         
         # let only the first chunk can be processed
         # make for the corner case of the first round
-        if len(seq_group_metadata_list) >=2:
-            seq_group_metadata_list = seq_group_metadata_list[:1]
+        #if len(seq_group_metadata_list) >=2:
+        #    seq_group_metadata_list = seq_group_metadata_list[:1]
         
         # prepare for chunked prefill
         step_chunked_block_tables = []
