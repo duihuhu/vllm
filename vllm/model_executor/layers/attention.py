@@ -71,8 +71,8 @@ class PagedAttention(nn.Module):
         if shape_length == 4:
             head_size = tensor.shape[2]
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            for i, block_id in enumerate(blocks):
-                block_id_data = block_id.item()
+            for i in range(block_length):
+                block_id_data = blocks[i].item()
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
@@ -96,13 +96,8 @@ class PagedAttention(nn.Module):
             split_num = tensor.shape[2]
             head_size = split_num * x
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            for i, block_id in enumerate(blocks):
-                block_id_data = block_id.item()
-                if num_tokens == 1680:
-                    print(block_id_data)
-                    t_tensor = tensor.cpu()
-                    t_block = t_tensor[block_id_data]
-                    print("success")
+            for i in range(block_length):
+                block_id_data = blocks[i].item()
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
