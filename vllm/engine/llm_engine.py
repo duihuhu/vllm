@@ -268,7 +268,7 @@ class LLMEngine:
         first_token_time = time.time()
         for seq_group_metadata in seq_group_metadata_list:
            seq_group_id = seq_group_metadata.request_id
-           if seq_group_id not in self.first_output:
+           if seq_group_id not in self.first_token_output:
                print(f"seq {seq_group_id} gets its' first token at {first_token_time}")
                self.first_token_output[seq_group_id] = 1
 
