@@ -205,7 +205,7 @@ class LLM:
             if iteration == 0:
                 step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
                     chunked_info = (iteration, chunked_size, chunked_size))
-            elif iteration > 0 and iteration < chunked_num - 1:
+            elif iteration > 0 and iteration <= chunked_num - 1:
                 step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
                     chunked_info = (iteration, chunked_size, chunked_size),
                     chunked_block_tables = chunked_block_tables)
