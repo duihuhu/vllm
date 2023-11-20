@@ -249,8 +249,9 @@ class Worker:
         if chunked_info is not None:
             chunked_list = range(chunked_info[2])
             position_list = [x + chunked_info[0] * chunked_info[1] for x in chunked_list]
+            position_list = _pad_to_alignment(position_list, multiple_of = 8)
             positions_tensor = torch.cuda.LongTensor(position_list)
-
+           
         return tokens_tensor, positions_tensor, input_metadata
 
     @torch.inference_mode()
