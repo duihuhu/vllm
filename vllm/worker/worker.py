@@ -231,7 +231,7 @@ class Worker:
         ]
         block_tables_tensor = torch.cuda.IntTensor(padded_block_tables)
         # debug log
-        print(block_tables_tensor)
+        #print(block_tables_tensor)
         seq_data: Dict[int, SequenceData] = {}
         for seq_group_metadata in seq_group_metadata_list:
             seq_data.update(seq_group_metadata.seq_data)
