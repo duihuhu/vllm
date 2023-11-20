@@ -148,8 +148,8 @@ class LLM:
         outputs: List[RequestOutput] = []
         interation = 0
         st = time.time()
+        print(f"Start Prefill at {st}")
         if split_two_phase == 1:
-            print(f"Start Prefill at {st}")
             total_num_token = 0
         while self.llm_engine.has_unfinished_requests():
             #print("interation: ", interation)
