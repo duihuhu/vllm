@@ -280,6 +280,9 @@ class LLMEngine:
         #     file.write("iter end\n")
         
         # Execute the model.
+        # add log
+        print(f"chunked_block_tables are {chunked_block_tables}")
+        print(f"chunked_info is {chunked_info}")
         output = self._run_workers(
             "execute_model",
             seq_group_metadata_list=seq_group_metadata_list,
