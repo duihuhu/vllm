@@ -225,7 +225,7 @@ class LLM:
             self.llm_engine.covert_running_to_prefilled()
 
             iteration += 1
-            if iteration == chunked_num:
+            if iteration > chunked_num:
                 break
 
         outputs = sorted(outputs, key=lambda x: int(x.request_id)) 
