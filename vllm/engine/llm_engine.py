@@ -263,9 +263,9 @@ class LLMEngine:
             for _, block_tables in seq_group_metadata.block_tables.items(): 
                 step_chunked_block_tables.extend(block_tables)
             # log for debug
-            for key, vaule in seq_group_metadata.seq_data.items():
-                print(f"req {seq_group_metadata.request_id}'s seq {key} total len is {vaule.get_len()}")
-                print(f"req {seq_group_metadata.request_id}'s seq {key} prompt len is {len(vaule.prompt_token_ids)}")
+            #for key, vaule in seq_group_metadata.seq_data.items():
+            #    print(f"req {seq_group_metadata.request_id}'s seq {key} total len is {vaule.get_len()}")
+            #    print(f"req {seq_group_metadata.request_id}'s seq {key} prompt len is {len(vaule.prompt_token_ids)}")
 
         # log for debug
         #for seq_group_metadata in seq_group_metadata_list:
@@ -281,8 +281,8 @@ class LLMEngine:
         
         # Execute the model.
         # add log
-        print(f"chunked_block_tables are {chunked_block_tables}")
-        print(f"chunked_info is {chunked_info}")
+        #print(f"chunked_block_tables are {chunked_block_tables}")
+        #print(f"chunked_info is {chunked_info}")
         output = self._run_workers(
             "execute_model",
             seq_group_metadata_list=seq_group_metadata_list,

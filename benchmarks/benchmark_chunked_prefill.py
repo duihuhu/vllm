@@ -116,7 +116,7 @@ def run_chunked_vllm(
             )
 
     start_time = time.time()
-    outputs, hidden_states = llm._run_engine_in_chunk(use_tqdm=True, chunked_num = offset, chunked_size = chunk,
+    outputs, hidden_states = llm._run_engine_in_chunk(use_tqdm=False, chunked_num = offset, chunked_size = chunk,
                                                       last_slot_num = last_slot_num)
     end_time = time.time()
     time_slot = end_time - start_time
