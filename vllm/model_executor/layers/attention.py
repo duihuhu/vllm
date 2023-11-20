@@ -244,7 +244,7 @@ class PagedAttention(nn.Module):
         #done_d = 0
         if num_prompt_tokens > 0:
             if chunked_block_tables is not None:
-                chunked_info = (input_metadata.chunked_id, input_metadata.chunked_size, len(query[:num_prompt_tokens]))
+                chunked_info = (input_metadata.chunked_id, input_metadata.chunked_size, num_prompt_tokens)
                 self.set_attn_bias(input_metadata, chunked_info)
                 k_past = self.transpose(key_cache, chunked_block_tables, chunked_info[0] * chunked_info[1])
                 k_past = k_past.reshape(-1, self.num_heads, self.head_size)
