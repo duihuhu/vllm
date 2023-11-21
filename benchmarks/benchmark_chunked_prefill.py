@@ -91,14 +91,14 @@ def run_chunked_vllm(
         while True:
             st = offset * chunk
             ed = st + chunk
+            offset += 1
             if ed <= prompt_len:
                 chunked_token_ids.append(prompt_token_ids[st: ed])
             else:
                 last_slot_num = prompt_len - st
                 chunked_token_ids.append(prompt_token_ids[st: prompt_len])
                 break
-            offset += 1
-        
+            
         sampling_params = SamplingParams(
             n=n,
             temperature=0.0 if use_beam_search else 1.0,
