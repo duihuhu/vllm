@@ -73,7 +73,7 @@ def run_chunked_vllm(
     use_beam_search: bool,
     batch_size: int,
     chunk: int
-) -> Tuple[List[RequestOutput], torch.Tensor, float]:
+):
     llm = LLM(
         model=model,
         tokenizer=tokenizer,
@@ -107,21 +107,32 @@ def run_chunked_vllm(
             ignore_eos=True,
             max_tokens=output_len,
         )
-        # FIXME(woosuk): Do not use internal method.
+        # add chunks
         for chunk_prompt_token_ids in chunked_token_ids:
             llm._add_request(
                 prompt=None,
                 prompt_token_ids=chunk_prompt_token_ids,
-                sampling_params=sampling_params,
+                sampling_params=sampling_params
             )
+        # add total prompt for verify
+        llm._add_request(
+            prompt=None,
+            prompt_token_ids=prompt_token_ids,
+            sampling_params=sampling_params
+        )
 
     start_time = time.time()
-    outputs, hidden_states = llm._run_engine_in_chunk(use_tqdm=False, chunked_num = offset, chunked_size = chunk,
+    _, hidden_states, total_hidden_states = llm._run_engine_in_chunk(use_tqdm=False, chunked_num = offset, chunked_size = chunk,
                                                       last_slot_num = last_slot_num)
     end_time = time.time()
     time_slot = end_time - start_time
 
-    return (outputs, hidden_states, time_slot)
+    print(f"The shape of result tensor is {hidden_states.shape}")
+    print(f"The shape of total result tensor is {total_hidden_states.shape}")
+    print(total_hidden_states.eq(hidden_states))
+    print(f"The prefill throughtput of chunked prompt is {len(requests[0][0]) / time_slot:.2f}")
+    
+    return 
 
 def main(args: argparse.Namespace):
     random.seed(args.seed)
@@ -129,47 +140,10 @@ def main(args: argparse.Namespace):
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
     requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
-    total_num_tokens = 0
-    for request in requests:
-        total_num_tokens += request[1]
     
-    _, hidden_states, time_slot = run_chunked_vllm(
+    run_chunked_vllm(
             requests, args.model, args.tokenizer, args.tensor_parallel_size,
             args.seed, args.n, args.use_beam_search, args.batch_size, args.chunk)
-    
-    print(f"The shape of result tensor is {hidden_states.shape}")
-    print(f"The result tensor is: ")
-    print(hidden_states)
-    print(f"The prefill throughtput of chunked prompt is {total_num_tokens / time_slot:.2f}")
-
-    # Combine 
-    # Currently just test one prompt
-    total_prompt_token_ids = requests[0][1]
-    total_sampling_params = SamplingParams(
-            n=args.n,
-            temperature=0.0 if args.use_beam_search else 1.0,
-            top_p=1.0,
-            use_beam_search=args.use_beam_search,
-            ignore_eos=True,
-            max_tokens=requests[0][2],
-        )
-    total_llm = LLM(
-        model=args.model,
-        tokenizer=tokenizer,
-        tensor_parallel_size=args.tensor_parallel_size,
-        seed=args.seed,
-        max_num_seqs=args.batch_size,
-    )
-    total_llm._add_request(
-        prompt = None,
-        sampling_params = total_sampling_params,
-        prompt_token_ids = total_prompt_token_ids
-    )
-    _, total_hidden_states = total_llm._run_engine(split_two_phase = 1, use_tqdm = False)
-    print(f"The shape of total hidden states is {total_hidden_states.shape}")
-    print(f"The total hidden states is")
-    print(total_hidden_states)
-    print(total_hidden_states.eq(hidden_states))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the chunked prefill throughput.")

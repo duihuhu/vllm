@@ -235,7 +235,7 @@ class LLMEngine:
     def covert_prefilled_to_running(self):
         self.scheduler.covert_prefilled_to_running()
 
-    def step(self, chunked_info: Optional[Tuple[int, int, int]],
+    def step(self, chunked_info: Optional[Tuple[int, int, int]]=None,
              chunked_block_tables: Optional[List[int]]=None) -> Tuple[List[RequestOutput], List[int], torch.Tensor]:
         """Performs one decoding iteration and returns newly generated results.
 

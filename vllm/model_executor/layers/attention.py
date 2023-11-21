@@ -56,7 +56,7 @@ class PagedAttention(nn.Module):
             raise ValueError(f"head_size ({self.head_size}) is not supported. "
                              f"Supported head sizes: {_SUPPORTED_HEAD_SIZES}.")
 
-    def transpose(self, tensor: torch.Tensor, blocks: torch.Tensor, 
+    def transpose(self, tensor: torch.Tensor, blocks: List[int], 
               num_tokens: int) -> torch.Tensor:
         # v cache: [num_blocks, num_heads, head_size, block_size]
         # k cache: [num_blocks, num_heads, head_size/x, block_size, x]
@@ -72,7 +72,7 @@ class PagedAttention(nn.Module):
             head_size = tensor.shape[2]
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
             for i in range(block_length):
-                block_id_data = blocks[i].item()
+                block_id_data = blocks[i]
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
@@ -97,7 +97,7 @@ class PagedAttention(nn.Module):
             head_size = split_num * x
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
             for i in range(block_length):
-                block_id_data = blocks[i].item()
+                block_id_data = blocks[i]
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
@@ -208,7 +208,7 @@ class PagedAttention(nn.Module):
         value_cache: Optional[torch.Tensor],
         input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
-        chunked_block_tables: Optional[torch.Tensor]=None
+        chunked_block_tables: Optional[List[int]]=None
     ) -> torch.Tensor:
         """PagedAttention forward pass.
 

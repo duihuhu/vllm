@@ -304,7 +304,7 @@ class Worker:
         # Execute the model.
         # when it's in chunked mode
         if chunked_block_tables is not None:
-            chunked_block_tables = torch.cuda.LongTensor(chunked_block_tables)
+            #chunked_block_tables = torch.cuda.LongTensor(chunked_block_tables)
             output = self.model(
             input_ids=input_tokens,
             positions=input_positions,

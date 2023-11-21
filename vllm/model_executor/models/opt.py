@@ -93,7 +93,7 @@ class OPTAttention(nn.Module):
         kv_cache: KVCache,
         input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
-        chunked_block_tables: Optional[torch.Tensor]=None
+        chunked_block_tables: Optional[List[int]]=None
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.chunk(chunks=3, dim=-1)
@@ -146,7 +146,7 @@ class OPTDecoderLayer(nn.Module):
         kv_cache: KVCache,
         input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
-        chunked_block_tables: Optional[torch.Tensor]=None
+        chunked_block_tables: Optional[List[int]]=None
     ) -> torch.Tensor:
         # Self Attention
         residual = hidden_states
@@ -237,7 +237,7 @@ class OPTDecoder(nn.Module):
         kv_caches: List[KVCache],
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
-        chunked_block_tables: Optional[torch.Tensor]=None
+        chunked_block_tables: Optional[List[int]]=None
     ) -> torch.Tensor:
         inputs_embeds = self.embed_tokens(input_ids)
         pos_embeds = self.embed_positions(positions)
@@ -276,7 +276,7 @@ class OPTModel(nn.Module):
         kv_caches: List[KVCache],
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
-        chunked_block_tables: Optional[torch.Tensor]=None
+        chunked_block_tables: Optional[List[int]]=None
     ) -> torch.Tensor:
         if chunked_block_tables is not None:
             return self.decoder(input_ids, positions, kv_caches, input_metadata,
@@ -303,7 +303,7 @@ class OPTForCausalLM(nn.Module):
         kv_caches: List[KVCache],
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
-        chunked_block_tables: Optional[torch.Tensor]=None
+        chunked_block_tables: Optional[List[int]]=None
     ) -> Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
         if chunked_block_tables is not None:
             hidden_states = self.model(input_ids, positions, kv_caches,

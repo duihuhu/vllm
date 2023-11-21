@@ -190,7 +190,8 @@ class LLM:
         return outputs
     
     def _run_engine_in_chunk(self, use_tqdm: bool, chunked_num: int,
-                             chunked_size: int, last_slot_num: int) -> Tuple[List[RequestOutput], torch.Tensor]:
+                             chunked_size: int, last_slot_num: int) -> Tuple[List[RequestOutput], 
+                                                                             torch.Tensor, torch.Tensor]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -233,4 +234,6 @@ class LLM:
         for i in range(1, len(hidden_states_list)):
             hidden_states_list[0] = torch.cat((hidden_states_list[0], hidden_states_list[i]), 0)
         
-        return (outputs, hidden_states_list[0])
+        _, _, total_hidden_states = self.llm_engine.step()
+        
+        return (outputs, hidden_states_list[0], total_hidden_states)
