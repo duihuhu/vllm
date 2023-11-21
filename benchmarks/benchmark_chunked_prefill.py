@@ -52,7 +52,7 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue'''
-        if prompt_len < 560:
+        if prompt_len < 1120:
             continue
         filtered_dataset.append((prompt_token_ids, prompt_len, output_len))
         num_requests_count += 1
@@ -131,7 +131,7 @@ def run_chunked_vllm(
     print(f"The shape of total result tensor is {total_hidden_states.shape}")
     print(total_hidden_states.eq(hidden_states))
     print(f"The prefill throughtput of chunked prompt is {len(requests[0][0]) / time_slot:.2f}")
-    
+
     return 
 
 def main(args: argparse.Namespace):

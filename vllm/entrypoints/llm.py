@@ -206,11 +206,11 @@ class LLM:
             if iteration == 0:
                 step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
                     chunked_info = (iteration, chunked_size, chunked_size))
-            elif iteration > 0 and iteration <= chunked_num - 1:
+            elif iteration > 0 and iteration < chunked_num - 1:
                 step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
                     chunked_info = (iteration, chunked_size, chunked_size),
                     chunked_block_tables = chunked_block_tables)
-            else:
+            elif iteration == chunked_num - 1:
                 step_outputs, step_chunked_block_tables, hidden_states = self.llm_engine.step(
                     chunked_info = (iteration, chunked_size, last_slot_num),
                     chunked_block_tables = chunked_block_tables)
@@ -226,7 +226,7 @@ class LLM:
             self.llm_engine.covert_running_to_prefilled()
 
             iteration += 1
-            if iteration > chunked_num:
+            if iteration >= chunked_num:
                 break
 
         outputs = sorted(outputs, key=lambda x: int(x.request_id)) 
@@ -235,5 +235,5 @@ class LLM:
             hidden_states_list[0] = torch.cat((hidden_states_list[0], hidden_states_list[i]), 0)
         
         _, _, total_hidden_states = self.llm_engine.step()
-        
+
         return (outputs, hidden_states_list[0], total_hidden_states)
