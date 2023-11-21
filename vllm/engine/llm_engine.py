@@ -268,10 +268,10 @@ class LLMEngine:
                 print(f"req {seq_group_metadata.request_id}'s seq {key} prompt len is {len(vaule.prompt_token_ids)}")
 
         # log for debug
-        for seq_group_metadata in seq_group_metadata_list:
-            print(f"The blocks of prompt {seq_group_metadata.request_id}")
-            for key, value in seq_group_metadata.block_tables.items():
-                print(f"seq {key}'s blocks are {value}")
+        #for seq_group_metadata in seq_group_metadata_list:
+        #    print(f"The blocks of prompt {seq_group_metadata.request_id}")
+        #    for key, value in seq_group_metadata.block_tables.items():
+        #        print(f"seq {key}'s blocks are {value}")
 
         # with open('/workspace/vllm/benchmarks/output/count2.txt', 'a') as file:
         #     for seq_group_metadata in seq_group_metadata_list:
@@ -281,8 +281,8 @@ class LLMEngine:
         
         # Execute the model.
         # add log
-        #print(f"chunked_block_tables are {chunked_block_tables}")
-        #print(f"chunked_info is {chunked_info}")
+        print(f"chunked_block_tables are {chunked_block_tables}")
+        print(f"chunked_info is {chunked_info}")
         output = self._run_workers(
             "execute_model",
             seq_group_metadata_list=seq_group_metadata_list,
