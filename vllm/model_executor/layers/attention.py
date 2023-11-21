@@ -71,20 +71,20 @@ class PagedAttention(nn.Module):
         if shape_length == 4:
             head_size = tensor.shape[2]
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            for i in range(block_length):
+            for i in range(block_length - 1, -1, -1):
                 block_id_data = blocks[i]
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
                     block_x_head_y_t = block_x_head_y.t()
-                    if i != block_length - 1:
-                        for token_id in range(i * block_size, (i + 1) * block_size):
+                    if i != 0:
+                        for token_id in range((i + 1) * block_size - 1, i * block_size - 1, -1):
                             st = head_id * head_size
                             ed = (head_id + 1) * head_size
                             offset = token_id % block_size
                             output[token_id][st: ed].copy_(block_x_head_y_t[offset])
                     else:
-                        for token_id in range(i * block_size, num_tokens):
+                        for token_id in range((i + 1) * block_size - 1, -1, -1):
                             st = head_id * head_size
                             ed = (head_id + 1) * head_size
                             offset = token_id % block_size
@@ -96,7 +96,7 @@ class PagedAttention(nn.Module):
             split_num = tensor.shape[2]
             head_size = split_num * x
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            for i in range(block_length):
+            for i in range(block_length - 1, -1, -1):
                 block_id_data = blocks[i]
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
@@ -104,14 +104,14 @@ class PagedAttention(nn.Module):
                     block_x_head_y_f = block_x_head_y[0]
                     for xi in range(1, split_num):
                         block_x_head_y_f = torch.cat((block_x_head_y_f, block_x_head_y[xi]), 1)
-                    if i != block_length - 1:
-                        for token_id in range(i * block_size, (i + 1) * block_size):
+                    if i != 0:
+                        for token_id in range((i + 1) * block_size - 1, i * block_size - 1, -1):
                             st = head_id * head_size
                             ed = (head_id + 1) * head_size
                             offset = token_id % block_size
                             output[token_id][st: ed].copy_(block_x_head_y_f[offset])
                     else:
-                        for token_id in range(i * block_size, num_tokens):
+                        for token_id in range((i + 1) * block_size - 1, -1, -1):
                             st = head_id * head_size
                             ed = (head_id + 1) * head_size
                             offset = token_id % block_size
