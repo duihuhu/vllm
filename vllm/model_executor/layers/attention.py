@@ -71,22 +71,22 @@ class PagedAttention(nn.Module):
         if shape_length == 4:
             head_size = tensor.shape[2]
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            t_st = num_tokens - 1
+            t_st = 0
             for i in range(block_length - 1, -1, -1):
                 block_id_data = blocks[i]
                 block = tensor[block_id_data]
                 for head_id in range(num_heads):
                     block_x_head_y = block[head_id]
                     block_x_head_y_t = block_x_head_y.t()
-                    t_ed = t_st - block_size
-                    if t_ed < 0:
-                        t_ed = -1
-                    for token_id in range(t_st, t_ed, -1):
+                    t_ed = t_st + block_size
+                    if t_ed > num_tokens:
+                        t_ed = num_tokens
+                    for token_id in range(t_st, t_ed):
                         st = head_id * head_size
                         ed = (head_id + 1) * head_size
                         offset = token_id % block_size
                         output[token_id][st: ed].copy_(block_x_head_y_t[offset])
-                t_st -= block_size
+                t_st += block_size
             return output
         
         if shape_length == 5:
@@ -94,7 +94,7 @@ class PagedAttention(nn.Module):
             split_num = tensor.shape[2]
             head_size = split_num * x
             output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            t_st = num_tokens - 1
+            t_st = 0
             for i in range(block_length - 1, -1, -1):
                 block_id_data = blocks[i]
                 block = tensor[block_id_data]
@@ -103,15 +103,15 @@ class PagedAttention(nn.Module):
                     block_x_head_y_f = block_x_head_y[0]
                     for xi in range(1, split_num):
                         block_x_head_y_f = torch.cat((block_x_head_y_f, block_x_head_y[xi]), 1)
-                    t_ed = t_st - block_size
-                    if t_ed < 0:
-                        t_ed = -1
-                    for token_id in range(t_st, t_ed, -1):
+                    t_ed = t_st + block_size
+                    if t_ed > num_tokens:
+                        t_ed = num_tokens
+                    for token_id in range(t_st, t_ed):
                         st = head_id * head_size
                         ed = (head_id + 1) * head_size
                         offset = token_id % block_size
                         output[token_id][st: ed].copy_(block_x_head_y_f[offset])
-                t_st -= block_size
+                t_st += block_size
             return output
     
     def set_attn_bias(self, input_metadata: InputMetadata,
