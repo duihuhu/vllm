@@ -52,7 +52,7 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue'''
-        if prompt_len < 560:
+        if prompt_len < 600:
             continue
         filtered_dataset.append((prompt_token_ids, prompt_len, output_len))
         num_requests_count += 1
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--chunk", type=int, default=560)
+    parser.add_argument("--chunk", type=int, default=200)
     args = parser.parse_args()
 
     if args.tokenizer is None:
