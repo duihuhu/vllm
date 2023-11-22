@@ -30,9 +30,9 @@ for data in datasets:
         generated_text = output.outputs[0].text
         print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
         js['instruction'] = data[0]
-        js['output_text'] = generated_text
-        js['output_text_len'] = len(generated_text)
-        js['output_token_len'] = len(output.outputs[0].token_ids)
+        # js['output_text'] = generated_text
+        js['input'] = ""
+        js['output'] = len(output.outputs[0].token_ids)
         opt_answer_datasets.append(js)
         
 with open("alpaca_opt13b_answer.json", 'w') as json_file:
