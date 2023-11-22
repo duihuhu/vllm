@@ -12,7 +12,7 @@ def get_alpaca(dataset_path):
         else: 
             alpaca_data.append((data["instruction"] + data['input'], data["output"]))
 
-    return dataset
+    return alpaca_data
 
 # Create a sampling params object.
 sampling_params = SamplingParams(temperature=0.95, top_p=1, max_tokens=2048)
