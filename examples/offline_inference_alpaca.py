@@ -29,7 +29,7 @@ for data in datasets:
         prompt = output.prompt
         generated_text = output.outputs[0].text
         print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
-        js['instruction'] = data['instruction']
+        js['instruction'] = data[0]
         js['output_text'] = generated_text
         js['output_text_len'] = len(generated_text)
         js['output_token_len'] = len(output.outputs[0].token_ids)
