@@ -185,8 +185,12 @@ class PagedAttention(nn.Module):
                     self.set_attn_bias(input_metadata, chunked_info)
                     if input_metadata.chunked_block_tables is not None:
                         used_prompt_len = input_metadata.chunked_id * input_metadata.chunked_size
-                        k_past = torch.zeros(used_prompt_len, self.num_heads, self.head_size)
-                        v_past = torch.zeros(used_prompt_len, self.num_heads, self.head_size)
+                        dtype = query.dtype
+                        device = query.device
+                        k_past = torch.zeros((used_prompt_len, self.num_heads, self.head_size), dtype = dtype,
+                                             device = device)
+                        v_past = torch.zeros((used_prompt_len, self.num_heads, self.head_size), dtype = dtype,
+                                             device = device)
                         cache_ops.gather_cached_kv(
                             k_past,
                             v_past,
