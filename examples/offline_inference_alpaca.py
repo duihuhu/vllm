@@ -4,10 +4,15 @@ def get_alpaca(dataset_path):
     with open(dataset_path) as f:
         dataset = json.load(f)
     # Only keep the first two turns of each conversation.
-    dataset = [
-        (data["instruction"], data["output"])
-        for data in dataset
-    ]
+
+    alpaca_data = []
+    for data in dataset:
+        print(data['input'])
+        if data['input'] == "":
+            alpaca_data.append((data["instruction"], data["output"]))
+        else:
+            alpaca_data.append((data["instruction"] + data['input'], data["output"]))
+
     return dataset
 
 # Create a sampling params object.
