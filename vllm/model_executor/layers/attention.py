@@ -195,7 +195,7 @@ class PagedAttention(nn.Module):
                             input_metadata.chunked_block_tables
                         )
                         k_in = torch.cat((k_past, key[:num_prompt_tokens]), 0)
-                        v_in = torch.cat((v_past, value[:num_prompt_tokens], 0))
+                        v_in = torch.cat((v_past, value[:num_prompt_tokens]), 0)
                         self.multi_query_kv_attention(
                             output[:num_prompt_tokens],
                             query[:num_prompt_tokens],
