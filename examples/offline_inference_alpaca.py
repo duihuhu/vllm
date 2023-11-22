@@ -13,8 +13,8 @@ def get_alpaca(dataset_path):
     return alpaca_data
 
 # Create a sampling params object.
-sampling_params = SamplingParams(temperature=0.95, top_p=1, max_tokens=4096)
-datasets = get_alpaca("/workspace/alpaca_data_test.json")
+sampling_params = SamplingParams(temperature=0.95, top_p=1, max_tokens=2048)
+datasets = get_alpaca("/workspace/alpaca_data.json")
 
 # Create an LLM.
 llm = LLM(model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5")
