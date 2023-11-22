@@ -13,7 +13,7 @@ def get_alpaca(dataset_path):
     return alpaca_data
 
 # Create a sampling params object.
-sampling_params = SamplingParams(temperature=0.95, top_p=1, max_tokens=2048)
+sampling_params = SamplingParams(temperature=0.95, top_p=1, max_tokens=4096)
 datasets = get_alpaca("/workspace/alpaca_data.json")
 
 # Create an LLM.
@@ -36,5 +36,5 @@ for data in datasets:
         js['stop_reason'] = output.outputs[0].finish_reason
         opt_answer_datasets.append(js)
         
-with open("alpaca_opt13b_answer.json", 'w') as json_file:
+with open("alpaca_opt13b_answer.json", 'w+') as json_file:
     json.dump(opt_answer_datasets, json_file, indent=2) 
