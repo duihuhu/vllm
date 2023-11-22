@@ -7,10 +7,11 @@ def get_alpaca(dataset_path):
 
     alpaca_data = []
     for data in dataset:
-        print(data['input'])
         if data['input'] == "":
+            print("a")
             alpaca_data.append((data["instruction"], data["output"]))
         else:
+            print("b")
             alpaca_data.append((data["instruction"] + data['input'], data["output"]))
 
     return dataset
