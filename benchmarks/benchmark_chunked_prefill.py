@@ -160,8 +160,8 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
-    parser.add_argument("--batch-size", type=int, default=560)
-    parser.add_argument("--chunk", type=int, default=200)
+    parser.add_argument("--batch-size", type=int, default=256)
+    parser.add_argument("--chunk", type=int, default=560)
     args = parser.parse_args()
 
     if args.tokenizer is None:
