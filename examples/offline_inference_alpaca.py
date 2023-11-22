@@ -33,6 +33,7 @@ for data in datasets:
         # js['output_text'] = generated_text
         js['input'] = ""
         js['output'] = len(output.outputs[0].token_ids)
+        js['stop_reason'] = output.outputs[0].finish_reason
         opt_answer_datasets.append(js)
         
 with open("alpaca_opt13b_answer.json", 'w') as json_file:
