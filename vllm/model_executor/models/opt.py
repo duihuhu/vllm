@@ -145,21 +145,13 @@ class OPTDecoderLayer(nn.Module):
         hidden_states: torch.Tensor,
         kv_cache: KVCache,
         input_metadata: InputMetadata,
-        cache_event: Optional[torch.cuda.Event],
-        chunked_block_tables: Optional[List[int]]=None
+        cache_event: Optional[torch.cuda.Event]
     ) -> torch.Tensor:
         # Self Attention
         residual = hidden_states
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
-        if chunked_block_tables is not None:
-            hidden_states = self.self_attn(hidden_states=hidden_states,
-                                        kv_cache=kv_cache,
-                                        input_metadata=input_metadata,
-                                        cache_event=cache_event,
-                                        chunked_block_tables=chunked_block_tables)
-        else:
             hidden_states = self.self_attn(hidden_states=hidden_states,
                                         kv_cache=kv_cache,
                                         input_metadata=input_metadata,
@@ -236,8 +228,7 @@ class OPTDecoder(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[KVCache],
         input_metadata: InputMetadata,
-        cache_events: Optional[List[torch.cuda.Event]],
-        chunked_block_tables: Optional[List[int]]=None
+        cache_events: Optional[List[torch.cuda.Event]]
     ) -> torch.Tensor:
         inputs_embeds = self.embed_tokens(input_ids)
         pos_embeds = self.embed_positions(positions)
@@ -250,11 +241,7 @@ class OPTDecoder(nn.Module):
             else:
                 cache_event = cache_events[i]
             layer = self.layers[i]
-            if chunked_block_tables is not None:
-                hidden_states = layer(hidden_states, kv_caches[i], input_metadata,
-                                  cache_event, chunked_block_tables)
-            else:
-                hidden_states = layer(hidden_states, kv_caches[i], input_metadata, cache_event)
+            hidden_states = layer(hidden_states, kv_caches[i], input_metadata, cache_event)
 
         if self.final_layer_norm is not None:
             hidden_states = self.final_layer_norm(hidden_states)
@@ -275,14 +262,9 @@ class OPTModel(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[KVCache],
         input_metadata: InputMetadata,
-        cache_events: Optional[List[torch.cuda.Event]],
-        chunked_block_tables: Optional[List[int]]=None
+        cache_events: Optional[List[torch.cuda.Event]]
     ) -> torch.Tensor:
-        if chunked_block_tables is not None:
-            return self.decoder(input_ids, positions, kv_caches, input_metadata,
-                            cache_events, chunked_block_tables)
-        else:
-            return self.decoder(input_ids, positions, kv_caches, input_metadata, cache_events)
+        return self.decoder(input_ids, positions, kv_caches, input_metadata, cache_events)
 
 
 class OPTForCausalLM(nn.Module):
@@ -302,14 +284,9 @@ class OPTForCausalLM(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[KVCache],
         input_metadata: InputMetadata,
-        cache_events: Optional[List[torch.cuda.Event]],
-        chunked_block_tables: Optional[List[int]]=None
+        cache_events: Optional[List[torch.cuda.Event]]
     ) -> Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
-        if chunked_block_tables is not None:
-            hidden_states = self.model(input_ids, positions, kv_caches,
-                                   input_metadata, cache_events, chunked_block_tables)
-        else:
-            hidden_states = self.model(input_ids, positions, kv_caches,
+        hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
         next_tokens = self.sampler(self.lm_head_weight, hidden_states,
                                    input_metadata)

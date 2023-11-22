@@ -135,7 +135,8 @@ class Worker:
     def _prepare_inputs(
         self,
         seq_group_metadata_list: List[SequenceGroupMetadata],
-        chunked_info: Optional[Tuple[int, int, int]]=None
+        chunked_info: Optional[Tuple[int, int, int]]=None,
+        chunked_block_tables: Optional[List[int]]=None
     ) -> Tuple[torch.Tensor, torch.Tensor, InputMetadata]:
         seq_groups: List[Tuple[List[int], SamplingParams]] = []
         input_tokens: List[int] = []
@@ -251,6 +252,17 @@ class Worker:
             position_list = [x + chunked_info[0] * chunked_info[1] for x in chunked_list]
             position_list = _pad_to_alignment(position_list, multiple_of = 8)
             positions_tensor = torch.cuda.LongTensor(position_list)
+
+            if chunked_block_tables is not None:
+                chunked_block_list = []
+                used_prompt_len = chunked_info[0] * chunked_info[1]
+                for i in range(used_prompt_len):
+                    block_number = chunked_block_tables[i // self.block_size]
+                    block_offset = i % self.block_size
+                    chunked_slot = block_number * self.block_size + block_offset
+                    chunked_block_list.append(chunked_slot)
+                chunked_slot_mapping_tensor = torch.cuda.IntTensor(chunked_block_list)
+                input_metadata.chunked_block_tables = chunked_slot_mapping_tensor
            
         return tokens_tensor, positions_tensor, input_metadata
 
@@ -295,32 +307,20 @@ class Worker:
         # Prepare input tensors if use chunked prefill
         if chunked_info is not None:
             input_tokens, input_positions, input_metadata = self._prepare_inputs(
-            seq_group_metadata_list, chunked_info)
+            seq_group_metadata_list, chunked_info, chunked_block_tables)
             input_metadata.chunked_id = chunked_info[0]
             input_metadata.chunked_size = chunked_info[1]
         else:
             input_tokens, input_positions, input_metadata = self._prepare_inputs(seq_group_metadata_list)
 
         # Execute the model.
-        # when it's in chunked mode
-        if chunked_block_tables is not None:
-            #chunked_block_tables = torch.cuda.LongTensor(chunked_block_tables)
-            output = self.model(
+        output = self.model(
             input_ids=input_tokens,
             positions=input_positions,
             kv_caches=self.gpu_cache,
             input_metadata=input_metadata,
             cache_events=cache_events,
-            chunked_block_tables=chunked_block_tables
         )
-        else:
-            output = self.model(
-                input_ids=input_tokens,
-                positions=input_positions,
-                kv_caches=self.gpu_cache,
-                input_metadata=input_metadata,
-                cache_events=cache_events,
-            )
         # for seq_group_metadata in seq_group_metadata_list:
         #     print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
         return output

@@ -55,64 +55,6 @@ class PagedAttention(nn.Module):
         if self.head_size not in _SUPPORTED_HEAD_SIZES:
             raise ValueError(f"head_size ({self.head_size}) is not supported. "
                              f"Supported head sizes: {_SUPPORTED_HEAD_SIZES}.")
-
-    def transpose(self, tensor: torch.Tensor, blocks: List[int], 
-              num_tokens: int) -> torch.Tensor:
-        # v cache: [num_blocks, num_heads, head_size, block_size]
-        # k cache: [num_blocks, num_heads, head_size/x, block_size, x]
-        # output: [num_tokens, num_heads * head_size]
-        shape_length = len(tensor.shape)
-        block_length = len(blocks)
-        num_heads = tensor.shape[1]
-        block_size = tensor.shape[3]
-        dtype = tensor.dtype
-        device = tensor.device       
-
-        if shape_length == 4:
-            head_size = tensor.shape[2]
-            output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            t_st = 0
-            for i in range(block_length - 1, -1, -1):
-                block_id_data = blocks[i]
-                block = tensor[block_id_data]
-                for head_id in range(num_heads):
-                    block_x_head_y = block[head_id]
-                    block_x_head_y_t = block_x_head_y.t()
-                    t_ed = t_st + block_size
-                    if t_ed > num_tokens:
-                        t_ed = num_tokens
-                    for token_id in range(t_st, t_ed):
-                        st = head_id * head_size
-                        ed = (head_id + 1) * head_size
-                        offset = token_id % block_size
-                        output[token_id][st: ed].copy_(block_x_head_y_t[offset])
-                t_st += block_size
-            return output
-        
-        if shape_length == 5:
-            x = tensor.shape[4]
-            split_num = tensor.shape[2]
-            head_size = split_num * x
-            output = torch.zeros((num_tokens, num_heads * head_size), dtype = dtype, device = device)
-            t_st = 0
-            for i in range(block_length - 1, -1, -1):
-                block_id_data = blocks[i]
-                block = tensor[block_id_data]
-                for head_id in range(num_heads):
-                    block_x_head_y = block[head_id]
-                    block_x_head_y_f = block_x_head_y[0]
-                    for xi in range(1, split_num):
-                        block_x_head_y_f = torch.cat((block_x_head_y_f, block_x_head_y[xi]), 1)
-                    t_ed = t_st + block_size
-                    if t_ed > num_tokens:
-                        t_ed = num_tokens
-                    for token_id in range(t_st, t_ed):
-                        st = head_id * head_size
-                        ed = (head_id + 1) * head_size
-                        offset = token_id % block_size
-                        output[token_id][st: ed].copy_(block_x_head_y_f[offset])
-                t_st += block_size
-            return output
     
     def set_attn_bias(self, input_metadata: InputMetadata,
                       chunked_info: Optional[Tuple[int, int, int]]=None) -> None:
@@ -203,8 +145,7 @@ class PagedAttention(nn.Module):
         key_cache: Optional[torch.Tensor],
         value_cache: Optional[torch.Tensor],
         input_metadata: InputMetadata,
-        cache_event: Optional[torch.cuda.Event],
-        chunked_block_tables: Optional[List[int]]=None
+        cache_event: Optional[torch.cuda.Event]
     ) -> torch.Tensor:
         """PagedAttention forward pass.
 
@@ -239,35 +180,46 @@ class PagedAttention(nn.Module):
         #done_p = 0
         #done_d = 0
         if num_prompt_tokens > 0:
-            if chunked_block_tables is not None:
-                chunked_info = (input_metadata.chunked_id, input_metadata.chunked_size, num_prompt_tokens)
-                self.set_attn_bias(input_metadata, chunked_info)
-                k_past = self.transpose(tensor = key_cache, 
-                                        blocks = chunked_block_tables, 
-                                        num_tokens = chunked_info[0] * chunked_info[1])
-                k_past = k_past.reshape(-1, self.num_heads, self.head_size)
-                v_past = self.transpose(tensor = value_cache, 
-                                        blocks = chunked_block_tables, 
-                                        num_tokens = chunked_info[0] * chunked_info[1])
-                v_past = v_past.reshape(-1, self.num_heads, self.head_size)
-                key_in = torch.cat((k_past, key[:num_prompt_tokens]), 0)
-                value_in = torch.cat((v_past, value[:num_prompt_tokens]), 0)
-                self.multi_query_kv_attention(
-                    output[:num_prompt_tokens],
-                    query[:num_prompt_tokens],
-                    key_in,
-                    value_in,
-                    input_metadata,
-                )
-            else:
-                self.set_attn_bias(input_metadata)
-                self.multi_query_kv_attention(
-                    output[:num_prompt_tokens],
-                    query[:num_prompt_tokens],
-                    key[:num_prompt_tokens],
-                    value[:num_prompt_tokens],
-                    input_metadata,
-                )
+                if input_metadata.chunked_id is not None and input_metadata.chunked_size is not None:
+                    chunked_info = (input_metadata.chunked_id, input_metadata.chunked_size, num_prompt_tokens)
+                    self.set_attn_bias(input_metadata, chunked_info)
+                    if input_metadata.chunked_block_tables is not None:
+                        used_prompt_len = input_metadata.chunked_id * input_metadata.chunked_size
+                        k_past = torch.zeros(used_prompt_len, self.num_heads, self.head_size)
+                        v_past = torch.zeros(used_prompt_len, self.num_heads, self.head_size)
+                        cache_ops.gather_cached_kv(
+                            k_past,
+                            v_past,
+                            key_cache,
+                            value_cache,
+                            input_metadata.chunked_block_tables
+                        )
+                        k_in = torch.cat((k_past, key[:num_prompt_tokens]), 0)
+                        v_in = torch.cat((v_past, value[:num_prompt_tokens], 0))
+                        self.multi_query_kv_attention(
+                            output[:num_prompt_tokens],
+                            query[:num_prompt_tokens],
+                            k_in,
+                            v_in,
+                            input_metadata
+                        )
+                    else:
+                        self.multi_query_kv_attention(
+                        output[:num_prompt_tokens],
+                        query[:num_prompt_tokens],
+                        key[:num_prompt_tokens],
+                        value[:num_prompt_tokens],
+                        input_metadata
+                    )
+                else:
+                    self.set_attn_bias(input_metadata)
+                    self.multi_query_kv_attention(
+                        output[:num_prompt_tokens],
+                        query[:num_prompt_tokens],
+                        key[:num_prompt_tokens],
+                        value[:num_prompt_tokens],
+                        input_metadata
+                    )
             #done_p += 1
 
         # Wait until the cache op is done.
