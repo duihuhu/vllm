@@ -21,6 +21,7 @@ llm = LLM(model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2
 # Generate texts from the prompts. The output is a list of RequestOutput objects
 # that contain the prompt, generated text, and other information.
 opt_answer_datasets = []
+index = 0
 for data in datasets:
     js = {}
     outputs = llm.generate(data[0], sampling_params)
@@ -36,6 +37,8 @@ for data in datasets:
         js['output'] = len(output.outputs[0].token_ids)
         js['stop_reason'] = output.outputs[0].finish_reason
         opt_answer_datasets.append(js)
-        
-    with open("alpaca_opt13b_answer.json", 'w') as json_file:
-        json.dump(opt_answer_datasets, json_file, indent=2) 
+    if index == 1000:
+        with open("alpaca_opt13b_answer.json", 'w') as json_file:
+            json.dump(opt_answer_datasets, json_file, indent=2)
+        index = 0
+    index = index + 1
