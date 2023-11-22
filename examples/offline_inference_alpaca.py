@@ -8,17 +8,15 @@ def get_alpaca(dataset_path):
     alpaca_data = []
     for data in dataset:
         if data['input'] == "":
-            print("a")
             alpaca_data.append((data["instruction"], data["output"]))
-        else:
-            print("b")
+        else: 
             alpaca_data.append((data["instruction"] + data['input'], data["output"]))
 
     return dataset
 
 # Create a sampling params object.
 sampling_params = SamplingParams(temperature=0.95, top_p=1, max_tokens=2048)
-datasets = get_alpaca("/workspace/alpaca_data.json")
+datasets = get_alpaca("/workspace/alpaca_data_test.json")
 
 # Create an LLM.
 llm = LLM(model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5")
