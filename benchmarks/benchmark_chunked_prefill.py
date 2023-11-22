@@ -52,7 +52,7 @@ def sample_requests(
         if prompt_len > 1024 or prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue'''
-        if prompt_len < 600:
+        if prompt_len < 1120:
             continue
         filtered_dataset.append((prompt_token_ids, prompt_len, output_len))
         num_requests_count += 1
@@ -130,7 +130,7 @@ def run_chunked_vllm(
     print(f"The shape of result tensor is {hidden_states.shape}")
     print(f"The shape of total result tensor is {total_hidden_states.shape}")
     print(total_hidden_states.eq(hidden_states))
-    print(f"The prefill throughtput of chunked prompt is {len(requests[0][0]) / time_slot:.2f}")
+    print(f"The prefill throughtput of chunked prompt is {(2 * len(requests[0][0])) / time_slot:.2f}")
 
     return 
 
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
-    parser.add_argument("--batch-size", type=int, default=256)
+    parser.add_argument("--batch-size", type=int, default=560)
     parser.add_argument("--chunk", type=int, default=200)
     args = parser.parse_args()
 

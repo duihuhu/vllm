@@ -67,7 +67,8 @@ class PagedAttention(nn.Module):
                                                                         kv_seqlen = [chunked_info[0] * 
                                                                                 chunked_info[1] + chunked_info[2]])
             else:
-                attn_bias = BlockDiagonalCausalMask.from_seqlens(q_seqlen = [chunked_info[2]])
+                attn_bias = BlockDiagonalCausalMask.from_seqlens(q_seqlen = [chunked_info[2]], 
+                                                                 kv_seqlen = [chunked_info[2]])
             input_metadata.attn_bias.append(attn_bias)
         else:
             prompt_lens = input_metadata.prompt_lens
