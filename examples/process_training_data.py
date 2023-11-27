@@ -5,8 +5,12 @@ def get_alpaca(dataset_path):
         
     alpaca_data = []
     for data in dataset:
-        if data['stop_reason'] == "stop":
-            alpaca_data.append((data["instruction"], data["input"], data["output"]))
+      js = {}
+      if data['stop_reason'] == "stop":
+        js['instruction'] = data['instruction']
+        js['input'] = data['input']
+        js['output'] = data['output']
+        alpaca_data.append(js)
     return alpaca_data
   
 if __name__ == "__main__":
