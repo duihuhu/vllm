@@ -31,9 +31,9 @@ llm = LLM(model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2
 # Generate texts from the prompts. The output is a list of RequestOutput objects
 # that contain the prompt, generated text, and other information.
 
-opt_already = already_alpaca("/workspace/vllm/examples/alpaca_opt13b_answer.json")
+opt_already = already_alpaca("/workspace/vllm/examples/alpaca_opt13b_answer_union.json")
 
-opt_answer_datasets = []
+opt_answer_datasets = opt_already
 index = 0
 prompts_list = []
 for data in datasets:
