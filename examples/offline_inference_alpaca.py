@@ -31,15 +31,15 @@ llm = LLM(model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2
 # Generate texts from the prompts. The output is a list of RequestOutput objects
 # that contain the prompt, generated text, and other information.
 
-opt_already = already_alpaca("/workspace/vllm/examples/alpaca_opt13b_answer_union.json")
+# opt_already = already_alpaca("/workspace/vllm/examples/alpaca_opt13b_answer_union.json")
 
-opt_answer_datasets = opt_already
+opt_answer_datasets = []
 index = 0
 prompts_list = []
 for data in datasets:
-    if data[0] in opt_already:
-        continue
-    if len(prompts_list) < 16:
+    # if data[0] in opt_already:
+    #     continue
+    if len(prompts_list) < 128:
         prompts_list.append(data[0])
         continue
 
@@ -50,7 +50,7 @@ for data in datasets:
         prompt = output.prompt
         generated_text = output.outputs[0].text
         print(f"Prompt: {prompt!r}, Generated text: {generated_text!r}")
-        js['instruction'] = data[0]
+        js['instruction'] = output.prompt
         js['output_text'] = generated_text
         js['first_text'] = output.outputs[0].first_text
         js['input'] = ""
