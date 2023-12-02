@@ -39,7 +39,7 @@ prompts_list = []
 for data in datasets:
     # if data[0] in opt_already:
     #     continue
-    if len(prompts_list) < 128:
+    if len(prompts_list) < 256:
         prompts_list.append(data[0])
         continue
 
@@ -58,8 +58,10 @@ for data in datasets:
         js['stop_reason'] = output.outputs[0].finish_reason
         opt_answer_datasets.append(js)
         index = index + 1
+
     if index >= 1000:
         with open("alpaca_opt13b_answer.json", 'w') as json_file:
             json.dump(opt_answer_datasets, json_file, indent=2)
         index = 0
+    prompts_list = [] 
     # index = index + 1
