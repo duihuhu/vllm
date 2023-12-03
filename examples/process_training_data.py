@@ -28,10 +28,10 @@ def union_dataset(filename1, filename2):
 
 if __name__ == "__main__":
   
-  # opt_answer_datasets_len = get_alpaca("/workspace/vllm/examples/alpaca_opt13b_answer.json")
-  # with open("/workspace/vllm/examples/alpaca_opt13b_answer_len.json", 'w') as json_file:
-  #   json.dump(opt_answer_datasets_len, json_file, indent=2)
+  opt_answer_datasets_len = get_alpaca("/workspace/vllm/examples/alpaca_opt13b_answer.json")
+  with open("/workspace/vllm/examples/alpaca_opt13b_answer_len.json", 'w') as json_file:
+    json.dump(opt_answer_datasets_len, json_file, indent=2)
     
-  data = union_dataset("/workspace/alpaca_opt13b_answer_len.json", "/workspace/vllm/examples/alpaca_opt13b_answer_len.json")
-  with open("/workspace/vllm/examples/alpaca_opt13b_answer_len_union.json", 'w') as json_file:
-    json.dump(data, json_file, indent=2)
+  # data = union_dataset("/workspace/alpaca_opt13b_answer_len.json", "/workspace/vllm/examples/alpaca_opt13b_answer_len.json")
+  # with open("/workspace/vllm/examples/alpaca_opt13b_answer_len_union.json", 'w') as json_file:
+  #   json.dump(data, json_file, indent=2)
