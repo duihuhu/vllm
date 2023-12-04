@@ -168,7 +168,7 @@ class LLM:
         print(f"iteration {interation}")
         if split_two_phase == 1:
             ed = time.time()
-            print(f"End Prefill at {ed}")
+            print(f"End Prefill at {ed}", "total prefill time: ", ed-st)
             print(f"Prefill process {total_num_token} tokens")
             print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
 
