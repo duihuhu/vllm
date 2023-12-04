@@ -40,20 +40,20 @@ def sample_requests(
     tokenized_dataset = []
     for i in range(len(dataset)):
         output_len = len(completion_token_ids[i])
-        tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
-    print(prompts[71])
+        tokenized_dataset.append((prompts[71], prompt_token_ids[71], output_len))
+    # print(prompts[71])
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[str, int, int]] = []
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
-        if prompt_len < 4 or output_len < 4:
-            # Prune too short sequences.
-            continue
+        # if prompt_len < 4 or output_len < 4:
+        #     # Prune too short sequences.
+        #     continue
+        # # if prompt_len > 1024 or prompt_len + output_len > 2048:
         # if prompt_len > 1024 or prompt_len + output_len > 2048:
-        if prompt_len > 1024 or prompt_len + output_len > 2048:
 
-            # Prune too long sequences.
-            continue
+        #     # Prune too long sequences.
+        #     continue
         filtered_dataset.append((prompt, prompt_len, output_len))
 
     # Sample the requests.
