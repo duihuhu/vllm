@@ -191,7 +191,7 @@ class LLM:
                             pbar.update(1)
             ed2 = time.time()
             print(f"iteration {interation}")
-            print(f"End Decode at {ed2}")
+            print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
             print(f"Decode process {total_num_token2} tokens")
             print(f"Decode Throughput {(total_num_token2 / (ed2-st2)):.2f} tokens/s")
