@@ -16,6 +16,7 @@ from vllm.transformers_utils.tokenizer import get_tokenizer
 def sample_requests(
     dataset_path: str,
     num_requests: int,
+    mix_num_prompts: int,
     tokenizer: PreTrainedTokenizerBase,
 ) -> List[Tuple[str, int, int]]:
     # Load the dataset.
@@ -39,12 +40,12 @@ def sample_requests(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for i in range(len(dataset)):
-        # if i < 1 :
-        output_len = len(completion_token_ids[19])
-        tokenized_dataset.append((prompts[19], prompt_token_ids[19], output_len))
-        # else:
-        #     output_len = len(completion_token_ids[8])
-        #     tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
+        if i < num_requests :
+            output_len = len(completion_token_ids[8])
+            tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
+        else:
+            output_len = len(completion_token_ids[110])
+            tokenized_dataset.append((prompts[110], prompt_token_ids[110], output_len))
     # print(prompts[71])
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[str, int, int]] = []
@@ -62,12 +63,14 @@ def sample_requests(
 
     # Sample the requests.
     sampled_requests = filtered_dataset[:num_requests]
+    sampled_mix_requests = filtered_dataset[num_requests:(mix_num_prompts + num_requests)]
     # sampled_requests = random.sample(filtered_dataset, num_requests)
-    return sampled_requests
+    return sampled_requests, sampled_mix_requests
 
 
 def run_vllm(
     requests: List[Tuple[str, int, int]],
+    mix_requests: List[Tuple[str, int, int]],
     model: str,
     tokenizer: str,
     tensor_parallel_size: int,
@@ -97,6 +100,23 @@ def run_vllm(
         )
         # FIXME(woosuk): Do not use internal method.
         llm._add_request(
+            prompt=prompt,
+            prompt_token_ids=None,
+            sampling_params=sampling_params,
+        )
+
+    # Add the requests to the engine.
+    for prompt, _, output_len in mix_requests:
+        sampling_params = SamplingParams(
+            n=n,
+            temperature=0.0 if use_beam_search else 1.0,
+            top_p=1.0,
+            use_beam_search=use_beam_search,
+            ignore_eos=True,
+            max_tokens=output_len,
+        )
+        # FIXME(woosuk): Do not use internal method.
+        llm._add_mix_request(
             prompt=prompt,
             prompt_token_ids=None,
             sampling_params=sampling_params,
@@ -184,11 +204,11 @@ def main(args: argparse.Namespace):
 
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
-    requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    requests, mix_requests = sample_requests(args.dataset, args.num_prompts, args.mix_num_prompts, tokenizer)
 
     if args.backend == "vllm":
         elapsed_time = run_vllm(
-            requests, args.model, args.tokenizer, args.tensor_parallel_size,
+            requests, mix_requests, args.model, args.tokenizer, args.tensor_parallel_size,
             args.seed, args.n, args.use_beam_search, args.batch_size, args.split_two_phase)
     elif args.backend == "hf":
         assert args.tensor_parallel_size == 1
@@ -223,6 +243,7 @@ if __name__ == "__main__":
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--split-two-phase", type=int, default=0)
+    parser.add_argument("--mix-num-prompts", type=int, default=0)
     args = parser.parse_args()
 
     if args.backend == "vllm":

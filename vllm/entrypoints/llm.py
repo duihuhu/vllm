@@ -139,6 +139,16 @@ class LLM:
         self.llm_engine.add_request(request_id, prompt, sampling_params,
                                     prompt_token_ids)
 
+    def _add_mix_request(
+        self,
+        prompt: Optional[str],
+        sampling_params: SamplingParams,
+        prompt_token_ids: Optional[List[int]],
+    ) -> None:
+        request_id = str(next(self.request_counter))
+        self.llm_engine.add_request(request_id, prompt, sampling_params,
+                                    prompt_token_ids)
+
     def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int]) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
@@ -159,6 +169,8 @@ class LLM:
             iteartion_end = time.time()
             iteration_time.append(iteartion_end-iteration_start)
             interation = interation  + 1
+            if interation == 2:
+                self.llm_engine.covert_mixing_to_waiting()
             for output in step_outputs:
                 if output.finished:
                     # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
@@ -169,6 +181,7 @@ class LLM:
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
                 total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
+
         with open("iteration_time.txt", "w") as fd:
             for line in iteration_time:
                 fd.write(str(line)+'\n')

@@ -72,8 +72,9 @@ class Scheduler:
         self.waiting: List[SequenceGroup] = []
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
-        self.running_stay: List[SequenceGroup] = []
+        # self.running_stay: List[SequenceGroup] = []
         
+        self.mixing: List[SequenceGroup] = []
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
         self.prefilled: List[SequenceGroup] = []
@@ -85,6 +86,10 @@ class Scheduler:
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
+
+    def add_mix_seq_group(self, seq_group: SequenceGroup) -> None:
+        # Add sequence groups to the waiting queue.
+        self.mixing.append(seq_group)
 
     def abort_seq_group(self, request_id: str) -> None:
         for state_queue in [self.waiting, self.running, self.swapped]:
@@ -99,8 +104,8 @@ class Scheduler:
                     return
 
     def has_unfinished_seqs(self) -> bool:
-        return self.waiting or self.running or self.swapped or self.running_stay
-        # return self.waiting or self.running or self.swapped
+        # return self.waiting or self.running or self.swapped or self.running_stay
+        return self.waiting or self.running or self.swapped
 
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
@@ -112,6 +117,13 @@ class Scheduler:
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
         self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
+
+    def covert_mixing_to_waiting(self):
+        while self.mixing:
+            seq_group = self.mixing.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.WAITING
+            self.waiting.append(seq_group) 
             
     def covert_running_to_prefilled(self):
         while self.running:
@@ -132,9 +144,9 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        while self.running_stay:
-            seq_group = self.running_stay.pop(0)
-            self.running.append(seq_group)
+        # while self.running_stay:
+        #     seq_group = self.running_stay.pop(0)
+        #     self.running.append(seq_group)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -149,7 +161,7 @@ class Scheduler:
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
-        index = 0
+        # index = 0
         while self.running:
             # if index %2 == 0:
             seq_group = self.running.pop(0)
@@ -173,10 +185,10 @@ class Scheduler:
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
                 # index = index + 1
-                if len(running) >= self.scheduler_config.max_num_seqs:
-                    while self.running:
-                        seq_group = self.running.pop(0)
-                        self.running_stay.append(seq_group)
+                # if len(running) >= self.scheduler_config.max_num_seqs:
+                #     while self.running:
+                #         seq_group = self.running.pop(0)
+                #         self.running_stay.append(seq_group)
         self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
