@@ -169,8 +169,9 @@ class LLM:
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
                 total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
+        sep = '\n'
         with open("iteration_time.txt", "w") as fd:
-            fd.write(iteration_time)
+            fd.write(sep.join(iteration_time))
         print(f"iteration {interation}")
         if split_two_phase == 1:
             ed = time.time()
