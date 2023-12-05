@@ -21,26 +21,27 @@
 The input of the model is flattened to a 1D tensor of tokens. The model uses
 InputMetadata to extract the original 2D shape of the input.
 """
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple#, Dict
 
 import torch
 from torch import nn
 from transformers import OPTConfig
 
-from vllm.model_executor.input_metadata import InputMetadata
+#from vllm.model_executor.input_metadata import InputMetadata
 from vllm.model_executor.layers.activation import get_act_fn
-from vllm.model_executor.layers.attention import PagedAttention
-from vllm.model_executor.layers.sampler import Sampler
+from vllm.model_executor.layers.attention import ChunkedPagedAttention#, PagedAttention 
+#from vllm.model_executor.layers.sampler import Sampler
 from vllm.model_executor.weight_utils import (hf_model_weights_iterator,
                                               load_tensor_parallel_weights)
 from vllm.model_executor.parallel_utils.parallel_state import (
     get_tensor_model_parallel_rank, get_tensor_model_parallel_world_size)
 from vllm.model_executor.parallel_utils.tensor_parallel import (
     VocabParallelEmbedding, ColumnParallelLinear, RowParallelLinear)
-from vllm.sequence import SequenceOutputs
+#from vllm.sequence import SequenceOutputs
+from vllm.chunked.chunk import ChunkInputMetadata
+from vllm.chunked.chunksampler import ChunkSampler
 
-KVCache = Tuple[torch.Tensor, torch.Tensor]
-
+#KVCache = Tuple[torch.Tensor, torch.Tensor]
 
 class OPTLearnedPositionalEmbedding(nn.Embedding):
 
@@ -83,28 +84,26 @@ class OPTAttention(nn.Module):
                                           bias=bias,
                                           input_is_parallel=True,
                                           perform_initialization=False)
-        self.attn = PagedAttention(self.num_heads,
-                                   self.head_dim,
-                                   scale=self.scaling)
+        #self.attn = PagedAttention(self.num_heads,
+        #                           self.head_dim,
+        #                           scale=self.scaling)
+        self.attn = ChunkedPagedAttention(self.num_heads,
+                                          self.head_dim,
+                                          scale=self.scaling)
 
     def forward(
         self,
         hidden_states: torch.Tensor,
-        kv_cache: KVCache,
-        input_metadata: InputMetadata,
+        kv_cache: Tuple[torch.Tensor, torch.Tensor],
+        #input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
-        chunked_block_tables: Optional[List[int]]=None
+        chunkinputmetadata: ChunkInputMetadata
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
-        if chunked_block_tables is not None:
-            attn_output = self.attn(q, k, v, key_cache, value_cache,
-                                    input_metadata, cache_event,
-                                    chunked_block_tables)
-        else:
-            attn_output = self.attn(q, k, v, key_cache, value_cache,
-                                    input_metadata, cache_event)
+        attn_output = self.attn(q, k, v, key_cache, value_cache, #input_metadata, 
+                                cache_event, chunkinputmetadata)
         output, _ = self.out_proj(attn_output)
         return output
 
@@ -143,9 +142,10 @@ class OPTDecoderLayer(nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        kv_cache: KVCache,
-        input_metadata: InputMetadata,
-        cache_event: Optional[torch.cuda.Event]
+        kv_cache: Tuple[torch.Tensor, torch.Tensor],
+        #input_metadata: InputMetadata,
+        cache_event: Optional[torch.cuda.Event],
+        chunkinputmetadata: ChunkInputMetadata
     ) -> torch.Tensor:
         # Self Attention
         residual = hidden_states
@@ -154,8 +154,9 @@ class OPTDecoderLayer(nn.Module):
             hidden_states = self.self_attn_layer_norm(hidden_states)
             hidden_states = self.self_attn(hidden_states=hidden_states,
                                         kv_cache=kv_cache,
-                                        input_metadata=input_metadata,
-                                        cache_event=cache_event)
+                                        #input_metadata=input_metadata,
+                                        cache_event=cache_event,
+                                        chunkinputmetadata=chunkinputmetadata)
         hidden_states = residual + hidden_states
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
@@ -226,9 +227,10 @@ class OPTDecoder(nn.Module):
         self,
         input_ids: torch.Tensor,
         positions: torch.Tensor,
-        kv_caches: List[KVCache],
-        input_metadata: InputMetadata,
-        cache_events: Optional[List[torch.cuda.Event]]
+        kv_caches: List[Tuple[torch.Tensor, torch.Tensor]],
+        #input_metadata: InputMetadata,
+        cache_events: Optional[List[torch.cuda.Event]],
+        chunkinputmetadata: ChunkInputMetadata
     ) -> torch.Tensor:
         inputs_embeds = self.embed_tokens(input_ids)
         pos_embeds = self.embed_positions(positions)
@@ -241,7 +243,8 @@ class OPTDecoder(nn.Module):
             else:
                 cache_event = cache_events[i]
             layer = self.layers[i]
-            hidden_states = layer(hidden_states, kv_caches[i], input_metadata, cache_event)
+            hidden_states = layer(hidden_states, kv_caches[i], #input_metadata, 
+                                  cache_event, chunkinputmetadata)
 
         if self.final_layer_norm is not None:
             hidden_states = self.final_layer_norm(hidden_states)
@@ -260,11 +263,13 @@ class OPTModel(nn.Module):
         self,
         input_ids: torch.Tensor,
         positions: torch.Tensor,
-        kv_caches: List[KVCache],
-        input_metadata: InputMetadata,
-        cache_events: Optional[List[torch.cuda.Event]]
+        kv_caches: List[Tuple[torch.Tensor, torch.Tensor]],
+        #input_metadata: InputMetadata,
+        cache_events: Optional[List[torch.cuda.Event]],
+        chunkinputmetadata: ChunkInputMetadata
     ) -> torch.Tensor:
-        return self.decoder(input_ids, positions, kv_caches, input_metadata, cache_events)
+        return self.decoder(input_ids, positions, kv_caches, #input_metadata, 
+                            cache_events, chunkinputmetadata)
 
 
 class OPTForCausalLM(nn.Module):
@@ -276,21 +281,23 @@ class OPTForCausalLM(nn.Module):
         # TODO(zhuohan): create a new weight after implementing pipeline
         #                parallelism
         self.lm_head_weight = self.model.decoder.embed_tokens.weight
-        self.sampler = Sampler(config.vocab_size)
+        self.sampler = ChunkSampler(config.vocab_size)
 
     def forward(
         self,
         input_ids: torch.Tensor,
         positions: torch.Tensor,
-        kv_caches: List[KVCache],
-        input_metadata: InputMetadata,
-        cache_events: Optional[List[torch.cuda.Event]]
-    ) -> Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
-        hidden_states = self.model(input_ids, positions, kv_caches,
-                                   input_metadata, cache_events)
-        next_tokens = self.sampler(self.lm_head_weight, hidden_states,
-                                   input_metadata)
-        return (next_tokens, hidden_states)
+        kv_caches: List[Tuple[torch.Tensor, torch.Tensor]],
+        #input_metadata: InputMetadata,
+        cache_events: Optional[List[torch.cuda.Event]],
+        chunkinputmetadata: ChunkInputMetadata
+    ) -> torch.Tensor: #Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
+        hidden_states = self.model(input_ids, positions, kv_caches, #input_metadata, 
+                                   cache_events, chunkinputmetadata)
+        #next_tokens_ids = self.sampler(self.lm_head_weight, hidden_states,
+        #                           input_metadata)
+        #return (next_tokens, hidden_states)
+        return hidden_states
 
     _column_parallel_weights = [
         "embed_tokens.weight", "fc1.weight", "fc1.bias"
