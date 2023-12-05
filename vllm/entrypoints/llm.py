@@ -146,7 +146,7 @@ class LLM:
         prompt_token_ids: Optional[List[int]],
     ) -> None:
         request_id = str(next(self.request_counter))
-        self.llm_engine.add_request(request_id, prompt, sampling_params,
+        self.llm_engine.add_mix_request(request_id, prompt, sampling_params,
                                     prompt_token_ids)
 
     def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int]) -> List[RequestOutput]:
