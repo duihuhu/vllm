@@ -151,9 +151,13 @@ class LLM:
         print(f"Start Prefill at {st}")
         if split_two_phase == 1:
             total_num_token = 0
+        iteration_time = []
         while self.llm_engine.has_unfinished_requests():
             #print("interation: ", interation)
+            iteration_start = time.time()
             step_outputs = self.llm_engine.step()
+            iteartion_end = time.time()
+            iteration_time.append(iteartion_end-iteration_start)
             interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
@@ -165,6 +169,8 @@ class LLM:
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
                 total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
+        with open("iteration_time.txt", "w") as fd:
+            fd.write(iteration_time)
         print(f"iteration {interation}")
         if split_two_phase == 1:
             ed = time.time()
