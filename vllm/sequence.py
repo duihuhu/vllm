@@ -203,7 +203,7 @@ class SequenceGroup:
         seqs: List[Sequence],
         sampling_params: SamplingParams,
         arrival_time: float,
-        output_len, int,
+        output_len: Optional[int],
     ) -> None:
         self.request_id = request_id
         self.seqs = seqs
