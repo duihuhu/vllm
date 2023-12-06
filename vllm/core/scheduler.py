@@ -72,7 +72,7 @@ class Scheduler:
         self.waiting: List[SequenceGroup] = []
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
-        # self.running_stay: List[SequenceGroup] = []
+        self.running_stay: List[SequenceGroup] = []
         
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
@@ -82,6 +82,9 @@ class Scheduler:
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
 
+        #to limit gpu memory in every decode iteration 
+        self.gpu_threshold = 2 * 1024 * 1024 * 1024
+        self.base_size = 4 * 40 * 5120
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
@@ -99,8 +102,8 @@ class Scheduler:
                     return
 
     def has_unfinished_seqs(self) -> bool:
-        # return self.waiting or self.running or self.swapped or self.running_stay
-        return self.waiting or self.running or self.swapped
+        return self.waiting or self.running or self.swapped or self.running_stay
+        # return self.waiting or self.running or self.swapped
 
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
@@ -140,9 +143,9 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        # while self.running_stay:
-        #     seq_group = self.running_stay.pop(0)
-        #     self.running.append(seq_group)
+        while self.running_stay:
+            seq_group = self.running_stay.pop(0)
+            self.running.append(seq_group)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -153,40 +156,51 @@ class Scheduler:
         self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
+        self.running.sort(key=lambda x:int(x.output_len + len(x.seqs[0].data.prompt_token_ids)), reverse=True)
 
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
+        
+        num_prompts = 0
+        gpu_threshold = self.gpu_threshold
+        
         index = 0
         while self.running:
             # if index %2 == 0:
             seq_group = self.running.pop(0)
             # if index %2 == 1:
             #     seq_group = self.running.pop(-1)
-                
-            while not self.block_manager.can_append_slot(seq_group):
-                if self.running:
-                    # Preempt the lowest-priority sequence groups.
-                    victim_seq_group = self.running.pop(-1)
-                    self._preempt(victim_seq_group, blocks_to_swap_out)
-                    preempted.append(victim_seq_group)
+            need_size = seq_group.output_len + len(seq_group.seqs[0].data.prompt_token_ids) * self.base_size
+            if gpu_threshold > need_size:
+                gpu_threshold = gpu_threshold - need_size
+                num_prompts = num_prompts + 1
+                while not self.block_manager.can_append_slot(seq_group):
+                    if self.running:
+                        # Preempt the lowest-priority sequence groups.
+                        victim_seq_group = self.running.pop(-1)
+                        self._preempt(victim_seq_group, blocks_to_swap_out)
+                        preempted.append(victim_seq_group)
+                    else:
+                        # No other sequence groups can be preempted.
+                        # Preempt the current sequence group.
+                        self._preempt(seq_group, blocks_to_swap_out)
+                        preempted.append(seq_group)
+                        break
                 else:
-                    # No other sequence groups can be preempted.
-                    # Preempt the current sequence group.
-                    self._preempt(seq_group, blocks_to_swap_out)
-                    preempted.append(seq_group)
-                    break
+                    # Append new slots to the sequence group.
+                    self._append_slot(seq_group, blocks_to_copy)
+                    running.append(seq_group)
+                    # index = index + 1
+                    # if len(running) >= self.scheduler_config.max_num_seqs:
+                    #     while self.running:
+                    #         seq_group = self.running.pop(0)
+                    #         self.running_stay.append(seq_group)
             else:
-                # Append new slots to the sequence group.
-                self._append_slot(seq_group, blocks_to_copy)
-                running.append(seq_group)
-                # index = index + 1
-                # if len(running) >= self.scheduler_config.max_num_seqs:
-                #     while self.running:
-                #         seq_group = self.running.pop(0)
-                #         self.running_stay.append(seq_group)
+                self.running_stay.append(seq_group)
+                
         self.running = running
-
+        print("prompts num in cur iteration: ", num_prompts)
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
         while self.swapped and not blocks_to_swap_out:
