@@ -156,7 +156,7 @@ class Scheduler:
         self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
-        self.running.sort(key=lambda x:int(x.output_len + len(x.seqs[0].data.prompt_token_ids)), reverse=True)
+        self.running.sort(key=lambda x:int(x.output_len + len(x.seqs[0].data.prompt_token_ids)))
         # self.running.sort(key=lambda x:float((x.output_len + len(x.seqs[0].data.prompt_token_ids))/len(x.seqs[0].data.prompt_token_ids)), reverse=True)
 
         # Reserve new token slots for the running sequence groups.
@@ -168,7 +168,7 @@ class Scheduler:
         
         index = 0
         while self.running:
-            if num_prompts %2 == 0:
+            if num_prompts == 0:
                 seq_group = self.running.pop(0)
             else:
                 seq_group = self.running.pop(-1)
