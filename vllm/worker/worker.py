@@ -114,7 +114,7 @@ class Worker:
         num_gpu_blocks = int(
             (total_gpu_memory * gpu_memory_utilization - peak_memory) //
             cache_block_size)
-        print("gpu memory ", total_gpu_memory, cache_block_size, num_cpu_blocks, peak_memory, gpu_memory_utilization)
+        print("gpu memory ", total_gpu_memory, cache_block_size, peak_memory, gpu_memory_utilization)
         num_cpu_blocks = int(cpu_swap_space // cache_block_size)
         num_gpu_blocks = max(num_gpu_blocks, 0)
         num_cpu_blocks = max(num_cpu_blocks, 0)
