@@ -99,7 +99,7 @@ def run_vllm(
             prompt=prompt,
             prompt_token_ids=None,
             sampling_params=sampling_params,
-            output_len,
+            output_len=output_len,
         )
         
     start = time.time()
