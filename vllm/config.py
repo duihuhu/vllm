@@ -79,7 +79,7 @@ class ModelConfig:
                 f"({tensor_parallel_size}).")
 
         total_num_hidden_layers = self.hf_config.num_hidden_layers
-        print("number hidden layer ", total_num_hidden_layers)
+        # print("number hidden layer ", total_num_hidden_layers)
         
         pipeline_parallel_size = parallel_config.pipeline_parallel_size
         if total_num_hidden_layers % pipeline_parallel_size != 0:
