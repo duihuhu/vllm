@@ -203,7 +203,7 @@ class Scheduler:
                 self.running_stay.append(seq_group)
                 
         self.running = running
-        print("prompts num in cur iteration: ", num_prompts, len(self.running) + len(self.running_stay))
+        # print("prompts num in cur iteration: ", num_prompts, len(self.running) + len(self.running_stay))
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
         while self.swapped and not blocks_to_swap_out:
