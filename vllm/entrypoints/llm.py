@@ -137,9 +137,8 @@ class LLM:
         output_len: Optional[int],
     ) -> None:
         request_id = str(next(self.request_counter))
-        print("output len ", output_len)
         self.llm_engine.add_request(request_id, prompt, sampling_params,
-                                    prompt_token_ids, output_len)
+                                    prompt_token_ids, output_len=output_len)
 
     def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int]) -> List[RequestOutput]:
         # Initialize tqdm.

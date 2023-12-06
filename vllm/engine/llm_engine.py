@@ -168,8 +168,8 @@ class LLMEngine:
         prompt: Optional[str],
         sampling_params: SamplingParams,
         prompt_token_ids: Optional[List[int]] = None,
-        arrival_time: Optional[float] = None,
         output_len: Optional[int] = 0,
+        arrival_time: Optional[float] = None,
     ) -> None:
         """Add a request to the engine's request pool.
 
