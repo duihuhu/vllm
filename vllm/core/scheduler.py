@@ -168,10 +168,10 @@ class Scheduler:
         
         index = 0
         while self.running:
-            if num_prompts == 0:
-                seq_group = self.running.pop(0)
-            else:
-                seq_group = self.running.pop(-1)
+            # if num_prompts == 0:
+            seq_group = self.running.pop(0)
+            # else:
+                # seq_group = self.running.pop(-1)
             # if index %2 == 1:
             #     seq_group = self.running.pop(-1)
             need_size = (seq_group.output_len + len(seq_group.seqs[0].data.prompt_token_ids)) * self.base_size
