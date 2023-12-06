@@ -130,7 +130,7 @@ class Scheduler:
         num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
         gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
 
-        print(total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage)
+        # print(total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage)
 
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
