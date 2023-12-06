@@ -169,6 +169,7 @@ class LLMEngine:
         sampling_params: SamplingParams,
         prompt_token_ids: Optional[List[int]] = None,
         arrival_time: Optional[float] = None,
+        output_len: Optional[int] = None,
     ) -> None:
         """Add a request to the engine's request pool.
 
@@ -206,6 +207,7 @@ class LLMEngine:
 
         # Add the sequence group to the scheduler.
         self.scheduler.add_seq_group(seq_group)
+        print("request_id total kv cache: " , request_id, 4*40*5120*(output_len + len(prompt_token_ids)))
 
     def abort_request(self, request_id: str) -> None:
         """Aborts a request with the given ID.

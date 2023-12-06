@@ -99,8 +99,9 @@ def run_vllm(
             prompt=prompt,
             prompt_token_ids=None,
             sampling_params=sampling_params,
+            output_len,
         )
-
+        
     start = time.time()
     # FIXME(woosuk): Do use internal method.
     outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
