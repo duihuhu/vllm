@@ -137,6 +137,7 @@ class LLM:
         output_len: Optional[int],
     ) -> None:
         request_id = str(next(self.request_counter))
+        print("output len ", output_len)
         self.llm_engine.add_request(request_id, prompt, sampling_params,
                                     prompt_token_ids, output_len)
 

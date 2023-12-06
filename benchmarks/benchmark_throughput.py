@@ -86,7 +86,6 @@ def run_vllm(
 
     # Add the requests to the engine.
     for prompt, _, output_len in requests:
-        print("output_len ", output_len)
         sampling_params = SamplingParams(
             n=n,
             temperature=0.0 if use_beam_search else 1.0,
