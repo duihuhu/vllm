@@ -171,7 +171,7 @@ class Scheduler:
             seq_group = self.running.pop(0)
             # if index %2 == 1:
             #     seq_group = self.running.pop(-1)
-            need_size = seq_group.output_len + len(seq_group.seqs[0].data.prompt_token_ids) * self.base_size
+            need_size = (seq_group.output_len + len(seq_group.seqs[0].data.prompt_token_ids)) * self.base_size
             if gpu_threshold > need_size:
                 gpu_threshold = gpu_threshold - need_size
                 num_prompts = num_prompts + 1
