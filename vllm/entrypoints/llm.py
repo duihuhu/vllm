@@ -134,7 +134,7 @@ class LLM:
         prompt: Optional[str],
         sampling_params: SamplingParams,
         prompt_token_ids: Optional[List[int]],
-        output_len, Optional[int],
+        output_len: Optional[int],
     ) -> None:
         request_id = str(next(self.request_counter))
         self.llm_engine.add_request(request_id, prompt, sampling_params,
