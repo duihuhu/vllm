@@ -65,7 +65,7 @@ class ChunkWorker:
         head_size= self.model_config.get_head_size()
         num_heads = self.model_config.get_num_heads(self.parallel_config)
         hidden_states = num_heads * head_size
-        dtype = self.model_config.dtype()
+        dtype = self.model_config.dtype
         for _ in range(num_layers):
             k_block = torch.empty(
                 size = (self.chunk_blocks_num, num_tokens, hidden_states),
