@@ -640,6 +640,7 @@ class LLMEngine:
             seq.first_text = new_output_text
         if seq.first_token == "":
             seq.first_token = new_tokens
+            
         if seq.tokens is None:
             seq.tokens = new_tokens
         else:
