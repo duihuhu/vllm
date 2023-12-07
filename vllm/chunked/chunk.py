@@ -58,11 +58,9 @@ class ChunkSamplingParams:
 class Sequence:
     def __init__(self,
                  seq_id: str,
-                 prompt: Optional[str],
                  prompt_token_ids: List[int],
                  sampling_params: ChunkSamplingParams) -> None:
         self.seq_id = seq_id
-        self.prompt = prompt
         self.prompt_token_ids = prompt_token_ids
         self.prompt_len = len(prompt_token_ids)
         self.chunks_to_prompts: Dict[int, int] = {}
