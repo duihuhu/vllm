@@ -32,8 +32,8 @@ class CompletionOutput:
         self.cumulative_logprob = cumulative_logprob
         self.logprobs = logprobs
         self.finish_reason = finish_reason
-        self.first_text = None
-        self.first_token = None
+        # self.first_text = None
+        # self.first_token = None
         
     def finished(self) -> bool:
         return self.finish_reason is not None
@@ -99,8 +99,8 @@ class RequestOutput:
                                       seq.get_output_token_ids(),
                                       seq.get_cumulative_logprob(), logprobs,
                                       finshed_reason)
-            output.first_text = seq.first_text
-            output.first_token = seq.first_token
+            # output.first_text = seq.first_text
+            # output.first_token = seq.first_token
             outputs.append(output)
 
         # Every sequence in the sequence group should have the same prompt.
