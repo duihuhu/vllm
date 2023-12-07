@@ -688,7 +688,6 @@ class LLMEngine:
     ) -> Any:
         """Runs the given method on all workers."""
         all_outputs = []
-        print("self.parallel_config.worker_use_ray ",  self.parallel_config.worker_use_ray)
         for worker in self.workers:
             if self.parallel_config.worker_use_ray:
                 executor = partial(worker.execute_method.remote, method)
