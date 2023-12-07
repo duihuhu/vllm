@@ -5,7 +5,7 @@ import torch
 
 from vllm.config import ModelConfig
 from vllm.chunked.chunkworker import ChunkWorker
-from vllm.chunked.chunk import Chunk, ChunkInputMetadata, ChunkSamplingParams
+from vllm.chunked.chunk import Chunk, ChunkInputMetadata, ChunkSamplingParams, ChunkStatus
 from vllm.worker.worker import _pad_to_alignment
 
 class ChunkRunner:
@@ -70,8 +70,9 @@ class ChunkRunner:
         input_tokens = chunk.prompt_token_ids
         input_positions: List[int] = []
         for i, slice_length in enumerate(chunk.prompt_lens):
-            input_positions.extend(range(len(slice_length)))
-            input_positions = [x + chunk.kv_prefixs[i] for x in input_positions]
+            slice_positions: List[int] = list(range(slice_length))
+            slice_positions = [x + chunk.kv_prefixs[i] for x in slice_positions]
+            input_positions.extend(slice_positions)
         input_tokens = _pad_to_alignment(input_tokens, multiple_of = 8)
         input_tokens_tensor = torch.cuda.LongTensor(input_tokens)
         input_positions = _pad_to_alignment(input_positions, multiple_of = 8)
@@ -100,10 +101,18 @@ class ChunkRunner:
         self._start_worker()
 
         for chunk in self.chunk_worker.job_chunks:
+            chunk.chunk_status = ChunkStatus.RUNNING
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
             chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, kv_block = chunk.cache_block_id)
-            output = self._execute_model(
+            # add for debug
+            print(f"chunk id: {chunk.chunk_id}")
+            print(f"prompt lens: {chunk.prompt_lens}")
+            print(f"seq2lens: {chunk.seqs_to_lens}")
+            print(f"kv prefixs: {chunk.kv_prefixs}")
+            print(f"kv prefixs blocks: {kv_cache_ids}")
+            print(f"self cache block id: {chunk.cache_block_id}")
+            '''output = self._execute_model(
                 inputs = input_tokens_tensor,
                 inputs_positions = input_positions_tensor,
                 kv_cache = self.chunk_worker.kv_cache,
@@ -114,7 +123,7 @@ class ChunkRunner:
         
         self.chunk_worker.reduce_outputs()
         self.chunk_worker.generate_first_token_id()
-        self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
+        self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)'''
      
     @torch.inference_mode()
     def _execute_model(self, inputs: torch.Tensor, inputs_positions: torch.Tensor, 

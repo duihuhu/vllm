@@ -9,7 +9,7 @@ class Block:
 class ChunkCacheBlocks:
     def __init__(self,
                  blocks_num: int) -> None:
-        self.Blocks = List[Block]
+        self.Blocks: List[Block] = []
         for i in range(blocks_num):
             self.Blocks.append(Block(block_id = i))
     

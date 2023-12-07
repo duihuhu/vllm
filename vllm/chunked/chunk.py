@@ -29,13 +29,13 @@ class Chunk:
             self.seqs_to_prefixs = self._set_seqs_to_prefixs()
 
     def _set_seqs_to_lens(self) -> Dict[str, int]:
-        out = Dict[str, int]
+        out: Dict[str, int] = {}
         for i, seq_id in enumerate(self.raw_sequence_ids):
             out[seq_id] = self.prompt_lens[i]
         return out
 
     def _set_seqs_to_prefixs(self) -> Dict[str, int]:
-        out = Dict[str, int]
+        out: Dict[str, int] = {}
         for i, seq_id in enumerate(self.raw_sequence_ids):
             out[seq_id] = self.kv_prefixs[i]
         return out
