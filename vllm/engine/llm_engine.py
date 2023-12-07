@@ -636,6 +636,10 @@ class LLMEngine:
              read_offset=seq.read_offset,
              skip_special_tokens=sampling_params.skip_special_tokens,
          )
+        if seq.first_text == "":
+            seq.first_text = new_output_text
+        if seq.first_token == "":
+            seq.first_token = new_tokens
         if seq.tokens is None:
             seq.tokens = new_tokens
         else:
