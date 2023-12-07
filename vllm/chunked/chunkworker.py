@@ -8,6 +8,9 @@ from vllm.model_executor import get_model, set_random_seed
 from vllm.utils import random_uuid, Counter
 from vllm.chunked.chunkcache import ChunkCacheBlocks
 from vllm.transformers_utils.tokenizer import detokenize_incrementally
+from vllm.engine.ray_utils import initialize_cluster
+from vllm.model_executor.parallel_utils.parallel_state import (
+    initialize_model_parallel, initialize_all_reduce_launcher)
 
 class ChunkWorker:
     def __init__(self,
@@ -29,9 +32,34 @@ class ChunkWorker:
         self._set_self_cacheblock()
     
     def _set_self_model(self) -> None:
+        distributed_init_method, _ = initialize_cluster(self.parallel_config)
+        self._init_distributed_environment(self.parallel_config, 0,
+                                      distributed_init_method)
         set_random_seed(seed = self.model_config.seed)
         self.model = get_model(model_config = self.model_config)
-    
+        initialize_all_reduce_launcher(
+            2560,
+            self.model_config.get_hidden_size(),
+            self.model_config.dtype,
+        )
+
+    def _init_distributed_environment(
+        parallel_config: ParallelConfig,
+        rank: int,
+        distributed_init_method: str,
+    ) -> None:
+        """Initialize the distributed environment."""
+        torch.distributed.init_process_group(
+            backend="nccl",
+            world_size=parallel_config.world_size,
+            rank=rank,
+            init_method=distributed_init_method,
+        )
+        # A small all_reduce for warmup.
+        torch.distributed.all_reduce(torch.zeros(1).cuda())
+        initialize_model_parallel(parallel_config.tensor_parallel_size,
+                                parallel_config.pipeline_parallel_size)
+
     def _set_self_kv_cache(self) -> None:
         kv_cache: List[Tuple[torch.Tensor, torch.Tensor]] = []
         num_layers = self.model_config.get_num_layers(self.parallel_config)
