@@ -105,14 +105,7 @@ class ChunkRunner:
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
             chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, kv_block = chunk.cache_block_id)
-            # add for debug
-            print(f"chunk id: {chunk.chunk_id}")
-            print(f"prompt lens: {chunk.prompt_lens}")
-            print(f"seq2lens: {chunk.seqs_to_lens}")
-            print(f"kv prefixs: {chunk.kv_prefixs}")
-            print(f"kv prefixs blocks: {kv_cache_ids}")
-            print(f"self cache block id: {chunk.cache_block_id}")
-            '''output = self._execute_model(
+            output = self._execute_model(
                 inputs = input_tokens_tensor,
                 inputs_positions = input_positions_tensor,
                 kv_cache = self.chunk_worker.kv_cache,
@@ -123,7 +116,7 @@ class ChunkRunner:
         
         self.chunk_worker.reduce_outputs()
         self.chunk_worker.generate_first_token_id()
-        self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)'''
+        self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
      
     @torch.inference_mode()
     def _execute_model(self, inputs: torch.Tensor, inputs_positions: torch.Tensor, 
