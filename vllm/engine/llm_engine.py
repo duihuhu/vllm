@@ -686,13 +686,13 @@ class LLMEngine:
         get_all_outputs: bool = False,
         **kwargs,
     ) -> Any:
+
         """Runs the given method on all workers."""
         all_outputs = []
         for worker in self.workers:
+            executor = getattr(worker, method)
             if self.parallel_config.worker_use_ray:
-                executor = partial(worker.execute_method.remote, method)
-            else:
-                executor = getattr(worker, method)
+                executor = executor.remote
 
             output = executor(*args, **kwargs)
             all_outputs.append(output)
@@ -708,3 +708,30 @@ class LLMEngine:
         for other_output in all_outputs[1:]:
             assert output == other_output
         return output
+        
+
+        # """Runs the given method on all workers."""
+        # all_outputs = []
+        # for worker in self.workers:
+        #     if self.parallel_config.worker_use_ray:
+        #         executor = partial(worker.execute_method.remote, method)
+        #     else:
+        #         executor = getattr(worker, method)
+
+        #     output = executor(*args, **kwargs)
+        #     all_outputs.append(output)
+
+        # if self.parallel_config.worker_use_ray:
+        #     all_outputs = ray.get(all_outputs)
+
+        # if get_all_outputs:
+        #     return all_outputs
+
+        # # Make sure all workers have the same results.
+        # output = all_outputs[0]
+        # for other_output in all_outputs[1:]:
+        #     assert output == other_output
+        # return output
+
+
+
