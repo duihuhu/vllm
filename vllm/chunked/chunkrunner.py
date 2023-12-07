@@ -122,9 +122,10 @@ class ChunkRunner:
     def _execute_model(self, inputs: torch.Tensor, inputs_positions: torch.Tensor, 
                        kv_cache: List[Tuple[torch.Tensor, torch.Tensor]], chunkmetadata: ChunkInputMetadata) -> torch.Tensor:
         output = self.chunk_worker.model(
-            inputs,
-            inputs_positions,
-            kv_cache,
-            chunkmetadata
+            input_ids = inputs,
+            positions = inputs_positions,
+            kv_caches = kv_cache,
+            cache_events = None,
+            chunkinputmetadata = chunkmetadata
         )
         return output
