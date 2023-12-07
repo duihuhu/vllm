@@ -68,12 +68,12 @@ class ChunkWorker:
         dtype = self.model_config.dtype
         for _ in range(num_layers):
             k_block = torch.empty(
-                size = (self.chunk_blocks_num, num_tokens, hidden_states),
+                size = (self.chunk_num, num_tokens, hidden_states),
                 dtype = dtype,
                 device = "cuda"
             )
             v_block = torch.empty(
-                size = (self.chunk_blocks_num, num_tokens, hidden_states),
+                size = (self.chunk_num, num_tokens, hidden_states),
                 dtype = dtype,
                 device = "cuda"
             )
