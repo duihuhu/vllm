@@ -33,8 +33,9 @@ class ChunkWorker:
     
     def _set_self_model(self) -> None:
         distributed_init_method, _ = initialize_cluster(self.parallel_config)
-        self._init_distributed_environment(self.parallel_config, 0,
-                                      distributed_init_method)
+        self._init_distributed_environment(parallel_config = self.parallel_config, 
+                                           rank = 0, 
+                                           distributed_init_method = distributed_init_method)
         set_random_seed(seed = self.model_config.seed)
         self.model = get_model(model_config = self.model_config)
         initialize_all_reduce_launcher(
@@ -43,11 +44,8 @@ class ChunkWorker:
             self.model_config.dtype,
         )
 
-    def _init_distributed_environment(
-        parallel_config: ParallelConfig,
-        rank: int,
-        distributed_init_method: str,
-    ) -> None:
+    def _init_distributed_environment(self, parallel_config: ParallelConfig, rank: int,
+        distributed_init_method: str) -> None:
         """Initialize the distributed environment."""
         torch.distributed.init_process_group(
             backend="nccl",
