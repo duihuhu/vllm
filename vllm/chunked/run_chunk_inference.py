@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--num-prompts", type=int, default=10,
                         help="Number of prompts to process.")
-    parser.add_argument("--chunk-szie", type=int, default=560)
+    parser.add_argument("--chunk-size", type=int, default=560)
     parser.add_argument("--chunk-num", type=int, default=100)
     args = parser.parse_args()
 
