@@ -86,6 +86,8 @@ class ChunkSampler(nn.Module):
 
         # Sample the next tokens.
         new_token_ids = _sample(probs, sampling_params)
+        print(logprobs.shape)
+        print(new_token_ids[0])
         logprob = logprobs[new_token_ids[0]].item()
         return (new_token_ids, logprob)
 
