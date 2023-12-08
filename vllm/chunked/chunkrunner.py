@@ -79,22 +79,24 @@ class ChunkRunner:
         input_positions_tensor = torch.cuda.LongTensor(input_positions)
         kv_cache_ids: Dict[int, List[Tuple[int, int, int]]] = {} # prompt_len to (block, st, length)s
         for seq_id, kv_cache_num in chunk.seqs_to_prefixs.items():
-            if kv_cache_num == 0:
-                continue
             sequence = self.chunk_worker.job_sequences[seq_id]
-            for chunk_id, used_token_num in sequence.chunks_to_prompts.items():
-                if chunk_id == chunk.chunk_id:
-                    break
-                else:
-                    block_id = self.chunk_worker.job_chunks[chunk_id].cache_block_id
-                    st = 0
-                    for a_seq_id, slice_token_num in self.chunk_worker.job_chunks[chunk_id].seqs_to_lens.items():
-                        if a_seq_id == seq_id:
-                            break
-                        else:
-                            st += slice_token_num
-                    prompt_len = chunk.seqs_to_lens.get(seq_id)
-                    kv_cache_ids.setdefault(prompt_len, []).append((block_id, st, used_token_num))
+            if kv_cache_num == 0:
+                prompt_len = chunk.seqs_to_lens.get(seq_id)
+                kv_cache_ids.setdefault(prompt_len, [])
+            else:
+                for chunk_id, used_token_num in sequence.chunks_to_prompts.items():
+                    if chunk_id == chunk.chunk_id:
+                        break
+                    else:
+                        block_id = self.chunk_worker.job_chunks[chunk_id].cache_block_id
+                        st = 0
+                        for a_seq_id, slice_token_num in self.chunk_worker.job_chunks[chunk_id].seqs_to_lens.items():
+                            if a_seq_id == seq_id:
+                                break
+                            else:
+                                st += slice_token_num
+                        prompt_len = chunk.seqs_to_lens.get(seq_id)
+                        kv_cache_ids.setdefault(prompt_len, []).append((block_id, st, used_token_num))
         return (input_tokens_tensor, input_positions_tensor, kv_cache_ids)
     
     def run_worker(self) -> None:

@@ -90,7 +90,7 @@ class ChunkInputMetadata:
     def __init__(self,
                  prompt_lens: List[int],
                  kv_prefixs: List[int],
-                 kv_prefixs_blocks: Dict[int, Tuple[int, int, int]],
+                 kv_prefixs_blocks: Dict[int, List[Tuple[int, int, int]]],
                  kv_block: int) -> None:
         self.prompt_lens = prompt_lens
         self.kv_prefixs = kv_prefixs
