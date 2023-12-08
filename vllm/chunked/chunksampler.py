@@ -85,7 +85,6 @@ class ChunkSampler(nn.Module):
             probs = _apply_top_p_top_k(probs, top_ps, top_ks)
 
         # Sample the next tokens.
-        print(probs.shape)
         new_token_ids = _sample(probs, sampling_params)
         logprob = logprobs[:, new_token_ids[0]].item()
         return (new_token_ids, logprob)
@@ -97,7 +96,8 @@ def _get_temperature(sampling_params: ChunkSamplingParams) -> List[float]:
     # Set the temperature to 1 to avoid division by zero.
     temperature = sampling_params.temperature
     if temperature < _SAMPLING_EPS:
-        temperature = 1.0
+        #just don't divide by 0
+        temperature = _SAMPLING_EPS
     return [temperature]
 
 def _get_top_p_top_k(
@@ -164,6 +164,7 @@ def _sample(
     probs: torch.Tensor,
     sampling_params: ChunkSamplingParams
 ) -> List[int]:
-    prob = probs[0]
-    next_token_ids = _sample_from_prompt(prob, sampling_params)      
+    #prob = probs[0]
+    #prob should be [m,n] even if m==1
+    next_token_ids = _sample_from_prompt(probs, sampling_params)      
     return next_token_ids
