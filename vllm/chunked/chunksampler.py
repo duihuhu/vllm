@@ -53,8 +53,7 @@ class ChunkSampler(nn.Module):
         # temporarily this is useless due to the tp==1   
         logits = gather_from_tensor_model_parallel_region(logits)
         # Remove paddings in vocab (if any).
-        print(logits.shape)
-        logits = logits[:, :self.vocab_size]
+        logits = logits[:self.vocab_size]
 
         # Apply presence and frequency penalties.
         # Only process prefill, so delete all codes for process prefill&decode       
