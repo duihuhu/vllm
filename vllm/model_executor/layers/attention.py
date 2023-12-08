@@ -126,7 +126,6 @@ class PagedAttention(nn.Module):
             p=0.0,
             scale=self.scale,
         )
-        print("multi_query_kv_attention: ", out)
         # TODO(woosuk): Unnecessary copy. Optimize.
         output.copy_(out.squeeze(0))
         return output
