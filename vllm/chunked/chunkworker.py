@@ -151,8 +151,8 @@ class ChunkWorker:
     
     def generate_first_token_id(self) -> None:
         for _, sequence in self.job_sequences.items():
-            output_tokens_list, logprob = self.model.sampler(self.model.lm_head_weight, sequence.outputs[0], 
-                                                   sequence.sampling_params)
+            output_tokens_list, logprob = self._execute_sampler(logits = sequence.outputs[0], 
+                                                                sampling_params = sequence.sampling_params)
             sequence.add_first_token_id(output_tokens_list[0])
             sequence.add_first_token_logprob(logprob)
     
@@ -166,3 +166,8 @@ class ChunkWorker:
                         skip_special_tokens=True,
                     )
             sequence.add_first_token_str(new_output_text = new_output_text)
+    
+    @torch.inference_mode()
+    def _execute_sampler(self, logits: torch.Tensor, sampling_params: ChunkSamplingParams) -> Tuple[List[int], float]:
+        output_tokens_list, logprob = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
+        return (output_tokens_list, logprob)
