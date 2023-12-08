@@ -169,6 +169,7 @@ class ChunkedPagedAttention(nn.Module):
                 value_slices[0] = torch.cat((value_slices[0], value_slices[i]), 0)
         
         # do attention op
+        self.set_attn_bias(chunkedinputmetadata = chunkinputmetadata)
         self.multi_query_kv_attention(
                             output[: num_valid_tokens],
                             query[: num_valid_tokens],
