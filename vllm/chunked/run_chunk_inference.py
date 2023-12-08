@@ -20,7 +20,10 @@ def main(args: argparse.Namespace):
     chunkrunner.run_worker()
 
     for seq_id, sequence in chunkrunner.chunk_worker.job_sequences.items():
-        print(f"{seq_id}'s first output token is {sequence.first_token_str} while it's id is {sequence.first_token_id} and it's prob is {sequence.first_token_logprob}")
+        print(f"seq_id is {seq_id}")
+        print(f"sequence output's shape is {sequence.outputs[0].shape}")
+        print(f"first token id is {sequence.first_token_id}")
+        print(f"first token prob is {sequence.first_token_logprob}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="run vllm's prefill stage in chunk")
