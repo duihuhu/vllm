@@ -7,7 +7,6 @@ from vllm.chunked.chunk import Chunk, Sequence, ChunkStatus, ChunkSamplingParams
 from vllm.model_executor import get_model, set_random_seed
 from vllm.utils import random_uuid, Counter
 from vllm.chunked.chunkcache import ChunkCacheBlocks
-from vllm.transformers_utils.tokenizer import detokenize_incrementally
 from vllm.engine.ray_utils import initialize_cluster
 from vllm.model_executor.parallel_utils.parallel_state import (
     initialize_model_parallel, initialize_all_reduce_launcher)
@@ -158,13 +157,8 @@ class ChunkWorker:
     
     def generate_first_token_str(self, tokenizer: PreTrainedTokenizerBase) -> None:
         for _, sequence in self.job_sequences.items():
-            old_output_tokens: List[str] = []
-            _, new_output_text = detokenize_incrementally(
-                        tokenizer,
-                        old_output_tokens,
-                        sequence.first_token_id,
-                        skip_special_tokens=True,
-                    )
+            new_token = tokenizer.convert_ids_to_tokens(sequence.first_token_id, skip_special_tokens = True)
+            new_output_text = tokenizer.convert_tokens_to_string(new_token)
             sequence.add_first_token_str(new_output_text = new_output_text)
     
     @torch.inference_mode()
