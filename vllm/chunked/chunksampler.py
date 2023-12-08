@@ -45,6 +45,8 @@ class ChunkSampler(nn.Module):
         # sync the outputs among different chunks and then
         # generate the new token
         hidden_states = hidden_states[-1]
+        # reshape for match later
+        hidden_states = hidden_states.reshape(1, -1)
 
         # Get the logits for the next tokens.
         logits = torch.matmul(hidden_states, embedding.t())
@@ -53,7 +55,7 @@ class ChunkSampler(nn.Module):
         # temporarily this is useless due to the tp==1   
         logits = gather_from_tensor_model_parallel_region(logits)
         # Remove paddings in vocab (if any).
-        logits = logits[:self.vocab_size]
+        logits = logits[:, :self.vocab_size]
 
         # Apply presence and frequency penalties.
         # Only process prefill, so delete all codes for process prefill&decode       
