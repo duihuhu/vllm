@@ -40,7 +40,7 @@ class ChunkSampler(nn.Module):
         #input_metadata: InputMetadata,
         sampling_params: ChunkSamplingParams,
         embedding_bias: Optional[torch.Tensor] = None,
-    ) -> int: #Tuple[List[int], float]:
+    ) -> Tuple[List[int], float]:
         # Get the hidden states that we use for sampling.
         # sync the outputs among different chunks and then
         # generate the new token
@@ -61,34 +61,34 @@ class ChunkSampler(nn.Module):
         # Only process prefill, so delete all codes for process prefill&decode       
 
         # Apply temperature scaling.
-        #temperatures = _get_temperature(sampling_params)
-        #if any(temperature != 1.0 for temperature in temperatures):
-        #    t = torch.tensor(temperatures,
-        #                     dtype=logits.dtype,
-        #                     device=logits.device)
+        temperatures = _get_temperature(sampling_params)
+        if any(temperature != 1.0 for temperature in temperatures):
+            t = torch.tensor(temperatures,
+                             dtype=logits.dtype,
+                             device=logits.device)
             # Use in-place division to avoid creating a new tensor.
-        #    logits.div_(t.unsqueeze(dim=1))
+            logits.div_(t.unsqueeze(dim=1))
 
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
         # Compute the log probabilities (before applying top-p and top-k).
         # no decoding stage so this is useless(maybe)
-        #logprobs = torch.log(probs)
+        logprobs = torch.log(probs)
         #max_prob_index = torch.argmax(logprobs, dim = -1)
-        max_prob_index = torch.argmax(probs, dim = -1)
+        #max_prob_index = torch.argmax(probs, dim = -1)
         # Apply top-p and top-k truncation.
-        #top_ps, top_ks = _get_top_p_top_k(sampling_params, self.vocab_size)
+        top_ps, top_ks = _get_top_p_top_k(sampling_params, self.vocab_size)
         
-        #do_top_p = any(top_p < 1.0 - _SAMPLING_EPS for top_p in top_ps)
-        #do_top_k = any(top_k != self.vocab_size for top_k in top_ks)
-        #if do_top_p or do_top_k:
-        #    probs = _apply_top_p_top_k(probs, top_ps, top_ks)
+        do_top_p = any(top_p < 1.0 - _SAMPLING_EPS for top_p in top_ps)
+        do_top_k = any(top_k != self.vocab_size for top_k in top_ks)
+        if do_top_p or do_top_k:
+            probs = _apply_top_p_top_k(probs, top_ps, top_ks)
 
         # Sample the next tokens.
-        #new_token_ids = _sample(probs, sampling_params)
-        #logprob = logprobs[:, new_token_ids[0]].item()
-        return max_prob_index.item() #(new_token_ids, logprob)
+        new_token_ids = _sample(probs, sampling_params)
+        logprob = logprobs[:, new_token_ids[0]].item()
+        return (new_token_ids, logprob)
 
 def _get_temperature(sampling_params: ChunkSamplingParams) -> List[float]:
     # Collect the temperatures for the logits.
