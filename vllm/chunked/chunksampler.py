@@ -74,8 +74,9 @@ class ChunkSampler(nn.Module):
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
         # Compute the log probabilities (before applying top-p and top-k).
         # no decoding stage so this is useless(maybe)
-        logprobs = torch.log(probs)
-        max_prob_index = torch.argmax(logprobs, dim = -1)
+        #logprobs = torch.log(probs)
+        #max_prob_index = torch.argmax(logprobs, dim = -1)
+        max_prob_index = torch.argmax(probs, dim = -1)
         # Apply top-p and top-k truncation.
         #top_ps, top_ks = _get_top_p_top_k(sampling_params, self.vocab_size)
         
