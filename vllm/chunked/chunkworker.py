@@ -165,3 +165,13 @@ class ChunkWorker:
     def _execute_sampler(self, logits: torch.Tensor, sampling_params: ChunkSamplingParams) -> Tuple[List[int], float]:
         output_tokens_list, logprob = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
         return (output_tokens_list, logprob)
+
+    def greedy_search(self) -> List[int]:
+        ans: List[int] = []
+        for _, sequence in self.job_sequences.items():
+            logits = sequence.outputs[0]
+            logits = logits.reshape(1, -1)
+            logits = torch.softmax(logits, dim = 1)
+            max_prob_index = torch.argmax(logits, dim = 1)
+            ans.append(max_prob_index)
+        return ans

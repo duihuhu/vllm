@@ -124,8 +124,10 @@ class ChunkRunner:
                 st = ed
         
         self.chunk_worker.reduce_outputs()
-        self.chunk_worker.generate_first_token_id()
-        self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
+        probs = self.chunk_worker.greedy_search
+        print(probs)
+        #self.chunk_worker.generate_first_token_id()
+        #self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
      
     @torch.inference_mode()
     def _execute_model(self, inputs: torch.Tensor, inputs_positions: torch.Tensor, 
