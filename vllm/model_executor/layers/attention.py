@@ -152,17 +152,17 @@ class ChunkedPagedAttention(nn.Module):
             value_slices.append(value[st: ed])
             st = ed
         for i, items in enumerate(chunkinputmetadata.kv_prefixs_blocks.items()):
-            prompt_len = items[0]
+            #prompt_len = items[0]
             if items[1]:
                 for block_id, block_st, block_slice in reversed(items[1]):    
                     block_ed = block_st + block_slice
-                    if prompt_len == chunkinputmetadata.prompt_lens[i]:
-                        k_past = key_cache[block_id][block_st: block_ed]
-                        k_past = k_past.view(-1, self.num_heads, self.head_size)
-                        v_past = value_cache[block_id][block_st: block_ed]
-                        v_past = v_past.view(-1, self.num_heads, self.head_size)
-                        key_slices[i] = torch.cat((k_past, key_slices[i]), 0)
-                        value_slices[i] = torch.cat((v_past, value_slices[i]), 0)
+                    #if prompt_len == chunkinputmetadata.prompt_lens[i]:
+                    k_past = key_cache[block_id][block_st: block_ed]
+                    k_past = k_past.view(-1, self.num_heads, self.head_size)
+                    v_past = value_cache[block_id][block_st: block_ed]
+                    v_past = v_past.view(-1, self.num_heads, self.head_size)
+                    key_slices[i] = torch.cat((k_past, key_slices[i]), 0)
+                    value_slices[i] = torch.cat((v_past, value_slices[i]), 0)
         for i in range(len(key_slices)):
             if i != 0:
                 key_slices[0] = torch.cat((key_slices[0], key_slices[i]), 0)
