@@ -66,7 +66,10 @@ class Sequence:
         self.chunks_to_prompts: Dict[int, int] = {}
         self.sampling_params = sampling_params
         self.outputs: List[torch.Tensor] = []
-    
+        self.account = 0
+        self.start_time = -1
+        self.end_time = -1
+
     def append_outputs(self, input: torch.Tensor) -> None:
         self.outputs.append(input)
 
@@ -85,6 +88,15 @@ class Sequence:
     
     def add_first_token_str(self, new_output_text: str) -> None:
         self.first_token_str = new_output_text
+    
+    def add_start_and_end_time(self, st: float, ed: float) -> None:
+        if self.account == 0:
+            self.start_time = st
+            self.end_time = ed
+            self.account = 1
+        else:
+            self.start_time = min(self.start_time, st)
+            self.end_time = max(self.end_time, ed)
 
 class ChunkInputMetadata:
     def __init__(self,

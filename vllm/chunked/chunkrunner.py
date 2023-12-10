@@ -2,6 +2,7 @@ from transformers import PreTrainedTokenizerBase
 import json
 from typing import List, Dict, Tuple
 import torch
+import time
 
 from vllm.config import ModelConfig
 from vllm.chunked.chunkworker import ChunkWorker
@@ -111,16 +112,20 @@ class ChunkRunner:
                                                     kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, 
                                                     kv_block = chunk.cache_block_id)
+            # add for test
+            start_time = time.time()
             output = self._execute_model(
                 inputs = input_tokens_tensor,
                 inputs_positions = input_positions_tensor,
                 kv_cache = self.chunk_worker.kv_cache,
                 chunkmetadata = chunkinputmetadata
             )
+            end_time = time.time()
             st = 0
             for seq_id, prompt_len in chunk.seqs_to_lens.items():
                 ed = st + prompt_len
                 self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
+                self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
                 st = ed
         
         self.chunk_worker.reduce_outputs()

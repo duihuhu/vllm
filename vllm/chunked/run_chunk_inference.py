@@ -24,6 +24,7 @@ def main(args: argparse.Namespace):
         #print(f"sequence output's shape is {sequence.outputs[0].shape}")
         print(f"first token id is {sequence.first_token_id}")
         print(f"first token prob is {sequence.first_token_logprob}")
+        print(f"start time is {sequence.start_time}, end time is {sequence.end_time}, costs {sequence.end_time - sequence.start_time} seconds")
         #print(sequence.outputs[0][-1])
 
 if __name__ == "__main__":
