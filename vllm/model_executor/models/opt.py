@@ -253,20 +253,20 @@ class OPTDecoder(nn.Module):
         
         print("inputs_embeds shape: ", inputs_embeds.shape)
         dim0, dim1, dim2 = inputs_embeds.shape
-        # import numpy as np
-        # if dim0 > 1:
-        #     if self.index == 1:
-        #         inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[-1].shape[0], -1)
-        #         print("sample_results inputs_embeds : ", inputs_embeds_shaped)
-        #         x_t = inputs_embeds_shaped.cpu().numpy()
-        #         np.savetxt("pos_embeds1.txt", x_t, delimiter='\n')
-        # else:
-        #     if self.index == 1:
-        #         inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-        #         print("sample_results inputs_embeds : ", inputs_embeds_shaped)
-        #         x_t = inputs_embeds_shaped.cpu().numpy()
-        #         np.savetxt("pos_embeds0.txt", x_t, delimiter='\n')
-        # self.index = self.index + 1
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 1:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results inputs_embeds : ", inputs_embeds[1])
+                x_t = inputs_embeds[1].cpu().numpy()
+                np.savetxt("inputs_embeds1.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results inputs_embeds : ", inputs_embeds)
+                x_t = inputs_embeds.cpu().numpy()
+                np.savetxt("inputs_embeds0.txt", x_t, delimiter='\n')
+        self.index = self.index + 1
         
         if self.project_in is not None:
             inputs_embeds, _ = self.project_in(inputs_embeds)
