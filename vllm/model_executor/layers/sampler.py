@@ -40,7 +40,6 @@ class Sampler(nn.Module):
         sampling_metadata: SamplingMetadata,
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> SamplerOutput:
-        dim0, dim1 = logits.shape
         import numpy as np
         # if dim0 > 1:
         if self.index == 1:
