@@ -270,7 +270,6 @@ class OPTDecoder(nn.Module):
                 print("sample_results hidden_states : ", hidden_states[0])
                 x_t = hidden_states[0].cpu().numpy()
                 np.savetxt("hidden_states0.txt", x_t, delimiter='\n')
-        self.index = self.index + 1
         
         for i in range(len(self.layers)):
             cache_event = None if cache_events is None else cache_events[i]
