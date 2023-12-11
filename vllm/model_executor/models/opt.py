@@ -278,13 +278,13 @@ class OPTDecoder(nn.Module):
                     # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
                     print("sample_results hidden_states : ", hidden_states[1])
                     x_t = hidden_states[1].cpu().numpy()
-                    np.savetxt("hidden_states0{i}.txt", x_t, delimiter='\n')
+                    np.savetxt("hidden_states0"+ str(i) + ".txt", x_t, delimiter='\n')
             else:
                 if self.index == 1:
                     # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
                     print("sample_results hidden_states : ", hidden_states[0])
                     x_t = hidden_states[0].cpu().numpy()
-                    np.savetxt("hidden_states1{i}.txt", x_t, delimiter='\n')
+                    np.savetxt("hidden_states"+ str(i) + ".txt", x_t, delimiter='\n')
                     
             cache_event = None if cache_events is None else cache_events[i]
             layer = self.layers[i]
