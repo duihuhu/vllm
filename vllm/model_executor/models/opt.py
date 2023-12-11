@@ -285,7 +285,7 @@ class OPTDecoder(nn.Module):
             #         print("sample_results hidden_states : ", hidden_states[0])
             #         x_t = hidden_states[0].cpu().numpy()
             #         np.savetxt("hidden_states1"+ str(i) + ".txt", x_t, delimiter='\n')
-            print("kv_caches ", kv_caches[i].shape)
+            print("kv_caches ", kv_caches[i])
             cache_event = None if cache_events is None else cache_events[i]
             layer = self.layers[i]
             hidden_states = layer(hidden_states, kv_caches[i], input_metadata,
