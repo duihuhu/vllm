@@ -15,13 +15,13 @@ def main(args: argparse.Namespace):
     chunk_num = args.chunk_num
     chunkrunner.set_self_chunkworker(chunk_size = chunk_size, chunk_num = chunk_num)
 
-    #chunkrunner.set_inputs(dataset_path = args.dataset, num_requests = args.num_prompts)
+    chunkrunner.set_inputs(dataset_path = args.dataset, num_requests = args.num_prompts)
 
     chunkrunner.run_worker()
 
     for seq_id, sequence in chunkrunner.chunk_worker.job_sequences.items():
         print(f"seq_id is {seq_id}")
-        #print(f"sequence output's shape is {sequence.outputs[0].shape}")
+        print(f"sequence output's shape is {sequence.outputs[0].shape}")
         print(f"first token id is {sequence.first_token_id}")
         print(f"first token prob is {sequence.first_token_logprob}")
         print(f"start time is {sequence.start_time}, end time is {sequence.end_time}, costs {sequence.end_time - sequence.start_time} seconds")
