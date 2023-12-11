@@ -103,7 +103,9 @@ class ChunkRunner:
     
     def run_worker(self) -> None:
         self._start_worker()
-
+        now_time = time.time()
+        print(f"Added in working pool at {now_time}")
+        
         #chunk_size = self.chunk_worker.chunk_size 
         for chunk in self.chunk_worker.job_chunks:
             chunk.chunk_status = ChunkStatus.RUNNING
