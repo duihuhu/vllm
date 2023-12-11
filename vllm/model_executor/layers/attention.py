@@ -40,6 +40,7 @@ class PagedAttention(nn.Module):
         num_kv_heads: Optional[int] = None,
         alibi_slopes: Optional[List[float]] = None,
         sliding_window: Optional[int] = None,
+        layer_num: Optional[int] = None
     ) -> None:
         super().__init__()
         self.num_heads = num_heads
@@ -47,6 +48,7 @@ class PagedAttention(nn.Module):
         self.scale = float(scale)
         self.num_kv_heads = num_heads if num_kv_heads is None else num_kv_heads
         self.sliding_window = sliding_window
+        self.layer_num = layer_num
         if alibi_slopes is not None:
             alibi_slopes = torch.tensor(alibi_slopes, dtype=torch.float32)
         self.register_buffer("alibi_slopes", alibi_slopes, persistent=False)
@@ -60,7 +62,7 @@ class PagedAttention(nn.Module):
         if self.head_size not in _SUPPORTED_HEAD_SIZES:
             raise ValueError(f"head_size ({self.head_size}) is not supported. "
                              f"Supported head sizes: {_SUPPORTED_HEAD_SIZES}.")
-
+        self.index = 0 
     def forward(
         self,
         query: torch.Tensor,
@@ -161,7 +163,21 @@ class PagedAttention(nn.Module):
                 p=0.0,
                 scale=self.scale,
             )
+            import numpy as np
+            
             output = out.view_as(query)
+            if batch_size > 1:
+                if self.index == 1 and self.layer_num == 0:
+                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                    print("sample_results hidden_states : ", out[1])
+                    x_t = out[1].cpu().numpy()
+                    np.savetxt("out0.txt", x_t, delimiter='\n')
+            else:
+                if self.index == 1 and self.layer_num == 0:
+                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                    print("sample_results hidden_states : ", out[0])
+                    x_t = out[0].cpu().numpy()
+                    np.savetxt("out1.txt", x_t, delimiter='\n')
         else:
             # Decoding run.
             output = _paged_attention(
@@ -173,6 +189,7 @@ class PagedAttention(nn.Module):
                 self.scale,
                 self.alibi_slopes,
             )
+        self.index = self.index + 1
 
         # Reshape the output tensor.
         return output.view(batch_size, seq_len, hidden_size)
