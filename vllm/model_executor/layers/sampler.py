@@ -87,7 +87,7 @@ class Sampler(nn.Module):
         # Compute the probabilities.
         print("logits.shape: ", logits.shape)
         import numpy as np
-        x_np = logits.numpy()
+        x_np = logits.cpu().numpy()
         np.savetxt("tensor.txt", x_np)
         # dim0, dim1 = logits.shape
         # for i in range(dim0):
