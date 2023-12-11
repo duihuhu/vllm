@@ -257,12 +257,12 @@ class OPTDecoder(nn.Module):
             if self.index == 1:
                 print("sample_results inputs_embeds : ", inputs_embeds)
                 x_t = inputs_embeds[-1].cpu().numpy()
-                np.savetxt("hidden_states.txt", x_t, delimiter=',')
+                np.savetxt("inputs_embeds1.txt", x_t, delimiter=',')
         else:
             if self.index == 1:
                 print("sample_results inputs_embeds : ", inputs_embeds)
-                x_t = inputs_embeds[-1].cpu().numpy()
-                np.savetxt("inputs_embeds.txt", x_t, delimiter=',')
+                x_t = inputs_embeds.cpu().numpy()
+                np.savetxt("inputs_embeds0.txt", x_t, delimiter=',')
         self.index = self.index + 1
         
         if self.project_in is not None:
