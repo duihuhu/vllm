@@ -32,7 +32,7 @@ class Sampler(nn.Module):
     def __init__(self, vocab_size: int) -> None:
         super().__init__()
         self.vocab_size = vocab_size
-
+        self.index = 0
     def forward(
         self,
         embedding: torch.Tensor,
@@ -87,9 +87,13 @@ class Sampler(nn.Module):
         # Compute the probabilities.
         dim0, dim1 = logits.shape
         if dim0 > 1:
-            print("sample_results logits : ", logits[-1])
+            if self.index == 0:
+                print("sample_results logits : ", logits[-1])
+                self.index = self.index + 1
         else:
-            print("sample_results logits : ", logits)
+            if self.index == 0:
+                print("sample_results logits : ", logits)
+                self.index = self.index + 1
         # dim0, dim1 = logits.shape
         # for i in range(dim0):
         #     prob = torch.softmax(logits[i], dim=-1, dtype=torch.float)
