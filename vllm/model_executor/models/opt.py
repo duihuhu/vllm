@@ -255,15 +255,15 @@ class OPTDecoder(nn.Module):
         import numpy as np
         if dim0 > 1:
             if self.index == 1:
-                pos_embeds = pos_embeds.reshape(pos_embeds.shape[0], -1)
-                print("sample_results inputs_embeds : ", pos_embeds)
-                x_t = pos_embeds[-1].cpu().numpy()
+                pos_embeds_shaped = pos_embeds.reshape(pos_embeds.shape[0], -1)
+                print("sample_results inputs_embeds : ", pos_embeds_shaped)
+                x_t = pos_embeds_shaped[-1].cpu().numpy()
                 np.savetxt("pos_embeds1.txt", x_t, delimiter=',')
         else:
             if self.index == 1:
-                pos_embeds = inputs_embeds.reshape(pos_embeds.shape[0], -1)
-                print("sample_results inputs_embeds : ", pos_embeds)
-                x_t = pos_embeds.cpu().numpy()
+                pos_embeds_shaped = inputs_embeds.reshape(pos_embeds.shape[0], -1)
+                print("sample_results inputs_embeds : ", pos_embeds_shaped)
+                x_t = pos_embeds_shaped.cpu().numpy()
                 np.savetxt("pos_embeds0.txt", x_t, delimiter='\n')
         self.index = self.index + 1
         
