@@ -155,8 +155,16 @@ class PagedAttention(nn.Module):
                 key = key.unflatten(0, (batch_size, seq_len))
                 value = value.unflatten(0, (batch_size, seq_len))
 
-            if self.layer_num == 0:
-                print("query ", query, " " , self.index)
+            if self.layer_num == 0 and self.index == 1: 
+                import numpy as np
+                q_t = query.cpu().numpy()
+                k_t = query.cpu().numpy()
+                v_t = query.cpu().numpy()
+
+                np.savetxt("query.txt", q_t, delimiter='\n')
+                np.savetxt("key.txt", k_t, delimiter='\n')
+                np.savetxt("value.txt", v_t, delimiter='\n')
+
             out = xops.memory_efficient_attention_forward(
                 query,
                 key,
