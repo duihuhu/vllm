@@ -57,9 +57,11 @@ class ChunkRunner:
         self.requests = filtered_dataset
     
     def _add_requests_to_worker(self) -> None:
-        for prompt_token_ids in self.requests:
+        #for prompt_token_ids in self.requests:
+        for _ in range(0, 20):
             sampling_params = ChunkSamplingParams(temperature = 0.8, top_p = 1.0, top_k = -1)
-            self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
+            dummy_prompt_token_ids = [[0] * self.chunk_worker.chunk_size]
+            self.chunk_worker.add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
     def _start_worker(self) -> None:
         self._add_requests_to_worker()
@@ -105,7 +107,7 @@ class ChunkRunner:
         self._start_worker()
         now_time = time.time()
         print(f"Added in working pool at {now_time}")
-        
+
         #chunk_size = self.chunk_worker.chunk_size 
         for chunk in self.chunk_worker.job_chunks:
             chunk.chunk_status = ChunkStatus.RUNNING
