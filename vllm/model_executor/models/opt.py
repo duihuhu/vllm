@@ -197,6 +197,8 @@ class OPTDecoder(nn.Module):
         self.padding_idx = config.pad_token_id
         self.max_target_positions = config.max_position_embeddings
         self.vocab_size = config.vocab_size
+        self.index = 0 
+
 
         self.embed_tokens = VocabParallelEmbedding(
             config.vocab_size,
@@ -238,7 +240,6 @@ class OPTDecoder(nn.Module):
             OPTDecoderLayer(config, linear_method)
             for _ in range(config.num_hidden_layers)
         ])
-
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -249,6 +250,21 @@ class OPTDecoder(nn.Module):
     ) -> torch.Tensor:
         inputs_embeds = self.embed_tokens(input_ids)
         pos_embeds = self.embed_positions(positions)
+        
+        dim0, dim1 = input_ids.shape
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 1:
+                print("sample_results inputs_embeds : ", inputs_embeds)
+                x_t = inputs_embeds[-1].cpu().numpy()
+                np.savetxt("hidden_states.txt", x_t, delimiter=',')
+        else:
+            if self.index == 1:
+                print("sample_results inputs_embeds : ", inputs_embeds)
+                x_t = inputs_embeds[-1].cpu().numpy()
+                np.savetxt("inputs_embeds.txt", x_t, delimiter=',')
+        self.index = self.index + 1
+        
         if self.project_in is not None:
             inputs_embeds, _ = self.project_in(inputs_embeds)
         hidden_states = inputs_embeds + pos_embeds
@@ -284,6 +300,7 @@ class OPTModel(nn.Module):
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
     ) -> torch.Tensor:
+        
         return self.decoder(input_ids, positions, kv_caches, input_metadata,
                             cache_events)
 
@@ -301,7 +318,7 @@ class OPTForCausalLM(nn.Module):
         self.model = OPTModel(config, linear_method)
         self.lm_head_weight = self.model.decoder.embed_tokens.weight
         self.sampler = Sampler(config.vocab_size)
-        self.index = 0
+
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -314,19 +331,6 @@ class OPTForCausalLM(nn.Module):
         
         hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
-        dim0, dim1 = input_ids.shape
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 1:
-                print("sample_results hidden_states : ", hidden_states[-1])
-                x_t = hidden_states[-1].cpu().numpy()
-                np.savetxt("hidden_states.txt", x_t, delimiter=',')
-        else:
-            if self.index == 1:
-                print("sample_results hidden_states : ", hidden_states)
-                x_t = hidden_states[-1].cpu().numpy()
-                np.savetxt("hidden_states.txt", x_t, delimiter=',')
-        self.index = self.index + 1
         return hidden_states
 
     def sample(
