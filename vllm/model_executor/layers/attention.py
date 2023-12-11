@@ -141,7 +141,7 @@ class ChunkedPagedAttention(nn.Module):
 
         # Compute the attention op for prompts.
         num_valid_tokens = chunkinputmetadata.valid_tokens_num
-
+        print(f"num_valid_tokens {num_valid_tokens}")
         #prepare inputs
         key_slices: List[torch.Tensor] = []
         value_slices: List[torch.Tensor] = []
@@ -170,6 +170,7 @@ class ChunkedPagedAttention(nn.Module):
         
         # do attention op
         self.set_attn_bias(chunkedinputmetadata = chunkinputmetadata)
+        print(f"key_slice[0].shape {key_slices[0].shape}")
         self.multi_query_kv_attention(
                             output[: num_valid_tokens],
                             query[: num_valid_tokens],
