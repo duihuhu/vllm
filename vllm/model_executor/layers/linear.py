@@ -107,7 +107,7 @@ class ReplicatedLinear(torch.nn.Module):
             self.register_parameter(name, weight)
         if bias:
             self.bias = Parameter(
-                torch.empty(self.output_size,
+                torch.zeros(self.output_size,
                             device=torch.cuda.current_device(),
                             dtype=self.params_dtype))
             set_weight_attrs(self.bias, {"output_dim": 0})
