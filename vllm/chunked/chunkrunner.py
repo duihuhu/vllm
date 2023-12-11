@@ -60,7 +60,7 @@ class ChunkRunner:
         #for prompt_token_ids in self.requests:
         for _ in range(0, 20):
             sampling_params = ChunkSamplingParams(temperature = 0.8, top_p = 1.0, top_k = -1)
-            dummy_prompt_token_ids = [[0] * self.chunk_worker.chunk_size]
+            dummy_prompt_token_ids = [0 * self.chunk_worker.chunk_size]
             self.chunk_worker.add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
     def _start_worker(self) -> None:
