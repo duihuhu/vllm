@@ -3,6 +3,7 @@ import json
 from typing import List, Dict, Tuple
 import torch
 import time
+import random
 
 from vllm.config import ModelConfig
 from vllm.chunked.chunkworker import ChunkWorker
@@ -61,7 +62,7 @@ class ChunkRunner:
         for _ in range(0, 3):
             sampling_params = ChunkSamplingParams(temperature = 0.8, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
-            dummy_prompt_token_ids = [0] * self.chunk_worker.chunk_size
+            dummy_prompt_token_ids = [random.randint(100, 200) for _ in range(self.chunk_worker.chunk_size)]
             self.chunk_worker.add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
     def _start_worker(self) -> None:
