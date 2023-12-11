@@ -107,10 +107,10 @@ class ChunkRunner:
     
     def run_worker(self) -> None:
         self._start_worker()
+
         now_time = time.time()
         print(f"Added in working pool at {now_time}")
-        print(f"chunks num {len(self.chunk_worker.job_chunks)}")
-        #chunk_size = self.chunk_worker.chunk_size 
+
         for chunk in self.chunk_worker.job_chunks:
             chunk.chunk_status = ChunkStatus.RUNNING
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
@@ -118,15 +118,12 @@ class ChunkRunner:
                                                     kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, 
                                                     kv_block = chunk.cache_block_id)
-            # add for test
-            start_time = time.time()
-            output = self._execute_model(
+            output, start_time, end_time = self._execute_model(
                 inputs = input_tokens_tensor,
                 inputs_positions = input_positions_tensor,
                 kv_cache = self.chunk_worker.kv_cache,
                 chunkmetadata = chunkinputmetadata
             )
-            end_time = time.time()
             st = 0
             for seq_id, prompt_len in chunk.seqs_to_lens.items():
                 ed = st + prompt_len
@@ -139,8 +136,12 @@ class ChunkRunner:
         self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
      
     @torch.inference_mode()
-    def _execute_model(self, inputs: torch.Tensor, inputs_positions: torch.Tensor, 
-                       kv_cache: List[Tuple[torch.Tensor, torch.Tensor]], chunkmetadata: ChunkInputMetadata) -> torch.Tensor:
+    def _execute_model(self, 
+                       inputs: torch.Tensor, 
+                       inputs_positions: torch.Tensor, 
+                       kv_cache: List[Tuple[torch.Tensor, torch.Tensor]], 
+                       chunkmetadata: ChunkInputMetadata) -> Tuple[torch.Tensor, float, float]:
+        start_time = time.time()
         output = self.chunk_worker.model(
             input_ids = inputs,
             positions = inputs_positions,
@@ -148,4 +149,5 @@ class ChunkRunner:
             cache_events = None,
             chunkinputmetadata = chunkmetadata
         )
-        return output
+        end_time = time.time()
+        return (output, start_time, end_time)

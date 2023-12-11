@@ -170,7 +170,6 @@ class ChunkedPagedAttention(nn.Module):
         
         # do attention op
         self.set_attn_bias(chunkedinputmetadata = chunkinputmetadata)
-        print(f"key_slice[0].shape {key_slices[0].shape}")
         self.multi_query_kv_attention(
                             output[: num_valid_tokens],
                             query[: num_valid_tokens],
