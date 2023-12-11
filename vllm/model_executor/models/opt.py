@@ -301,7 +301,7 @@ class OPTForCausalLM(nn.Module):
         self.model = OPTModel(config, linear_method)
         self.lm_head_weight = self.model.decoder.embed_tokens.weight
         self.sampler = Sampler(config.vocab_size)
-
+        self.index = 0
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -310,6 +310,20 @@ class OPTForCausalLM(nn.Module):
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
     ) -> torch.Tensor:
+        dim0, dim1 = input_ids.shape
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 1:
+                print("sample_results input_ids : ", input_ids[-1])
+                x_t = input_ids[-1].cpu().numpy()
+                np.savetxt("input_ids.txt", x_t, delimiter=',')
+        else:
+            if self.index == 1:
+                print("sample_results input_ids : ", input_ids)
+                x_t = input_ids[-1].cpu().numpy()
+                np.savetxt("input_ids.txt", x_t, delimiter=',')
+        self.index = self.index + 1
+        
         hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
         return hidden_states
