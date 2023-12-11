@@ -42,16 +42,16 @@ class Sampler(nn.Module):
     ) -> SamplerOutput:
         dim0, dim1 = logits.shape
         import numpy as np
-        if dim0 > 1:
-            if self.index == 1:
-                print("sample_results hidden_states : ", hidden_states)
-                x_t = hidden_states.cpu().numpy()
-                np.savetxt("hidden_states.txt", x_t, delimiter=',')
-        else:
-            if self.index == 1:
-                print("sample_results hidden_states : ", hidden_states)
-                x_t = hidden_states.cpu().numpy()
-                np.savetxt("hidden_states.txt", x_t, delimiter=',')
+        # if dim0 > 1:
+        if self.index == 1:
+            print("sample_results hidden_states : ", hidden_states)
+            x_t = hidden_states.cpu().numpy()
+            np.savetxt("hidden_states.txt", x_t, delimiter=',')
+        # else:
+            # if self.index == 1:
+            #     print("sample_results hidden_states : ", hidden_states)
+            #     x_t = hidden_states.cpu().numpy()
+            #     np.savetxt("hidden_states.txt", x_t, delimiter=',')
                 
         self.index = self.index + 1
         
