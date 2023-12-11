@@ -87,13 +87,14 @@ class Sampler(nn.Module):
         # Compute the probabilities.
         dim0, dim1 = logits.shape
         if dim0 > 1:
-            if self.index == 0:
+            if self.index == 1:
                 print("sample_results logits : ", logits[-1])
-                self.index = self.index + 1
+
         else:
-            if self.index == 0:
+            if self.index == 1:
                 print("sample_results logits : ", logits)
                 self.index = self.index + 1
+        self.index = self.index + 1
         # dim0, dim1 = logits.shape
         # for i in range(dim0):
         #     prob = torch.softmax(logits[i], dim=-1, dtype=torch.float)
