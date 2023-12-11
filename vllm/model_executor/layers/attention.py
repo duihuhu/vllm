@@ -134,9 +134,9 @@ class PagedAttention(nn.Module):
             # FIXME(woosuk): This is a hack.
             if input_metadata.attn_bias is None:
                 if self.alibi_slopes is None:
+                    print("seq_len ", seq_len, " batch_size ", batch_size)
                     attn_bias = BlockDiagonalCausalMask.from_seqlens(
                         [seq_len] * batch_size)
-                    print("attn_bias ", attn_bias)
                     if self.sliding_window is not None:
                         attn_bias = attn_bias.make_local_attention(
                             self.sliding_window)
