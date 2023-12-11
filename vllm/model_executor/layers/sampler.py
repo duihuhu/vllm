@@ -86,14 +86,18 @@ class Sampler(nn.Module):
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
         dim0, dim1 = logits.shape
+        import numpy as np
         if dim0 > 1:
             if self.index == 1:
                 print("sample_results logits : ", logits[-1])
-
+                x_t = logits[-1].cpu().numpy()
+                np.savetxt("tensor.txt", x_t, delimiter=',')
         else:
             if self.index == 1:
                 print("sample_results logits : ", logits)
-                self.index = self.index + 1
+                x_t = logits[-1].cpu().numpy()
+                np.savetxt("tensor.txt", x_t, delimiter=',')
+                
         self.index = self.index + 1
         # dim0, dim1 = logits.shape
         # for i in range(dim0):
