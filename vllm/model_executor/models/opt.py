@@ -174,7 +174,7 @@ class OPTDecoderLayer(nn.Module):
                 print("sample_results hidden_states : ", hidden_states[0])
                 x_t = hidden_states[0].cpu().numpy()
                 np.savetxt("hidden_states3.txt", x_t, delimiter='\n')
-        
+        self.index = self.index + 1
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
