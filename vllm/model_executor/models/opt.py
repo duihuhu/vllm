@@ -251,8 +251,8 @@ class OPTDecoder(nn.Module):
         inputs_embeds = self.embed_tokens(input_ids)
         pos_embeds = self.embed_positions(positions)
         
-        print("inputs_embeds.shape: ", inputs_embeds.shape)
-        dim0, dim1 = inputs_embeds.shape
+        print("input_ids shape: ", input_ids.shape)
+        dim0, dim1 = input_ids.shape
         # import numpy as np
         # if dim0 > 1:
         #     if self.index == 1:
