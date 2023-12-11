@@ -91,6 +91,7 @@ class Sampler(nn.Module):
 
         # Sample the next tokens.
         sample_results = _sample(probs, logprobs, sampling_metadata)
+        print("sample_results ", sample_results)
         # Get the logprobs query results.
         prompt_logprobs, sample_logprobs = _get_logprobs(
             logprobs, sampling_metadata, sample_results)
@@ -408,7 +409,7 @@ def _random_sample(
             parent_ids = [0] * sampling_params.best_of
             next_token_ids = random_samples[
                 sample_idx, :sampling_params.best_of].tolist()
-            print("random sample is_prompt: ", sample_idx, sampling_params.best_of, next_token_ids)
+            # print("random sample is_prompt: ", sample_idx, sampling_params.best_of, next_token_ids)
         else:
             # Generation phase.
             parent_ids = list(range(num_parent_seqs))
