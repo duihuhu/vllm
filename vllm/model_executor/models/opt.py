@@ -264,7 +264,7 @@ class OPTDecoder(nn.Module):
                 inputs_embeds_reshaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
                 print("sample_results inputs_embeds : ", inputs_embeds_reshaped)
                 x_t = inputs_embeds_reshaped.cpu().numpy()
-                np.savetxt("inputs_embeds0.txt", x_t, delimiter=',')
+                np.savetxt("inputs_embeds0.txt", x_t, delimiter='\n')
         self.index = self.index + 1
         
         if self.project_in is not None:
