@@ -40,6 +40,21 @@ class Sampler(nn.Module):
         sampling_metadata: SamplingMetadata,
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> SamplerOutput:
+        dim0, dim1 = logits.shape
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 1:
+                print("sample_results hidden_states : ", hidden_states)
+                x_t = hidden_states.cpu().numpy()
+                np.savetxt("hidden_states.txt", x_t, delimiter=',')
+        else:
+            if self.index == 1:
+                print("sample_results hidden_states : ", hidden_states)
+                x_t = hidden_states.cpu().numpy()
+                np.savetxt("hidden_states.txt", x_t, delimiter=',')
+                
+        self.index = self.index + 1
+        
         # Get the hidden states that we use for sampling.
         hidden_states = _prune_hidden_states(hidden_states, sampling_metadata)
 
@@ -47,20 +62,20 @@ class Sampler(nn.Module):
         logits = _get_logits(hidden_states, embedding, embedding_bias,
                              self.vocab_size)
         
-        dim0, dim1 = logits.shape
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 1:
-                print("sample_results logits : ", logits[-1])
-                x_t = logits[-1].cpu().numpy()
-                np.savetxt("logits.txt", x_t, delimiter=',')
-        else:
-            if self.index == 1:
-                print("sample_results logits : ", logits)
-                x_t = logits[-1].cpu().numpy()
-                np.savetxt("logits.txt", x_t, delimiter=',')
+        # dim0, dim1 = logits.shape
+        # import numpy as np
+        # if dim0 > 1:
+        #     if self.index == 1:
+        #         print("sample_results logits : ", logits[-1])
+        #         x_t = logits[-1].cpu().numpy()
+        #         np.savetxt("logits.txt", x_t, delimiter=',')
+        # else:
+        #     if self.index == 1:
+        #         print("sample_results logits : ", logits)
+        #         x_t = logits[-1].cpu().numpy()
+        #         np.savetxt("logits.txt", x_t, delimiter=',')
                 
-        self.index = self.index + 1
+        # self.index = self.index + 1
         # Apply logits processors (if any).
         logits = _apply_logits_processors(logits, sampling_metadata)
         # Apply presence and frequency penalties.
