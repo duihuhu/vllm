@@ -98,7 +98,7 @@ def _get_temperature(sampling_params: ChunkSamplingParams) -> List[float]:
     temperature = sampling_params.temperature
     if temperature < _SAMPLING_EPS:
         #just don't divide by 0
-        temperature = _SAMPLING_EPS
+        temperature = 1
     return [temperature]
 
 def _get_top_p_top_k(
