@@ -15,7 +15,7 @@ def main(args: argparse.Namespace):
     chunk_num = args.chunk_num
     chunkrunner.set_self_chunkworker(chunk_size = chunk_size, chunk_num = chunk_num)
 
-    chunkrunner.set_inputs(dataset_path = args.dataset, num_requests = args.num_prompts)
+    #chunkrunner.set_inputs(dataset_path = args.dataset, num_requests = args.num_prompts)
 
     chunkrunner.run_worker()
 
