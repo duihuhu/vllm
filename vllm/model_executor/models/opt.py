@@ -257,15 +257,15 @@ class OPTDecoder(nn.Module):
         if dim0 > 1:
             if self.index == 1:
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("sample_results inputs_embeds : ", inputs_embeds[1])
-                x_t = inputs_embeds[1].cpu().numpy()
-                np.savetxt("inputs_embeds1.txt", x_t, delimiter='\n')
+                print("sample_results pos_embeds : ", pos_embeds[1])
+                x_t = pos_embeds[1].cpu().numpy()
+                np.savetxt("pos_embeds1.txt", x_t, delimiter='\n')
         else:
             if self.index == 1:
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("sample_results inputs_embeds : ", inputs_embeds[0])
-                x_t = inputs_embeds[0].cpu().numpy()
-                np.savetxt("inputs_embeds0.txt", x_t, delimiter='\n')
+                print("sample_results pos_embeds : ", pos_embeds[0])
+                x_t = pos_embeds[0].cpu().numpy()
+                np.savetxt("pos_embeds0.txt", x_t, delimiter='\n')
         self.index = self.index + 1
         
         if self.project_in is not None:
