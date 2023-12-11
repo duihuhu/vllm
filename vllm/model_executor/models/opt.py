@@ -148,7 +148,8 @@ class OPTDecoderLayer(nn.Module):
         self.final_layer_norm = nn.LayerNorm(
             self.embed_dim,
             elementwise_affine=config.layer_norm_elementwise_affine)
-
+        
+        self.index = 0
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -158,6 +159,22 @@ class OPTDecoderLayer(nn.Module):
     ) -> torch.Tensor:
         # Self Attention
         residual = hidden_states
+        import numpy as np
+        print("self index ", self.index)
+        dim0, dim1, dim2 = hidden_states.shape
+        if dim0 > 1:
+            if self.index == 20:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[1])
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states2.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 20:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[0])
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states3.txt", x_t, delimiter='\n')
+        
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
@@ -257,35 +274,21 @@ class OPTDecoder(nn.Module):
         
         print("inputs_embeds shape: ", inputs_embeds.shape)
         dim0, dim1, dim2 = inputs_embeds.shape
-        # import numpy as np
-        # if dim0 > 1:
-        #     if self.index == 1:
-        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-        #         print("sample_results hidden_states : ", hidden_states[1])
-        #         x_t = hidden_states[1].cpu().numpy()
-        #         np.savetxt("hidden_states1.txt", x_t, delimiter='\n')
-        # else:
-        #     if self.index == 1:
-        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-        #         print("sample_results hidden_states : ", hidden_states[0])
-        #         x_t = hidden_states[0].cpu().numpy()
-        #         np.savetxt("hidden_states0.txt", x_t, delimiter='\n')
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 1:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[1])
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states1.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[0])
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states0.txt", x_t, delimiter='\n')
         
         for i in range(len(self.layers)):
-            # import numpy as np
-            # if dim0 > 1:
-            #     if self.index == 1:
-            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-            #         print("sample_results hidden_states : ", hidden_states[1])
-            #         x_t = hidden_states[1].cpu().numpy()
-            #         np.savetxt("hidden_states0"+ str(i) + ".txt", x_t, delimiter='\n')
-            # else:
-            #     if self.index == 1:
-            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-            #         print("sample_results hidden_states : ", hidden_states[0])
-            #         x_t = hidden_states[0].cpu().numpy()
-            #         np.savetxt("hidden_states1"+ str(i) + ".txt", x_t, delimiter='\n')
-            print("kv_caches ", kv_caches[i])
             cache_event = None if cache_events is None else cache_events[i]
             layer = self.layers[i]
             hidden_states = layer(hidden_states, kv_caches[i], input_metadata,
