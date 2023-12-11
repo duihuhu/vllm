@@ -91,7 +91,7 @@ class Sampler(nn.Module):
 
         # Sample the next tokens.
         sample_results = _sample(probs, logprobs, sampling_metadata)
-        print("sample_results ", sample_results, probs, logprobs, sampling_metadata)
+        print("sample_results ", sample_results, probs, logprobs, sampling_metadata, logits)
         # Get the logprobs query results.
         prompt_logprobs, sample_logprobs = _get_logprobs(
             logprobs, sampling_metadata, sample_results)
