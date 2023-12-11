@@ -272,20 +272,20 @@ class OPTDecoder(nn.Module):
         #         np.savetxt("hidden_states0.txt", x_t, delimiter='\n')
         
         for i in range(len(self.layers)):
-            import numpy as np
-            if dim0 > 1:
-                if self.index == 1:
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                    print("sample_results hidden_states : ", hidden_states[1])
-                    x_t = hidden_states[1].cpu().numpy()
-                    np.savetxt("hidden_states0"+ str(i) + ".txt", x_t, delimiter='\n')
-            else:
-                if self.index == 1:
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                    print("sample_results hidden_states : ", hidden_states[0])
-                    x_t = hidden_states[0].cpu().numpy()
-                    np.savetxt("hidden_states1"+ str(i) + ".txt", x_t, delimiter='\n')
-                    
+            # import numpy as np
+            # if dim0 > 1:
+            #     if self.index == 1:
+            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+            #         print("sample_results hidden_states : ", hidden_states[1])
+            #         x_t = hidden_states[1].cpu().numpy()
+            #         np.savetxt("hidden_states0"+ str(i) + ".txt", x_t, delimiter='\n')
+            # else:
+            #     if self.index == 1:
+            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+            #         print("sample_results hidden_states : ", hidden_states[0])
+            #         x_t = hidden_states[0].cpu().numpy()
+            #         np.savetxt("hidden_states1"+ str(i) + ".txt", x_t, delimiter='\n')
+            print("kv_caches ", kv_caches[i].shape)
             cache_event = None if cache_events is None else cache_events[i]
             layer = self.layers[i]
             hidden_states = layer(hidden_states, kv_caches[i], input_metadata,
