@@ -147,10 +147,12 @@ class PagedAttention(nn.Module):
             # TODO(woosuk): Too many view operations. Let's try to reduce them
             # in the future for code readability.
             if self.alibi_slopes is None:
+                print("alibi_slopes is None")
                 query = query.unsqueeze(0)
                 key = key.unsqueeze(0)
                 value = value.unsqueeze(0)
             else:
+                print("alibi_slopes is not None")
                 query = query.unflatten(0, (batch_size, seq_len))
                 key = key.unflatten(0, (batch_size, seq_len))
                 value = value.unflatten(0, (batch_size, seq_len))
@@ -161,8 +163,8 @@ class PagedAttention(nn.Module):
                 # k_t = key.cpu().numpy()
                 # v_t = value.cpu().numpy()
                 torch.save(query, "query.pth")
-                torch.save(key, "query.pth")
-                torch.save(value, "query.pth")
+                torch.save(key, "key.pth")
+                torch.save(value, "value.pth")
 
                 # np.savetxt("query.txt", q_t, delimiter='\n')
                 # np.savetxt("key.txt", k_t, delimiter='\n')
