@@ -286,12 +286,12 @@ class OPTDecoder(nn.Module):
                     x_t = hidden_states[0].cpu().numpy()
                     np.savetxt("hidden_states1{i}.txt", x_t, delimiter='\n')
                     
-            self.index = self.index + 1
             cache_event = None if cache_events is None else cache_events[i]
             layer = self.layers[i]
             hidden_states = layer(hidden_states, kv_caches[i], input_metadata,
                                   cache_event)
 
+        self.index = self.index + 1
 
         
         if self.final_layer_norm is not None:
