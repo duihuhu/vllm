@@ -310,22 +310,23 @@ class OPTForCausalLM(nn.Module):
         input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
     ) -> torch.Tensor:
+
+        
+        hidden_states = self.model(input_ids, positions, kv_caches,
+                                   input_metadata, cache_events)
         dim0, dim1 = input_ids.shape
         import numpy as np
         if dim0 > 1:
             if self.index == 1:
-                print("sample_results input_ids : ", positions[-1])
-                x_t = positions[-1].cpu().numpy()
-                np.savetxt("positions.txt", x_t, delimiter=',')
+                print("sample_results hidden_states : ", hidden_states[-1])
+                x_t = hidden_states[-1].cpu().numpy()
+                np.savetxt("hidden_states.txt", x_t, delimiter=',')
         else:
             if self.index == 1:
-                print("sample_results positions : ", positions)
-                x_t = positions[-1].cpu().numpy()
-                np.savetxt("positions.txt", x_t, delimiter=',')
+                print("sample_results hidden_states : ", hidden_states)
+                x_t = hidden_states[-1].cpu().numpy()
+                np.savetxt("hidden_states.txt", x_t, delimiter=',')
         self.index = self.index + 1
-        
-        hidden_states = self.model(input_ids, positions, kv_caches,
-                                   input_metadata, cache_events)
         return hidden_states
 
     def sample(
