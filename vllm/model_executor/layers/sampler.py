@@ -43,7 +43,7 @@ class Sampler(nn.Module):
         import numpy as np
         # if dim0 > 1:
         if self.index == 1:
-            hidden_states_reshaped = hidden_states.reshape(hidden_states.shape[0], -1)
+            hidden_states_reshaped = hidden_states.reshape(hidden_states[-1].shape[0], -1)
             print("sample_results hidden_states : ", hidden_states_reshaped)
             x_t = hidden_states_reshaped.cpu().numpy()
             np.savetxt("hidden_states.txt", x_t, delimiter=',')
