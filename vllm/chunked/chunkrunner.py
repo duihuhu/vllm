@@ -60,7 +60,7 @@ class ChunkRunner:
         #for prompt_token_ids in self.requests:
         for _ in range(0, 10):
             sampling_params = ChunkSamplingParams(temperature = 0.8, top_p = 1.0, top_k = -1)
-            dummy_prompt_token_ids = [0 * self.chunk_worker.chunk_size]
+            dummy_prompt_token_ids = [0] * self.chunk_worker.chunk_size
             self.chunk_worker.add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
     def _start_worker(self) -> None:
@@ -110,9 +110,6 @@ class ChunkRunner:
 
         #chunk_size = self.chunk_worker.chunk_size 
         for chunk in self.chunk_worker.job_chunks:
-            print(chunk.chunk_id)
-            print(chunk.seqs_to_lens)
-            print(chunk.seqs_to_prefixs)
             chunk.chunk_status = ChunkStatus.RUNNING
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
             chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
