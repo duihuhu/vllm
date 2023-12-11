@@ -82,6 +82,7 @@ class Sampler(nn.Module):
         if do_min_p:
             logits = _apply_min_p(logits, min_ps)
 
+
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
@@ -91,7 +92,9 @@ class Sampler(nn.Module):
 
         # Sample the next tokens.
         sample_results = _sample(probs, logprobs, sampling_metadata)
-        print("sample_results ", sample_results, probs, logprobs, sampling_metadata, logits)
+        print("sample_results logits", logits)
+        print("sample_results logits", probs)
+        print("sample_results logits", logprobs)
         # Get the logprobs query results.
         prompt_logprobs, sample_logprobs = _get_logprobs(
             logprobs, sampling_metadata, sample_results)
