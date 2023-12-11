@@ -161,6 +161,7 @@ class PagedAttention(nn.Module):
                 # q_t = query.cpu().numpy()
                 # k_t = key.cpu().numpy()
                 # v_t = value.cpu().numpy()
+                print("query shape ", query.shape)
                 torch.save(query, "query.pth")
                 torch.save(key, "key.pth")
                 torch.save(value, "value.pth")
