@@ -65,6 +65,7 @@ class OPTAttention(nn.Module):
         num_heads: int,
         bias: bool = True,
         linear_method: Optional[LinearMethodBase] = None,
+        num_layer: Optional[int] = None,
     ) -> None:
         super().__init__()
         self.embed_dim = embed_dim
@@ -92,7 +93,7 @@ class OPTAttention(nn.Module):
         self.attn = PagedAttention(self.num_heads,
                                    self.head_dim,
                                    scale=self.scaling)
-
+        self.index = 0
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -100,6 +101,22 @@ class OPTAttention(nn.Module):
         input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
+        import numpy as np
+        dim0, dim1, dim2 = hidden_states.shape
+        if dim0 > 1:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[1])
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[0])
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
+        self.index = self.index + 1
+        
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
@@ -118,6 +135,7 @@ class OPTDecoderLayer(nn.Module):
         num_layer: Optional[int] = None,
     ):
         super().__init__()
+        self.layer_num = num_layer
         self.config = config
         self.embed_dim = config.hidden_size
         self.self_attn = OPTAttention(
@@ -125,6 +143,7 @@ class OPTDecoderLayer(nn.Module):
             num_heads=config.num_attention_heads,
             bias=config.enable_bias,
             linear_method=linear_method,
+            num_layer= num_layer,
         )
         self.do_layer_norm_before = config.do_layer_norm_before
 
@@ -151,7 +170,6 @@ class OPTDecoderLayer(nn.Module):
             elementwise_affine=config.layer_norm_elementwise_affine)
         
         self.index = 0
-        self.layer_num = num_layer
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -185,19 +203,20 @@ class OPTDecoderLayer(nn.Module):
                                        input_metadata=input_metadata,
                                        cache_event=cache_event)
         
-        if dim0 > 1:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[1])
-                x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[0])
-                x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
+        # if dim0 > 1:
+        #     if self.index == 1 and self.layer_num == 0:
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+        #         print("sample_results hidden_states : ", hidden_states[1])
+        #         x_t = hidden_states[1].cpu().numpy()
+        #         np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
+        # else:
+        #     if self.index == 1 and self.layer_num == 0:
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+        #         print("sample_results hidden_states : ", hidden_states[0])
+        #         x_t = hidden_states[0].cpu().numpy()
+        #         np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
         self.index = self.index + 1
+        
         hidden_states = residual + hidden_states
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
