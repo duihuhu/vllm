@@ -46,7 +46,21 @@ class Sampler(nn.Module):
         # Get the logits for the next tokens.
         logits = _get_logits(hidden_states, embedding, embedding_bias,
                              self.vocab_size)
-
+        
+        dim0, dim1 = logits.shape
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 1:
+                print("sample_results logits : ", logits[-1])
+                x_t = logits[-1].cpu().numpy()
+                np.savetxt("logits.txt", x_t, delimiter=',')
+        else:
+            if self.index == 1:
+                print("sample_results logits : ", logits)
+                x_t = logits[-1].cpu().numpy()
+                np.savetxt("logits.txt", x_t, delimiter=',')
+                
+        self.index = self.index + 1
         # Apply logits processors (if any).
         logits = _apply_logits_processors(logits, sampling_metadata)
         # Apply presence and frequency penalties.
@@ -85,24 +99,6 @@ class Sampler(nn.Module):
 
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
-        dim0, dim1 = logits.shape
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 1:
-                print("sample_results logits : ", logits[-1])
-                x_t = logits[-1].cpu().numpy()
-                np.savetxt("tensor.txt", x_t, delimiter=',')
-        else:
-            if self.index == 1:
-                print("sample_results logits : ", logits)
-                x_t = logits[-1].cpu().numpy()
-                np.savetxt("tensor.txt", x_t, delimiter=',')
-                
-        self.index = self.index + 1
-        # dim0, dim1 = logits.shape
-        # for i in range(dim0):
-        #     prob = torch.softmax(logits[i], dim=-1, dtype=torch.float)
-        #     print("sample_results prob: ", prob)
         
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
         # Compute the log probabilities.
