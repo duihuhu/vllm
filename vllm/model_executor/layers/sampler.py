@@ -85,7 +85,11 @@ class Sampler(nn.Module):
 
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
-        print("sample_results logits : ", logits)
+        dim0, dim1 = logits.shape
+        if dim0 > 1:
+            print("sample_results logits : ", logits[-1])
+        else:
+            print("sample_results logits : ", logits)
         # dim0, dim1 = logits.shape
         # for i in range(dim0):
         #     prob = torch.softmax(logits[i], dim=-1, dtype=torch.float)
