@@ -406,6 +406,7 @@ def _random_sample(
             assert num_parent_seqs == 1, (
                 "Prompt input should have only one seq.")
             parent_ids = [0] * sampling_params.best_of
+            print(sample_idx, sampling_params.best_of)
             next_token_ids = random_samples[
                 sample_idx, :sampling_params.best_of].tolist()
         else:
