@@ -314,14 +314,14 @@ class OPTForCausalLM(nn.Module):
         import numpy as np
         if dim0 > 1:
             if self.index == 1:
-                print("sample_results input_ids : ", input_ids[-1])
-                x_t = input_ids[-1].cpu().numpy()
-                np.savetxt("input_ids.txt", x_t, delimiter=',')
+                print("sample_results input_ids : ", positions[-1])
+                x_t = positions[-1].cpu().numpy()
+                np.savetxt("positions.txt", x_t, delimiter=',')
         else:
             if self.index == 1:
-                print("sample_results input_ids : ", input_ids)
-                x_t = input_ids[-1].cpu().numpy()
-                np.savetxt("input_ids.txt", x_t, delimiter=',')
+                print("sample_results positions : ", positions)
+                x_t = positions[-1].cpu().numpy()
+                np.savetxt("positions.txt", x_t, delimiter=',')
         self.index = self.index + 1
         
         hidden_states = self.model(input_ids, positions, kv_caches,
