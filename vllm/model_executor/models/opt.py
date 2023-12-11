@@ -277,12 +277,6 @@ class OPTDecoder(nn.Module):
             hidden_states = layer(hidden_states, kv_caches[i], input_metadata,
                                   cache_event)
 
-        if self.final_layer_norm is not None:
-            print("self.final_layer_norm is not None ")
-            hidden_states = self.final_layer_norm(hidden_states)
-        if self.project_out is not None:
-            print("self.project_out is not None ")
-            hidden_states, _ = self.project_out(hidden_states)
         import numpy as np
         if dim0 > 1:
             if self.index == 1:
@@ -298,7 +292,10 @@ class OPTDecoder(nn.Module):
                 np.savetxt("hidden_states3.txt", x_t, delimiter='\n')
         self.index = self.index + 1
         
-        
+        if self.final_layer_norm is not None:
+            hidden_states = self.final_layer_norm(hidden_states)
+        if self.project_out is not None:
+            hidden_states, _ = self.project_out(hidden_states)
         return hidden_states
 
 
