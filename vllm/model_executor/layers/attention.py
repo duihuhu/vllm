@@ -155,6 +155,8 @@ class PagedAttention(nn.Module):
                 key = key.unflatten(0, (batch_size, seq_len))
                 value = value.unflatten(0, (batch_size, seq_len))
 
+            if self.layer_num == 0:
+                print("query ", query, " " , self.index)
             out = xops.memory_efficient_attention_forward(
                 query,
                 key,
@@ -163,21 +165,9 @@ class PagedAttention(nn.Module):
                 p=0.0,
                 scale=self.scale,
             )
-            import numpy as np
-            
+
             output = out.view_as(query)
-            if batch_size > 1:
-                if self.index == 1 and self.layer_num == 0:
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                    print("sample_results hidden_states : ", out[1])
-                    x_t = out[1].cpu().numpy()
-                    np.savetxt("out0.txt", x_t, delimiter='\n')
-            else:
-                if self.index == 1 and self.layer_num == 0:
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                    print("sample_results hidden_states : ", out[0])
-                    x_t = out[0].cpu().numpy()
-                    np.savetxt("out1.txt", x_t, delimiter='\n')
+
         else:
             # Decoding run.
             output = _paged_attention(
