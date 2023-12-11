@@ -115,6 +115,7 @@ class OPTDecoderLayer(nn.Module):
         self,
         config: OPTConfig,
         linear_method: Optional[LinearMethodBase] = None,
+        num_layer: Optional[int] = None,
     ):
         super().__init__()
         self.config = config
@@ -150,6 +151,7 @@ class OPTDecoderLayer(nn.Module):
             elementwise_affine=config.layer_norm_elementwise_affine)
         
         self.index = 0
+        self.layer_num = num_layer
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -163,13 +165,13 @@ class OPTDecoderLayer(nn.Module):
         print("self index ", self.index)
         dim0, dim1, dim2 = hidden_states.shape
         if dim0 > 1:
-            if self.index == 1:
+            if self.index == 1 and self.layer_num == 0:
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
                 print("sample_results hidden_states : ", hidden_states[1])
                 x_t = hidden_states[1].cpu().numpy()
                 np.savetxt("hidden_states2.txt", x_t, delimiter='\n')
         else:
-            if self.index == 1:
+            if self.index == 1 and self.layer_num == 0:
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
                 print("sample_results hidden_states : ", hidden_states[0])
                 x_t = hidden_states[0].cpu().numpy()
@@ -254,7 +256,7 @@ class OPTDecoder(nn.Module):
             self.final_layer_norm = None
 
         self.layers = nn.ModuleList([
-            OPTDecoderLayer(config, linear_method)
+            OPTDecoderLayer(config, linear_method, _)
             for _ in range(config.num_hidden_layers)
         ])
     def forward(
