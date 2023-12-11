@@ -136,6 +136,7 @@ class PagedAttention(nn.Module):
                 if self.alibi_slopes is None:
                     attn_bias = BlockDiagonalCausalMask.from_seqlens(
                         [seq_len] * batch_size)
+                    print("attn_bias ", attn_bias)
                     if self.sliding_window is not None:
                         attn_bias = attn_bias.make_local_attention(
                             self.sliding_window)
@@ -147,12 +148,10 @@ class PagedAttention(nn.Module):
             # TODO(woosuk): Too many view operations. Let's try to reduce them
             # in the future for code readability.
             if self.alibi_slopes is None:
-                print("alibi_slopes is None")
                 query = query.unsqueeze(0)
                 key = key.unsqueeze(0)
                 value = value.unsqueeze(0)
             else:
-                print("alibi_slopes is not None")
                 query = query.unflatten(0, (batch_size, seq_len))
                 key = key.unflatten(0, (batch_size, seq_len))
                 value = value.unflatten(0, (batch_size, seq_len))
