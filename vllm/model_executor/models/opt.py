@@ -65,7 +65,7 @@ class OPTAttention(nn.Module):
         num_heads: int,
         bias: bool = True,
         linear_method: Optional[LinearMethodBase] = None,
-        num_layer: Optional[int] = None,
+        layer_num: Optional[int] = None,
     ) -> None:
         super().__init__()
         self.embed_dim = embed_dim
@@ -77,6 +77,7 @@ class OPTAttention(nn.Module):
         self.head_dim = embed_dim // total_num_heads
         self.scaling = self.head_dim**-0.5
 
+        self.layer_num = layer_num
         self.qkv_proj = QKVParallelLinear(
             embed_dim,
             self.head_dim,
@@ -132,10 +133,10 @@ class OPTDecoderLayer(nn.Module):
         self,
         config: OPTConfig,
         linear_method: Optional[LinearMethodBase] = None,
-        num_layer: Optional[int] = None,
+        layer_num: Optional[int] = None,
     ):
         super().__init__()
-        self.layer_num = num_layer
+        self.layer_num = layer_num
         self.config = config
         self.embed_dim = config.hidden_size
         self.self_attn = OPTAttention(
@@ -143,7 +144,7 @@ class OPTDecoderLayer(nn.Module):
             num_heads=config.num_attention_heads,
             bias=config.enable_bias,
             linear_method=linear_method,
-            num_layer= num_layer,
+            layer_num= layer_num,
         )
         self.do_layer_norm_before = config.do_layer_norm_before
 
