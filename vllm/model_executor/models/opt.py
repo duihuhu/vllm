@@ -161,8 +161,11 @@ class OPTDecoderLayer(nn.Module):
     ) -> torch.Tensor:
         # Self Attention
         residual = hidden_states
+        # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
+        if self.do_layer_norm_before:
+            hidden_states = self.self_attn_layer_norm(hidden_states)
+        
         import numpy as np
-        print("self index ", self.index)
         dim0, dim1, dim2 = hidden_states.shape
         if dim0 > 1:
             if self.index == 1 and self.layer_num == 0:
@@ -177,9 +180,6 @@ class OPTDecoderLayer(nn.Module):
                 x_t = hidden_states[0].cpu().numpy()
                 np.savetxt("hidden_states3.txt", x_t, delimiter='\n')
         self.index = self.index + 1
-        # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
-        if self.do_layer_norm_before:
-            hidden_states = self.self_attn_layer_norm(hidden_states)
         hidden_states = self.self_attn(hidden_states=hidden_states,
                                        kv_cache=kv_cache,
                                        input_metadata=input_metadata,
