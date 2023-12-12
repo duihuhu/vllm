@@ -31,7 +31,7 @@ class ModelRunner:
                                if model_config is not None else None)
         self.model = None
         self.block_size = None  # Set after initial profiling.
-
+        self.index = 0
     def load_model(self) -> None:
         self.model = get_model(self.model_config)
 
@@ -283,7 +283,22 @@ class ModelRunner:
             input_metadata=input_metadata,
             cache_events=cache_events,
         )
-
+        import numpy as np
+        dim0, dim1, dim2 = hidden_states.shape
+        if dim0 > 1:
+            if self.index == 1:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[1])
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states13.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[0])
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states14.txt", x_t, delimiter='\n')
+        self.index = self.index + 1
+        
         # Sample the next token.
         output = self.model.sample(
             hidden_states=hidden_states,
