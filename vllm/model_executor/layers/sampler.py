@@ -42,14 +42,16 @@ class Sampler(nn.Module):
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> Dict[int, SequenceOutputs]:
         # Get the hidden states that we use for sampling.
-        st = time.time()
+        #st = time.time()
         hidden_states = _prune_hidden_states(hidden_states, input_metadata)
 
         # Get the logits for the next tokens.
         logits = torch.matmul(hidden_states, embedding.t())
         if embedding_bias is not None:
             logits += embedding_bias
+        st = time.time()
         logits = gather_from_tensor_model_parallel_region(logits)
+        ed = time.time()
         # Remove paddings in vocab (if any).
         logits = logits[:, :self.vocab_size]
 
@@ -66,13 +68,14 @@ class Sampler(nn.Module):
         # Apply temperature scaling.
         temperatures = _get_temperatures(input_metadata)
         assert len(temperatures) == logits.shape[0]
+        #st = time.time()
         if any(t != 1.0 for t in temperatures):
             t = torch.tensor(temperatures,
                              dtype=logits.dtype,
                              device=logits.device)
             # Use in-place division to avoid creating a new tensor.
             logits.div_(t.unsqueeze(dim=1))
-
+        #ed = time.time()
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
@@ -86,7 +89,7 @@ class Sampler(nn.Module):
         do_top_k = any(k != self.vocab_size for k in top_ks)
         if do_top_p or do_top_k:
             probs = _apply_top_p_top_k(probs, top_ps, top_ks)
-        ed = time.time()
+        #ed = time.time()
         print(f"sample itself costs {ed - st} seconds")
         # Sample the next tokens.
         return _sample(probs, logprobs, input_metadata)
