@@ -278,7 +278,6 @@ class OPTDecoderLayer(nn.Module):
         #         print("sample_results hidden_states : ", hidden_states[0])
         #         x_t = hidden_states[0].cpu().numpy()
         #         np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
-        self.index = self.index + 1
         
         hidden_states = residual + hidden_states
         # 350m applies layer norm AFTER attention
@@ -309,6 +308,7 @@ class OPTDecoderLayer(nn.Module):
                 print("sample_results hidden_states : ", hidden_states[0])
                 x_t = hidden_states[0].cpu().numpy()
                 np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
+        self.index = self.index + 1
         return hidden_states
 
 
