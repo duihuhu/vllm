@@ -115,7 +115,7 @@ class OPTAttention(nn.Module):
             # else:
             #     qkv_cat =qkv.clone()
         qkv_cat_after = torch.stack(qkv_cat, dim=0)
-        dim0, dim1, dim2 = qkv.shape
+        dim0, dim1, dim2 = qkv_cat_after.shape
         if dim0 > 1:
             if self.index == 1 and self.layer_num == 0:
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
