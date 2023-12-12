@@ -134,7 +134,7 @@ class PagedAttention(nn.Module):
             # FIXME(woosuk): This is a hack.
             if input_metadata.attn_bias is None:
                 if self.alibi_slopes is None:
-                    print("seq_len ", seq_len, " batch_size ", batch_size)
+                    # print("seq_len ", seq_len, " batch_size ", batch_size)
                     attn_bias = BlockDiagonalCausalMask.from_seqlens(
                         [seq_len] * batch_size)
                     if self.sliding_window is not None:
@@ -156,15 +156,15 @@ class PagedAttention(nn.Module):
                 key = key.unflatten(0, (batch_size, seq_len))
                 value = value.unflatten(0, (batch_size, seq_len))
 
-            if self.layer_num == 0 and self.index == 1: 
-                import numpy as np
-                # q_t = query.cpu().numpy()
-                # k_t = key.cpu().numpy()
-                # v_t = value.cpu().numpy()
-                print("query shape ", query.shape)
-                torch.save(query, "query.pth")
-                torch.save(key, "key.pth")
-                torch.save(value, "value.pth")
+            # if self.layer_num == 0 and self.index == 1: 
+            #     import numpy as np
+            #     # q_t = query.cpu().numpy()
+            #     # k_t = key.cpu().numpy()
+            #     # v_t = value.cpu().numpy()
+            #     print("query shape ", query.shape)
+            #     torch.save(query, "query.pth")
+            #     torch.save(key, "key.pth")
+            #     torch.save(value, "value.pth")
 
                 # np.savetxt("query.txt", q_t, delimiter='\n')
                 # np.savetxt("key.txt", k_t, delimiter='\n')
