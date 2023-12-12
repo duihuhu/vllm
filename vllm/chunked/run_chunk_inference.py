@@ -20,11 +20,10 @@ def main(args: argparse.Namespace):
     chunkrunner.run_worker()
 
     for seq_id, sequence in chunkrunner.chunk_worker.job_sequences.items():
-        print(f"seq_id is {seq_id}")
-        print(f"sequence output's shape is {sequence.outputs[0].shape}")
-        print(f"first token id is {sequence.first_token_id}")
-        print(f"first token prob is {sequence.first_token_logprob}")
-        print(f"start time is {sequence.start_time}, end time is {sequence.end_time}, costs {sequence.end_time - sequence.start_time} seconds")
+        print(f"Sequence ID is {seq_id}")
+        print(f"The shape of the sequence's output is {sequence.outputs[0].shape}")
+        print(f"The first token id is {sequence.first_token_id} and the first token prob is {sequence.first_token_logprob}")
+        print(f"Start at {sequence.start_time}, end at {sequence.end_time}, costs {sequence.end_time - sequence.start_time} seconds")
         #print(sequence.outputs[0][-1])
 
 if __name__ == "__main__":
