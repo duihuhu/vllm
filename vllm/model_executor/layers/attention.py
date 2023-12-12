@@ -141,7 +141,7 @@ class ChunkedPagedAttention(nn.Module):
 
         # Compute the attention op for prompts.
         num_valid_tokens = chunkinputmetadata.valid_tokens_num
-        print(f"num_valid_tokens {num_valid_tokens}")
+        
         #prepare inputs
         key_slices: List[torch.Tensor] = []
         value_slices: List[torch.Tensor] = []
