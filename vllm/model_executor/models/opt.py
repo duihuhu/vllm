@@ -114,12 +114,11 @@ class OPTAttention(nn.Module):
             #         qkv_cat = torch.cat([qkv_cat, qkv.unsqueeze(0)], dim=0)
             # else:
             #     qkv_cat =qkv.clone()
-        # will produce a tensor of shape (2,4)
         qkv_cat_after = torch.stack(qkv_cat, dim=0)
-        print("qkv_cat_after: ", qkv_cat_after.shape)
-        qkv, _ = self.qkv_proj(hidden_states)
-        print("qkv: ", qkv.shape)
-        q, k, v = qkv.chunk(chunks=3, dim=-1)
+        q, k, v = qkv_cat_after.chunk(chunks=3, dim=-1)
+
+        # qkv, _ = self.qkv_proj(hidden_states)
+        # q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
         attn_output = self.attn(q, k, v, key_cache, value_cache,
                                 input_metadata, cache_event)
