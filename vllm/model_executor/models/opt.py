@@ -170,15 +170,17 @@ class OPTDecoderLayer(nn.Module):
         
         import numpy as np
         dim0, dim1, dim2 = hidden_states.shape
-        print("hidden shape ", dim0, dim1, dim2)
         if dim0 > 1:
             if self.index == 1 and self.layer_num == 0:
+                print("hidden shape ", dim0, dim1, dim2)
+
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
                 print("sample_results hidden_states : ", hidden_states[1])
                 x_t = hidden_states[1].cpu().numpy()
                 np.savetxt("hidden_states2.txt", x_t, delimiter='\n')
         else:
             if self.index == 1 and self.layer_num == 0:
+                print("hidden shape ", dim0, dim1, dim2)
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
                 print("sample_results hidden_states : ", hidden_states[0])
                 x_t = hidden_states[0].cpu().numpy()
@@ -293,7 +295,7 @@ class OPTDecoder(nn.Module):
             inputs_embeds, _ = self.project_in(inputs_embeds)
         hidden_states = inputs_embeds + pos_embeds
         
-        print("inputs_embeds shape: ", inputs_embeds.shape)
+        # print("inputs_embeds shape: ", inputs_embeds.shape)
         dim0, dim1, dim2 = inputs_embeds.shape
         import numpy as np
         if dim0 > 1:
