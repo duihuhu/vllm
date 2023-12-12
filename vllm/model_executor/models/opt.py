@@ -104,7 +104,7 @@ class OPTAttention(nn.Module):
     ) -> torch.Tensor:
         dim0, dim1, dim2 = hidden_states.shape
         qkv_cat = []
-        import numpy as np
+        # import numpy as np
         
         for i in range(dim0):
             qkv, _ = self.qkv_proj(hidden_states[i])
@@ -117,20 +117,20 @@ class OPTAttention(nn.Module):
             # else:
             #     qkv_cat =qkv.clone()
             
-            if dim0 > 1:
-                if self.index == 1 and self.layer_num == 0 and i==1:
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                    # print("qkv shape ", dim0, dim1, dim2)
-                    # print("sample_results hidden_states : ", qkv[0])
-                    x_t = qkv[0].cpu().numpy()
-                    np.savetxt("qkv1.txt", x_t, delimiter='\n')    
-            else:
-                if self.index == 1 and self.layer_num == 0:
-                    # print("qkv shape ", dim0, dim1, dim2)
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                    # print("sample_results hidden_states : ", qkv[0])
-                    x_t = qkv[0].cpu().numpy()
-                    np.savetxt("qkv0.txt", x_t, delimiter='\n')
+            # if dim0 > 1:
+            #     if self.index == 1 and self.layer_num == 0 and i==1:
+            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+            #         # print("qkv shape ", dim0, dim1, dim2)
+            #         # print("sample_results hidden_states : ", qkv[0])
+            #         x_t = qkv[0].cpu().numpy()
+            #         np.savetxt("qkv1.txt", x_t, delimiter='\n')    
+            # else:
+            #     if self.index == 1 and self.layer_num == 0:
+            #         # print("qkv shape ", dim0, dim1, dim2)
+            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+            #         # print("sample_results hidden_states : ", qkv[0])
+            #         x_t = qkv[0].cpu().numpy()
+            #         np.savetxt("qkv0.txt", x_t, delimiter='\n')
                     
         qkv_cat_after = torch.stack(qkv_cat, dim=0)
         q, k, v = qkv_cat_after.chunk(chunks=3, dim=-1)
@@ -141,21 +141,21 @@ class OPTAttention(nn.Module):
         key_cache, value_cache = kv_cache
         attn_output = self.attn(q, k, v, key_cache, value_cache,
                                 input_metadata, cache_event)
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                # print("qkv shape ", dim0, dim1, dim2)
-                # print("sample_results hidden_states : ", attn_output[1])
-                x_t = attn_output[1].cpu().numpy()
-                np.savetxt("attn_output1.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 1 and self.layer_num == 0:
-                # print("qkv shape ", dim0, dim1, dim2)
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                # print("sample_results hidden_states : ", attn_output[0])
-                x_t = attn_output[0].cpu().numpy()
-                np.savetxt("attn_output0.txt", x_t, delimiter='\n')
+        # import numpy as np
+        # if dim0 > 1:
+        #     if self.index == 1 and self.layer_num == 0:
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+        #         # print("qkv shape ", dim0, dim1, dim2)
+        #         # print("sample_results hidden_states : ", attn_output[1])
+        #         x_t = attn_output[1].cpu().numpy()
+        #         np.savetxt("attn_output1.txt", x_t, delimiter='\n')
+        # else:
+        #     if self.index == 1 and self.layer_num == 0:
+        #         # print("qkv shape ", dim0, dim1, dim2)
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+        #         # print("sample_results hidden_states : ", attn_output[0])
+        #         x_t = attn_output[0].cpu().numpy()
+        #         np.savetxt("attn_output0.txt", x_t, delimiter='\n')
         
 
         output_cat = []
@@ -164,20 +164,20 @@ class OPTAttention(nn.Module):
             output, _ = self.out_proj(attn_output[i])
             output_cat.append(output)
             
-            if dim0 > 1:
-                if self.index == 1 and self.layer_num == 0 and i==1:
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                    # print("qkv shape ", dim0, dim1, dim2)
-                    # print("sample_results hidden_states : ", qkv[0])
-                    x_t = output[0].cpu().numpy()
-                    np.savetxt("output1.txt", x_t, delimiter='\n')    
-            else:
-                if self.index == 1 and self.layer_num == 0:
-                    # print("qkv shape ", dim0, dim1, dim2)
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                    # print("sample_results hidden_states : ", qkv[0])
-                    x_t = output[0].cpu().numpy()
-                    np.savetxt("output0.txt", x_t, delimiter='\n')
+            # if dim0 > 1:
+            #     if self.index == 1 and self.layer_num == 0 and i==1:
+            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+            #         # print("qkv shape ", dim0, dim1, dim2)
+            #         # print("sample_results hidden_states : ", qkv[0])
+            #         x_t = output[0].cpu().numpy()
+            #         np.savetxt("output1.txt", x_t, delimiter='\n')    
+            # else:
+            #     if self.index == 1 and self.layer_num == 0:
+            #         # print("qkv shape ", dim0, dim1, dim2)
+            #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+            #         # print("sample_results hidden_states : ", qkv[0])
+            #         x_t = output[0].cpu().numpy()
+            #         np.savetxt("output0.txt", x_t, delimiter='\n')
         output_cat_after = torch.stack(output_cat, dim=0)
         
         # output, _ = self.out_proj(attn_output)
@@ -297,6 +297,18 @@ class OPTDecoderLayer(nn.Module):
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
+        if dim0 > 1:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[1])
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[0])
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
         return hidden_states
 
 
