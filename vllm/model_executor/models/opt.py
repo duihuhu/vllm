@@ -133,27 +133,11 @@ class OPTAttention(nn.Module):
                     np.savetxt("qkv0.txt", x_t, delimiter='\n')
                     
         qkv_cat_after = torch.stack(qkv_cat, dim=0)
-        dim0, dim1, dim2 = qkv_cat_after.shape
-        print("qkv_cat_after shape ", dim0, dim1, dim2)
-        if dim0 > 1:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("qkv shape ", dim0, dim1, dim2)
-                print("sample_results hidden_states : ", qkv_cat_after[1])
-                x_t = qkv_cat_after[1].cpu().numpy()
-                np.savetxt("qkv_after1.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 1 and self.layer_num == 0:
-                print("qkv shape ", dim0, dim1, dim2)
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("sample_results hidden_states : ", qkv_cat_after[0])
-                x_t = qkv_cat_after[0].cpu().numpy()
-                np.savetxt("qkv_after0.txt", x_t, delimiter='\n')
-                
         q, k, v = qkv_cat_after.chunk(chunks=3, dim=-1)
-        self.index = self.index + 1
-        qkv, _ = self.qkv_proj(hidden_states)
-        q, k, v = qkv.chunk(chunks=3, dim=-1)
+        
+        # qkv, _ = self.qkv_proj(hidden_states)
+        # q, k, v = qkv.chunk(chunks=3, dim=-1)
+        
         key_cache, value_cache = kv_cache
         attn_output = self.attn(q, k, v, key_cache, value_cache,
                                 input_metadata, cache_event)
@@ -173,7 +157,7 @@ class OPTAttention(nn.Module):
                 x_t = attn_output[0].cpu().numpy()
                 np.savetxt("attn_output0.txt", x_t, delimiter='\n')
         
-        # self.index = self.index + 1
+        self.index = self.index + 1
         output, _ = self.out_proj(attn_output)
         return output
 
