@@ -103,17 +103,20 @@ class OPTAttention(nn.Module):
         cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
         dim0, dim1, dim2 = hidden_states.shape
-        qkv_cat = None
+        qkv_cat = []
         for i in range(dim0):
             qkv, _ = self.qkv_proj(hidden_states[i])
-            if qkv_cat != None:
-                if i == 1:
-                    qkv_cat = torch.cat([qkv_cat.unsqueeze[0], qkv.unsqueeze(0)], dim=0)
-                else:
-                    qkv_cat = torch.cat([qkv_cat, qkv.unsqueeze(0)], dim=0)
-            else:
-                qkv_cat =qkv.clone()
-        print("qkv_cat: ", qkv_cat.shape)
+            qkv_cat.append(qkv)
+            # if qkv_cat != None:
+            #     if i == 1:
+            #         qkv_cat = torch.cat([qkv_cat.unsqueeze[0], qkv.unsqueeze(0)], dim=0)
+            #     else:
+            #         qkv_cat = torch.cat([qkv_cat, qkv.unsqueeze(0)], dim=0)
+            # else:
+            #     qkv_cat =qkv.clone()
+        # will produce a tensor of shape (2,4)
+        qkv_cat_after = torch.stack(qkv_cat, dim=0)
+        print("qkv_cat_after: ", qkv_cat_after.shape)
         qkv, _ = self.qkv_proj(hidden_states)
         print("qkv: ", qkv.shape)
         q, k, v = qkv.chunk(chunks=3, dim=-1)
