@@ -157,9 +157,30 @@ class OPTAttention(nn.Module):
                 x_t = attn_output[0].cpu().numpy()
                 np.savetxt("attn_output0.txt", x_t, delimiter='\n')
         
-        self.index = self.index + 1
-        print("attn_output shape ", attn_output.shape)
+
+        output_cat = []
+        dim0, dim1, dim2 = attn_output.shape
+        for i in range(dim0):
+            output, _ = self.out_proj(attn_output[i])
+            output_cat.append(output)
+            
+            if dim0 > 1:
+                if self.index == 1 and self.layer_num == 0 and i==1:
+                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                    # print("qkv shape ", dim0, dim1, dim2)
+                    # print("sample_results hidden_states : ", qkv[0])
+                    x_t = output[0].cpu().numpy()
+                    np.savetxt("output1.txt", x_t, delimiter='\n')    
+            else:
+                if self.index == 1 and self.layer_num == 0:
+                    # print("qkv shape ", dim0, dim1, dim2)
+                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                    # print("sample_results hidden_states : ", qkv[0])
+                    x_t = output[0].cpu().numpy()
+                    np.savetxt("output0.txt", x_t, delimiter='\n')
+
         output, _ = self.out_proj(attn_output)
+        self.index = self.index + 1
         return output
 
 
