@@ -266,18 +266,18 @@ class OPTDecoderLayer(nn.Module):
                                        input_metadata=input_metadata,
                                        cache_event=cache_event)
         
-        # if dim0 > 1:
-        #     if self.index == 1 and self.layer_num == 0:
-        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-        #         print("sample_results hidden_states : ", hidden_states[1])
-        #         x_t = hidden_states[1].cpu().numpy()
-        #         np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
-        # else:
-        #     if self.index == 1 and self.layer_num == 0:
-        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-        #         print("sample_results hidden_states : ", hidden_states[0])
-        #         x_t = hidden_states[0].cpu().numpy()
-        #         np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
+        if dim0 > 1:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[1])
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[0])
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
         
         hidden_states = residual + hidden_states
         # 350m applies layer norm AFTER attention
@@ -296,18 +296,18 @@ class OPTDecoderLayer(nn.Module):
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
-        if dim0 > 1:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[1])
-                x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[0])
-                x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
+        # if dim0 > 1:
+        #     if self.index == 1 and self.layer_num == 0:
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+        #         print("sample_results hidden_states : ", hidden_states[1])
+        #         x_t = hidden_states[1].cpu().numpy()
+        #         np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
+        # else:
+        #     if self.index == 1 and self.layer_num == 0:
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+        #         print("sample_results hidden_states : ", hidden_states[0])
+        #         x_t = hidden_states[0].cpu().numpy()
+        #         np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
         self.index = self.index + 1
         return hidden_states
 
