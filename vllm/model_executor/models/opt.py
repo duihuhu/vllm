@@ -140,7 +140,7 @@ class OPTAttention(nn.Module):
                 # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
                 print("qkv shape ", dim0, dim1, dim2)
                 print("sample_results hidden_states : ", qkv_cat_after[1])
-                x_t = qkv[1].cpu().numpy()
+                x_t = qkv_cat_after[1].cpu().numpy()
                 np.savetxt("qkv_after1.txt", x_t, delimiter='\n')
         else:
             if self.index == 1 and self.layer_num == 0:
