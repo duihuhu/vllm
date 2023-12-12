@@ -115,6 +115,22 @@ class OPTAttention(nn.Module):
             # else:
             #     qkv_cat =qkv.clone()
         qkv_cat_after = torch.stack(qkv_cat, dim=0)
+        dim0, dim1, dim2 = qkv.shape
+        if dim0 > 1:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("qkv shape ", dim0, dim1, dim2)
+                print("sample_results hidden_states : ", qkv[1])
+                x_t = qkv[1].cpu().numpy()
+                np.savetxt("qkv1.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1 and self.layer_num == 0:
+                print("qkv shape ", dim0, dim1, dim2)
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", qkv[0])
+                x_t = qkv[0].cpu().numpy()
+                np.savetxt("qkv0.txt", x_t, delimiter='\n')
+                
         q, k, v = qkv_cat_after.chunk(chunks=3, dim=-1)
 
         # qkv, _ = self.qkv_proj(hidden_states)
