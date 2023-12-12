@@ -109,7 +109,7 @@ class OPTAttention(nn.Module):
             if qkv_cat!=None:
                 qkv_cat = torch.cat((qkv_cat.unsqueeze, qkv.unsqueeze(0)), dim=0)
             else:
-                qkv_cat =qkv
+                qkv_cat =qkv.clone()
         # qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
