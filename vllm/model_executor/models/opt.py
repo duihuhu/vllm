@@ -109,7 +109,10 @@ class OPTAttention(nn.Module):
             if qkv_cat != None:
                 print("qkv_cat: ", qkv_cat.shape)
                 print("qkv: ", qkv.shape)
-                qkv_cat = torch.cat((qkv_cat.unsqueeze, qkv.unsqueeze(0)), dim=0)
+                if i == 1:
+                    qkv_cat = torch.cat((qkv_cat.unsqueeze[0], qkv.unsqueeze(0)), dim=0)
+                else:
+                    qkv_cat = torch.cat((qkv_cat.unsqueeze, qkv.unsqueeze(0)), dim=0)
             else:
                 qkv_cat =qkv.clone()
         # qkv, _ = self.qkv_proj(hidden_states)
