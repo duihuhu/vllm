@@ -133,7 +133,7 @@ class OPTAttention(nn.Module):
                 np.savetxt("qkv0.txt", x_t, delimiter='\n')
                 
         q, k, v = qkv_cat_after.chunk(chunks=3, dim=-1)
-
+        self.index = self.index + 1
         # qkv, _ = self.qkv_proj(hidden_states)
         # q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
