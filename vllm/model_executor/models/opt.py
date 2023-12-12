@@ -106,7 +106,7 @@ class OPTAttention(nn.Module):
         qkv_cat = None
         for i in range(dim0):
             qkv, _ = self.qkv_proj(hidden_states[i])
-            if qkv_cat:
+            if qkv_cat!=None:
                 qkv_cat = torch.cat((qkv_cat.unsqueeze(0), qkv.unsqueeze(0)), dim=0)
             else:
                 qkv_cat =qkv
