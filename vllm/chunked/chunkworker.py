@@ -38,7 +38,8 @@ class ChunkWorker:
         set_random_seed(seed = self.model_config.seed)
         self.model = get_model(model_config = self.model_config)
         initialize_all_reduce_launcher(
-            2560,
+            self.chunk_size,
+            #2560,
             self.model_config.get_hidden_size(),
             self.model_config.dtype,
         )
