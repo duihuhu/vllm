@@ -139,7 +139,7 @@ class LLM:
         self.llm_engine.add_request(request_id, prompt, sampling_params,
                                     prompt_token_ids)
 
-    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int]) -> List[RequestOutput]:
+    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int] = 0) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()

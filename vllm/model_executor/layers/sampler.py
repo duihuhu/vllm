@@ -1,5 +1,6 @@
 """A layer that samples the next tokens from the model's outputs."""
 from typing import Dict, List, Tuple, Optional
+import time
 
 import numpy as np
 import torch
@@ -41,6 +42,7 @@ class Sampler(nn.Module):
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> Dict[int, SequenceOutputs]:
         # Get the hidden states that we use for sampling.
+        st = time.time()
         hidden_states = _prune_hidden_states(hidden_states, input_metadata)
 
         # Get the logits for the next tokens.
@@ -84,7 +86,8 @@ class Sampler(nn.Module):
         do_top_k = any(k != self.vocab_size for k in top_ks)
         if do_top_p or do_top_k:
             probs = _apply_top_p_top_k(probs, top_ps, top_ks)
-
+        ed = time.time()
+        print(f"sample itself costs {ed - st} seconds")
         # Sample the next tokens.
         return _sample(probs, logprobs, input_metadata)
 
@@ -377,6 +380,7 @@ def _sample(
 
     # TODO(woosuk): Optimize.
     idx = 0
+    st = time.time()
     for i, seq_group in enumerate(input_metadata.seq_groups):
         seq_ids, sampling_params = seq_group
         if i < input_metadata.num_prompts:
@@ -433,4 +437,6 @@ def _sample(
                     output_logprobs,
                 )
 
+    ed = time.time()
+    print(f"_sample costs {ed - st} seconds")
     return seq_outputs

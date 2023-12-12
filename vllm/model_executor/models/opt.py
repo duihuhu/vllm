@@ -22,6 +22,7 @@ The input of the model is flattened to a 1D tensor of tokens. The model uses
 InputMetadata to extract the original 2D shape of the input.
 """
 from typing import Dict, List, Optional, Tuple
+import time
 
 import torch
 from torch import nn
@@ -116,7 +117,6 @@ class OPTDecoderLayer(nn.Module):
         )
         self.do_layer_norm_before = config.do_layer_norm_before
         self.activation_fn = get_act_fn(config.activation_function)
-
         self.self_attn_layer_norm = nn.LayerNorm(
             self.embed_dim,
             elementwise_affine=config.layer_norm_elementwise_affine)
@@ -284,8 +284,11 @@ class OPTForCausalLM(nn.Module):
     ) -> Dict[int, SequenceOutputs]:
         hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
+        st = time.time()
         next_tokens = self.sampler(self.lm_head_weight, hidden_states,
                                    input_metadata)
+        ed = time.time()
+        print(f"sampling costs {ed - st} seconds")
         return next_tokens
 
     _column_parallel_weights = [
