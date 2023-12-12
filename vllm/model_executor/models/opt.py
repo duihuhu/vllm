@@ -103,30 +103,35 @@ class OPTAttention(nn.Module):
         cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
         dim0, dim1, dim2 = hidden_states.shape
+        qkv_cat = None
         for i in range(dim0):
             qkv, _ = self.qkv_proj(hidden_states[i])
-            import numpy as np
-            if dim0 > 1:
-                if self.index == 1 and self.layer_num == 0 and i == 1:
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                    print("qkv shape ", dim0, dim1, dim2)
-                    print("sample_results hidden_states : ", qkv[0])
-                    x_t = qkv[0].cpu().numpy()
-                    np.savetxt("qkv1.txt", x_t, delimiter='\n')
+            if qkv_cat:
+                qkv_cat = torch.cat((qkv_cat.unsqueeze(0), qkv.unsqueeze(0)), dim=0)
             else:
-                if self.index == 1 and self.layer_num == 0:
-                    print("qkv shape ", dim0, dim1, dim2)
-                    # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                    print("sample_results hidden_states : ", qkv[0])
-                    x_t = qkv[0].cpu().numpy()
-                    np.savetxt("qkv0.txt", x_t, delimiter='\n')
-        
-        self.index = self.index + 1
-        qkv, _ = self.qkv_proj(hidden_states)
+                qkv_cat =qkv
+        # qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
         attn_output = self.attn(q, k, v, key_cache, value_cache,
                                 input_metadata, cache_event)
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("qkv shape ", dim0, dim1, dim2)
+                print("sample_results hidden_states : ", attn_output[1])
+                x_t = attn_output[1].cpu().numpy()
+                np.savetxt("attn_output1.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1 and self.layer_num == 0:
+                print("qkv shape ", dim0, dim1, dim2)
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", attn_output[0])
+                x_t = attn_output[0].cpu().numpy()
+                np.savetxt("attn_output0.txt", x_t, delimiter='\n')
+        
+        # self.index = self.index + 1
         output, _ = self.out_proj(attn_output)
         return output
 
