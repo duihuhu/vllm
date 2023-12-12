@@ -104,6 +104,8 @@ class OPTAttention(nn.Module):
     ) -> torch.Tensor:
         dim0, dim1, dim2 = hidden_states.shape
         qkv_cat = []
+        import numpy as np
+        
         for i in range(dim0):
             qkv, _ = self.qkv_proj(hidden_states[i])
             qkv_cat.append(qkv)
