@@ -1,6 +1,7 @@
 from typing import List, Tuple, Dict
 import torch
 from transformers import PreTrainedTokenizerBase
+import time
 
 from vllm.config import ModelConfig, ParallelConfig
 from vllm.chunked.chunk import Chunk, Sequence, ChunkStatus, ChunkSamplingParams
@@ -151,10 +152,13 @@ class ChunkWorker:
     
     def generate_first_token_id(self) -> None:
         for _, sequence in self.job_sequences.items():
+            st = time.time()
             output_tokens_list, logprob = self._execute_sampler(logits = sequence.outputs[0], 
                                                                 sampling_params = sequence.sampling_params)
             #logprob_index = self._execute_sampler(logits = sequence.outputs[0], 
             #                                                    sampling_params = sequence.sampling_params)
+            ed = time.time()
+            sequence.add_sampler_time(st, ed)
             sequence.add_first_token_id(output_tokens_list[0])
             sequence.add_first_token_logprob(logprob)
     
@@ -165,7 +169,9 @@ class ChunkWorker:
             sequence.add_first_token_str(new_output_text = new_output_text)
     
     @torch.inference_mode()
-    def _execute_sampler(self, logits: torch.Tensor, sampling_params: ChunkSamplingParams) -> Tuple[List[int], float]:
+    def _execute_sampler(self, 
+                         logits: torch.Tensor, 
+                         sampling_params: ChunkSamplingParams) -> Tuple[List[int], float, float]:
         output_tokens_list, logprob = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
         #logprob_index = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
         return (output_tokens_list, logprob)

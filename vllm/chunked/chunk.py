@@ -103,6 +103,10 @@ class Sequence:
 
     def _update_account(self, account: int) -> None:
         self.account = account
+    
+    def add_sampler_time(self, st: float, ed: float) -> None:
+        self.sampler_start = st
+        self.sampler_end = ed
 
 class ChunkInputMetadata:
     def __init__(self,
