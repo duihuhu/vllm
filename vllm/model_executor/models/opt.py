@@ -486,7 +486,7 @@ class OPTForCausalLM(nn.Module):
         self.model = OPTModel(config, linear_method)
         self.lm_head_weight = self.model.decoder.embed_tokens.weight
         self.sampler = Sampler(config.vocab_size)
-
+        self.index = 0
     def forward(
         self,
         input_ids: torch.Tensor,
@@ -513,7 +513,8 @@ class OPTForCausalLM(nn.Module):
                 print("sample_results hidden_states : ", hidden_states[0])
                 x_t = hidden_states[0].cpu().numpy()
                 np.savetxt("hidden_states12.txt", x_t, delimiter='\n')
-                
+               
+        self.index = self.index + 1
         return hidden_states
 
     def sample(
