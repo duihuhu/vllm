@@ -160,7 +160,7 @@ class ChunkWorker:
     def generate_first_token_str(self, tokenizer: PreTrainedTokenizerBase) -> None:
         for _, sequence in self.job_sequences.items():
             new_token = tokenizer.convert_ids_to_tokens(sequence.first_token_id, skip_special_tokens = True)
-            new_output_text = tokenizer.convert_tokens_to_string(new_token)
+            new_output_text = tokenizer.convert_tokens_to_string([new_token])
             sequence.add_first_token_str(new_output_text = new_output_text)
     
     @torch.inference_mode()
