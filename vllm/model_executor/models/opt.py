@@ -178,10 +178,12 @@ class OPTAttention(nn.Module):
                     # print("sample_results hidden_states : ", qkv[0])
                     x_t = output[0].cpu().numpy()
                     np.savetxt("output0.txt", x_t, delimiter='\n')
-
-        output, _ = self.out_proj(attn_output)
+        output_cat_after = torch.stack(output_cat, dim=0)
+        
+        # output, _ = self.out_proj(attn_output)
         self.index = self.index + 1
-        return output
+        # return output
+        return output_cat_after
 
 
 class OPTDecoderLayer(nn.Module):
