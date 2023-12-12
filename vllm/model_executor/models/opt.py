@@ -291,26 +291,6 @@ class OPTDecoderLayer(nn.Module):
         if self.do_layer_norm_before:
             hidden_states = self.final_layer_norm(hidden_states)
         
-        if dim0 > 1:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[1])
-                x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[0])
-                x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
-        
-        hidden_states, _ = self.fc1(hidden_states)
-        hidden_states = self.activation_fn(hidden_states)
-        hidden_states, _ = self.fc2(hidden_states)
-        hidden_states = residual + hidden_states
-        # 350m applies layer norm AFTER attention
-        if not self.do_layer_norm_before:
-            hidden_states = self.final_layer_norm(hidden_states)
         # if dim0 > 1:
         #     if self.index == 1 and self.layer_num == 0:
         #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
@@ -323,6 +303,35 @@ class OPTDecoderLayer(nn.Module):
         #         print("sample_results hidden_states : ", hidden_states[0])
         #         x_t = hidden_states[0].cpu().numpy()
         #         np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
+        hidden_states_cat = []
+        dim0, dim1, dim2 = hidden_states.shape
+        for i in range(dim0):
+            output, _ = self.fc1(hidden_states[i])
+            output = self.activation_fn(output)
+            output, _ = self.fc2(output)
+            hidden_states_cat.append(output)
+            
+        hidden_states = torch.stack(hidden_states_cat, dim=0)
+
+        # hidden_states, _ = self.fc1(hidden_states)
+        # hidden_states = self.activation_fn(hidden_states)
+        # hidden_states, _ = self.fc2(hidden_states)
+        hidden_states = residual + hidden_states
+        # 350m applies layer norm AFTER attention
+        if not self.do_layer_norm_before:
+            hidden_states = self.final_layer_norm(hidden_states)
+        if dim0 > 1:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[1])
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", hidden_states[0])
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
         self.index = self.index + 1
         return hidden_states
 
