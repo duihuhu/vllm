@@ -103,8 +103,22 @@ class OPTAttention(nn.Module):
         cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
-        if self.layer_num == 0 and self.index == 1: 
-                print("qkv shape ", qkv.shape)
+        dim0, dim1, dim2 = qkv.shape
+        if dim0 > 1:
+            import numpy as np
+            if self.index == 1 and self.layer_num == 0:
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+                print("sample_results hidden_states : ", qkv[1])
+                x_t = qkv[1].cpu().numpy()
+                np.savetxt("qkv1.txt", x_t, delimiter='\n')
+        else:
+            if self.index == 1 and self.layer_num == 0:
+                print("hidden shape ", dim0, dim1, dim2)
+                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+                print("sample_results hidden_states : ", qkv[0])
+                x_t = qkv[0].cpu().numpy()
+                np.savetxt("qkv0.txt", x_t, delimiter='\n')
+
         self.index = self.index + 1
         q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
