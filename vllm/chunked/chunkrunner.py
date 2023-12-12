@@ -142,6 +142,8 @@ class ChunkRunner:
                        kv_cache: List[Tuple[torch.Tensor, torch.Tensor]], 
                        chunkmetadata: ChunkInputMetadata) -> Tuple[torch.Tensor, float, float]:
         start_time = time.time()
+        print(inputs.shape)
+        print(inputs_positions.shape)
         output = self.chunk_worker.model(
             input_ids = inputs,
             positions = inputs_positions,
