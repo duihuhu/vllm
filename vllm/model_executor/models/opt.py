@@ -73,22 +73,22 @@ class OPTAttention(nn.Module):
         self.head_dim = embed_dim // total_num_heads
         self.scaling = self.head_dim**-0.5
 
-        # self.qkv_proj = ColumnParallelLinear(embed_dim,
-        #                                      3 * embed_dim,
-        #                                      bias=bias,
-        #                                      gather_output=False,
-        #                                      perform_initialization=False)
-        # self.out_proj = RowParallelLinear(embed_dim,
-        #                                   embed_dim,
-        #                                   bias=bias,
-        #                                   input_is_parallel=True,
-        #                                   perform_initialization=False)
+        self.qkv_proj = ColumnParallelLinear(embed_dim,
+                                             3 * embed_dim,
+                                             bias=bias,
+                                             gather_output=False,
+                                             perform_initialization=False)
+        self.out_proj = RowParallelLinear(embed_dim,
+                                          embed_dim,
+                                          bias=bias,
+                                          input_is_parallel=True,
+                                          perform_initialization=False)
        
-        self.k_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
+        # self.k_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
+        # self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
+        # self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
-        self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
+        # self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
         self.attn = PagedAttention(self.num_heads,
                                    self.head_dim,
@@ -101,38 +101,9 @@ class OPTAttention(nn.Module):
         input_metadata: InputMetadata,
         cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
-        dim0, dim1, dim2 = hidden_states.shape
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("hidden_states shape ", dim0, dim1, dim2)
-                print("sample_results hidden_states : ", hidden_states[1])
-                x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states4.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("hidden_states shape ", dim0, dim1, dim2)
-                print("sample_results hidden_states : ", hidden_states[0])
-                x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states5.txt", x_t, delimiter='\n')
+
         qkv, _ = self.qkv_proj(hidden_states)
-        dim0, dim1, dim2 = qkv.shape
-        if dim0 > 1:
-            if self.index == 1 and self.layer_num == 0:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("qkv shape ", dim0, dim1, dim2)
-                print("sample_results hidden_states : ", qkv[1])
-                x_t = qkv[1].cpu().numpy()
-                np.savetxt("qkv1.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 1 and self.layer_num == 0:
-                print("qkv shape ", dim0, dim1, dim2)
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("sample_results hidden_states : ", qkv[0])
-                x_t = qkv[0].cpu().numpy()
-                np.savetxt("qkv0.txt", x_t, delimiter='\n')
+
         q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
         attn_output = self.attn(q, k, v, key_cache, value_cache,
