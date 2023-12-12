@@ -103,7 +103,9 @@ class OPTAttention(nn.Module):
         cache_event: Optional[torch.cuda.Event],
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
-        print("qkv.shape: ", qkv.shape)
+        if self.layer_num == 0 and self.index == 1: 
+                print("qkv shape ", qkv.shape)
+        self.index = self.index + 1
         q, k, v = qkv.chunk(chunks=3, dim=-1)
         key_cache, value_cache = kv_cache
         attn_output = self.attn(q, k, v, key_cache, value_cache,
