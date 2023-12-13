@@ -33,7 +33,7 @@ def tensor_model_parallel_all_gather(input_, dim=-1):
         dim += input_.dim()
     input_size = input_.size()
     # Allocate output tensor.
-    output_tensor = torch.empty((world_size, ) + input_size,
+    output_tensor = torch.zeros((world_size, ) + input_size,
                                 dtype=input_.dtype,
                                 device=input_.device)
     # All-gather.

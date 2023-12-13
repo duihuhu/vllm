@@ -42,17 +42,6 @@ class Sampler(nn.Module):
     ) -> SamplerOutput:        
         import numpy as np
         dim0, dim1, dim2 = hidden_states.shape
-        
-        if dim0 > 1:
-            if self.index == 2:
-                x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states_sample_mul_b"+str(self.index)+".txt", x_t, delimiter='\n')
-
-        else:
-            if self.index ==2:
-                x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states_sample_sig_b"+str(self.index)+".txt", x_t, delimiter='\n')
-
         # Get the hidden states that we use for sampling.
         hidden_states = _prune_hidden_states(hidden_states, sampling_metadata)
         
@@ -60,12 +49,12 @@ class Sampler(nn.Module):
         if dim0 > 1:
             if self.index == 2:
                 x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states_sample_mul_a"+str(self.index)+".txt", x_t, delimiter='\n')
+                np.savetxt("hidden_states_sample_mul"+str(self.index)+".txt", x_t, delimiter='\n')
 
         else:
             if self.index ==2:
                 x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states_sample_sig_a"+str(self.index)+".txt", x_t, delimiter='\n')
+                np.savetxt("hidden_states_sample_sig"+str(self.index)+".txt", x_t, delimiter='\n')
 
         self.index = self.index + 1
         # Get the logits for the next tokens.
@@ -91,6 +80,14 @@ class Sampler(nn.Module):
         # Apply presence and frequency penalties.
         presence_penalties, frequency_penalties, repetition_penalties = (
             _get_penalties(sampling_metadata))
+        
+        if dim0 > 1:
+            if self.index == 2:
+                print("mul: ", presence_penalties, frequency_penalties, repetition_penalties)
+        else:
+            if self.index ==2:
+                print("sig: ", presence_penalties, frequency_penalties, repetition_penalties)
+                
         assert len(presence_penalties) == logits.shape[0]
         assert len(frequency_penalties) == logits.shape[0]
         assert len(repetition_penalties) == logits.shape[0]
