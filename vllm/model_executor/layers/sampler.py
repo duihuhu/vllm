@@ -484,9 +484,10 @@ def _random_sample(
             # torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
             prob_t = probs[i].unsqueeze(0)
-            random_samples = torch.argmax(prob_t,
-                                            num_samples=max_best_of,
-                                            replacement=True).cpu()
+            # random_samples = torch.multinomial(prob_t,
+            #                                 num_samples=max_best_of,
+            #                                 replacement=True).cpu()
+            random_samples = torch.argmax(prob_t, dim=-1).cpu()
             random_samples_cat.append(random_samples.squeeze(dim=1))
             if index == 2 and i == 1:
                 x_t = prob_t.cpu().numpy()
