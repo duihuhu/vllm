@@ -481,17 +481,20 @@ def _random_sample(
     if dim0 > 1:
         for i in range(dim0):
             print("probs i shape: ", probs[i].shape)
-            random_samples = torch.multinomial(probs[i],
+            random_samples = torch.multinomial(probs[i].view(1, -1),
                                             num_samples=max_best_of,
                                             replacement=True).cpu()
             random_samples_cat.append(random_samples)
         random_samples = torch.stack(random_samples_cat, dim=0)
+        if index == 2:
+            print("random_samples  " , random_samples, max_best_of)
     else:
         print("probs 0 shape: ", probs.shape)
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
-                                       replacement=True).cpu()    
-
+                                       replacement=True).cpu()
+        if index == 2:
+            print("random_samples  " , random_samples, max_best_of)
     # if dim0 > 1:
     #     if index == 2:
     #         print("random_samples shape " ,random_samples.shape, max_best_of)
