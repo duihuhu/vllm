@@ -482,22 +482,22 @@ def _random_sample(
 
     if dim0 > 1 and index > 1:
         for i in range(dim0):
-            print("probs i shape: ", probs[i].unsqueeze(0).shape)
+            # print("probs i shape: ", probs[i].unsqueeze(0).shape)
             prob_t = probs[i].unsqueeze(0)
             random_samples = torch.multinomial(prob_t,
                                             num_samples=max_best_of,
                                             replacement=True).cpu()
             random_samples_cat.append(random_samples.squeeze(dim=1))
         random_samples = torch.stack(random_samples_cat, dim=0)
-        print("random_samples: ", type(random_samples),  " ", random_samples.shape, " ", random_samples)
+        print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
         # if index == 2:
         #     print("random_samples  " , random_samples, max_best_of)
     else:
-        print("probs 0 shape: ", probs.shape)
+        # print("probs 0 shape: ", probs.shape)
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
-        print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples)
+        print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
         # if index == 2:
         #     print("random_samples  " , random_samples, max_best_of)
     
