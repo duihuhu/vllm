@@ -298,7 +298,7 @@ class ModelRunner:
                 x_t = hidden_states[0].cpu().numpy()
                 np.savetxt("hidden_states14.txt", x_t, delimiter='\n')
         self.index = self.index + 1
-        
+        print("self index ", self.index)
         # Sample the next token.
         output = self.model.sample(
             hidden_states=hidden_states,
