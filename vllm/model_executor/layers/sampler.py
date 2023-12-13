@@ -34,7 +34,8 @@ class Sampler(nn.Module):
         self.vocab_size = vocab_size
         self.index = 0
         self.rng_state = torch.get_rng_state()
-        
+        torch.manual_seed(42)
+
     def forward(
         self,
         embedding: torch.Tensor,
