@@ -482,52 +482,53 @@ def _random_sample(
     random_samples_cat = []
     import numpy as np
 
-    if dim0 > 1 and index > 1 and dim0!=256:
-        for i in range(dim0):
-            torch.set_rng_state(rng_state)
-            # torch.manual_seed(0)
-            # print("probs i shape: ", probs[i].unsqueeze(0).shape)
-            prob_t = probs[i].unsqueeze(0)
-            random_samples = torch.multinomial(prob_t,
-                                            num_samples=max_best_of,
-                                            replacement=True).cpu()
-            random_samples_cat.append(random_samples.squeeze(dim=1))
-            if index == 2 and i == 1:
-                x_t = prob_t.cpu().numpy()
-                np.savetxt("prob_t1.txt", x_t, delimiter='\n')
-                print("random_samples 2: ", random_samples)
+    # if dim0 > 1 and index > 1 and dim0!=256:
+    #     for i in range(dim0):
+    #         torch.set_rng_state(rng_state)
+    #         # torch.manual_seed(0)
+    #         # print("probs i shape: ", probs[i].unsqueeze(0).shape)
+    #         prob_t = probs[i].unsqueeze(0)
+    #         random_samples = torch.multinomial(prob_t,
+    #                                         num_samples=max_best_of,
+    #                                         replacement=True).cpu()
+    #         random_samples_cat.append(random_samples.squeeze(dim=1))
+    #         if index == 2 and i == 1:
+    #             x_t = prob_t.cpu().numpy()
+    #             np.savetxt("prob_t1.txt", x_t, delimiter='\n')
+    #             print("random_samples 2: ", random_samples)
                 
-        random_samples = torch.stack(random_samples_cat, dim=0)
-        print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
-        # if index == 2:
-        #     print("random_samples  " , random_samples, max_best_of)
-        rng_state1 = torch.get_rng_state()
-        rng_state.copy_(rng_state1)
-    else:
-        # print("probs 0 shape: ", probs.shape)
-        rng_state_b = torch.get_rng_state()
-        random_samples = torch.multinomial(probs,
-                                       num_samples=max_best_of,
-                                       replacement=True).cpu()
-        rng_state1 = torch.get_rng_state()
-        if torch.equal(rng_state_b, rng_state1):
-            print("rng_state_b rng_state1 equal ")
-        else:
-            print("rng_state_b rng_state1 no equal ")
+    #     random_samples = torch.stack(random_samples_cat, dim=0)
+    #     print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
+    #     # if index == 2:
+    #     #     print("random_samples  " , random_samples, max_best_of)
+    #     rng_state1 = torch.get_rng_state()
+    #     rng_state.copy_(rng_state1)
+    # else:
+    #     # print("probs 0 shape: ", probs.shape)
+    #     rng_state_b = torch.get_rng_state()
+    #     random_samples = torch.multinomial(probs,
+    #                                    num_samples=max_best_of,
+    #                                    replacement=True).cpu()
+    #     rng_state1 = torch.get_rng_state()
+    #     if torch.equal(rng_state_b, rng_state1):
+    #         print("rng_state_b rng_state1 equal ")
+    #     else:
+    #         print("rng_state_b rng_state1 no equal ")
             
-        if torch.equal(rng_state, rng_state1):
-            print("rng_state rng_state1 equal ")
-        else:
-            print("rng_state rng_state1 no equal ")
+    #     if torch.equal(rng_state, rng_state1):
+    #         print("rng_state rng_state1 equal ")
+    #     else:
+    #         print("rng_state rng_state1 no equal ")
             
-        rng_state.copy_(rng_state1)
+    #     rng_state.copy_(rng_state1)
         
-        if index == 2:
-            x_t = probs.cpu().numpy()
-            np.savetxt("prob_t0.txt", x_t, delimiter='\n')
-            print("random_samples 2: ",random_samples)
+    #     if index == 2:
+    #         x_t = probs.cpu().numpy()
+    #         np.savetxt("prob_t0.txt", x_t, delimiter='\n')
+    #         print("random_samples 2: ",random_samples)
             
-        print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
+    #     print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
+      
         # if index == 2:
         #     print("random_samples  " , random_samples, max_best_of)
     
@@ -537,10 +538,15 @@ def _random_sample(
     # else:
     #     if index == 2:
     #         print("random_samples shape " ,random_samples.shape, max_best_of)
-   
-    # random_samples = torch.multinomial(probs,
-    #                     num_samples=max_best_of,
-    #                     replacement=True).cpu()
+    rng_state1 = torch.get_rng_state()
+    random_samples = torch.multinomial(probs,
+                        num_samples=max_best_of,
+                        replacement=True).cpu()
+    rng_state2 = torch.get_rng_state()
+    if torch.equal(rng_state2, rng_state1):
+        print("rng_state2 rng_state1 equal ")
+    else:
+        print("rng_state2 rng_state1 no equal ")
     # print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
     
     sample_idx = 0
