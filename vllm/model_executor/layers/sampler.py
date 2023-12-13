@@ -505,11 +505,23 @@ def _random_sample(
         rng_state.copy_(rng_state1)
     else:
         # print("probs 0 shape: ", probs.shape)
+        rng_state_b = torch.get_rng_state()
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
         rng_state1 = torch.get_rng_state()
+        if torch.equal(rng_state_b, rng_state1):
+            print("rng_state_b rng_state1 equal ")
+        else:
+            print("rng_state_b rng_state1 no equal ")
+            
+        if torch.equal(rng_state, rng_state1):
+            print("rng_state rng_state1 equal ")
+        else:
+            print("rng_state rng_state1 no equal ")
+            
         rng_state.copy_(rng_state1)
+        
         if index == 2:
             x_t = probs.cpu().numpy()
             np.savetxt("prob_t0.txt", x_t, delimiter='\n')
