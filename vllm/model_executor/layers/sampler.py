@@ -33,6 +33,7 @@ class Sampler(nn.Module):
         super().__init__()
         self.vocab_size = vocab_size
         self.index = 0
+        self.rng_state = torch.get_rng_state()
     def forward(
         self,
         embedding: torch.Tensor,
@@ -138,7 +139,7 @@ class Sampler(nn.Module):
         #         print("sampling_metadata 0: ", sampling_metadata)
 
         # Sample the next tokens.
-        sample_results = _sample(probs, logprobs, sampling_metadata, self.index)
+        sample_results = _sample(probs, logprobs, sampling_metadata, self.index, self.rng_state)
 
 
         # print("sample_results logits ", logits)
@@ -456,6 +457,7 @@ def _random_sample(
     is_prompts: List[bool],
     probs: torch.Tensor,
     index: Optional[int],
+    rng_state,
 ) -> List[Tuple[List[int], List[int]]]:
     # Find the maximum best_of value of the prompt phase requests.
     max_best_of = 1
@@ -481,13 +483,13 @@ def _random_sample(
 
     if dim0 > 1 and index > 1 and dim0!=256:
         for i in range(dim0):
+            torch.set_rng_state(rng_state)
             # torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
             prob_t = probs[i].unsqueeze(0)
-            # random_samples = torch.multinomial(prob_t,
-            #                                 num_samples=max_best_of,
-            #                                 replacement=True).cpu()
-            random_samples = torch.argmax(prob_t, dim=-1).cpu()
+            random_samples = torch.multinomial(prob_t,
+                                            num_samples=max_best_of,
+                                            replacement=True).cpu()
             random_samples_cat.append(random_samples.squeeze(dim=1))
             if index == 2 and i == 1:
                 x_t = prob_t.cpu().numpy()
@@ -498,11 +500,13 @@ def _random_sample(
         print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
         # if index == 2:
         #     print("random_samples  " , random_samples, max_best_of)
+        rng_state = torch.get_rng_state()
     else:
         # print("probs 0 shape: ", probs.shape)
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
+        rng_state = torch.get_rng_state()
         if index == 2:
             x_t = probs.cpu().numpy()
             np.savetxt("prob_t0.txt", x_t, delimiter='\n')
@@ -606,6 +610,7 @@ def _sample(
     logprobs: torch.Tensor,
     sampling_metadata: SamplingMetadata,
     index: Optional[int],
+    rng_state
 ) -> List[Tuple[List[int], List[int]]]:
     categorized_seq_group_ids = {t: [] for t in SamplingType}
     categorized_sample_indices = sampling_metadata.categorized_sample_indices
@@ -629,7 +634,7 @@ def _sample(
         elif sampling_type == SamplingType.RANDOM:
             category_probs = probs[sample_indices]
             sample_results = _random_sample(seq_groups, is_prompts,
-                                            category_probs, index)
+                                            category_probs, index, rng_state)
 
         elif sampling_type == SamplingType.BEAM:
             category_logprobs = logprobs[sample_indices]
