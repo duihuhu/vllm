@@ -476,26 +476,26 @@ def _random_sample(
     #         x_t = probs[0].cpu().numpy()
     #         np.savetxt("probs0.txt", x_t, delimiter=',')
 
-    # random_samples_cat = []
-    # import numpy as np
+    random_samples_cat = []
+    import numpy as np
     
-    # if dim0 > 1:
-    #     for i in range(dim0):
-    #         print("probs i shape: ", probs[i].unsqueeze(0).shape)
-    #         random_samples = torch.multinomial(probs[i].unsqueeze(0),
-    #                                         num_samples=max_best_of,
-    #                                         replacement=True).cpu()
-    #         random_samples_cat.append(random_samples)
-    #     random_samples = torch.stack(random_samples_cat, dim=0)
-    #     if index == 2:
-    #         print("random_samples  " , random_samples, max_best_of)
-    # else:
-    #     print("probs 0 shape: ", probs.shape)
-    #     random_samples = torch.multinomial(probs,
-    #                                    num_samples=max_best_of,
-    #                                    replacement=True).cpu()
-    #     if index == 2:
-    #         print("random_samples  " , random_samples, max_best_of)
+    if dim0 > 1 and dim0!=256:
+        for i in range(dim0):
+            print("probs i shape: ", probs[i].unsqueeze(0).shape)
+            random_samples = torch.multinomial(probs[i].unsqueeze(0),
+                                            num_samples=max_best_of,
+                                            replacement=True).cpu()
+            random_samples_cat.append(random_samples)
+        random_samples = torch.stack(random_samples_cat, dim=0)
+        if index == 2:
+            print("random_samples  " , random_samples, max_best_of)
+    else:
+        print("probs 0 shape: ", probs.shape)
+        random_samples = torch.multinomial(probs,
+                                       num_samples=max_best_of,
+                                       replacement=True).cpu()
+        if index == 2:
+            print("random_samples  " , random_samples, max_best_of)
     
     # if dim0 > 1:
     #     if index == 2:
@@ -503,9 +503,9 @@ def _random_sample(
     # else:
     #     if index == 2:
     #         print("random_samples shape " ,random_samples.shape, max_best_of)
-    random_samples = torch.multinomial(probs,
-                        num_samples=max_best_of,
-                        replacement=True).cpu()
+    # random_samples = torch.multinomial(probs,
+    #                     num_samples=max_best_of,
+    #                     replacement=True).cpu()
     sample_idx = 0
     results = []
     for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
