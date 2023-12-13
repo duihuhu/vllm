@@ -480,12 +480,11 @@ def _random_sample(
     import numpy as np
 
     if dim0 > 1 and index > 1 and dim0!=256:
-        rg = range(dim0)
-        for i in reversed(rg):
+        for i in range(dim0):
             # torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
             prob_t = probs[i].unsqueeze(0)
-            random_samples = torch.multinomial(prob_t,
+            random_samples = torch.argmax(prob_t,
                                             num_samples=max_best_of,
                                             replacement=True).cpu()
             random_samples_cat.append(random_samples.squeeze(dim=1))
@@ -493,7 +492,7 @@ def _random_sample(
                 x_t = prob_t.cpu().numpy()
                 np.savetxt("prob_t1.txt", x_t, delimiter='\n')
                 print("random_samples 2: ", random_samples)
-        random_samples_cat.reverse()
+                
         random_samples = torch.stack(random_samples_cat, dim=0)
         print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
         # if index == 2:
