@@ -488,6 +488,9 @@ def _random_sample(
                                             num_samples=max_best_of,
                                             replacement=True).cpu()
             random_samples_cat.append(random_samples.squeeze(dim=1))
+            if index == 2 and i == 1:
+                x_t = prob_t.cpu().numpy()
+                np.savetxt("prob_t1.txt", x_t, delimiter=',')
         random_samples = torch.stack(random_samples_cat, dim=0)
         print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
         # if index == 2:
@@ -497,6 +500,10 @@ def _random_sample(
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
+        if index == 2:
+            x_t = probs.cpu().numpy()
+            np.savetxt("prob_t1.txt", x_t, delimiter=',')
+            
         print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
         # if index == 2:
         #     print("random_samples  " , random_samples, max_best_of)
