@@ -463,9 +463,19 @@ def _random_sample(
         if is_prompt:
             seq_ids, sampling_params = seq_group
             max_best_of = max(max_best_of, sampling_params.best_of)
-    random_samples = torch.multinomial(probs,
-                                       num_samples=max_best_of,
-                                       replacement=True).cpu()
+    dim0, dim1, dim2 = probs.shape
+    random_samples_cat = []
+    # import numpy as np
+    
+    for i in range(dim0):
+        random_samples = torch.multinomial(probs[i],
+                                           num_samples=max_best_of,
+                                           replacement=True).cpu()
+        random_samples_cat.append(random_samples)
+    random_samples = torch.stack(random_samples_cat, dim=0)
+    # random_samples = torch.multinomial(probs,
+    #                                    num_samples=max_best_of,
+    #                                    replacement=True).cpu()
     dim0, dim1 = random_samples.shape
     import numpy as np
     if dim0 > 1:
