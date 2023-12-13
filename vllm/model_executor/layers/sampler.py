@@ -118,10 +118,17 @@ class Sampler(nn.Module):
         if do_min_p:
             logits = _apply_min_p(logits, min_ps)
 
+        dim0, dim1 = logits.shape
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 2:
+                x_t = logits[1].cpu().numpy()
+                np.savetxt("logits1.txt", x_t, delimiter=',')
+        else:
+            if self.index == 2:
+                x_t = logits[0].cpu().numpy()
+                np.savetxt("logits0.txt", x_t, delimiter=',')
 
-        # We use float32 for probabilities and log probabilities.
-        # Compute the probabilities.
-        
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
         # Compute the log probabilities.
         # Use log_softmax to ensure numerical stability.
@@ -148,18 +155,6 @@ class Sampler(nn.Module):
         #         print("sample_results logits : ", logits)
         #         x_t = logits[-1].cpu().numpy()
         #         np.savetxt("logits.txt", x_t, delimiter=',')
-        if dim0 > 1:
-            if self.index == 2:
-                print("sample_results 1 " , sample_results)
-                print("sampling_metadata 1  " , sampling_metadata)
-                print("prompt_logprobs 1 " , prompt_logprobs)
-                print("sample_logprobs 1 " , sample_logprobs)
-        else:
-            if self.index ==2:
-                print("sample_results 0 " , sample_results)
-                print("sampling_metadata 0 " , sampling_metadata)
-                print("prompt_logprobs 0 " , prompt_logprobs)
-                print("sample_logprobs 0 " , sample_logprobs)
                 
         sampler_output = _build_sampler_output(sample_results, sampling_metadata,
                                      prompt_logprobs, sample_logprobs)
