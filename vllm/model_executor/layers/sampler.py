@@ -60,13 +60,6 @@ class Sampler(nn.Module):
         # Get the logits for the next tokens.
         logits = _get_logits(hidden_states, embedding, embedding_bias,
                              self.vocab_size)
-        if dim0 > 1:
-            if self.index == 2:
-                print("logits " , logits.shape, logits)
-        else:
-            if self.index ==2:
-                print("logits " , logits.shape, logits)
-                
         # dim0, dim1 = logits.shape
         # import numpy as np
         # if dim0 > 1:
@@ -83,6 +76,15 @@ class Sampler(nn.Module):
         # self.index = self.index + 1
         # Apply logits processors (if any).
         logits = _apply_logits_processors(logits, sampling_metadata)
+        
+        if dim0 > 1:
+            if self.index == 2:
+                print("logits " , logits.shape, logits)
+        else:
+            if self.index ==2:
+                print("logits " , logits.shape, logits)
+                
+        
         # Apply presence and frequency penalties.
         presence_penalties, frequency_penalties, repetition_penalties = (
             _get_penalties(sampling_metadata))
