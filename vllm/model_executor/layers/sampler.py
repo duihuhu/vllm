@@ -490,7 +490,7 @@ def _random_sample(
             random_samples_cat.append(random_samples.squeeze(dim=1))
             if index == 2 and i == 1:
                 x_t = prob_t.cpu().numpy()
-                np.savetxt("prob_t1.txt", x_t, delimiter=',')
+                np.savetxt("prob_t1.txt", x_t, delimiter='\n')
         random_samples = torch.stack(random_samples_cat, dim=0)
         print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
         # if index == 2:
@@ -502,7 +502,7 @@ def _random_sample(
                                        replacement=True).cpu()
         if index == 2:
             x_t = probs.cpu().numpy()
-            np.savetxt("prob_t0.txt", x_t, delimiter=',')
+            np.savetxt("prob_t0.txt", x_t, delimiter='\n')
             
         print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
         # if index == 2:
