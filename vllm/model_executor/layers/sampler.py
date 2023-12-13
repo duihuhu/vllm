@@ -77,14 +77,6 @@ class Sampler(nn.Module):
         # Apply logits processors (if any).
         logits = _apply_logits_processors(logits, sampling_metadata)
         
-        if dim0 > 1:
-            if self.index == 2:
-                print("logits " , logits.shape, logits)
-        else:
-            if self.index ==2:
-                print("logits " , logits.shape, logits)
-                
-        
         # Apply presence and frequency penalties.
         presence_penalties, frequency_penalties, repetition_penalties = (
             _get_penalties(sampling_metadata))
@@ -102,12 +94,6 @@ class Sampler(nn.Module):
         logits = _apply_penalties(logits, sampling_metadata,
                                   presence_penalties, frequency_penalties,
                                   repetition_penalties)
-        if dim0 > 1:
-            if self.index == 2:
-                print("logits a " , logits.shape, logits)
-        else:
-            if self.index ==2:
-                print("logits a " , logits.shape, logits)
                 
         # Apply temperature scaling.
         temperatures = _get_temperatures(sampling_metadata)
@@ -162,6 +148,19 @@ class Sampler(nn.Module):
         #         print("sample_results logits : ", logits)
         #         x_t = logits[-1].cpu().numpy()
         #         np.savetxt("logits.txt", x_t, delimiter=',')
+        if dim0 > 1:
+            if self.index == 2:
+                print("sample_results 1 " , sample_results)
+                print("sampling_metadata 1  " , sampling_metadata)
+                print("prompt_logprobs 1 " , prompt_logprobs)
+                print("sample_logprobs 1 " , sample_logprobs)
+        else:
+            if self.index ==2:
+                print("sample_results 0 " , sample_results)
+                print("sampling_metadata 0 " , sampling_metadata)
+                print("prompt_logprobs 0 " , prompt_logprobs)
+                print("sample_logprobs 0 " , sample_logprobs)
+                
         sampler_output = _build_sampler_output(sample_results, sampling_metadata,
                                      prompt_logprobs, sample_logprobs)
         return sampler_output
