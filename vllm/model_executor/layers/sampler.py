@@ -463,7 +463,7 @@ def _random_sample(
         if is_prompt:
             seq_ids, sampling_params = seq_group
             max_best_of = max(max_best_of, sampling_params.best_of)
-    dim0, dim1, dim2 = probs.shape
+    dim0, dim1 = probs.shape
     random_samples_cat = []
     # import numpy as np
     
