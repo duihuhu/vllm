@@ -478,10 +478,10 @@ def _random_sample(
 
     random_samples_cat = []
     import numpy as np
-    torch.manual_seed(0)
 
     if dim0 > 1 and index > 1:
         for i in range(dim0):
+            torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
             prob_t = probs[i].unsqueeze(0)
             random_samples = torch.multinomial(prob_t,
@@ -507,10 +507,11 @@ def _random_sample(
     # else:
     #     if index == 2:
     #         print("random_samples shape " ,random_samples.shape, max_best_of)
-    random_samples = torch.multinomial(probs,
-                        num_samples=max_best_of,
-                        replacement=True).cpu()
-    print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
+   
+    # random_samples = torch.multinomial(probs,
+    #                     num_samples=max_best_of,
+    #                     replacement=True).cpu()
+    # print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
     
     sample_idx = 0
     results = []
