@@ -464,29 +464,30 @@ def _random_sample(
             seq_ids, sampling_params = seq_group
             max_best_of = max(max_best_of, sampling_params.best_of)
     dim0, dim1 = probs.shape
-    random_samples_cat = []
+    print("probs: ", probs.shape)
+    # random_samples_cat = []
+    # # import numpy as np
+    
+    # for i in range(dim0):
+    #     random_samples = torch.multinomial(probs[i],
+    #                                        num_samples=max_best_of,
+    #                                        replacement=True).cpu()
+    #     random_samples_cat.append(random_samples)
+    
+    # random_samples = torch.stack(random_samples_cat, dim=0)
+    random_samples = torch.multinomial(probs,
+                                       num_samples=max_best_of,
+                                       replacement=True).cpu()
+    # dim0, dim1 = random_samples.shape
     # import numpy as np
-    
-    for i in range(dim0):
-        random_samples = torch.multinomial(probs[i],
-                                           num_samples=max_best_of,
-                                           replacement=True).cpu()
-        random_samples_cat.append(random_samples)
-    
-    random_samples = torch.stack(random_samples_cat, dim=0)
-    # random_samples = torch.multinomial(probs,
-    #                                    num_samples=max_best_of,
-    #                                    replacement=True).cpu()
-    dim0, dim1 = random_samples.shape
-    import numpy as np
-    if dim0 > 1:
-        if index == 2:
-            x_t = random_samples[1].cpu().numpy()
-            np.savetxt("random_samples1.txt", x_t, delimiter=',')
-    else:
-        if index == 2:
-            x_t = random_samples[0].cpu().numpy()
-            np.savetxt("random_samples0.txt", x_t, delimiter=',')
+    # if dim0 > 1:
+    #     if index == 2:
+    #         x_t = random_samples[1].cpu().numpy()
+    #         np.savetxt("random_samples1.txt", x_t, delimiter=',')
+    # else:
+    #     if index == 2:
+    #         x_t = random_samples[0].cpu().numpy()
+    #         np.savetxt("random_samples0.txt", x_t, delimiter=',')
 
     sample_idx = 0
     results = []
