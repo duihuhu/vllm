@@ -541,13 +541,14 @@ def _random_sample(
     random_samples = torch.multinomial(probs,
                         num_samples=max_best_of,
                         replacement=True).cpu()
-    # random_samples_a = probs.multinomial(1,replacement=True)
+    print("random_samples orgin 0 : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
+    random_samples_a = probs.multinomial(1,replacement=True)
     rng_state2 = torch.get_rng_state()
     if torch.equal(rng_state2, rng_state1):
         print("rng_state2 rng_state1 equal ")
     else:
         print("rng_state2 rng_state1 no equal ")
-    print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
+    print("random_samples orgin 1 : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
     
     sample_idx = 0
     results = []
