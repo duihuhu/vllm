@@ -484,12 +484,6 @@ def _random_sample(
 
     if dim0 > 1 and index > 1 and dim0!=256:
         for i in range(dim0):
-            if index == 2:
-                rng_state1 = torch.get_rng_state()
-                if torch.equal(rng_state, rng_state1):
-                    print("equal ")
-                else:
-                    print("no equal ")
             torch.set_rng_state(rng_state)
             # torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
@@ -507,19 +501,15 @@ def _random_sample(
         print("random_samples i : ", type(random_samples),  " ", random_samples.shape, " ", random_samples , "\n")
         # if index == 2:
         #     print("random_samples  " , random_samples, max_best_of)
-        rng_state.copy_(torch.get_rng_state())
+        rng_state1 = torch.get_rng_state()
+        rng_state.copy_(rng_state1)
     else:
         # print("probs 0 shape: ", probs.shape)
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
-        if index == 2:
-            rng_state1 = torch.get_rng_state()
-            if torch.equal(rng_state, rng_state1):
-                print("equal ")
-            else:
-                print("no equal ")
-        rng_state.copy_(torch.get_rng_state())
+        rng_state1 = torch.get_rng_state()
+        rng_state.copy_(rng_state1)
         if index == 2:
             x_t = probs.cpu().numpy()
             np.savetxt("prob_t0.txt", x_t, delimiter='\n')
