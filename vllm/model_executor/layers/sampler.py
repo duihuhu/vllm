@@ -56,22 +56,19 @@ class Sampler(nn.Module):
                 x_t = hidden_states[0].cpu().numpy()
                 np.savetxt("hidden_states_sample_sig"+str(self.index)+".txt", x_t, delimiter='\n')
 
-        self.index = self.index + 1
         # Get the logits for the next tokens.
         logits = _get_logits(hidden_states, embedding, embedding_bias,
                              self.vocab_size)
-        # dim0, dim1 = logits.shape
-        # import numpy as np
-        # if dim0 > 1:
-        #     if self.index == 1:
-        #         print("sample_results logits : ", logits[-1])
-        #         x_t = logits[-1].cpu().numpy()
-        #         np.savetxt("logits.txt", x_t, delimiter=',')
-        # else:
-        #     if self.index == 1:
-        #         print("sample_results logits : ", logits)
-        #         x_t = logits[-1].cpu().numpy()
-        #         np.savetxt("logits.txt", x_t, delimiter=',')
+        dim0, dim1 = logits.shape
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 2:
+                x_t = logits[1].cpu().numpy()
+                np.savetxt("logits1.txt", x_t, delimiter=',')
+        else:
+            if self.index == 2:
+                x_t = logits[0].cpu().numpy()
+                np.savetxt("logits0.txt", x_t, delimiter=',')
                 
         # self.index = self.index + 1
         # Apply logits processors (if any).
@@ -166,6 +163,7 @@ class Sampler(nn.Module):
                 
         sampler_output = _build_sampler_output(sample_results, sampling_metadata,
                                      prompt_logprobs, sample_logprobs)
+        self.index = self.index + 1
         return sampler_output
 
 
