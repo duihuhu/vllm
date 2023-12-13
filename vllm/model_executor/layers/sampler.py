@@ -479,9 +479,9 @@ def _random_sample(
     random_samples_cat = []
     import numpy as np
 
-    if dim0 > 1 and index > 1:
+    if dim0 > 1:
         for i in range(dim0):
-            torch.manual_seed(0)
+            # torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
             prob_t = probs[i].unsqueeze(0)
             random_samples = torch.multinomial(prob_t,
