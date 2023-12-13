@@ -502,7 +502,7 @@ def _random_sample(
                                        replacement=True).cpu()
         if index == 2:
             x_t = probs.cpu().numpy()
-            np.savetxt("prob_t1.txt", x_t, delimiter=',')
+            np.savetxt("prob_t0.txt", x_t, delimiter=',')
             
         print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
         # if index == 2:
