@@ -479,7 +479,7 @@ def _random_sample(
     random_samples_cat = []
     import numpy as np
 
-    if dim0 > 1 and index > 1:
+    if dim0 > 1 and index > 1 and dim0!=256:
         for i in range(dim0):
             if i == 0:
                 continue
