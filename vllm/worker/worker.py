@@ -143,7 +143,6 @@ class Worker:
                 for event in cache_events:
                     event.wait()
             return {}
-        set_random_seed(self.model_config.seed)
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache, cache_events)
         return output
