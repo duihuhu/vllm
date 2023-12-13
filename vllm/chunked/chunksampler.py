@@ -88,7 +88,9 @@ class ChunkSampler(nn.Module):
 
         # Sample the next tokens.
         new_token_ids = _sample(probs, sampling_params)
-        logprob = logprobs[:, new_token_ids].item()
+        logprob: List[float] = []
+        for new_token_id in new_token_ids:
+            logprob.append(logprobs[:, new_token_id].item())
         return (new_token_ids, logprob)
 
 def _get_temperature(sampling_params: List[ChunkSamplingParams]) -> List[float]:
