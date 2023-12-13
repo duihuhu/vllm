@@ -102,7 +102,13 @@ class Sampler(nn.Module):
         logits = _apply_penalties(logits, sampling_metadata,
                                   presence_penalties, frequency_penalties,
                                   repetition_penalties)
-
+        if dim0 > 1:
+            if self.index == 2:
+                print("logits a " , logits.shape, logits)
+        else:
+            if self.index ==2:
+                print("logits a " , logits.shape, logits)
+                
         # Apply temperature scaling.
         temperatures = _get_temperatures(sampling_metadata)
         assert len(temperatures) == logits.shape[0]
