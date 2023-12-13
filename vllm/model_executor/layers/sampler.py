@@ -60,7 +60,13 @@ class Sampler(nn.Module):
         # Get the logits for the next tokens.
         logits = _get_logits(hidden_states, embedding, embedding_bias,
                              self.vocab_size)
-        
+        if dim0 > 1:
+            if self.index == 2:
+                print("logits " , logits.shape, logits)
+        else:
+            if self.index ==2:
+                print("logits " , logits.shape, logits)
+                
         # dim0, dim1 = logits.shape
         # import numpy as np
         # if dim0 > 1:
@@ -150,13 +156,6 @@ class Sampler(nn.Module):
         #         np.savetxt("logits.txt", x_t, delimiter=',')
         sampler_output = _build_sampler_output(sample_results, sampling_metadata,
                                      prompt_logprobs, sample_logprobs)
-        
-        if dim0 > 1:
-            if self.index == 2:
-                print("mul: ", sampler_output)
-        else:
-            if self.index ==2:
-                print("sig: ", sampler_output)
         return sampler_output
 
 

@@ -66,7 +66,7 @@ class VocabParallelEmbedding(torch.nn.Module):
         self.num_embeddings_per_partition = (self.vocab_end_index -
                                              self.vocab_start_index)
         self.weight = Parameter(
-            torch.empty(self.num_embeddings_per_partition,
+            torch.zeros(self.num_embeddings_per_partition,
                         self.embedding_dim,
                         device=torch.cuda.current_device(),
                         dtype=params_dtype))
