@@ -408,20 +408,20 @@ class OPTDecoder(nn.Module):
         hidden_states = inputs_embeds + pos_embeds
         
         # print("inputs_embeds shape: ", inputs_embeds.shape)
-        dim0, dim1, dim2 = hidden_states.shape
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 3:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[1])
-                x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states1.txt", x_t, delimiter='\n')
-        else:
-            if self.index == 3:
-                # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
-                print("sample_results hidden_states : ", hidden_states[0])
-                x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states0.txt", x_t, delimiter='\n')
+        # dim0, dim1, dim2 = hidden_states.shape
+        # import numpy as np
+        # if dim0 > 1:
+        #     if self.index == 3:
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
+        #         print("sample_results hidden_states : ", hidden_states[1])
+        #         x_t = hidden_states[1].cpu().numpy()
+        #         np.savetxt("hidden_states1.txt", x_t, delimiter='\n')
+        # else:
+        #     if self.index == 3:
+        #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds.shape[0], -1)
+        #         print("sample_results hidden_states : ", hidden_states[0])
+        #         x_t = hidden_states[0].cpu().numpy()
+        #         np.savetxt("hidden_states0.txt", x_t, delimiter='\n')
         
         for i in range(len(self.layers)):
             cache_event = None if cache_events is None else cache_events[i]
