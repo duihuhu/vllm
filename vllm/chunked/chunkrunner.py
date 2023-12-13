@@ -135,7 +135,7 @@ class ChunkRunner:
                     idxs.append(ed - 1)
                     do_sampling.append(seq_id)
                     sampling_params.append(self.chunk_worker.job_sequences[seq_id].sampling_params)
-                self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
+                #self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
                 st = ed
                 #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
                 #st = ed

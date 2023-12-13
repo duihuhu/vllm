@@ -144,10 +144,10 @@ class ChunkWorker:
             st += self.chunk_size
     
     def reduce_outputs(self) -> None:
-        for _, sequence in self.job_sequences.items():
-            for i in range(len(sequence.outputs)):
-                if i != 0:
-                    sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
+        #for _, sequence in self.job_sequences.items():
+        #    for i in range(len(sequence.outputs)):
+        #        if i != 0:
+        #            sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
         # free all chunks' cache
         for chunk in self.job_chunks:
             self.cacheblock.free_block(block = chunk.cache_block)
