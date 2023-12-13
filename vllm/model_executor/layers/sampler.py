@@ -478,7 +478,7 @@ def _random_sample(
     random_samples_cat = []
     import numpy as np
     
-    if dim0 > 0:
+    if dim0 > 1:
         for i in range(dim0):
             random_samples = torch.multinomial(probs[i],
                                             num_samples=max_best_of,
