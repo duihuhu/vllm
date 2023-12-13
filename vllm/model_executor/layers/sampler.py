@@ -118,17 +118,6 @@ class Sampler(nn.Module):
         if do_min_p:
             logits = _apply_min_p(logits, min_ps)
 
-        dim0, dim1 = logits.shape
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 2:
-                x_t = logits[1].cpu().numpy()
-                np.savetxt("logits1.txt", x_t, delimiter=',')
-        else:
-            if self.index == 2:
-                x_t = logits[0].cpu().numpy()
-                np.savetxt("logits0.txt", x_t, delimiter=',')
-
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
         # Compute the log probabilities.
         # Use log_softmax to ensure numerical stability.
@@ -136,6 +125,15 @@ class Sampler(nn.Module):
 
         # Sample the next tokens.
         sample_results = _sample(probs, logprobs, sampling_metadata)
+        dim0, dim1 = logits.shape
+        import numpy as np
+        if dim0 > 1:
+            if self.index == 2:
+                print("sample_results 1 ", sample_results)
+        else:
+            if self.index == 2:
+                print("sample_results 0 ", sample_results)
+
         # print("sample_results logits ", logits)
         # print("sample_results probs ", probs)
         # print("sample_results logprobs ", logprobs)
