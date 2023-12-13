@@ -42,20 +42,26 @@ class Sampler(nn.Module):
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> Dict[int, SequenceOutputs]:
         # Get the hidden states that we use for sampling.
-        #st = time.time()
-        hidden_states = _prune_hidden_states(hidden_states, input_metadata)
+        st1 = time.time()
+        temp = _prune_hidden_states(hidden_states, input_metadata)
+        ed1 = time.time()
+        sl1 = ed1 - st1
 
         # Get the logits for the next tokens.
+        st2 = time.time()
+        hidden_states = hidden_states[temp]
         logits = torch.matmul(hidden_states, embedding.t())
         if embedding_bias is not None:
             logits += embedding_bias
-        st = time.time()
         logits = gather_from_tensor_model_parallel_region(logits)
-        ed = time.time()
+
         # Remove paddings in vocab (if any).
         logits = logits[:, :self.vocab_size]
+        ed2 = time.time()
+        sl2 = ed2 - st2
 
         # Apply presence and frequency penalties.
+        st3 = time.time()
         output_tokens = _get_output_tokens(input_metadata)
         assert len(output_tokens) == logits.shape[0]
         presence_penalties, frequency_penalties = _get_penalties(
@@ -64,33 +70,47 @@ class Sampler(nn.Module):
         assert len(frequency_penalties) == logits.shape[0]
         logits = _apply_penalties(logits, output_tokens, presence_penalties,
                                   frequency_penalties, self.vocab_size)
-
+        ed3 = time.time()
+        sl3 = ed3 - st3
         # Apply temperature scaling.
+        st4 = time.time()
         temperatures = _get_temperatures(input_metadata)
         assert len(temperatures) == logits.shape[0]
-        #st = time.time()
         if any(t != 1.0 for t in temperatures):
             t = torch.tensor(temperatures,
                              dtype=logits.dtype,
                              device=logits.device)
             # Use in-place division to avoid creating a new tensor.
             logits.div_(t.unsqueeze(dim=1))
-        #ed = time.time()
+        ed4 = time.time()
+        sl4 = ed4 - st4
+
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
+        st5 = time.time()
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
         # Compute the log probabilities (before applying top-p and top-k).
         logprobs = torch.log(probs)
+        ed5 = time.time()
+        sl5 = ed5 - st5
 
         # Apply top-p and top-k truncation.
+        st6 = time.time()
         top_ps, top_ks = _get_top_p_top_k(input_metadata, self.vocab_size)
         assert len(top_ps) == len(top_ks) == probs.shape[0]
         do_top_p = any(p < 1.0 - _SAMPLING_EPS for p in top_ps)
         do_top_k = any(k != self.vocab_size for k in top_ks)
         if do_top_p or do_top_k:
             probs = _apply_top_p_top_k(probs, top_ps, top_ks)
-        #ed = time.time()
-        print(f"sample itself costs {ed - st} seconds")
+        ed6 = time.time()
+        sl6 = ed6 - st6
+
+        print(f"sl1 {sl1}")
+        print(f"sl2 {sl2}")
+        print(f"sl3 {sl3}")
+        print(f"sl4 {sl4}")
+        print(f"sl5 {sl5}")
+        print(f"sl6 {sl6}")
         # Sample the next tokens.
         return _sample(probs, logprobs, input_metadata)
 
@@ -98,7 +118,8 @@ class Sampler(nn.Module):
 def _prune_hidden_states(
     hidden_states: torch.Tensor,
     input_metadata: InputMetadata,
-) -> torch.Tensor:
+) -> List[int]:
+    st = time.time()
     start_idx = 0
     last_token_indicies: List[int] = []
     for prompt_len in input_metadata.prompt_lens:
@@ -106,7 +127,9 @@ def _prune_hidden_states(
         start_idx += prompt_len
     last_token_indicies.extend(
         range(start_idx, start_idx + input_metadata.num_generation_tokens))
-    return hidden_states[last_token_indicies]
+    ed = time.time()
+    print(f"prune itself costs {ed - st} seconds")
+    return last_token_indicies
 
 
 def _get_penalties(
