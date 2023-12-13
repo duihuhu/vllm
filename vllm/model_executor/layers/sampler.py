@@ -455,6 +455,7 @@ def _random_sample(
     selected_seq_groups: List[Tuple[List[int], SamplingParams]],
     is_prompts: List[bool],
     probs: torch.Tensor,
+    index: Optional[int],
 ) -> List[Tuple[List[int], List[int]]]:
     # Find the maximum best_of value of the prompt phase requests.
     max_best_of = 1
@@ -465,6 +466,17 @@ def _random_sample(
     random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
+    dim0, dim1 = random_samples.shape
+    import numpy as np
+    if dim0 > 1:
+        if index == 2:
+            x_t = random_samples[1].cpu().numpy()
+            np.savetxt("random_samples1.txt", x_t, delimiter=',')
+    else:
+        if index == 2:
+            x_t = random_samples[0].cpu().numpy()
+            np.savetxt("random_samples0.txt", x_t, delimiter=',')
+
     sample_idx = 0
     results = []
     for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
@@ -570,10 +582,7 @@ def _sample(
         elif sampling_type == SamplingType.RANDOM:
             category_probs = probs[sample_indices]
             sample_results = _random_sample(seq_groups, is_prompts,
-                                            category_probs)
-            if index == 2:
-                print("category_probs: ", category_probs)
-                print("seq_groups: ", seq_groups)
+                                            category_probs, index)
 
         elif sampling_type == SamplingType.BEAM:
             category_logprobs = logprobs[sample_indices]
