@@ -486,7 +486,7 @@ def _random_sample(
             random_samples = torch.multinomial(prob_t,
                                             num_samples=max_best_of,
                                             replacement=True).cpu()
-            random_samples_cat.append(random_samples)
+            random_samples_cat.append(random_samples.squeeze(dim=1))
         random_samples = torch.stack(random_samples_cat, dim=0)
         print("random_samples: ", type(random_samples),  " ", random_samples.shape, " ", random_samples)
         # if index == 2:
