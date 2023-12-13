@@ -497,7 +497,7 @@ def _random_sample(
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
-        print("random_samples: ", type(random_samples),  " ", random_samples.shape, " ", random_samples)
+        print("random_samples index 0: ", type(random_samples),  " ", random_samples.shape, " ", random_samples)
         # if index == 2:
         #     print("random_samples  " , random_samples, max_best_of)
     
