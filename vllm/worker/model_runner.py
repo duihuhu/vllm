@@ -304,7 +304,7 @@ class ModelRunner:
             hidden_states=hidden_states,
             sampling_metadata=sampling_metadata,
         )
-        print("output: ",  output)
+        # print("output: ",  output)
         return output
 
     @torch.inference_mode()
