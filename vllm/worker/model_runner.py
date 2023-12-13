@@ -275,10 +275,6 @@ class ModelRunner:
         sampling_metadata = self._prepare_sample(seq_group_metadata_list,
                                                  input_metadata.prompt_lens)
 
-        if self.index !=0:
-            print("input_tokens ", input_tokens)
-            print("input_positions ", input_positions)
-
         # Execute the model.
         hidden_states = self.model(
             input_ids=input_tokens,
@@ -287,9 +283,16 @@ class ModelRunner:
             input_metadata=input_metadata,
             cache_events=cache_events,
         )
-        # import numpy as np
-        # dim0, dim1, dim2 = hidden_states.shape
-        # if dim0 > 1:
+        import numpy as np
+        dim0, dim1, dim2 = hidden_states.shape
+        if dim0 > 1:
+            if self.index !=0:
+                print("input_tokens_1: ", input_tokens[1])
+                print("input_positions_1: ", input_positions[1])
+        else:
+            if self.index !=0:
+                print("input_tokens_0: ", input_tokens[0])
+                print("input_positions_0: ", input_positions[0]) 
         #     if self.index != 0:
         #         # inputs_embeds_shaped = inputs_embeds.reshape(inputs_embeds[].shape[0], -1)
         #         print("sample_results hidden_states : ", hidden_states[1])
