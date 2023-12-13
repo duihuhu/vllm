@@ -480,8 +480,8 @@ def _random_sample(
     
     if dim0 > 1:
         for i in range(dim0):
-            print("probs i shape: ", probs[i].shape)
-            random_samples = torch.multinomial(probs[i].view(1, -1),
+            print("probs i shape: ", probs[i].unsqueeze(0).shape)
+            random_samples = torch.multinomial(probs[i].unsqueeze(0),
                                             num_samples=max_best_of,
                                             replacement=True).cpu()
             random_samples_cat.append(random_samples)
