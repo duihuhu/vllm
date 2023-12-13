@@ -478,7 +478,7 @@ def _random_sample(
 
     random_samples_cat = []
     import numpy as np
-    torch.manual_seed(42)
+    torch.manual_seed(0)
 
     if dim0 > 1 and index > 1:
         for i in range(dim0):
