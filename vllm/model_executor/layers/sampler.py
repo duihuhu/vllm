@@ -46,29 +46,29 @@ class Sampler(nn.Module):
         hidden_states = _prune_hidden_states(hidden_states, sampling_metadata)
         
 
-        if dim0 > 1:
-            if self.index == 2:
-                x_t = hidden_states[1].cpu().numpy()
-                np.savetxt("hidden_states_sample_mul"+str(self.index)+".txt", x_t, delimiter='\n')
+        # if dim0 > 1:
+        #     if self.index == 2:
+        #         x_t = hidden_states[1].cpu().numpy()
+        #         np.savetxt("hidden_states_sample_mul"+str(self.index)+".txt", x_t, delimiter='\n')
 
-        else:
-            if self.index ==2:
-                x_t = hidden_states[0].cpu().numpy()
-                np.savetxt("hidden_states_sample_sig"+str(self.index)+".txt", x_t, delimiter='\n')
+        # else:
+        #     if self.index ==2:
+        #         x_t = hidden_states[0].cpu().numpy()
+        #         np.savetxt("hidden_states_sample_sig"+str(self.index)+".txt", x_t, delimiter='\n')
 
         # Get the logits for the next tokens.
         logits = _get_logits(hidden_states, embedding, embedding_bias,
                              self.vocab_size)
         dim0, dim1 = logits.shape
-        import numpy as np
-        if dim0 > 1:
-            if self.index == 2:
-                x_t = logits[1].cpu().numpy()
-                np.savetxt("logits1.txt", x_t, delimiter=',')
-        else:
-            if self.index == 2:
-                x_t = logits[0].cpu().numpy()
-                np.savetxt("logits0.txt", x_t, delimiter=',')
+        # import numpy as np
+        # if dim0 > 1:
+        #     if self.index == 2:
+        #         x_t = logits[1].cpu().numpy()
+        #         np.savetxt("logits1.txt", x_t, delimiter=',')
+        # else:
+        #     if self.index == 2:
+        #         x_t = logits[0].cpu().numpy()
+        #         np.savetxt("logits0.txt", x_t, delimiter=',')
                 
         # self.index = self.index + 1
         # Apply logits processors (if any).
@@ -78,12 +78,12 @@ class Sampler(nn.Module):
         presence_penalties, frequency_penalties, repetition_penalties = (
             _get_penalties(sampling_metadata))
         
-        if dim0 > 1:
-            if self.index == 2:
-                print("mul: ", presence_penalties, frequency_penalties, repetition_penalties)
-        else:
-            if self.index ==2:
-                print("sig: ", presence_penalties, frequency_penalties, repetition_penalties)
+        # if dim0 > 1:
+        #     if self.index == 2:
+        #         print("mul: ", presence_penalties, frequency_penalties, repetition_penalties)
+        # else:
+        #     if self.index ==2:
+        #         print("sig: ", presence_penalties, frequency_penalties, repetition_penalties)
                 
         assert len(presence_penalties) == logits.shape[0]
         assert len(frequency_penalties) == logits.shape[0]
@@ -138,7 +138,7 @@ class Sampler(nn.Module):
                 print("sampling_metadata 0: ", sampling_metadata)
 
         # Sample the next tokens.
-        sample_results = _sample(probs, logprobs, sampling_metadata, index)
+        sample_results = _sample(probs, logprobs, sampling_metadata, self.index)
 
 
         # print("sample_results logits ", logits)
