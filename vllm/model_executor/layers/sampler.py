@@ -489,6 +489,7 @@ def _random_sample(
                                             num_samples=max_best_of,
                                             replacement=True).cpu()
             random_samples_cat.append(random_samples.squeeze(dim=1))
+            random_samples_cat = reversed(random_samples_cat)
             if index == 2 and i == 1:
                 x_t = prob_t.cpu().numpy()
                 np.savetxt("prob_t1.txt", x_t, delimiter='\n')
