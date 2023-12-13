@@ -123,16 +123,26 @@ class Sampler(nn.Module):
         # Use log_softmax to ensure numerical stability.
         logprobs = torch.log_softmax(logits, dim=-1, dtype=torch.float)
 
-        # Sample the next tokens.
-        sample_results = _sample(probs, logprobs, sampling_metadata)
         dim0, dim1 = logits.shape
         import numpy as np
         if dim0 > 1:
             if self.index == 2:
-                print("sample_results 1 ", sample_results)
+                x_t = probs[1].cpu().numpy()
+                np.savetxt("probs1.txt", x_t, delimiter=',')
+                x_t = logprobs[1].cpu().numpy()
+                np.savetxt("logprobs1.txt", x_t, delimiter=',')
+                print("sampling_metadata 1: ", sampling_metadata)
         else:
             if self.index == 2:
-                print("sample_results 0 ", sample_results)
+                x_t = probs[0].cpu().numpy()
+                np.savetxt("probs0.txt", x_t, delimiter=',')
+                x_t = logprobs[0].cpu().numpy()
+                np.savetxt("logprobs.txt", x_t, delimiter=',')
+                print("sampling_metadata 0: ", sampling_metadata)
+
+        # Sample the next tokens.
+        sample_results = _sample(probs, logprobs, sampling_metadata)
+
 
         # print("sample_results logits ", logits)
         # print("sample_results probs ", probs)
