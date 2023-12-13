@@ -464,7 +464,7 @@ def _random_sample(
             seq_ids, sampling_params = seq_group
             max_best_of = max(max_best_of, sampling_params.best_of)
     dim0, dim1 = probs.shape
-    print("probs shape ", probs.shape)
+    # print("probs shape ", probs.shape)
     # print("probs: ", probs.shape)
     # import numpy as np
     # if dim0 > 1:
@@ -511,6 +511,7 @@ def _random_sample(
                         num_samples=max_best_of,
                         replacement=True).cpu()
     print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
+    
     sample_idx = 0
     results = []
     for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
