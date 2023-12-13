@@ -447,7 +447,7 @@ class OPTDecoder(nn.Module):
         #         x_t = hidden_states[0].cpu().numpy()
         #         np.savetxt("hidden_states10.txt", x_t, delimiter='\n')
         self.index = self.index + 1
-        print("forward index ", self.index)
+        # print("forward index ", self.index)
         return hidden_states
 
 
