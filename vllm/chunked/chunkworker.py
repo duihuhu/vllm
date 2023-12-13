@@ -87,8 +87,11 @@ class ChunkWorker:
     def add_requests(self, prompt_token_ids: List[int], 
                      sampling_params: ChunkSamplingParams) -> None:
         seq_id = random_uuid()
-        self.total_sequences.append(Sequence(seq_id = seq_id, prompt_token_ids = prompt_token_ids,
-                                             sampling_params = sampling_params))
+        now_time = time.time()
+        self.total_sequences.append(Sequence(seq_id = seq_id, 
+                                             prompt_token_ids = prompt_token_ids,
+                                             sampling_params = sampling_params,
+                                             start_time = now_time))
     
     # add error handle when extremly long req appears
     def set_job_sequences(self) -> None:
@@ -141,10 +144,10 @@ class ChunkWorker:
             st += self.chunk_size
     
     def reduce_outputs(self) -> None:
-        for _, sequence in self.job_sequences.items():
-            for i in range(len(sequence.outputs)):
-                if i != 0:
-                    sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
+        #for _, sequence in self.job_sequences.items():
+        #    for i in range(len(sequence.outputs)):
+        #        if i != 0:
+        #            sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
         # free all chunks' cache
         for chunk in self.job_chunks:
             self.cacheblock.free_block(block = chunk.cache_block)
@@ -161,20 +164,22 @@ class ChunkWorker:
             sequence.add_sampler_time(st, ed)
             sequence.add_first_token_id(output_tokens_list[0])
             sequence.add_first_token_logprob(logprob)
-    
+
     def generate_first_token_str(self, tokenizer: PreTrainedTokenizerBase) -> None:
         for _, sequence in self.job_sequences.items():
+            input_new_token = []
             new_token = tokenizer.convert_ids_to_tokens(sequence.first_token_id, skip_special_tokens = True)
-            new_output_text = tokenizer.convert_tokens_to_string([new_token])
+            input_new_token.extend(new_token)
+            new_output_text = tokenizer.convert_tokens_to_string(input_new_token)
             sequence.add_first_token_str(new_output_text = new_output_text)
     
     @torch.inference_mode()
     def _execute_sampler(self, 
                          logits: torch.Tensor, 
-                         sampling_params: ChunkSamplingParams) -> Tuple[List[int], float, float]:
-        output_tokens_list, logprob = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
+                         sampling_params: List[ChunkSamplingParams]) -> Tuple[List[int], List[float]]:
+        output_tokens_list, logprobs = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
         #logprob_index = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
-        return (output_tokens_list, logprob)
+        return (output_tokens_list, logprobs)
 
     def greedy_search(self) -> List[int]:
         ans: List[int] = []

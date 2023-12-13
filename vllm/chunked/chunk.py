@@ -1,5 +1,5 @@
 import enum
-from typing import Optional, List, Dict, Tuple
+from typing import List, Dict, Tuple
 import torch
 from xformers.ops import AttentionBias
 
@@ -62,7 +62,8 @@ class Sequence:
                  sampling_params: ChunkSamplingParams,
                  account: int = 0,
                  start_time: float = -1.0,
-                 end_time: float = -1.0) -> None:
+                 end_time: float = -1.0,
+                 count: int = 0) -> None:
         self.seq_id = seq_id
         self.prompt_token_ids = prompt_token_ids
         self.prompt_len = len(prompt_token_ids)
@@ -72,6 +73,7 @@ class Sequence:
         self.account = account
         self.start_time = start_time
         self.end_time = end_time
+        self.count = count
 
     def append_outputs(self, input: torch.Tensor) -> None:
         self.outputs.append(input)
@@ -101,12 +103,24 @@ class Sequence:
             self.start_time = min(self.start_time, st)
             self.end_time = max(self.end_time, ed)
 
+    def set_end_time(self, ed: float) -> None:
+        self.end_time = ed
+
     def _update_account(self, account: int) -> None:
         self.account = account
     
     def add_sampler_time(self, st: float, ed: float) -> None:
         self.sampler_start = st
         self.sampler_end = ed
+
+    def update_count(self, input: int) -> None:
+        self.count += input
+    
+    def is_full(self) -> bool:
+        if self.count == self.prompt_len:
+            return True
+        else:
+            return False
 
 class ChunkInputMetadata:
     def __init__(self,

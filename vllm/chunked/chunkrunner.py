@@ -59,7 +59,7 @@ class ChunkRunner:
     
     def _add_requests_to_worker(self) -> None:
         #for prompt_token_ids in self.requests:
-        for _ in range(0, self.chunk_worker.chunk_num):
+        for _ in range(0, self.chunk_worker.chunk_num - 1):
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
             dummy_prompt_token_ids = [random.randint(100, 200) for _ in range(self.chunk_worker.chunk_size)]
@@ -108,8 +108,8 @@ class ChunkRunner:
     def run_worker(self) -> None:
         self._start_worker()
 
-        now_time = time.time()
-        print(f"Added in working pool at {now_time}")
+        #now_time = time.time()
+        #print(f"Added in working pool at {now_time}")
 
         for chunk in self.chunk_worker.job_chunks:
             chunk.chunk_status = ChunkStatus.RUNNING
@@ -118,32 +118,49 @@ class ChunkRunner:
                                                     kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, 
                                                     kv_block = chunk.cache_block_id)
-            output, start_time, end_time = self._execute_model(
+            output = self._execute_model(
                 inputs = input_tokens_tensor,
                 inputs_positions = input_positions_tensor,
                 kv_cache = self.chunk_worker.kv_cache,
                 chunkmetadata = chunkinputmetadata
             )
             st = 0
+            idxs: List[int] = []
+            sampling_params: List[ChunkSamplingParams] = []
+            do_sampling: List[str] = []
             for seq_id, prompt_len in chunk.seqs_to_lens.items():
                 ed = st + prompt_len
-                self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
-                self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
+                self.chunk_worker.job_sequences[seq_id].update_count(prompt_len)
+                if self.chunk_worker.job_sequences[seq_id].is_full():
+                    idxs.append(ed - 1)
+                    do_sampling.append(seq_id)
+                    sampling_params.append(self.chunk_worker.job_sequences[seq_id].sampling_params)
                 st = ed
-        
+                #self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
+                #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
+                #st = ed
+            output = output[idxs]
+            output_token_list, logprobs = self.chunk_worker._execute_sampler(logits = output, 
+                                                                             sampling_params = sampling_params)
+            end_time = time.time()
+            for i, id in enumerate(do_sampling):
+                self.chunk_worker.job_sequences[id].add_first_token_id(output_token_list[i])
+                self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
+                self.chunk_worker.job_sequences[id].set_end_time(end_time)
+            
         self.chunk_worker.reduce_outputs()
-        self.chunk_worker.generate_first_token_id()
-        self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
+        #self.chunk_worker.generate_first_token_id()
+        #self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
      
     @torch.inference_mode()
     def _execute_model(self, 
                        inputs: torch.Tensor, 
                        inputs_positions: torch.Tensor, 
                        kv_cache: List[Tuple[torch.Tensor, torch.Tensor]], 
-                       chunkmetadata: ChunkInputMetadata) -> Tuple[torch.Tensor, float, float]:
-        start_time = time.time()
-        print(inputs.shape)
-        print(inputs_positions.shape)
+                       chunkmetadata: ChunkInputMetadata) -> torch.Tensor: #Tuple[torch.Tensor, float, float]:
+        #start_time = time.time()
+        #print(inputs.shape)
+        #print(inputs_positions.shape)
         output = self.chunk_worker.model(
             input_ids = inputs,
             positions = inputs_positions,
@@ -151,5 +168,5 @@ class ChunkRunner:
             cache_events = None,
             chunkinputmetadata = chunkmetadata
         )
-        end_time = time.time()
-        return (output, start_time, end_time)
+        #end_time = time.time()
+        return output #(output, start_time, end_time)

@@ -38,15 +38,16 @@ class ChunkSampler(nn.Module):
         embedding: torch.Tensor,
         hidden_states: torch.Tensor,
         #input_metadata: InputMetadata,
-        sampling_params: ChunkSamplingParams,
+        sampling_params: List[ChunkSamplingParams],
         embedding_bias: Optional[torch.Tensor] = None,
-    ) -> Tuple[List[int], float]:
+    ) -> Tuple[List[int], List[float]]:
         # Get the hidden states that we use for sampling.
         # sync the outputs among different chunks and then
         # generate the new token
-        hidden_states = hidden_states[-1]
+        #hidden_states = hidden_states[-1]
         # reshape for match later
-        hidden_states = hidden_states.reshape(1, -1)
+        if len(hidden_states.shape) == 1:
+            hidden_states = hidden_states.reshape(1, -1)
 
         # Get the logits for the next tokens.
         logits = torch.matmul(hidden_states, embedding.t())
@@ -87,28 +88,36 @@ class ChunkSampler(nn.Module):
 
         # Sample the next tokens.
         new_token_ids = _sample(probs, sampling_params)
-        logprob = logprobs[:, new_token_ids[0]].item()
+        logprob = logprobs[:, new_token_ids].item()
         return (new_token_ids, logprob)
 
-def _get_temperature(sampling_params: ChunkSamplingParams) -> List[float]:
+def _get_temperature(sampling_params: List[ChunkSamplingParams]) -> List[float]:
     # Collect the temperatures for the logits.
     # NOTE: Zero temperature means deterministic sampling
     # (i.e., greedy sampling or beam search).
     # Set the temperature to 1 to avoid division by zero.
-    temperature = sampling_params.temperature
-    if temperature < _SAMPLING_EPS:
-        #just don't divide by 0
-        temperature = 1
-    return [temperature]
+    ans: List[float] = []
+    for sampling_param in sampling_params:
+        temperature = sampling_param.temperature
+        if temperature < _SAMPLING_EPS:
+            #just don't divide by 0
+            temperature = 1.0
+        ans.append(temperature)
+    return ans
 
 def _get_top_p_top_k(
-    sampling_params: ChunkSamplingParams,
+    sampling_params: List[ChunkSamplingParams],
     vocab_size: int,
 ) -> Tuple[List[float], List[int]]:
-    top_p = sampling_params.top_p
-    top_k = min(sampling_params.top_k, vocab_size)
-    top_k = vocab_size if top_k == -1 else top_k
-    return ([top_p], [top_k])
+    top_ps: List[float] = []
+    top_ks: List[int] = []
+    for sampling_param in sampling_params:
+        top_p = sampling_param.top_p
+        top_k = min(sampling_param.top_k, vocab_size)
+        top_k = vocab_size if top_k == -1 else top_k
+        top_ps.append(top_p)
+        top_ks.append(top_k)
+    return (top_ps, top_ks)
 
 def _apply_top_p_top_k(
     probs: torch.Tensor,
@@ -163,9 +172,15 @@ def _sample_from_prompt(
 
 def _sample(
     probs: torch.Tensor,
-    sampling_params: ChunkSamplingParams
+    sampling_params: List[ChunkSamplingParams]
 ) -> List[int]:
     #prob = probs[0]
     #prob should be [m,n] even if m==1
-    next_token_ids = _sample_from_prompt(probs, sampling_params)      
-    return next_token_ids
+    length = probs.shape[0]
+    ans: List[int] = []
+    for i in range(0, length):
+        prob = probs[i]
+        sampling_param = sampling_params[i]
+        next_token_ids = _sample_from_prompt(prob, sampling_param)
+        ans.extend(next_token_ids)      
+    return ans
