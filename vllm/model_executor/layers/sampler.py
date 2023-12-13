@@ -484,6 +484,12 @@ def _random_sample(
 
     if dim0 > 1 and index > 1 and dim0!=256:
         for i in range(dim0):
+            if index == 2:
+                rng_state1 = torch.get_rng_state()
+                if torch.equal(rng_state, rng_state1):
+                    print("equal ")
+                else:
+                    print("no equal ")
             torch.set_rng_state(rng_state)
             # torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
@@ -507,6 +513,12 @@ def _random_sample(
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
+        if index == 2:
+            rng_state1 = torch.get_rng_state()
+            if torch.equal(rng_state, rng_state1):
+                print("equal ")
+            else:
+                print("no equal ")
         rng_state.copy_(torch.get_rng_state())
         if index == 2:
             x_t = probs.cpu().numpy()
