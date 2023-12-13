@@ -480,9 +480,8 @@ def _random_sample(
     import numpy as np
 
     if dim0 > 1 and index > 1 and dim0!=256:
-        for i in range(dim0):
-            if i == 0:
-                continue
+        rg = range(dim0)
+        for i in reversed(rg):
             # torch.manual_seed(0)
             # print("probs i shape: ", probs[i].unsqueeze(0).shape)
             prob_t = probs[i].unsqueeze(0)
