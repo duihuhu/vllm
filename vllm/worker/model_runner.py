@@ -278,7 +278,7 @@ class ModelRunner:
         if self.index !=0:
             print("input_tokens ", input_tokens)
             print("input_positions ", input_positions)
-            input_positions
+
         # Execute the model.
         hidden_states = self.model(
             input_ids=input_tokens,
