@@ -506,10 +506,10 @@ def _random_sample(
     # else:
     #     if index == 2:
     #         print("random_samples shape " ,random_samples.shape, max_best_of)
-    # random_samples = torch.multinomial(probs,
-    #                     num_samples=max_best_of,
-    #                     replacement=True).cpu()
-    # print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples)
+    random_samples = torch.multinomial(probs,
+                        num_samples=max_best_of,
+                        replacement=True).cpu()
+    print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples)
     sample_idx = 0
     results = []
     for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
