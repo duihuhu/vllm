@@ -138,7 +138,7 @@ class Sampler(nn.Module):
                 print("sampling_metadata 0: ", sampling_metadata)
 
         # Sample the next tokens.
-        sample_results = _sample(probs, logprobs, sampling_metadata)
+        sample_results = _sample(probs, logprobs, sampling_metadata, index)
 
 
         # print("sample_results logits ", logits)
@@ -546,6 +546,7 @@ def _sample(
     probs: torch.Tensor,
     logprobs: torch.Tensor,
     sampling_metadata: SamplingMetadata,
+    index: Optional[int],
 ) -> List[Tuple[List[int], List[int]]]:
     categorized_seq_group_ids = {t: [] for t in SamplingType}
     categorized_sample_indices = sampling_metadata.categorized_sample_indices
@@ -570,6 +571,10 @@ def _sample(
             category_probs = probs[sample_indices]
             sample_results = _random_sample(seq_groups, is_prompts,
                                             category_probs)
+            if index == 2:
+                print("category_probs: ", category_probs)
+                print("seq_groups: ", seq_groups)
+
         elif sampling_type == SamplingType.BEAM:
             category_logprobs = logprobs[sample_indices]
             sample_results = _beam_search_sample(seq_groups, is_prompts,
