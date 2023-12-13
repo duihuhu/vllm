@@ -40,9 +40,34 @@ class Sampler(nn.Module):
         sampling_metadata: SamplingMetadata,
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> SamplerOutput:        
+        import numpy as np
+        dim0, dim1, dim2 = hidden_states.shape
+        
+        if dim0 > 1:
+            if self.index == 2:
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states_sample_mul_b"+str(self.index)+".txt", x_t, delimiter='\n')
+
+        else:
+            if self.index ==2:
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states_sample_sig_b"+str(self.index)+".txt", x_t, delimiter='\n')
+
         # Get the hidden states that we use for sampling.
         hidden_states = _prune_hidden_states(hidden_states, sampling_metadata)
+        
 
+        if dim0 > 1:
+            if self.index == 2:
+                x_t = hidden_states[1].cpu().numpy()
+                np.savetxt("hidden_states_sample_mul_a"+str(self.index)+".txt", x_t, delimiter='\n')
+
+        else:
+            if self.index ==2:
+                x_t = hidden_states[0].cpu().numpy()
+                np.savetxt("hidden_states_sample_sig_a"+str(self.index)+".txt", x_t, delimiter='\n')
+
+        self.index = self.index + 1
         # Get the logits for the next tokens.
         logits = _get_logits(hidden_states, embedding, embedding_bias,
                              self.vocab_size)
