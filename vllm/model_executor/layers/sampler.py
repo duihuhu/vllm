@@ -478,7 +478,8 @@ def _random_sample(
 
     random_samples_cat = []
     import numpy as np
-    
+    torch.manual_seed(42)
+
     if dim0 > 1 and index > 1:
         for i in range(dim0):
             print("probs i shape: ", probs[i].unsqueeze(0).shape)
