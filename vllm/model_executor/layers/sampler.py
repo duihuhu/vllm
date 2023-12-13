@@ -122,20 +122,20 @@ class Sampler(nn.Module):
 
         dim0, dim1 = logits.shape
         import numpy as np
-        if dim0 > 1:
-            if self.index == 2:
-                x_t = probs[1].cpu().numpy()
-                np.savetxt("probs1.txt", x_t, delimiter=',')
-                x_t = logprobs[1].cpu().numpy()
-                np.savetxt("logprobs1.txt", x_t, delimiter=',')
-                print("sampling_metadata 1: ", sampling_metadata)
-        else:
-            if self.index == 2:
-                x_t = probs[0].cpu().numpy()
-                np.savetxt("probs0.txt", x_t, delimiter=',')
-                x_t = logprobs[0].cpu().numpy()
-                np.savetxt("logprobs.txt", x_t, delimiter=',')
-                print("sampling_metadata 0: ", sampling_metadata)
+        # if dim0 > 1:
+        #     if self.index == 2:
+        #         x_t = probs[1].cpu().numpy()
+        #         np.savetxt("probs1.txt", x_t, delimiter=',')
+        #         x_t = logprobs[1].cpu().numpy()
+        #         np.savetxt("logprobs1.txt", x_t, delimiter=',')
+        #         print("sampling_metadata 1: ", sampling_metadata)
+        # else:
+        #     if self.index == 2:
+        #         x_t = probs[0].cpu().numpy()
+        #         np.savetxt("probs0.txt", x_t, delimiter=',')
+        #         x_t = logprobs[0].cpu().numpy()
+        #         np.savetxt("logprobs.txt", x_t, delimiter=',')
+        #         print("sampling_metadata 0: ", sampling_metadata)
 
         # Sample the next tokens.
         sample_results = _sample(probs, logprobs, sampling_metadata, self.index)
@@ -465,6 +465,16 @@ def _random_sample(
             max_best_of = max(max_best_of, sampling_params.best_of)
     dim0, dim1 = probs.shape
     print("probs: ", probs.shape)
+    import numpy as np
+    if dim0 > 1:
+        if index == 2:
+            x_t = probs[1].cpu().numpy()
+            np.savetxt("probs1.txt", x_t, delimiter=',')
+    else:
+        if index == 2:
+            x_t = probs[0].cpu().numpy()
+            np.savetxt("probs0.txt", x_t, delimiter=',')
+
     # random_samples_cat = []
     # # import numpy as np
     
@@ -478,17 +488,13 @@ def _random_sample(
     random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
-    # dim0, dim1 = random_samples.shape
-    # import numpy as np
-    # if dim0 > 1:
-    #     if index == 2:
-    #         x_t = random_samples[1].cpu().numpy()
-    #         np.savetxt("random_samples1.txt", x_t, delimiter=',')
-    # else:
-    #     if index == 2:
-    #         x_t = random_samples[0].cpu().numpy()
-    #         np.savetxt("random_samples0.txt", x_t, delimiter=',')
-
+    if dim0 > 1:
+        if index == 2:
+            print("random_samples shape " ,random_samples.shape, max_best_of)
+    else:
+        if index == 2:
+            print("random_samples shape " ,random_samples.shape, max_best_of)
+            
     sample_idx = 0
     results = []
     for seq_group, is_prompt in zip(selected_seq_groups, is_prompts):
