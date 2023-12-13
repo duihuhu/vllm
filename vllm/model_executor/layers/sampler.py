@@ -547,7 +547,7 @@ def _random_sample(
         print("rng_state2 rng_state1 equal ")
     else:
         print("rng_state2 rng_state1 no equal ")
-    # print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
+    print("random_samples orgin : ", type(random_samples),  " ", random_samples.shape, " ", random_samples, "\n")
     
     sample_idx = 0
     results = []
