@@ -536,6 +536,7 @@ def _random_sample(
     # else:
     #     if index == 2:
     #         print("random_samples shape " ,random_samples.shape, max_best_of)
+    print("initial_seed ", torch.initial_seed())
     rng_state1 = torch.get_rng_state()
     random_samples = torch.multinomial(probs,
                         num_samples=max_best_of,
