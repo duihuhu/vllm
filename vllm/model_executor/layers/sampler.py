@@ -481,7 +481,7 @@ def _random_sample(
     random_samples_cat = []
     import numpy as np
 
-    if dim0 > 1 and index > 1 and dim0!=256:
+    if dim0 > 1:
         for i in range(dim0):
             torch.cuda.set_rng_state(rng_state)
             # torch.manual_seed(0)
@@ -504,21 +504,11 @@ def _random_sample(
         rng_state.copy_(rng_state1)
     else:
         # print("probs 0 shape: ", probs.shape)
-        rng_state_b = torch.cuda.get_rng_state()
+        torch.cuda.set_rng_state(rng_state)
         random_samples = torch.multinomial(probs,
                                        num_samples=max_best_of,
                                        replacement=True).cpu()
         rng_state1 = torch.cuda.get_rng_state()
-        if torch.equal(rng_state_b, rng_state1):
-            print("rng_state_b rng_state1 equal ")
-        else:
-            print("rng_state_b rng_state1 no equal ")
-            
-        if torch.equal(rng_state, rng_state1):
-            print("rng_state rng_state1 equal ")
-        else:
-            print("rng_state rng_state1 no equal ")
-            
         rng_state.copy_(rng_state1)
         
     #     if index == 2:
