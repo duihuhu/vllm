@@ -19,11 +19,13 @@ def main(args: argparse.Namespace):
 
     chunkrunner.run_worker()
 
-    for seq_id, sequence in chunkrunner.chunk_worker.job_sequences.items():
-        print(f"Sequence ID is {seq_id}")
+    with open("/workspace/vllm/vllm/chunked/logs_1.txt", 'a') as file:
+        for seq_id, sequence in chunkrunner.chunk_worker.job_sequences.items():
+            file.write(f"Seq ID {seq_id}, prompt len {sequence.prompt_len}, costs {sequence.end_time - sequence.start_time} seconds\n")
+        #print(f"Sequence ID is {seq_id}")
         #print(f"The shape of the sequence's output is {sequence.outputs[0].shape}")
-        print(f"The first token id is {sequence.first_token_id} and the first token prob is {sequence.first_token_logprob}")
-        print(f"Start at {sequence.start_time}, end at {sequence.end_time}, costs {sequence.end_time - sequence.start_time} seconds")
+        #print(f"The first token id is {sequence.first_token_id} and the first token prob is {sequence.first_token_logprob}")
+        #print(f"Start at {sequence.start_time}, end at {sequence.end_time}, costs {sequence.end_time - sequence.start_time} seconds")
         #print(f"Sampling starts at {sequence.sampler_start}, sampling ends at {sequence.sampler_end}, costs {sequence.sampler_end - sequence.sampler_start} seconds")
         #print(sequence.outputs[0][-1])
 
