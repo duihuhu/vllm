@@ -42,14 +42,14 @@ class Sampler(nn.Module):
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> Dict[int, SequenceOutputs]:
         # Get the hidden states that we use for sampling.
-        st1 = time.time()
-        temp = _prune_hidden_states(hidden_states, input_metadata)
-        ed1 = time.time()
-        sl1 = ed1 - st1
+        #st1 = time.time()
+        hidden_states = _prune_hidden_states(hidden_states, input_metadata)
+        #ed1 = time.time()
+        #sl1 = ed1 - st1
 
         # Get the logits for the next tokens.
-        st2 = time.time()
-        hidden_states = hidden_states[temp]
+        #st2 = time.time()
+        #hidden_states = hidden_states[temp]
         logits = torch.matmul(hidden_states, embedding.t())
         if embedding_bias is not None:
             logits += embedding_bias
@@ -57,11 +57,11 @@ class Sampler(nn.Module):
 
         # Remove paddings in vocab (if any).
         logits = logits[:, :self.vocab_size]
-        ed2 = time.time()
-        sl2 = ed2 - st2
+        #ed2 = time.time()
+        #sl2 = ed2 - st2
 
         # Apply presence and frequency penalties.
-        st3 = time.time()
+        #st3 = time.time()
         output_tokens = _get_output_tokens(input_metadata)
         assert len(output_tokens) == logits.shape[0]
         presence_penalties, frequency_penalties = _get_penalties(
@@ -70,10 +70,10 @@ class Sampler(nn.Module):
         assert len(frequency_penalties) == logits.shape[0]
         logits = _apply_penalties(logits, output_tokens, presence_penalties,
                                   frequency_penalties, self.vocab_size)
-        ed3 = time.time()
-        sl3 = ed3 - st3
+        #ed3 = time.time()
+        #sl3 = ed3 - st3
         # Apply temperature scaling.
-        st4 = time.time()
+        #st4 = time.time()
         temperatures = _get_temperatures(input_metadata)
         assert len(temperatures) == logits.shape[0]
         if any(t != 1.0 for t in temperatures):
@@ -82,17 +82,17 @@ class Sampler(nn.Module):
                              device=logits.device)
             # Use in-place division to avoid creating a new tensor.
             logits.div_(t.unsqueeze(dim=1))
-        ed4 = time.time()
-        sl4 = ed4 - st4
+        #ed4 = time.time()
+        #sl4 = ed4 - st4
 
         # We use float32 for probabilities and log probabilities.
         # Compute the probabilities.
-        st5 = time.time()
+        #st5 = time.time()
         probs = torch.softmax(logits, dim=-1, dtype=torch.float)
         # Compute the log probabilities (before applying top-p and top-k).
         logprobs = torch.log(probs)
-        ed5 = time.time()
-        sl5 = ed5 - st5
+        #ed5 = time.time()
+        #sl5 = ed5 - st5
 
         # Apply top-p and top-k truncation.
         st6 = time.time()
@@ -105,12 +105,12 @@ class Sampler(nn.Module):
         ed6 = time.time()
         sl6 = ed6 - st6
 
-        print(f"sl1 {sl1}")
+        '''print(f"sl1 {sl1}")
         print(f"sl2 {sl2}")
         print(f"sl3 {sl3}")
         print(f"sl4 {sl4}")
         print(f"sl5 {sl5}")
-        print(f"sl6 {sl6}")
+        print(f"sl6 {sl6}")'''
         # Sample the next tokens.
         return _sample(probs, logprobs, input_metadata)
 
@@ -118,8 +118,8 @@ class Sampler(nn.Module):
 def _prune_hidden_states(
     hidden_states: torch.Tensor,
     input_metadata: InputMetadata,
-) -> List[int]:
-    st = time.time()
+) -> torch.Tensor:
+    #st = time.time()
     start_idx = 0
     last_token_indicies: List[int] = []
     for prompt_len in input_metadata.prompt_lens:
@@ -127,9 +127,9 @@ def _prune_hidden_states(
         start_idx += prompt_len
     last_token_indicies.extend(
         range(start_idx, start_idx + input_metadata.num_generation_tokens))
-    ed = time.time()
-    print(f"prune itself costs {ed - st} seconds")
-    return last_token_indicies
+    #ed = time.time()
+    #print(f"prune itself costs {ed - st} seconds")
+    return hidden_states[last_token_indicies]
 
 
 def _get_penalties(
@@ -406,7 +406,7 @@ def _sample(
 
     # TODO(woosuk): Optimize.
     idx = 0
-    st = time.time()
+    #st = time.time()
     for i, seq_group in enumerate(input_metadata.seq_groups):
         seq_ids, sampling_params = seq_group
         if i < input_metadata.num_prompts:
@@ -463,6 +463,6 @@ def _sample(
                     output_logprobs,
                 )
 
-    ed = time.time()
-    print(f"_sample costs {ed - st} seconds")
+    #ed = time.time()
+    #print(f"_sample costs {ed - st} seconds")
     return seq_outputs

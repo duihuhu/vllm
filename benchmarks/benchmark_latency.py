@@ -1,7 +1,7 @@
 """Benchmark the latency of processing a single batch of requests."""
 import argparse
 import time
-import random
+#import random
 
 import numpy as np
 import torch
@@ -33,7 +33,7 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
-    dummy_prompt_token_ids = [[1] * args.input_len] * args.batch_size
+    dummy_prompt_token_ids = [[0] * args.input_len] * args.batch_size
 
     def run_to_completion(profile: bool = False):
         if profile:
@@ -58,6 +58,7 @@ def main(args: argparse.Namespace):
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
+    print(f'Avg throughput: {args.input_len * args.batch_size / np.mean(latencies):.2f} token/s')
 
 
 if __name__ == '__main__':
