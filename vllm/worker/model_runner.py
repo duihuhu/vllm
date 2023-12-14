@@ -300,21 +300,21 @@ class ModelRunner:
             hidden_states=hidden_states,
             sampling_metadata=sampling_metadata,
         )
-        import numpy as np
-        dim0, dim1, dim2 = hidden_states.shape
-        if dim0 > 1:
-            if self.index == 2:
-                print("input_tokens_1: ", input_tokens[1])
-                print("input_positions_1: ", input_positions[1])
-                print("output_1: ", output[1])
-                # x_t = hidden_states[1].cpu().numpy()
-                # np.savetxt("hidden_states_mul"+str(self.index)+".txt", x_t, delimiter='\n')
+        # import numpy as np
+        # dim0, dim1, dim2 = hidden_states.shape
+        # if dim0 > 1:
+        #     if self.index == 2:
+        #         print("input_tokens_1: ", input_tokens[1])
+        #         print("input_positions_1: ", input_positions[1])
+        #         print("output_1: ", output[1])
+        #         # x_t = hidden_states[1].cpu().numpy()
+        #         # np.savetxt("hidden_states_mul"+str(self.index)+".txt", x_t, delimiter='\n')
 
-        else:
-            if self.index == 2:
-                print("input_tokens_0: ", input_tokens[0])
-                print("input_positions_0: ", input_positions[0]) 
-                print("output_0: ", output[0])
+        # else:
+        #     if self.index == 2:
+        #         print("input_tokens_0: ", input_tokens[0])
+        #         print("input_positions_0: ", input_positions[0]) 
+        #         print("output_0: ", output[0])
                 # x_t = hidden_states[0].cpu().numpy()
                 # np.savetxt("hidden_states_sig"+str(self.index)+".txt", x_t, delimiter='\n')
 
