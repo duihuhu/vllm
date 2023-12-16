@@ -34,8 +34,7 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
     dummy_prompt_token_ids = []
-    prompt_lens = [41, 45, 40, 45, 45, 40, 41, 43, 40, 46, 49, 44, 44, 43, 40, 45, 48, 43, 49, 49, 42, 44, 40, 42, 
-                   1000]
+    prompt_lens = [41, 45, 40, 45, 45, 40, 41, 43, 40, 46, 49, 44, 44, 43, 40, 45, 48, 43, 49, 49, 42, 44, 40, 42]
     for prompt_len in prompt_lens:
         temp_input = [random.randint(0, 100) for _ in range(prompt_len)]
         dummy_prompt_token_ids.append(temp_input)
@@ -77,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
     parser.add_argument('--input-len', type=int, default=32)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--batch-size', type=int, default=25)
+    parser.add_argument('--batch-size', type=int, default=24)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')
