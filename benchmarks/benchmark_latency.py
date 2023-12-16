@@ -33,14 +33,14 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
-    #dummy_prompt_token_ids = []
-    #prompt_lens = [41, 45, 40, 45, 45, 40, 41, 43, 40, 46, 49, 44, 44, 43, 40, 45, 48, 43, 49, 49, 42, 44, 40, 42, 
-    #               1000]
-    #for prompt_len in prompt_lens:
-    #    temp_input = [random.randint(0, 100) for _ in range(prompt_len)]
-    #    dummy_prompt_token_ids.append(temp_input)
+    dummy_prompt_token_ids = []
+    prompt_lens = [41, 45, 40, 45, 45, 40, 41, 43, 40, 46, 49, 44, 44, 43, 40, 45, 48, 43, 49, 49, 42, 44, 40, 42, 
+                   1000]
+    for prompt_len in prompt_lens:
+        temp_input = [random.randint(0, 100) for _ in range(prompt_len)]
+        dummy_prompt_token_ids.append(temp_input)
     
-    dummy_prompt_token_ids = [[1] * args.input_len] * args.batch_size
+    #dummy_prompt_token_ids = [[1] * args.input_len] * args.batch_size
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
@@ -65,7 +65,7 @@ def main(args: argparse.Namespace):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
     #print(latencies)
-    print(f'Avg throughput: {args.input_len * args.batch_size / np.mean(latencies):.2f} token/s')
+    #print(f'Avg throughput: {args.input_len * args.batch_size / np.mean(latencies):.2f} token/s')
 
 
 if __name__ == '__main__':
