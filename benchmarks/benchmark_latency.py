@@ -40,7 +40,7 @@ def main(args: argparse.Namespace):
     #    temp_input = [random.randint(0, 100) for _ in range(prompt_len)]
     #    dummy_prompt_token_ids.append(temp_input)
     
-    dummy_prompt_token_ids = [random.randint(0, 100) for _ in range(args.input_len)] * args.batch_size
+    dummy_prompt_token_ids = [[1] * args.input_len] * args.batch_size
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
@@ -64,6 +64,7 @@ def main(args: argparse.Namespace):
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
+    print(latencies)
     #print(f'Avg throughput: {args.input_len * args.batch_size / np.mean(latencies):.2f} token/s')
 
 
