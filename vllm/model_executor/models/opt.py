@@ -284,11 +284,11 @@ class OPTForCausalLM(nn.Module):
     ) -> Dict[int, SequenceOutputs]:
         hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
-        st = time.time()
+        #st = time.time()
         next_tokens = self.sampler(self.lm_head_weight, hidden_states,
                                    input_metadata)
-        ed = time.time()
-        print(f"sampling costs {ed - st} seconds")
+        #ed = time.time()
+        #print(f"sampling costs {ed - st} seconds")
         return next_tokens
 
     _column_parallel_weights = [
