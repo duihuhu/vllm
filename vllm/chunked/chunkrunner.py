@@ -59,9 +59,12 @@ class ChunkRunner:
     
     def _add_requests_to_worker(self) -> None:
         #for prompt_token_ids in self.requests:
-        prompt_lens = [37, 45, 43, 43, 36, 36, 42, 41, 38, 45, 42, 40, 45, 43, 42, 45, 37, 38, 40, 40, 40, 45, 39, 
-                       42, 44, 44, 43, 37, 41, 45, 45, 44, 38, 37, 45, 42, 44, 43, 42, 38, 38, 39, 45, 44, 35, 42, 
-                       38, 35, 41, 35]
+        cold_start_token_ids = [random.randint(0, 100) for _ in range(self.chunk_worker.chunk_size)]
+        cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
+        self.chunk_worker.add_requests(prompt_token_ids = cold_start_token_ids, 
+                                       sampling_params = cold_start_sampling_params)
+        prompt_lens = [41, 45, 40, 45, 45, 40, 41, 43, 40, 46, 49, 44, 44, 43, 40, 45, 48, 43, 49, 49, 42, 44, 40, 42, 
+                       1000]
         for prompt_len in prompt_lens:
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
