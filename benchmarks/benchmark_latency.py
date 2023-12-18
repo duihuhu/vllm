@@ -34,9 +34,7 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
     dummy_prompt_token_ids = []
-    prompt_lens = [37, 45, 43, 43, 36, 36, 42, 41, 38, 45, 42, 40, 45, 43, 42, 45, 37, 38, 40, 40, 40, 45, 39, 42, 
-                   44, 44, 43, 37, 41, 45, 45, 44, 38, 37, 45, 42, 44, 43, 42, 38, 38, 39, 45, 44, 35, 42, 38, 35, 
-                   41, 35]
+    prompt_lens = [41, 45, 40, 45, 45, 40, 41, 43, 40, 46, 49, 44, 44, 43, 40, 45, 48, 43, 49, 49, 42, 44, 40, 42, 1000]
     for prompt_len in prompt_lens:
         temp_input = [random.randint(0, 100) for _ in range(prompt_len)]
         dummy_prompt_token_ids.append(temp_input)
