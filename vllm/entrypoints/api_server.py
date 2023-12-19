@@ -15,7 +15,9 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
-
+@app.post("/init_decode_prefill")
+async def init_decode_prefill(request: Request) -> Response:
+    return 
 @app.post("/generate")
 async def generate(request: Request) -> Response:
     """Generate completion for the request.

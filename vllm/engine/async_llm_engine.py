@@ -80,9 +80,7 @@ class AsyncLLMEngine:
             request_id = request_output.request_id
             self.request_outputs[request_id] = request_output
             self.request_events[request_id].set()
-
-    async def init_decode_prefill():
-        return 
+            
     async def generate(
             self,
             prompt: Optional[str],
