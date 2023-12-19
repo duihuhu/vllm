@@ -105,6 +105,7 @@ def run_vllm(
             prompt_token_ids=None,
             sampling_params=sampling_params,
         )
+        outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
 
     # Add the requests to the engine.
     for prompt, _, output_len in mix_requests:
@@ -125,7 +126,7 @@ def run_vllm(
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    # outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     end = time.time()
     
     
