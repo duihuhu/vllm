@@ -40,7 +40,7 @@ def sample_requests(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for i in range(len(dataset)):
-        if i < num_requests :
+        if i % 2 == 0 :
             output_len = len(completion_token_ids[8])
             tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
         else:
