@@ -6,20 +6,23 @@ from vllm.transformers_utils.tokenizer import get_tokenizer
 def main(args: argparse.Namespace):
     tokenizer = get_tokenizer(args.tokenizer)
 
-    chunkrunner = ChunkRunner(tokenizer = tokenizer)
+    chunkrunner = ChunkRunner(tokenizer = tokenizer,
+                              chunk_size = args.chunk_size,
+                              chunk_num = args.chunk_num)
 
     model_name = args.model
-    chunkrunner.set_self_model_config(model = model_name)
+    chunkrunner.set_self_configs(model = model_name, tensor_parallel_size = args.tp)
 
-    chunk_size = args.chunk_size
-    chunk_num = args.chunk_num
-    chunkrunner.set_self_chunkworker(chunk_size = chunk_size, chunk_num = chunk_num)
+    #chunk_size = args.chunk_size
+    #chunk_num = args.chunk_num
+    #chunkrunner.set_self_chunkworker(chunk_size = chunk_size, chunk_num = chunk_num)
+    chunkrunner.set_parallel_chunkworkers()
 
     #chunkrunner.set_inputs(dataset_path = args.dataset, num_requests = args.num_prompts)
 
     chunkrunner.run_worker()
 
-    with open("/workspace/vllm/vllm/chunked/logs_5_1.txt", 'a') as file:
+    with open("/workspace/vllm/vllm/chunked/logs_6_1.txt", 'a') as file:
         for seq_id, sequence in chunkrunner.chunk_worker.job_sequences.items():
             file.write(f"Seq ID {seq_id}, prompt len {sequence.prompt_len}, start at {sequence.start_time}, end at {sequence.end_time}\n")
         #print(f"Sequence ID is {seq_id}")
@@ -34,6 +37,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, required=True,
                         help="Path to the dataset.")
     parser.add_argument("--model", type=str, default="facebook/opt-125m")
+    parser.add_argument("--tp", type=int, default=1)
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--num-prompts", type=int, default=10,
                         help="Number of prompts to process.")

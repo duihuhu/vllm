@@ -4,11 +4,11 @@ from transformers import PreTrainedTokenizerBase
 import time
 
 from vllm.config import ModelConfig, ParallelConfig
-from vllm.chunked.chunk import Chunk, Sequence, ChunkStatus, ChunkSamplingParams
+from vllm.chunked.chunk import Chunk, Sequence, ChunkStatus, ChunkSamplingParams, ChunkInputMetadata
 from vllm.model_executor import get_model, set_random_seed
 from vllm.utils import random_uuid, Counter
 from vllm.chunked.chunkcache import ChunkCacheBlocks
-from vllm.engine.ray_utils import initialize_cluster
+#from vllm.engine.ray_utils import initialize_cluster
 from vllm.model_executor.parallel_utils.parallel_state import (
     initialize_model_parallel, initialize_all_reduce_launcher)
 
@@ -16,26 +16,30 @@ class ChunkWorker:
     def __init__(self,
                  chunk_size: int,
                  chunk_num: int,
-                 model_config: ModelConfig) -> None:
+                 model_config: ModelConfig,
+                 parallel_config: ParallelConfig,
+                 rank: int,
+                 distributed_init_method: str,
+                 ) -> None:
         self.chunk_size = chunk_size
         self.chunk_num = chunk_num
         self.model_config = model_config
-        self.parallel_config = ParallelConfig(pipeline_parallel_size = 1,
-                                              tensor_parallel_size = 1,
-                                              worker_use_ray = False)
+        self.parallel_config = parallel_config
+        self.rank = rank
+        self.distributed_init_method = distributed_init_method
         self.total_sequences: List[Sequence] = []
         self.job_sequences: Dict[str, Sequence] = {}
         self.job_chunks: List[Chunk] = []
         self.counter = Counter()
         self._set_self_model()
         self._set_self_kv_cache()
-        self._set_self_cacheblock()
+        #self._set_self_cacheblock()
     
     def _set_self_model(self) -> None:
-        distributed_init_method, _ = initialize_cluster(self.parallel_config)
+        #distributed_init_method, _ = initialize_cluster(self.parallel_config)
         self._init_distributed_environment(parallel_config = self.parallel_config, 
-                                           rank = 0, 
-                                           distributed_init_method = distributed_init_method)
+                                           rank = self.rank, 
+                                           distributed_init_method = self.distributed_init_method)
         set_random_seed(seed = self.model_config.seed)
         self.model = get_model(model_config = self.model_config)
         initialize_all_reduce_launcher(
@@ -174,7 +178,7 @@ class ChunkWorker:
             sequence.add_first_token_str(new_output_text = new_output_text)
     
     @torch.inference_mode()
-    def _execute_sampler(self, 
+    def execute_sampler(self, 
                          logits: torch.Tensor, 
                          sampling_params: List[ChunkSamplingParams]) -> Tuple[List[int], List[float]]:
         output_tokens_list, logprobs = self.model.sampler(self.model.lm_head_weight, logits, sampling_params)
@@ -190,3 +194,22 @@ class ChunkWorker:
             max_prob_index = torch.argmax(logits, dim = 1)
             ans.append(max_prob_index)
         return ans
+    
+    @torch.inference_mode()
+    def execute_model(self, 
+                       inputs: torch.Tensor, 
+                       inputs_positions: torch.Tensor, 
+                       #kv_cache: List[Tuple[torch.Tensor, torch.Tensor]], 
+                       chunkmetadata: ChunkInputMetadata) -> torch.Tensor: #Tuple[torch.Tensor, float, float]:
+        #start_time = time.time()
+        #print(inputs.shape)
+        #print(inputs_positions.shape)
+        output = self.model(
+            input_ids = inputs,
+            positions = inputs_positions,
+            kv_caches = self.kv_cache,
+            cache_events = None,
+            chunkinputmetadata = chunkmetadata
+        )
+        #end_time = time.time()
+        return output #(output, start_time, end_time)
