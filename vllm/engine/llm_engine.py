@@ -14,7 +14,7 @@ from vllm.transformers_utils.tokenizer import (detokenize_incrementally,
                                                get_tokenizer)
 from vllm.utils import Counter
 from vllm.worker.worker import Worker
-
+import requests
 logger = init_logger(__name__)
 
 
@@ -230,8 +230,23 @@ class LLMEngine:
     def covert_running_to_prefilled(self):
         self.scheduler.covert_running_to_prefilled()
 
+    def send_mdecode_prefilled_controller(self):
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+        }
+        host_decode = "127.0.0.1"
+        port_decode = 8000
+        api_url_notify_decode = f"http://{host_decode}:{port_decode}/mdecode_prefilled"
+        response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
+
+    def send_mprefilled_to_mdecode(self):
+        self.scheduler.send_mprefilled_to_mdecode()
+
     def covert_prefilled_to_running(self):
         self.scheduler.covert_prefilled_to_running()
+
+    def convert_reqs_status(self, request_ids):
+        self.scheduler.convert_reqs_status(request_ids)
 
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.

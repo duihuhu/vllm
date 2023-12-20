@@ -9,7 +9,7 @@ from vllm.logger import init_logger
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceOutputs,
                            SequenceStatus)
-
+import requests
 logger = init_logger(__name__)
 
 _LOGGING_INTERVAL_SEC = 5
@@ -111,8 +111,15 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
-        self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
-            
+        # self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
+    
+    def convert_reqs_status(self, request_ids):
+        for seq_group in self.prefilled:
+            if seq_group.request_id in request_ids:
+                for seq in seq_group.get_seqs():
+                    seq.status = SequenceStatus.RUNNING
+                self.running.append(seq_group)
+    
     def covert_running_to_prefilled(self):
         while self.running:
             seq_group = self.running.pop(0)
@@ -120,7 +127,24 @@ class Scheduler:
                 seq.status = SequenceStatus.PREFILLED
             self.prefilled.append(seq_group)
             # print(f"req {seq_group.request_id} is finished prefill ", time.time())
-
+    def send_mprefilled_to_mdecode(self):
+        #first to convert to prefilled
+        #then to send to mdecode
+        request_ids = []
+        while self.running:
+            seq_group = self.running.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.PREFILLED
+            self.prefilled.append(seq_group)
+            request_ids.append(seq_group.request_id)
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+            "request_ids": request_ids,
+        }
+        host_decode = "127.0.0.1"
+        port_decode = 7002
+        api_url_notify_decode = f"http://{host_decode}:{port_decode}/notify_mdecode"
+        response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
 
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:

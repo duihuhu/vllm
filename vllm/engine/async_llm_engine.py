@@ -80,8 +80,20 @@ class AsyncLLMEngine:
             request_id = request_output.request_id
             self.request_outputs[request_id] = request_output
             self.request_events[request_id].set()
- 
-    def mul_generate(
+
+    def convert_reqs_status(self,request_ids: List[str]):
+        self.engine.convert_reqs_status(request_ids)
+
+    def generate_decode(self):
+        outputs: List[RequestOutput] = []
+        while self.engine.has_unfinished_requests():
+            print("mdecode decode iteration")
+            step_outputs = self.engine.step()
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+                    
+    def generate_prefill(
         self,
         prompts: Optional[List[str]],
         output_lens: Optional[List[int]],
@@ -107,43 +119,49 @@ class AsyncLLMEngine:
             The output `RequestOutput` objects from the LLMEngine for the
             request.
         """
+
+        # Preprocess the request.
+        # vLLM engine.
+        for prompt, request_id, output_len, sampling_param in zip(prompts, request_ids, output_lens, sampling_params):
+            # if self.log_requests:
+            #     logger.info(f"Received request {request_id}: "
+            #                 f"prompt: {prompt!r}, "
+            #                 f"sampling params: {sampling_params}, "
+            #                 f"prompt token ids: {prompt_token_ids}.")
+
+            # Add the request into the vLLM engine's waiting queue.
+            sampling_param.max_tokens = int(output_len)
+            if self.engine_use_ray:
+                self.engine.add_request.remote(
+                    request_id,
+                    prompt,
+                    sampling_param,
+                    prompt_token_ids=prompt_token_ids,
+                    arrival_time=arrival_time)
+            else:
+                self.engine.add_request(request_id,
+                                        prompt,
+                                        sampling_param,
+                                        prompt_token_ids=prompt_token_ids,
+                                        arrival_time=arrival_time)
         arrival_time = time.time()
-        if status == 'init_prefill':
-            # Preprocess the request.
-            # vLLM engine.
-            for prompt, request_id, output_len, sampling_param in zip(prompts, request_ids, output_lens, sampling_params):
-                # if self.log_requests:
-                #     logger.info(f"Received request {request_id}: "
-                #                 f"prompt: {prompt!r}, "
-                #                 f"sampling params: {sampling_params}, "
-                #                 f"prompt token ids: {prompt_token_ids}.")
-
-                # Add the request into the vLLM engine's waiting queue.
-                sampling_param.max_tokens = int(output_len)
-                if self.engine_use_ray:
-                    self.engine.add_request.remote(
-                        request_id,
-                        prompt,
-                        sampling_param,
-                        prompt_token_ids=prompt_token_ids,
-                        arrival_time=arrival_time)
-                else:
-                    self.engine.add_request(request_id,
-                                            prompt,
-                                            sampling_param,
-                                            prompt_token_ids=prompt_token_ids,
-                                            arrival_time=arrival_time)
-
+        if status == 'init_mdecode_prefill':
             # outputs: List[RequestOutput] = []
             while self.engine.has_unfinished_requests():
-                print("iteration")
+                print("mdecode prefill iteration")
                 step_outputs = self.engine.step()
                 self.engine.covert_running_to_prefilled()
+                self.engine.send_mdecode_prefilled_controller()
             print("already complish prefill request ")
-        else:
+        elif status == 'mprefill_execute':
+            while self.engine.has_unfinished_requests():
+                print("mprefill prefill iteration")
+                step_outputs = self.engine.step()
+                self.engine.send_mprefilled_to_mdecode()
             #todo list
             print("todo ")
-            
+     
+               
     async def generate(
             self,
             prompt: Optional[str],

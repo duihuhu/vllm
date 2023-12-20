@@ -8,16 +8,25 @@ from typing import Iterable, List, Tuple, Optional
 
 from transformers import PreTrainedTokenizerBase
 
+import fastapi
+from fastapi import Request
+from fastapi.responses import JSONResponse, Response, StreamingResponse
+
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import requests
 import random
 import threading
 from vllm.utils import random_uuid
-
+import time
+import asyncio
+import uvicorn
+app = fastapi.FastAPI()
+TIMEOUT_KEEP_ALIVE = 5  # seconds
 request_prompts_token_ids = {}
 request_prompts = {}
 
 status = 0
+prefilled_event = asyncio.Event()
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
     LINE_CLEAR = '\x1b[2K'
@@ -63,17 +72,15 @@ def post_http_request(prompt: List[str],
     return response
 
 
-def post_init_decode_prefill_http_request(prompt: List[str],
+def post_init_decode_prefill(prompts: List[str],
                       output_lens: List[int],
                       request_ids: List[str],
                       api_url: str,
                       n: int = 1,
-                      stream: bool = False,
-                      tid: Optional[int] = 0,
-                      num_servers: Optional[int] = 1) -> requests.Response: 
+                      stream: bool = False) -> requests.Response: 
     headers = {"User-Agent": "Test Client"}
     pload = {
-        "prompts": prompt,
+        "prompts": prompts,
         "output_lens": output_lens,
         "request_ids": request_ids,
         "n": 1,
@@ -86,14 +93,61 @@ def post_init_decode_prefill_http_request(prompt: List[str],
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
-def post_requests_to_prefilling(prompt: List[str],
+async def post_prefill_execute(prompts: List[str],
                       output_lens: List[int],
-                      api_url: str,
+                      request_ids: List[str],
+                      api_url_execute_prefill: str,
+                      api_url_add_prefill: str,
                       n: int = 1,
-                      stream: bool = False,
-                      tid: Optional[int] = 0,
-                      num_servers: Optional[int] = 1):
-    return 
+                      stream: bool = False):
+    await prefilled_event.wait()
+    print("start to post request to mprefill: ")
+    num_prompts = len(prompts)
+    batch_size = 4
+    alread_send = 0
+    while alread_send <= num_prompts:
+        if alread_send == 0:
+            mprefill_status = "add_with_exec"
+            api_url = api_url_execute_prefill
+        else:
+            mprefill_status = "only_add "
+            api_url = api_url_add_prefill
+            
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+            "prompts": prompts[alread_send:alread_send + batch_size],
+            "output_lens": output_lens[alread_send:alread_send + batch_size],
+            "request_ids": request_ids[alread_send:alread_send + batch_size],
+            "n": 1,
+            "use_beam_search": False,
+            "temperature": 0.0,
+            # "max_tokens": 16,
+            'ignore_eos': True,
+            "stream": stream,
+            "mprefill_status": mprefill_status
+        }
+        response = requests.post(api_url, headers=headers, json=pload, stream=True)
+        if alread_send < num_prompts and (alread_send + batch_size) > num_prompts:
+            alread_send=num_prompts 
+        else:
+            alread_send = alread_send + batch_size
+        time.sleep(2)
+    return
+
+def receive_mdecode_prefilled_signal(host, port):
+    uvicorn.run(app,
+            host=host,
+            port=port,
+            log_level="info",
+            timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
+    
+#background threads
+@app.post("/mdecode_prefilled")
+async def mdecode_prefilled(request: Request) -> Response:
+    print("controller already recv prefilled signal ")
+    prefilled_event.set()
+    return
+
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
     for chunk in response.iter_lines(chunk_size=8192,
                                      decode_unicode=False,
@@ -199,21 +253,41 @@ if __name__ == "__main__":
     n = args.n
     stream = args.stream
             
-    while True:
-        if status == 0:
-            host_decode = args.host
-            port_decode = args.port + 1
-            api_url = f"http://{host_decode}:{port_decode}/init_decode_prefill"
-            response = post_init_decode_prefill_http_request(prompts, output_lens, request_ids, api_url , n, stream)
-            status = status + 1
-        elif status == 2:
-            host_prefill = args.host
-            port_prefill = args.port
-            api_url = f"http://{host_prefill}:{port_prefill}/prefilled"
-            post_requests_to_prefilling(prompts, output_lens, api_url, n, stream)
+    # while True:
+    #     if status == 0:
+    #         host_decode = args.host
+    #         port_decode = args.port + 1
+    #         api_url = f"http://{host_decode}:{port_decode}/init_decode_prefill"
+    #         response = post_init_decode_prefill(prompts, output_lens, request_ids, api_url , n, stream)
+    #         status = status + 1
+    #     elif status == 2:
+    #         host_prefill = args.host
+    #         port_prefill = args.port
+    #         api_url = f"http://{host_prefill}:{port_prefill}/prefilled"
+    #         post_prefill_execute(prompts, output_lens, api_url, n, stream)
 
-            break
-        
+    #         break
+
+    host_decode = args.host
+    port_decode = args.port - 1000 + 2 
+    api_url_decode = f"http://{host_decode}:{port_decode}/init_mdecode"
+    task_td = []
+    task_td.append(threading.Thread(target=post_init_decode_prefill, args=(prompts, output_lens, request_ids, api_url_decode , n, stream)))
+    
+    host_prefill = args.host
+    port_prefill = args.port - 1000 + 1
+    api_url_execute_prefill = f"http://{host_prefill}:{port_prefill}/mprefill_execute"
+    api_url_add_prefill = f"http://{host_prefill}:{port_prefill}/mprefill_add"
+
+    task_td.append(threading.Thread(target=post_prefill_execute, args=(prompts, output_lens, request_ids, api_url_execute_prefill, api_url_add_prefill, n, stream)))
+      
+    task_td.append(threading.Thread(target=receive_mdecode_prefilled_signal), args=(args.host, args.port))
+    for td in task_td:
+      td.start()
+    for td in task_td:
+      td.join()  
+      
+
     # if stream:
     #     num_printed_lines = 0
     #     for h in get_streaming_response(response):
