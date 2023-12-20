@@ -10,14 +10,98 @@ from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.sampling_params import SamplingParams
 from vllm.utils import random_uuid
+import asyncio
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
+status = "init_prefill"
+init_prefill_event = asyncio.Event()
+
+
+@app.post("/notify_decode")
+async def notify_decode(request: Request) -> Response:
+    return
+
+async def init_prefill(request_dict):
+    global status
+    while True:
+      if status == "init_prefill":
+        prompts = request_dict.pop("prompt")
+        output_lens = request_dict.pop("output_lens")
+        stream = request_dict.pop("stream", False)
+        sampling_params_list = []
+        for i in range(len(prompts)):
+            sampling_params = SamplingParams(**request_dict)
+            sampling_params_list.append(sampling_params)
+        results_generator = engine.mul_generate(prompts, output_lens, sampling_params_list)    
+        await init_prefill_event.wait()  # 等待事件发生
+      else:
+          print("status is chanage ", status)
+
+#background threads
 @app.post("/init_decode_prefill")
 async def init_decode_prefill(request: Request) -> Response:
-    return 
+    """Generate completion for the request, containing a list of prompts.
+
+    The request should be a JSON object with the following fields:
+    - prompts: the prompt to use for the generation.
+    - stream: whether to stream the results or not.
+    - other fields: the sampling parameters (See `SamplingParams` for details).
+    """
+    request_dict = await request.json()
+    background_task_future = asyncio.ensure_future(init_prefill(request_dict))
+
+    # prompts = request_dict.pop("prompt")
+    # output_lens = request_dict.pop("output_lens")
+    
+    
+    # stream = request_dict.pop("stream", False)
+    # sampling_params_list = []
+    # for i in range(len(prompts)):
+    #     sampling_params = SamplingParams(**request_dict)
+    #     sampling_params_list.append(sampling_params)
+    
+    # # # request_id = random_uuid()
+    
+    # results_generator = engine.mul_generate(prompts, output_lens, sampling_params_list)
+
+    # # Streaming case
+    # async def stream_results() -> AsyncGenerator[bytes, None]:
+    #     async for request_output in results_generator:
+    #         prompt = request_output.prompt
+    #         text_outputs = [
+    #             prompt + output.text for output in request_output.outputs
+    #         ]
+    #         ret = {"text": text_outputs}
+    #         yield (json.dumps(ret) + "\0").encode("utf-8")
+
+    # async def abort_request() -> None:
+    #     await engine.abort(request_id)
+
+    # if stream:
+    #     background_tasks = BackgroundTasks()
+    #     # Abort the request if the client disconnects.
+    #     background_tasks.add_task(abort_request)
+    #     return StreamingResponse(stream_results(), background=background_tasks)
+
+    # # Non-streaming case
+    # final_output = None
+    # async for request_output in results_generator:
+    #     if await request.is_disconnected():
+    #         # Abort the request if the client disconnects.
+    #         await engine.abort(request_id)
+    #         return Response(status_code=499)
+    #     final_output = request_output
+
+    # assert final_output is not None
+    # prompt = final_output.prompt
+    # text_outputs = [prompt + output.text for output in final_output.outputs]
+    # ret = {"text": text_outputs}
+    ret = {"text": 'test'}
+    return JSONResponse(ret)
+
 @app.post("/generate")
 async def generate(request: Request) -> Response:
     """Generate completion for the request.
