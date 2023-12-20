@@ -239,8 +239,8 @@ class LLMEngine:
         api_url_notify_decode = f"http://{host_decode}:{port_decode}/mdecode_prefilled"
         response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
 
-    def send_mprefilled_to_mdecode(self):
-        self.scheduler.send_mprefilled_to_mdecode()
+    def send_mprefilled_to_mdecode(self, out_request_ids):
+        self.scheduler.send_mprefilled_to_mdecode(out_request_ids)
 
     def covert_prefilled_to_running(self):
         self.scheduler.covert_prefilled_to_running()

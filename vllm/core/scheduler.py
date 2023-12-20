@@ -127,23 +127,29 @@ class Scheduler:
                 seq.status = SequenceStatus.PREFILLED
             self.prefilled.append(seq_group)
             # print(f"req {seq_group.request_id} is finished prefill ", time.time())
-    def send_mprefilled_to_mdecode(self):
+    def send_mprefilled_to_mdecode(self, out_request_ids):
         #first to convert to prefilled
         #then to send to mdecode
         request_ids = []
-        while self.running:
+        running = List[SequenceGroup]
+        for seq_group in self.running:
             seq_group = self.running.pop(0)
-            for seq in seq_group.get_seqs():
-                seq.status = SequenceStatus.PREFILLED
-            self.prefilled.append(seq_group)
-            request_ids.append(seq_group.request_id)
+            if seq_group.request_id in out_request_ids:
+                for seq in seq_group.get_seqs():
+                    seq.status = SequenceStatus.PREFILLED
+                self.prefilled.append(seq_group)
+            else:
+                running.append(seq_group)
+        self.running = running 
+        
         headers = {"User-Agent": "Test Client"}
         pload = {
-            "request_ids": request_ids,
+            "request_ids": out_request_ids,
         }
         host_decode = "127.0.0.1"
         port_decode = 7002
         api_url_notify_decode = f"http://{host_decode}:{port_decode}/notify_mdecode"
+        print("before send_mprefilled_to_mdecode ")
         response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=False)
         print("after send_mprefilled_to_mdecode ")
     def _schedule(

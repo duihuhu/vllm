@@ -35,7 +35,8 @@ async def notify_mdecode(request: Request) -> Response:
     engine.convert_reqs_status(request_ids)
     mdecode_status = "decode"
     decode_event.set()
-    return
+    ret = {"text": 'test'}
+    return JSONResponse(ret)
 
 async def init_mdecode_prefill(request_dict):
     global mdecode_status
