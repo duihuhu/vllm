@@ -122,6 +122,7 @@ class AsyncLLMEngine:
 
         # Preprocess the request.
         # vLLM engine.
+        arrival_time = time.time()
         for prompt, request_id, output_len, sampling_param in zip(prompts, request_ids, output_lens, sampling_params):
             # if self.log_requests:
             #     logger.info(f"Received request {request_id}: "
@@ -144,7 +145,6 @@ class AsyncLLMEngine:
                                         sampling_param,
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
-        arrival_time = time.time()
         if status == 'init_mdecode_prefill':
             # outputs: List[RequestOutput] = []
             while self.engine.has_unfinished_requests():
