@@ -126,10 +126,10 @@ async def post_prefill_exec(prompts: List[str],
     alread_send = 0
     while alread_send <= num_prompts:
         if alread_send == 0:
-            mprefill_status = "add_with_exec"
+            mprefill_status = "mprefill_execute"
             api_url = api_url_execute_prefill
         else:
-            mprefill_status = "only_add "
+            mprefill_status = "mprefill_add "
             api_url = api_url_add_prefill
             
         headers = {"User-Agent": "Test Client"}
