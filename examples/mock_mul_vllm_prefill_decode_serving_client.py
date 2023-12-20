@@ -281,7 +281,8 @@ if __name__ == "__main__":
 
     task_td.append(threading.Thread(target=post_prefill_execute, args=(prompts, output_lens, request_ids, api_url_execute_prefill, api_url_add_prefill, n, stream)))
       
-    task_td.append(threading.Thread(target=receive_mdecode_prefilled_signal), args=(args.host, args.port))
+    task_td.append(threading.Thread(target=receive_mdecode_prefilled_signal, args=(args.host, args.port)))
+    
     for td in task_td:
       td.start()
     for td in task_td:
