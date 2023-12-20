@@ -73,19 +73,18 @@ async def mprefill_exec_prefill(request_dict):
         prefill_event.wait()
 
 async def mprefill_add_prefill(request_dict):
-    while True:
-        print("mprefill add prefill request ")
-        request_ids = request_dict.pop("request_ids")
-        prompts = request_dict.pop("prompts")
-        output_lens = request_dict.pop("output_lens")
-        stream = request_dict.pop("stream", False)
-        mprefill_status = request_dict.pop("mprefill_status")
-        sampling_params_list = []
-        for i in range(len(prompts)):
-            sampling_params = SamplingParams(**request_dict)
-            sampling_params_list.append(sampling_params)
-        results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
-        prefill_event.set()
+    print("mprefill add prefill request ")
+    request_ids = request_dict.pop("request_ids")
+    prompts = request_dict.pop("prompts")
+    output_lens = request_dict.pop("output_lens")
+    stream = request_dict.pop("stream", False)
+    mprefill_status = request_dict.pop("mprefill_status")
+    sampling_params_list = []
+    for i in range(len(prompts)):
+        sampling_params = SamplingParams(**request_dict)
+        sampling_params_list.append(sampling_params)
+    results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
+    prefill_event.set()
 
 @app.post("/mprefill_add")
 async def mprefill_add(request: Request) -> Response:
