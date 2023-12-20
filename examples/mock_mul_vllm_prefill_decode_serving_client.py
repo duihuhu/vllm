@@ -116,6 +116,9 @@ async def post_prefill_exec(prompts: List[str],
                       stream: bool = False):
     global prefilled_event
     print("start to post request to mprefill: ")
+    while True:
+        print("status ", status)
+        time.sleep(1)
     await prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
@@ -163,6 +166,7 @@ async def mdecode_prefilled(request: Request) -> Response:
     print("controller already recv prefilled signal ")
     global prefilled_event
     prefilled_event.set()
+    status = 1
     return
 
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
