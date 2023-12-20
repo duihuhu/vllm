@@ -100,6 +100,7 @@ def post_prefill_execute(prompts: List[str],
                       api_url_add_prefill: str,
                       n: int = 1,
                       stream: bool = False):
+    print("start post_prefill_execute ")
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     # 运行异步函数
