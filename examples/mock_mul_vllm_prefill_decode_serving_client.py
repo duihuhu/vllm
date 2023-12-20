@@ -73,7 +73,7 @@ def post_init_decode_prefill_http_request(prompt: List[str],
                       num_servers: Optional[int] = 1) -> requests.Response: 
     headers = {"User-Agent": "Test Client"}
     pload = {
-        "prompt": prompt,
+        "prompts": prompt,
         "output_lens": output_lens,
         "request_ids": request_ids,
         "n": n,
