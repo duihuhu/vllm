@@ -96,7 +96,8 @@ async def mprefill_add(request: Request) -> Response:
 async def mprefill_execute(request: Request) -> Response:
     request_dict = await request.json()
     background_task_future = asyncio.ensure_future(mprefill_exec_prefill(request_dict))
-
+    ret = {"text": 'test'}
+    return JSONResponse(ret)
 #background threads
 @app.post("/init_mdecode")
 async def init_mdecode(request: Request) -> Response:
@@ -156,6 +157,7 @@ async def init_mdecode(request: Request) -> Response:
     # prompt = final_output.prompt
     # text_outputs = [prompt + output.text for output in final_output.outputs]
     # ret = {"text": text_outputs}
+    print("init_mdecode return ")
     ret = {"text": 'test'}
     return JSONResponse(ret)
 

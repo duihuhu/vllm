@@ -142,7 +142,7 @@ class Scheduler:
                 running.append(seq_group)
         self.running = running 
         
-        headers = {"User-Agent": "Test Client"}
+        headers = {"User-Agent": "Test Client1"}
         pload = {
             "request_ids": out_request_ids,
         }
@@ -150,7 +150,7 @@ class Scheduler:
         port_decode = 7002
         api_url_notify_decode = f"http://{host_decode}:{port_decode}/notify_mdecode"
         print("before send_mprefilled_to_mdecode ")
-        response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=False)
+        response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
         print("after send_mprefilled_to_mdecode ")
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
