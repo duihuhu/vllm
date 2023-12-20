@@ -157,6 +157,7 @@ class AsyncLLMEngine:
             while self.engine.has_unfinished_requests():
                 print("mprefill prefill iteration")
                 step_outputs = self.engine.step()
+                print("mprefill prefill iteration step")
                 self.engine.send_mprefilled_to_mdecode()
             #todo list
             print("todo ")
