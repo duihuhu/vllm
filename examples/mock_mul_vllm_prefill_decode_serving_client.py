@@ -93,15 +93,28 @@ def post_init_decode_prefill(prompts: List[str],
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
-async def post_prefill_execute(prompts: List[str],
+def post_prefill_execute(prompts: List[str],
                       output_lens: List[int],
                       request_ids: List[str],
                       api_url_execute_prefill: str,
                       api_url_add_prefill: str,
                       n: int = 1,
                       stream: bool = False):
-    print("start to post request to mprefill: ")
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    # 运行异步函数
+    loop.run_until_complete(post_prefill_exec(prompts, output_lens, request_ids, api_url_execute_prefill, api_url_add_prefill, n, stream))
+    return
+
+async def post_prefill_exec(prompts: List[str],
+                      output_lens: List[int],
+                      request_ids: List[str],
+                      api_url_execute_prefill: str,
+                      api_url_add_prefill: str,
+                      n: int = 1,
+                      stream: bool = False):
     await prefilled_event.wait()
+    print("start to post request to mprefill: ")
     num_prompts = len(prompts)
     batch_size = 4
     alread_send = 0
