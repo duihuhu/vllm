@@ -136,6 +136,7 @@ class AsyncLLMEngine:
 
             # outputs: List[RequestOutput] = []
             while self.engine.has_unfinished_requests():
+                print("iteration")
                 step_outputs = self.engine.step()
                 self.engine.covert_running_to_prefilled()
             print("already complish prefill request ")
