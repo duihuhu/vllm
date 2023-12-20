@@ -43,6 +43,7 @@ async def init_mdecode_prefill(request_dict):
     global mdecode_status
     global decode_event 
     while True:
+        print("init_mdecode_prefill ", mdecode_status)
         if mdecode_status == "init_mdecode_prefill":
             request_ids = request_dict.pop("request_ids")
             prompts = request_dict.pop("prompts")
@@ -53,11 +54,11 @@ async def init_mdecode_prefill(request_dict):
                 sampling_params = SamplingParams(**request_dict)
                 sampling_params_list.append(sampling_params)
             results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mdecode_status)
-            decode_event.wait()  # 等待事件发生
+            await decode_event.wait()  # 等待事件发生
         elif mdecode_status == "decode":
             print("status is chanage, mdecode start exec decode", mdecode_status)
             engine.generate_decode()
-            decode_event.wait()
+            await decode_event.wait()
 #todo 
 async def mprefill_exec_prefill(request_dict):
     while True:
@@ -72,7 +73,7 @@ async def mprefill_exec_prefill(request_dict):
             sampling_params = SamplingParams(**request_dict)
             sampling_params_list.append(sampling_params)
         results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
-        prefill_event.wait()
+        await prefill_event.wait()
 
 async def mprefill_add_prefill(request_dict):
     print("mprefill add prefill request ")
@@ -99,6 +100,7 @@ async def mprefill_execute(request: Request) -> Response:
     background_task_future = asyncio.ensure_future(mprefill_exec_prefill(request_dict))
     ret = {"text": 'test'}
     return JSONResponse(ret)
+
 #background threads
 @app.post("/init_mdecode")
 async def init_mdecode(request: Request) -> Response:
