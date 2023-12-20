@@ -126,7 +126,7 @@ async def post_prefill_exec(prompts: List[str],
     # while True:
     #     print("status ", status.value)
     #     time.sleep(1)
-    await prefilled_event.wait()
+    prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
     batch_size = 4
