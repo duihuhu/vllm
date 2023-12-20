@@ -121,11 +121,11 @@ async def post_prefill_exec(prompts: List[str],
                       n: int = 1,
                       stream: bool = False):
     global prefilled_event
-    global status
-    print("start to post request to mprefill: ")
-    while True:
-        print("status ", status.value)
-        time.sleep(1)
+    # global status
+    # print("start to post request to mprefill: ")
+    # while True:
+    #     print("status ", status.value)
+    #     time.sleep(1)
     await prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
