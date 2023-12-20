@@ -115,6 +115,7 @@ async def post_prefill_exec(prompts: List[str],
                       n: int = 1,
                       stream: bool = False):
     global prefilled_event
+    global status
     print("start to post request to mprefill: ")
     while True:
         print("status ", status)
@@ -165,8 +166,10 @@ def receive_mdecode_prefilled_signal(host, port):
 async def mdecode_prefilled(request: Request) -> Response:
     print("controller already recv prefilled signal ")
     global prefilled_event
-    prefilled_event.set()
-    status = 1
+    global status
+    with prefilled_event.get_lock():
+        prefilled_event.set()
+    status = status + 1
     return
 
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
