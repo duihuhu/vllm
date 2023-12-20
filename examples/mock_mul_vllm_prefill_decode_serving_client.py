@@ -167,8 +167,7 @@ async def mdecode_prefilled(request: Request) -> Response:
     print("controller already recv prefilled signal ")
     global prefilled_event
     global status
-    with prefilled_event.get_lock():
-        prefilled_event.set()
+    prefilled_event.set()
     status = status + 1
     return
 
