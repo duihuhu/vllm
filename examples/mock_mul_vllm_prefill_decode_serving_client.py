@@ -20,13 +20,19 @@ from vllm.utils import random_uuid
 import time
 import asyncio
 import uvicorn
+import multiprocessing
+manager = multiprocessing.Manager()
+
+prefilled_event = manager.Event()
+
 app = fastapi.FastAPI()
 TIMEOUT_KEEP_ALIVE = 5  # seconds
 request_prompts_token_ids = {}
 request_prompts = {}
 
-status = 0
-prefilled_event = asyncio.Event()
+status = manager.Value('i', 0)
+
+# prefilled_event = asyncio.Event()
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
     LINE_CLEAR = '\x1b[2K'
@@ -118,7 +124,7 @@ async def post_prefill_exec(prompts: List[str],
     global status
     print("start to post request to mprefill: ")
     while True:
-        print("status ", status)
+        print("status ", status.value)
         time.sleep(1)
     await prefilled_event.wait()
     print("after prefilled_event wait ")
@@ -168,7 +174,7 @@ async def mdecode_prefilled(request: Request) -> Response:
     global prefilled_event
     global status
     prefilled_event.set()
-    status = status + 1
+    status.value = status.value + 1
     return
 
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
