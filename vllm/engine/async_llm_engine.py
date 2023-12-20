@@ -88,11 +88,7 @@ class AsyncLLMEngine:
         request_ids: Optional[List[str]],
         sampling_params: List[SamplingParams],
         status: str,
-        seq_ids: Optional[List[List[int]]] = None,
-        prompt_token_ids: Optional[List[List[int]]] = None,
-        prefilled_token_ids: Optional[List[int]] = None,
-        prefilled_texts: Optional[List[str]]=None,
-        cumulative_logprobs: Optional[List[float]]=None) -> RequestOutput:
+        prompt_token_ids: Optional[List[List[int]]] = None) -> RequestOutput:
         """Generate outputs for a request.
 
         Generate outputs for a request. This method is a coroutine. It adds the
@@ -114,12 +110,8 @@ class AsyncLLMEngine:
         arrival_time = time.time()
         if status == 'init_prefill':
             # Preprocess the request.
-            start = time.time()
-            print("start prefill time ", start)
-            # Create an event to notify us that there is new output from the
             # vLLM engine.
             for prompt, request_id, output_len, sampling_param in zip(prompts, request_ids, output_lens, sampling_params):
-                # request_id = random_uuid()
                 # if self.log_requests:
                 #     logger.info(f"Received request {request_id}: "
                 #                 f"prompt: {prompt!r}, "
@@ -141,78 +133,16 @@ class AsyncLLMEngine:
                                             sampling_param,
                                             prompt_token_ids=prompt_token_ids,
                                             arrival_time=arrival_time)
-            # add_request_time = time.time()
-            # print("add request time in prefill ", add_request_time)
+
             outputs: List[RequestOutput] = []
             while self.engine.has_unfinished_requests():
                 step_outputs = self.engine.step()
                 for output in step_outputs:
                     # if output.finished:
                     outputs.append(output)
-            end = time.time()
-            elapsed_time = end-start
-            total_num_tokens = sum(
-                len(output.prompt_token_ids)
-                for output in outputs
-            )
-            print("start prefill time, end prefill time,  total num token ", start, end, total_num_tokens)
-            # print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
-            #     f"{total_num_tokens / elapsed_time:.2f} tokens/s")   
-        elif status == 'prefilled':
-            #todo 
-            print("decode ")
-            for prompt, prompt_token_id, request_id, seq_id, prefilled_token_id, prefilled_text, cumulative_logprob, output_len, sampling_param \
-                in zip(prompts, prompt_token_ids, request_ids,seq_ids, prefilled_token_ids, prefilled_texts, cumulative_logprobs, output_lens, sampling_params):
-                sampling_param.max_tokens = int(output_len)
-                if self.engine_use_ray:
-                    self.engine.add_prefilled_request.remote(
-                        request_id,
-                        prompt,
-                        sampling_param,
-                        seq_ids=seq_id,
-                        prefilled_token_ids=prefilled_token_id,
-                        prefilled_texts=prefilled_text,
-                        cumulative_logprobs=cumulative_logprob,
-                        prompt_token_ids=prompt_token_id,
-                        arrival_time=arrival_time)
-                else:
-                    self.engine.add_prefilled_request(
-                                            request_id,
-                                            prompt,
-                                            sampling_param,
-                                            seq_ids=seq_id,
-                                            prefilled_token_ids=prefilled_token_id,
-                                            prefilled_texts=prefilled_text,
-                                            cumulative_logprobs=cumulative_logprob,
-                                            prompt_token_ids=prompt_token_id,
-                                            arrival_time=arrival_time,)
-            
-            # self.engine.watch_block_table()
-    
-            outputs: List[RequestOutput] = []
-            while self.engine.has_unfinished_requests():
-                step_outputs = self.engine.step_decoder()
-                for output in step_outputs:
-                    if output.finished:
-                        print("output: ", output)
-                        outputs.append(output)
-
-            end = time.time()
-
-            elapsed_time = end-start
-            # total_num_tokens = sum(
-            #     len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
-            #     for output in outputs
-            # )
-            total_num_tokens = sum(
-                len(output.outputs[0].token_ids)
-                for output in outputs
-            )
-            print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
-                f"{total_num_tokens / elapsed_time:.2f} tokens/s")
- 
- 
- 
+        else:
+            #todo list
+            print("todo ")
             
     async def generate(
             self,

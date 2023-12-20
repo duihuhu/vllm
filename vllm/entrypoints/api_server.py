@@ -17,7 +17,7 @@ TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
 status = "init_prefill"
-init_prefill_event = asyncio.Event()
+decode_event = asyncio.Event()
 
 
 @app.post("/notify_decode")
@@ -28,17 +28,19 @@ async def init_prefill(request_dict):
     global status
     while True:
       if status == "init_prefill":
-        prompts = request_dict.pop("prompt")
+        request_ids = request_dict.pop("request_ids")
+        prompts = request_dict.pop("prompts")
         output_lens = request_dict.pop("output_lens")
         stream = request_dict.pop("stream", False)
         sampling_params_list = []
         for i in range(len(prompts)):
             sampling_params = SamplingParams(**request_dict)
             sampling_params_list.append(sampling_params)
-        results_generator = engine.mul_generate(prompts, output_lens, sampling_params_list)    
-        await init_prefill_event.wait()  # 等待事件发生
-      else:
+        results_generator = engine.mul_generate(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=status)
+        await decode_event.wait()  # 等待事件发生
+      elif status == "decode":
           print("status is chanage ", status)
+          await decode_event.wait()
 
 #background threads
 @app.post("/init_decode_prefill")
