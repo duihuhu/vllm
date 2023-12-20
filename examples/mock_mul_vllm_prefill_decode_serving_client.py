@@ -30,8 +30,6 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds
 request_prompts_token_ids = {}
 request_prompts = {}
 
-status = manager.Value('i', 0)
-
 # prefilled_event = asyncio.Event()
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -121,11 +119,6 @@ async def post_prefill_exec(prompts: List[str],
                       n: int = 1,
                       stream: bool = False):
     global prefilled_event
-    # global status
-    # print("start to post request to mprefill: ")
-    # while True:
-    #     print("status ", status.value)
-    #     time.sleep(1)
     prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
@@ -172,9 +165,7 @@ def receive_mdecode_prefilled_signal(host, port):
 async def mdecode_prefilled(request: Request) -> Response:
     print("controller already recv prefilled signal ")
     global prefilled_event
-    global status
     prefilled_event.set()
-    status.value = status.value + 1
     return
 
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
