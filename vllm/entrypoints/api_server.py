@@ -13,7 +13,7 @@ from vllm.utils import random_uuid
 import asyncio
 
 import multiprocessing
-manager = multiprocessing.Manager()
+# manager = multiprocessing.Manager()
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
@@ -22,13 +22,14 @@ app = FastAPI()
 mdecode_status = "init_mdecode_prefill"
 mprefill_status = "mprefill_execute"
 
-decode_event = manager.Event()
+decode_event = asyncio.Event()
 
-prefill_event = manager.Event()
+prefill_event = asyncio.Event()
 
 @app.post("/notify_mdecode")
 async def notify_mdecode(request: Request) -> Response:
     global decode_event
+    global mdecode_status
     print("mdecode recv signal from mprefill ")
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
