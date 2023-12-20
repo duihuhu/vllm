@@ -116,6 +116,7 @@ async def post_prefill_exec(prompts: List[str],
                       stream: bool = False):
     print("start to post request to mprefill: ")
     await prefilled_event.wait()
+    print("after prefilled_event wait ")
     num_prompts = len(prompts)
     batch_size = 4
     alread_send = 0
