@@ -42,7 +42,10 @@ class ChunkRunner:
                                    trust_remote_code = False, download_dir = None, use_np_weights = False,
                                    use_dummy_weights = False, dtype = 'auto', seed = 0)
         self.model_config = model_config
-        worker_use_ray = True if tensor_parallel_size > 1 else False
+        if tensor_parallel_size > 1:
+            worker_use_ray = True
+        else:
+            worker_use_ray = False
         self.worker_use_ray = worker_use_ray
         self.parallel_config = ParallelConfig(pipeline_parallel_size = 1,
                                               tensor_parallel_size = tensor_parallel_size,
@@ -112,9 +115,9 @@ class ChunkRunner:
                 break
         self.requests = filtered_dataset
     
-    def _add_requests_to_worker(self) -> None:
+    def _add_requests_to_self(self) -> None:
         #for prompt_token_ids in self.requests:
-        cold_start_token_ids = [random.randint(0, 100) for _ in range(self.chunk_worker.chunk_size)]
+        cold_start_token_ids = [random.randint(0, 100) for _ in range(self.chunk_size)]
         cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
         self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                        sampling_params = cold_start_sampling_params)
@@ -129,7 +132,7 @@ class ChunkRunner:
             self._add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
     def _start_worker(self) -> None:
-        self._add_requests_to_worker()
+        self._add_requests_to_self()
         self._set_job_sequences()
         self._set_job_chunks()
         #self.chunk_worker.set_job_sequences()
@@ -183,7 +186,7 @@ class ChunkRunner:
                                                     kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, 
                                                     kv_block = chunk.cache_block_id)
-            output = self._run_workers("execute_model",
+            output = self._run_workers_model("execute_model",
                                         inputs = input_tokens_tensor,
                                         inputs_positions = input_positions_tensor,
                                         #kv_cache = self.chunk_worker.kv_cache,
@@ -206,7 +209,7 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
                 #st = ed
             output = output[idxs]
-            output_token_list, logprobs = self._run_workers("execute_sampler",
+            output_token_list, logprobs = self._run_workers_sampler("execute_sampler",
                                                             logits = output, 
                                                             sampling_params = sampling_params)
             end_time = time.time()
@@ -223,7 +226,29 @@ class ChunkRunner:
         #self.chunk_worker.generate_first_token_id()
         #self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
     
-    def _run_workers(
+    def _run_workers_model(
+        self,
+        method: str,
+        *args,
+        **kwargs
+    ) -> Any:
+        all_outputs = []
+        for worker in self.workers:
+            executor = getattr(worker, method)
+            if self.parallel_config.worker_use_ray:
+                executor = executor.remote
+            
+            output = executor(*args, **kwargs)
+            all_outputs.append(output)
+        
+        if self.parallel_config.worker_use_ray:
+            all_outputs = ray.get(all_outputs)
+        
+        concatenated_result = torch.cat(all_outputs, dim=-1)
+
+        return concatenated_result
+    
+    def _run_workers_sampler(
         self,
         method: str,
         *args,
