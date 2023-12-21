@@ -11,8 +11,9 @@ from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.sampling_params import SamplingParams
 from vllm.utils import random_uuid
 import asyncio
+import threading
 
-import multiprocessing
+# import multiprocessing
 # manager = multiprocessing.Manager()
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
@@ -112,7 +113,7 @@ async def mprefill_execute(request: Request) -> Response:
 
 #background threads
 @app.post("/init_mdecode")
-async def init_mdecode(request: Request) -> Response:
+async def init_mdecode(request: Request, background_tasks: BackgroundTasks) -> Response:
     """Generate completion for the request, containing a list of prompts.
 
     The request should be a JSON object with the following fields:
@@ -121,8 +122,10 @@ async def init_mdecode(request: Request) -> Response:
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = await request.json()
-    background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
-
+    # background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
+    # background_tasks.add_task(init_mdecode_prefill(request_dict))
+    thread = threading.Thread(target=init_mdecode_prefill, args=(request_dict))
+    thread.start()
     # prompts = request_dict.pop("prompt")
     # output_lens = request_dict.pop("output_lens")
     

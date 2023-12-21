@@ -84,7 +84,7 @@ class AsyncLLMEngine:
     def convert_reqs_status(self,request_ids: List[str]):
         self.engine.convert_reqs_status(request_ids)
 
-    def generate_decode(self):
+    async def generate_decode(self):
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_requests():
             # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
@@ -92,7 +92,8 @@ class AsyncLLMEngine:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-
+            await asyncio.sleep(0)
+            
     def generate_prefill(
         self,
         prompts: Optional[List[str]],
