@@ -85,16 +85,21 @@ def sample_requests_summary(dataset_path: str,
 def sample_requests_write(dataset_path: str,
     tokenizer: PreTrainedTokenizerBase,) -> List[Tuple[str, int, int]]:
     # Load the dataset.
-    with open(dataset_path) as f:
-        dataset = json.load(f)
+    input_data = []
+    output_data = []
+    with open(dataset_path) as fd:
+        for line in fd.readlines():
+            content = json.loads(line)
+            input_data.append(content["input"])
+            output_data.append(content["response"])
     # Filter out the conversations with less than 2 turns.
-    
-    for data in dataset:
-        prompt_token_ids = tokenizer(data["input"]).input_ids
-        completion_token_ids = tokenizer(data["response"]).input_ids
-        print("prompt len, prompt token len ,completions len ,completions token len: ", 
-              len(data['input']), len(prompt_token_ids), len(data['response']), len(completion_token_ids))
-        
+    with open("/workspace/four_datasets/write/write.txt", "a+") as fd:      
+        for input_d,output_d in zip(input_data, output_data):
+            prompt_token_ids = tokenizer(input_d).input_ids
+            completion_token_ids = tokenizer(output_d).input_ids
+            fd.write("prompt len, prompt token len ,completions len ,completions token len: " + 
+                     str(input_d) + "," + str(len(prompt_token_ids)) + "," + str(output_d) + "," + str(len(completion_token_ids))+"\n")
+          
     return 
 
 def main(args: argparse.Namespace):
@@ -103,8 +108,8 @@ def main(args: argparse.Namespace):
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
     # requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
-    sample_requests_summary(args.dataset, tokenizer)
-    # sample_requests_write(args.dataset, tokenizer)
+    # sample_requests_summary(args.dataset, tokenizer)
+    sample_requests_write(args.dataset, tokenizer)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
