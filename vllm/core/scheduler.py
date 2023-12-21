@@ -157,9 +157,9 @@ class Scheduler:
         host_decode = "127.0.0.1"
         port_decode = 7002
         api_url_notify_decode = f"http://{host_decode}:{port_decode}/notify_mdecode"
-        print("before send_mprefilled_to_mdecode ")
+        print("before send_mprefilled_to_mdecode ", time.time())
         response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
-        print("after send_mprefilled_to_mdecode ")
+        print("after send_mprefilled_to_mdecode ", time.time())
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
 

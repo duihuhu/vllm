@@ -12,7 +12,7 @@ from vllm.sampling_params import SamplingParams
 from vllm.utils import random_uuid
 import asyncio
 import threading
-
+import time
 # import multiprocessing
 # manager = multiprocessing.Manager()
 
@@ -31,7 +31,7 @@ prefill_event = asyncio.Event()
 async def notify_mdecode(request: Request) -> Response:
     global decode_event
     global mdecode_status
-    print("mdecode recv signal from mprefill ")
+    print("mdecode recv signal from mprefill ", time.time())
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
     engine.convert_reqs_status(request_ids)
