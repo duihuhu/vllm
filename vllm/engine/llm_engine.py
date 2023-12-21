@@ -228,11 +228,12 @@ class LLMEngine:
         return self.scheduler.has_unfinished_seqs()
 
     def covert_running_to_prefilled(self):
-        self.scheduler.covert_running_to_prefilled()
+        return self.scheduler.covert_running_to_prefilled()
 
-    def send_mdecode_prefilled_controller(self):
+    def send_mdecode_prefilled_controller(self, prefilled_num):
         headers = {"User-Agent": "Test Client"}
         pload = {
+            "prefilled_num": prefilled_num
         }
         host_decode = "127.0.0.1"
         port_decode = 8000

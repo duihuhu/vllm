@@ -126,11 +126,14 @@ class Scheduler:
         self.prefilled = prefilled
     
     def covert_running_to_prefilled(self):
+        num = 0
         while self.running:
             seq_group = self.running.pop(0)
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.PREFILLED
             self.prefilled.append(seq_group)
+            num = num + 1
+        return num
             # print(f"req {seq_group.request_id} is finished prefill ", time.time())
     def send_mprefilled_to_mdecode(self, out_request_ids):
         #first to convert to prefilled

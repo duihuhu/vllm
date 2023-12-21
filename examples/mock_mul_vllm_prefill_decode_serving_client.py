@@ -30,8 +30,8 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds
 request_prompts_token_ids = {}
 request_prompts = {}
 
-# mdecode_prefilled = 0
-# total_requests = 16
+mdecode_prefilled = 0
+total_requests = 16
 # batch_size = 4
 
 # prefilled_event = asyncio.Event()
@@ -152,6 +152,7 @@ async def post_prefill_exec(prompts: List[str],
             "stream": stream,
             "mprefill_status": mprefill_status
         }
+        print("mprefill send ", api_url)
         response = requests.post(api_url, headers=headers, json=pload, stream=True)
         if alread_send < num_prompts and (alread_send + batch_size) > num_prompts:
             last_num = num_prompts - alread_send
@@ -172,9 +173,15 @@ def receive_mdecode_prefilled_signal(host, port):
 #background threads
 @app.post("/mdecode_prefilled")
 async def mdecode_prefilled(request: Request) -> Response:
-    print("controller already recv prefilled signal ")
+    global total_requests
+    global mdecode_prefilled
     global prefilled_event
-    prefilled_event.set()
+    request_dict = await request.json()
+    prefilled_num = request_dict.pop("prefilled_num")
+    mdecode_prefilled = mdecode_prefilled + prefilled_num
+    if mdecode_prefilled == total_requests:
+        print("controller already recv prefilled signal ", mdecode_prefilled)
+        prefilled_event.set()
     return
 
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:

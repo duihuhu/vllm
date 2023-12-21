@@ -150,8 +150,8 @@ class AsyncLLMEngine:
             while self.engine.has_unfinished_requests():
                 print("mdecode prefill iteration")
                 step_outputs = self.engine.step()
-                self.engine.covert_running_to_prefilled()
-                self.engine.send_mdecode_prefilled_controller()
+                prefilled_num = self.engine.covert_running_to_prefilled()
+                self.engine.send_mdecode_prefilled_controller(prefilled_num)
             print("already complish prefill request ")
         elif status == 'mprefill_execute':
             while self.engine.has_unfinished_requests():
