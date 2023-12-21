@@ -30,6 +30,10 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds
 request_prompts_token_ids = {}
 request_prompts = {}
 
+# mdecode_prefilled = 0
+# total_requests = 16
+# batch_size = 4
+
 # prefilled_event = asyncio.Event()
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -122,7 +126,7 @@ async def post_prefill_exec(prompts: List[str],
     prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
-    batch_size = 4
+    batch_size = 16
     alread_send = 0
     last_num = 0
     while alread_send <= num_prompts:
