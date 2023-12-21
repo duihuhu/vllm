@@ -126,7 +126,7 @@ async def post_prefill_exec(prompts: List[str],
     prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
-    batch_size = 16
+    batch_size = 4
     alread_send = 0
     while alread_send <= num_prompts:
         if alread_send == 0:
