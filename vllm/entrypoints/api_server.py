@@ -122,8 +122,8 @@ async def init_mdecode(request: Request, background_tasks: BackgroundTasks) -> R
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = await request.json()
-    # background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
-    background_tasks.add_task(init_mdecode_prefill(request_dict))
+    background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
+    # background_tasks.add_task(init_mdecode_prefill(request_dict))
     # thread = threading.Thread(target=init_mdecode_prefill, args=(request_dict))
     # thread.start()
     # prompts = request_dict.pop("prompt")
