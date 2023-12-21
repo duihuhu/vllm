@@ -174,7 +174,7 @@ def receive_mdecode_prefilled_signal(host, port):
 @app.post("/mdecode_prefilled")
 async def mdecode_prefilled(request: Request) -> Response:
     global total_requests
-    global mdecode_prefilled
+    global mdecode_prefilled_num
     global prefilled_event
     request_dict = await request.json()
     prefilled_num = request_dict.pop("prefilled_num")
