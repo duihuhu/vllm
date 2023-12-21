@@ -98,7 +98,7 @@ def sample_requests_write(dataset_path: str,
             prompt_token_ids = tokenizer(input_d).input_ids
             completion_token_ids = tokenizer(output_d).input_ids
             fd.write("prompt len, prompt token len ,completions len ,completions token len: " + 
-                     str(input_d) + "," + str(len(prompt_token_ids)) + "," + str(output_d) + "," + str(len(completion_token_ids))+"\n")
+                     str(len(input_d)) + "," + str(len(prompt_token_ids)) + "," + str(len(output_d)) + "," + str(len(completion_token_ids))+"\n")
           
     return 
 
