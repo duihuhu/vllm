@@ -200,7 +200,7 @@ class ChunkWorker:
                        inputs: torch.Tensor, 
                        inputs_positions: torch.Tensor, 
                        #kv_cache: List[Tuple[torch.Tensor, torch.Tensor]], 
-                       chunkmetadata: ChunkInputMetadata) -> torch.Tensor: #Tuple[torch.Tensor, float, float]:
+                       chunkmetadata: ChunkInputMetadata) -> Tuple[List[int], List[float]]: #Tuple[torch.Tensor, float, float]:
         #start_time = time.time()
         #print(inputs.shape)
         #print(inputs_positions.shape)
