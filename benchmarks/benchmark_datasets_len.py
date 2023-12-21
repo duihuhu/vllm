@@ -77,7 +77,7 @@ def sample_requests_summary(dataset_path: str,
             prompt_token_ids = tokenizer(data["input"]).input_ids
             completion_token_ids = tokenizer(data["output"]).input_ids
             fd.write("prompt len, prompt token len ,completions len ,completions token len: " + 
-                     str(len(data['input'])) + "," + str(len(prompt_token_ids)) + "," + str(len(data['output'])) + "," + str(len(completion_token_ids)))
+                     str(len(data['input'])) + "," + str(len(prompt_token_ids)) + "," + str(len(data['output'])) + "," + str(len(completion_token_ids))+"\n")
         # print("prompt len, prompt token len ,completions len ,completions token len: ", 
         #     len(data['input']), len(prompt_token_ids), len(data['output']), len(completion_token_ids))
     return 
