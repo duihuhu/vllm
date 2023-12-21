@@ -57,8 +57,9 @@ async def init_mdecode_prefill(request_dict):
         elif mdecode_status == "decode":
             print("status is chanage, mdecode start exec decode", mdecode_status)
             engine.generate_decode()
+        decode_event.clear()
         await decode_event.wait()
-#todo 
+
 async def mprefill_exec_prefill(request_dict):
     while True:
         print("mprefill exec prefill request ")
@@ -72,6 +73,7 @@ async def mprefill_exec_prefill(request_dict):
             sampling_params = SamplingParams(**request_dict)
             sampling_params_list.append(sampling_params)
         results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
+        prefill_event.clear()
         await prefill_event.wait()
 
 async def mprefill_add_prefill(request_dict):

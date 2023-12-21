@@ -114,11 +114,15 @@ class Scheduler:
         # self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
     
     def convert_reqs_status(self, request_ids):
+        prefilled = List[SequenceGroup]
         for seq_group in self.prefilled:
             if seq_group.request_id in request_ids:
                 for seq in seq_group.get_seqs():
                     seq.status = SequenceStatus.RUNNING
                 self.running.append(seq_group)
+            else:
+                prefilled.append(seq_group)
+        self.prefilled = prefilled
     
     def covert_running_to_prefilled(self):
         while self.running:
