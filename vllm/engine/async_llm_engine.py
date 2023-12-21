@@ -92,7 +92,6 @@ class AsyncLLMEngine:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-            print(len(outputs))
             await asyncio.sleep(0)
             
     def generate_prefill(

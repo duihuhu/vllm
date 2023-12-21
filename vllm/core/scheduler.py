@@ -10,10 +10,13 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceOutputs,
                            SequenceStatus)
 import requests
+import threading
 logger = init_logger(__name__)
 
 _LOGGING_INTERVAL_SEC = 5
 
+def post_request(api_url_notify_decode, headers, pload):
+    response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
 
 class PreemptionMode(enum.Enum):
     """Preemption modes.
@@ -158,7 +161,9 @@ class Scheduler:
         port_decode = 7002
         api_url_notify_decode = f"http://{host_decode}:{port_decode}/notify_mdecode"
         print("before send_mprefilled_to_mdecode ", time.time())
-        response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
+        thread = threading.Thread(target=post_request, args=(api_url_notify_decode, headers, pload))
+        thread.start()
+        # response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
         print("after send_mprefilled_to_mdecode ", time.time())
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
