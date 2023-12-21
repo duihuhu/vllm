@@ -57,7 +57,7 @@ async def init_mdecode_prefill(request_dict):
             results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mdecode_status)
         elif mdecode_status == "decode":
             print("status is chanage, mdecode start exec decode", mdecode_status)
-            engine.generate_decode()
+            await engine.generate_decode()
         decode_event.clear()
         await decode_event.wait()
 
@@ -123,9 +123,9 @@ async def init_mdecode(request: Request, background_tasks: BackgroundTasks) -> R
     """
     request_dict = await request.json()
     # background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
-    # background_tasks.add_task(init_mdecode_prefill(request_dict))
-    thread = threading.Thread(target=init_mdecode_prefill, args=(request_dict))
-    thread.start()
+    background_tasks.add_task(init_mdecode_prefill(request_dict))
+    # thread = threading.Thread(target=init_mdecode_prefill, args=(request_dict))
+    # thread.start()
     # prompts = request_dict.pop("prompt")
     # output_lens = request_dict.pop("output_lens")
     
