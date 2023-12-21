@@ -46,6 +46,7 @@ class ChunkSampler(nn.Module):
         # sync the outputs among different chunks and then
         # generate the new token
         hidden_states = hidden_states[idxs]
+        print(f"In sampler hidden_states is {hidden_states.shape}")
         # reshape for match later
         if len(hidden_states.shape) == 1:
             hidden_states = hidden_states.reshape(1, -1)

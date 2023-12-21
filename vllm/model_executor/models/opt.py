@@ -294,6 +294,7 @@ class OPTForCausalLM(nn.Module):
     ) -> Tuple[List[int], List[float]]: #torch.Tensor: #Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
         hidden_states = self.model(input_ids, positions, kv_caches, #input_metadata, 
                                    cache_events, chunkinputmetadata)
+        print(f"In opt.py hidden_states is {hidden_states.shape}")
         next_tokens_ids, logrobs = self.sampler(self.lm_head_weight, 
                                                 hidden_states,
                                                 chunkinputmetadata.idxs,
