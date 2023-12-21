@@ -140,7 +140,7 @@ class ChunkRunner:
 
     def _prepare_model_inputs(self, 
                               chunk: Chunk) -> Tuple[torch.Tensor, torch.Tensor, Dict[int, List[Tuple[int, int, int]]]]:
-        chunk_size = self.chunk_worker.chunk_size
+        chunk_size = self.chunk_size
         input_tokens = chunk.prompt_token_ids
         input_positions: List[int] = []
         for i, slice_length in enumerate(chunk.prompt_lens):
