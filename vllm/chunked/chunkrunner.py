@@ -186,7 +186,7 @@ class ChunkRunner:
                                                     kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, 
                                                     kv_block = chunk.cache_block_id)
-            output = self._run_workers_model("execute_model",
+            output = self._run_workers("execute_model",
                                         inputs = input_tokens_tensor,
                                         inputs_positions = input_positions_tensor,
                                         #kv_cache = self.chunk_worker.kv_cache,
@@ -209,7 +209,7 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
                 #st = ed
             output = output[idxs]
-            output_token_list, logprobs = self._run_workers_sampler("execute_sampler",
+            output_token_list, logprobs = self._run_workers("execute_sampler",
                                                             logits = output, 
                                                             sampling_params = sampling_params)
             end_time = time.time()
@@ -248,7 +248,7 @@ class ChunkRunner:
 
         return concatenated_result
     
-    def _run_workers_sampler(
+    def _run_workers(
         self,
         method: str,
         *args,
