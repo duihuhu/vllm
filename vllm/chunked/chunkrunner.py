@@ -153,7 +153,7 @@ class ChunkRunner:
         input_positions_tensor = torch.cuda.LongTensor(input_positions)
         kv_cache_ids: Dict[int, List[Tuple[int, int, int]]] = {} # prompt_len to (block, st, length)s
         for seq_id, kv_cache_num in chunk.seqs_to_prefixs.items():
-            sequence = self.chunk_worker.job_sequences[seq_id]
+            sequence = self.all_job_sequences[seq_id]
             if kv_cache_num == 0:
                 prompt_len = chunk.seqs_to_lens.get(seq_id)
                 kv_cache_ids.setdefault(prompt_len, [])
@@ -162,9 +162,9 @@ class ChunkRunner:
                     if chunk_id == chunk.chunk_id:
                         break
                     else:
-                        block_id = self.chunk_worker.job_chunks[chunk_id].cache_block_id
+                        block_id = self.all_job_chunks[chunk_id].cache_block_id
                         st = 0
-                        for a_seq_id, slice_token_num in self.chunk_worker.job_chunks[chunk_id].seqs_to_lens.items():
+                        for a_seq_id, slice_token_num in self.all_job_chunks[chunk_id].seqs_to_lens.items():
                             if a_seq_id == seq_id:
                                 break
                             else:
