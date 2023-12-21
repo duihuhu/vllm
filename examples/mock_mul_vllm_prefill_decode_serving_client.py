@@ -152,7 +152,7 @@ async def post_prefill_exec(prompts: List[str],
             "stream": stream,
             "mprefill_status": mprefill_status
         }
-        print("mprefill send ", api_url)
+        print("mprefill send ", api_url, " alread_send " , alread_send)
         response = requests.post(api_url, headers=headers, json=pload, stream=True)
         if alread_send < num_prompts and (alread_send + batch_size) > num_prompts:
             last_num = num_prompts - alread_send
