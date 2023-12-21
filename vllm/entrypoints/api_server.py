@@ -20,7 +20,7 @@ TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
 mdecode_status = "init_mdecode_prefill"
-mprefill_status = "mprefill_execute"
+mprefill_status_curr = "mprefill_execute"
 
 decode_event = asyncio.Event()
 
@@ -61,23 +61,28 @@ async def init_mdecode_prefill(request_dict):
         await decode_event.wait()
 
 async def mprefill_exec_prefill(request_dict):
+    global mprefill_status_curr
     while True:
-        print("mprefill exec prefill request ")
-        request_ids = request_dict.pop("request_ids")
-        prompts = request_dict.pop("prompts")
-        output_lens = request_dict.pop("output_lens")
-        stream = request_dict.pop("stream", False)
-        mprefill_status = request_dict.pop("mprefill_status")
-        sampling_params_list = []
-        for i in range(len(prompts)):
-            sampling_params = SamplingParams(**request_dict)
-            sampling_params_list.append(sampling_params)
-        results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
+        if mprefill_status_curr == "mprefill_execute":
+            print("mprefill exec prefill request ")
+            request_ids = request_dict.pop("request_ids")
+            prompts = request_dict.pop("prompts")
+            output_lens = request_dict.pop("output_lens")
+            stream = request_dict.pop("stream", False)
+            mprefill_status = request_dict.pop("mprefill_status")
+            sampling_params_list = []
+            for i in range(len(prompts)):
+                sampling_params = SamplingParams(**request_dict)
+                sampling_params_list.append(sampling_params)
+            results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
+        elif mprefill_status_curr == "mprefill_add":
+            results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
         prefill_event.clear()
         await prefill_event.wait()
 
 async def mprefill_add_prefill(request_dict):
     print("mprefill add prefill request ")
+    global mprefill_status_curr
     request_ids = request_dict.pop("request_ids")
     prompts = request_dict.pop("prompts")
     output_lens = request_dict.pop("output_lens")
@@ -88,6 +93,7 @@ async def mprefill_add_prefill(request_dict):
         sampling_params = SamplingParams(**request_dict)
         sampling_params_list.append(sampling_params)
     results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
+    mprefill_status_curr = "mprefill_add"
     prefill_event.set()
 
 @app.post("/mprefill_add")
