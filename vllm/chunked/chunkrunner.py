@@ -245,8 +245,10 @@ class ChunkRunner:
             all_outputs = ray.get(all_outputs)
         
         concatenated_result = torch.cat(all_outputs, dim=-1)
-        for item in all_outputs:
+        item0 = all_outputs[0]
+        for item in all_outputs[1:]:
             print(item.shape)
+            print(item0.eq(item))
         return concatenated_result
     
     def _run_workers_sampler(

@@ -297,6 +297,7 @@ class OPTForCausalLM(nn.Module):
         #next_tokens_ids = self.sampler(self.lm_head_weight, hidden_states,
         #                           input_metadata)
         #return (next_tokens, hidden_states)
+        print(hidden_states.shape)
         return hidden_states
 
     _column_parallel_weights = [
