@@ -30,7 +30,7 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds
 request_prompts_token_ids = {}
 request_prompts = {}
 
-mdecode_prefilled = 0
+mdecode_prefilled_num = 0
 total_requests = 16
 # batch_size = 4
 
@@ -178,8 +178,8 @@ async def mdecode_prefilled(request: Request) -> Response:
     global prefilled_event
     request_dict = await request.json()
     prefilled_num = request_dict.pop("prefilled_num")
-    mdecode_prefilled = mdecode_prefilled + prefilled_num
-    if mdecode_prefilled == total_requests:
+    mdecode_prefilled_num = mdecode_prefilled_num + prefilled_num
+    if mdecode_prefilled_num == total_requests:
         print("controller already recv prefilled signal ", mdecode_prefilled)
         prefilled_event.set()
     return
