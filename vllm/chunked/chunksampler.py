@@ -38,13 +38,14 @@ class ChunkSampler(nn.Module):
         embedding: torch.Tensor,
         hidden_states: torch.Tensor,
         #input_metadata: InputMetadata,
+        idxs: List[int],
         sampling_params: List[ChunkSamplingParams],
         embedding_bias: Optional[torch.Tensor] = None,
     ) -> Tuple[List[int], List[float]]:
         # Get the hidden states that we use for sampling.
         # sync the outputs among different chunks and then
         # generate the new token
-        #hidden_states = hidden_states[-1]
+        hidden_states = hidden_states[idxs]
         # reshape for match later
         if len(hidden_states.shape) == 1:
             hidden_states = hidden_states.reshape(1, -1)

@@ -291,14 +291,15 @@ class OPTForCausalLM(nn.Module):
         #input_metadata: InputMetadata,
         cache_events: Optional[List[torch.cuda.Event]],
         chunkinputmetadata: ChunkInputMetadata
-    ) -> torch.Tensor: #Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
+    ) -> Tuple[List[int], List[float]]: #torch.Tensor: #Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
         hidden_states = self.model(input_ids, positions, kv_caches, #input_metadata, 
                                    cache_events, chunkinputmetadata)
-        #next_tokens_ids = self.sampler(self.lm_head_weight, hidden_states,
-        #                           input_metadata)
+        next_tokens_ids, logrobs = self.sampler(self.lm_head_weight, 
+                                                hidden_states,
+                                                chunkinputmetadata.idxs,
+                                                chunkinputmetadata.sampling_params_for_sampler)
         #return (next_tokens, hidden_states)
-        print(hidden_states.shape)
-        return hidden_states
+        return (next_tokens_ids, logrobs)
 
     _column_parallel_weights = [
         "embed_tokens.weight", "fc1.weight", "fc1.bias"

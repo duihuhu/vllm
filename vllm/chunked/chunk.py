@@ -127,10 +127,14 @@ class ChunkInputMetadata:
                  prompt_lens: List[int],
                  kv_prefixs: List[int],
                  kv_prefixs_blocks: Dict[int, List[Tuple[int, int, int]]],
-                 kv_block: int) -> None:
+                 kv_block: int,
+                 idxs: List[int],
+                 sampling_params_for_sampler: List[ChunkSamplingParams]) -> None:
         self.prompt_lens = prompt_lens
         self.kv_prefixs = kv_prefixs
         self.kv_prefixs_blocks = kv_prefixs_blocks
         self.kv_block = kv_block
         self.valid_tokens_num = sum(prompt_lens)
         self.attn_bias: List[AttentionBias] = []
+        self.idxs = idxs
+        self.sampling_params_for_sampler = sampling_params_for_sampler

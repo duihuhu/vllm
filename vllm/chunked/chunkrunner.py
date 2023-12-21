@@ -182,15 +182,7 @@ class ChunkRunner:
         for chunk in self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
             chunk.chunk_status = ChunkStatus.RUNNING
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
-            chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
-                                                    kv_prefixs = chunk.kv_prefixs,
-                                                    kv_prefixs_blocks = kv_cache_ids, 
-                                                    kv_block = chunk.cache_block_id)
-            output = self._run_workers("execute_model",
-                                        inputs = input_tokens_tensor,
-                                        inputs_positions = input_positions_tensor,
-                                        #kv_cache = self.chunk_worker.kv_cache,
-                                        chunkmetadata = chunkinputmetadata)
+
             st = 0
             idxs: List[int] = []
             sampling_params: List[ChunkSamplingParams] = []
@@ -208,10 +200,24 @@ class ChunkRunner:
                 st = ed
                 #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
                 #st = ed
-            output = output[idxs]
+            
+            chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
+                                                    kv_prefixs = chunk.kv_prefixs,
+                                                    kv_prefixs_blocks = kv_cache_ids, 
+                                                    kv_block = chunk.cache_block_id,
+                                                    idxs = idxs,
+                                                    sampling_params_for_sampler = sampling_params)
+            
+            output_token_list, logprobs = self._run_workers("execute_model",
+                                        inputs = input_tokens_tensor,
+                                        inputs_positions = input_positions_tensor,
+                                        #kv_cache = self.chunk_worker.kv_cache,
+                                        chunkmetadata = chunkinputmetadata)
+            
+            '''output = output[idxs]
             output_token_list, logprobs = self._run_workers("execute_sampler",
                                                             logits = output, 
-                                                            sampling_params = sampling_params)
+                                                            sampling_params = sampling_params)'''
             end_time = time.time()
             for i, id in enumerate(do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
@@ -225,31 +231,6 @@ class ChunkRunner:
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
         #self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
-    
-    def _run_workers_model(
-        self,
-        method: str,
-        *args,
-        **kwargs
-    ) -> Any:
-        all_outputs = []
-        for worker in self.workers:
-            executor = getattr(worker, method)
-            if self.parallel_config.worker_use_ray:
-                executor = executor.remote
-            
-            output = executor(*args, **kwargs)
-            all_outputs.append(output)
-        
-        if self.parallel_config.worker_use_ray:
-            all_outputs = ray.get(all_outputs)
-        
-        concatenated_result = torch.cat(all_outputs, dim=-1)
-        item0 = all_outputs[0]
-        for item in all_outputs[1:]:
-            print(item.shape)
-            print(item0.eq(item))
-        return concatenated_result
     
     def _run_workers(
         self,
