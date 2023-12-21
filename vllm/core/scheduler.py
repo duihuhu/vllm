@@ -114,8 +114,9 @@ class Scheduler:
         # self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
     
     def convert_reqs_status(self, request_ids):
-        prefilled = List[SequenceGroup]
-        for seq_group in self.prefilled:
+        prefilled: List[SequenceGroup] = []
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
             if seq_group.request_id in request_ids:
                 for seq in seq_group.get_seqs():
                     seq.status = SequenceStatus.RUNNING
@@ -135,8 +136,8 @@ class Scheduler:
         #first to convert to prefilled
         #then to send to mdecode
         request_ids = []
-        running = List[SequenceGroup]
-        for seq_group in self.running:
+        running: List[SequenceGroup] = []
+        while self.running:
             seq_group = self.running.pop(0)
             if seq_group.request_id in out_request_ids:
                 for seq in seq_group.get_seqs():
