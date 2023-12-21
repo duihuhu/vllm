@@ -72,12 +72,14 @@ def sample_requests_summary(dataset_path: str,
     with open(dataset_path) as f:
         dataset = json.load(f)
     # Filter out the conversations with less than 2 turns.
-    
-    for data in dataset:
-        prompt_token_ids = tokenizer(data["input"]).input_ids
-        completion_token_ids = tokenizer(data["output"]).input_ids
-        print("prompt len, prompt token len ,completions len ,completions token len: ", 
-              len(data['input']), len(prompt_token_ids), len(data['output']), len(completion_token_ids))
+    with open("/workspace/four_datasets/summarization/summarization.txt", "a+") as fd:      
+        for data in dataset:
+            prompt_token_ids = tokenizer(data["input"]).input_ids
+            completion_token_ids = tokenizer(data["output"]).input_ids
+            fd.write("prompt len, prompt token len ,completions len ,completions token len: ", 
+                     str(len(data['input'])) + "," + str(len(prompt_token_ids)) + "," + str(len(data['output'])) + "," + str(len(completion_token_ids)))
+        # print("prompt len, prompt token len ,completions len ,completions token len: ", 
+        #     len(data['input']), len(prompt_token_ids), len(data['output']), len(completion_token_ids))
     return 
 
 def sample_requests_write(dataset_path: str,
@@ -92,6 +94,7 @@ def sample_requests_write(dataset_path: str,
         completion_token_ids = tokenizer(data["response"]).input_ids
         print("prompt len, prompt token len ,completions len ,completions token len: ", 
               len(data['input']), len(prompt_token_ids), len(data['response']), len(completion_token_ids))
+        
     return 
 
 def main(args: argparse.Namespace):
