@@ -92,7 +92,7 @@ class LLMEngine:
             if self.parallel_config.worker_use_ray:
                 worker_cls = ray.remote(
                     num_cpus=0,
-                    num_gpus=0.5,
+                    num_gpus=0.6,
                     resources={node_resource: 1e-3},
                 )(worker_cls).remote
 
