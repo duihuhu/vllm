@@ -40,8 +40,8 @@ def sample_requests(
     tokenized_dataset = []
     for i in range(len(dataset)):
         # if i < 1 :
-        output_len = len(completion_token_ids[285])
-        tokenized_dataset.append((prompts[285], prompt_token_ids[285], output_len))
+        output_len = len(completion_token_ids[16])
+        tokenized_dataset.append((prompts[16], prompt_token_ids[16], output_len))
         # else:
         #     output_len = len(completion_token_ids[8])
         #     tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
