@@ -181,6 +181,8 @@ class ChunkRunner:
         #print(f"Added in working pool at {now_time}")
         
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
+            print(f"Chunk {i} start at {time.time()}")
+
             chunk.chunk_status = ChunkStatus.RUNNING
 
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
@@ -191,7 +193,7 @@ class ChunkRunner:
                                                     kv_block = chunk.cache_block_id,
                                                     idxs = chunk.idxs,
                                                     sampling_params_for_sampler = chunk.sampling_params_for_sampler)
-            print(f"Chunk {i} start at {time.time()}")
+            
             output_token_list, logprobs = self._run_workers("execute_model",
                                         inputs = input_tokens_tensor,
                                         inputs_positions = input_positions_tensor,
@@ -202,14 +204,15 @@ class ChunkRunner:
             output_token_list, logprobs = self._run_workers("execute_sampler",
                                                             logits = output, 
                                                             sampling_params = sampling_params)'''
+            
             end_time = time.time()
             for i, id in enumerate(chunk.do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
                 self.all_job_sequences[id].set_end_time(end_time)
-                '''self.chunk_worker.job_sequences[id].add_first_token_id(output_token_list[i])
-                self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
-                self.chunk_worker.job_sequences[id].set_end_time(end_time)'''
+                #self.chunk_worker.job_sequences[id].add_first_token_id(output_token_list[i])
+                #self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
+                #self.chunk_worker.job_sequences[id].set_end_time(end_time)
         
         self._reduce_outputs()
   
@@ -236,7 +239,7 @@ class ChunkRunner:
 
         if self.parallel_config.worker_use_ray:
             all_outputs = ray.get(all_outputs)
-        print(f"Now is {time.time()}")
+       
         if get_all_outputs:
             return all_outputs
 
@@ -244,7 +247,7 @@ class ChunkRunner:
         output = all_outputs[0]
         for other_output in all_outputs[1:]:
             assert output == other_output
-        
+        print(f"Now is {time.time()}")
         return output
     
     def _set_job_sequences(self) -> None:
