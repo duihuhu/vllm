@@ -112,7 +112,8 @@ class Sequence:
             self.start_time = min(self.start_time, st)
             self.end_time = max(self.end_time, ed)
 
-    def set_end_time(self, ed: float) -> None:
+    def set_end_time(self, st: float, ed: float) -> None:
+        self.start_time = st
         self.end_time = ed
 
     def _update_account(self, account: int) -> None:

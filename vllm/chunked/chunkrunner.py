@@ -181,7 +181,7 @@ class ChunkRunner:
         #print(f"Added in working pool at {now_time}")
         
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
-            print(f"Chunk {i} start at {time.time()}")
+            start_time = time.time()
 
             chunk.chunk_status = ChunkStatus.RUNNING
 
@@ -209,7 +209,8 @@ class ChunkRunner:
             for i, id in enumerate(chunk.do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
-                self.all_job_sequences[id].set_end_time(end_time)
+                self.all_job_sequences[id].set_end_time(st = start_time,
+                                                        ed = end_time)
                 #self.chunk_worker.job_sequences[id].add_first_token_id(output_token_list[i])
                 #self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
                 #self.chunk_worker.job_sequences[id].set_end_time(end_time)
@@ -247,7 +248,7 @@ class ChunkRunner:
         output = all_outputs[0]
         for other_output in all_outputs[1:]:
             assert output == other_output
-        print(f"Now is {time.time()}")
+        
         return output
     
     def _set_job_sequences(self) -> None:
