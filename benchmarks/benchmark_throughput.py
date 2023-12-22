@@ -198,14 +198,21 @@ def main(args: argparse.Namespace):
                               args.use_beam_search, args.hf_max_batch_size)
     else:
         raise ValueError(f"Unknown backend: {args.backend}")
+    # total_num_tokens = sum(
+    #     prompt_len + output_len
+    #     for _, prompt_len, output_len in requests
+    # )
+    # print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
+    #       f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+    
     total_num_tokens = sum(
-        prompt_len + output_len
+        prompt_len + 1
         for _, prompt_len, output_len in requests
     )
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
           f"{total_num_tokens / elapsed_time:.2f} tokens/s")
-
-
+    
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
     parser.add_argument("--backend", type=str, choices=["vllm", "hf"],
