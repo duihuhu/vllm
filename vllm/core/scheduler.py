@@ -111,7 +111,7 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
-        self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
+        # self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
             
     def covert_running_to_prefilled(self):
         while self.running:
@@ -125,12 +125,12 @@ class Scheduler:
     def _schedule(
             self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
 
-        total_num_gpu_blocks = self.cache_config.num_gpu_blocks
-        num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-        num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
-        gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
+        # total_num_gpu_blocks = self.cache_config.num_gpu_blocks
+        # num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+        # num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
+        # gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
 
-        print(total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage)
+        # print(total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage)
 
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
