@@ -174,81 +174,44 @@ class ChunkRunner:
         return (input_tokens_tensor, input_positions_tensor, kv_cache_ids)
     
     def run_worker(self) -> None:
-        st1 = time.time()
         self._start_worker()
-        ed1 = time.time()
 
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
         
         for chunk in self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
             chunk.chunk_status = ChunkStatus.RUNNING
-            st2 = time.time()
-            input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
-            ed2 = time.time()
 
-            st3 = time.time()
-            st = 0
-            idxs: List[int] = []
-            sampling_params: List[ChunkSamplingParams] = []
-            do_sampling: List[str] = []
-            for seq_id, prompt_len in chunk.seqs_to_lens.items():
-                ed = st + prompt_len
-                self.all_job_sequences[seq_id].update_count(prompt_len)
-                #self.chunk_worker.job_sequences[seq_id].update_count(prompt_len)
-                if self.all_job_sequences[seq_id].is_full(): #if self.chunk_worker.job_sequences[seq_id].is_full():
-                    idxs.append(ed - 1)
-                    do_sampling.append(seq_id)
-                    sampling_params.append(self.all_job_sequences[seq_id].sampling_params)
-                    #sampling_params.append(self.chunk_worker.job_sequences[seq_id].sampling_params)
-                #self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
-                st = ed
-                #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
-                #st = ed
-            ed3 = time.time()
-            
-            st4 = time.time()
+            input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
+
             chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
                                                     kv_prefixs = chunk.kv_prefixs,
                                                     kv_prefixs_blocks = kv_cache_ids, 
                                                     kv_block = chunk.cache_block_id,
-                                                    idxs = idxs,
-                                                    sampling_params_for_sampler = sampling_params)
-            ed4 = time.time()
+                                                    idxs = chunk.idxs,
+                                                    sampling_params_for_sampler = chunk.sampling_params_for_sampler)
 
-            st5 = time.time()
             output_token_list, logprobs = self._run_workers("execute_model",
                                         inputs = input_tokens_tensor,
                                         inputs_positions = input_positions_tensor,
                                         #kv_cache = self.chunk_worker.kv_cache,
                                         chunkmetadata = chunkinputmetadata)
-            ed5 = time.time()
 
             '''output = output[idxs]
             output_token_list, logprobs = self._run_workers("execute_sampler",
                                                             logits = output, 
                                                             sampling_params = sampling_params)'''
             end_time = time.time()
-            st6 = time.time()
-            for i, id in enumerate(do_sampling):
+            for i, id in enumerate(chunk.do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
                 self.all_job_sequences[id].set_end_time(end_time)
                 '''self.chunk_worker.job_sequences[id].add_first_token_id(output_token_list[i])
                 self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
                 self.chunk_worker.job_sequences[id].set_end_time(end_time)'''
-            ed6 = time.time()
         
-        st7 = time.time()
         self._reduce_outputs()
-        ed7 = time.time()
-        print(f"cost 1 {ed1 - st1}")
-        print(f"cost 2 {ed2 - st2}")  
-        print(f"cost 3 {ed3 - st3}")  
-        print(f"cost 4 {ed4 - st4}")  
-        print(f"cost 5 {ed5 - st5}")  
-        print(f"cost 6 {ed6 - st6}")  
-        print(f"cost 7 {ed7 - st7}")      
+  
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
         #self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
@@ -330,6 +293,28 @@ class ChunkRunner:
             chunk.set_self_block(block = temp_block)
             self.all_job_chunks.append(chunk)
             st += self.chunk_size
+        
+        for chunk in self.all_job_chunks:
+            st = 0
+            idxs: List[int] = []
+            sampling_params: List[ChunkSamplingParams] = []
+            do_sampling: List[str] = []
+            for seq_id, prompt_len in chunk.seqs_to_lens.items():
+                ed = st + prompt_len
+                self.all_job_sequences[seq_id].update_count(prompt_len)
+                #self.chunk_worker.job_sequences[seq_id].update_count(prompt_len)
+                if self.all_job_sequences[seq_id].is_full(): #if self.chunk_worker.job_sequences[seq_id].is_full():
+                    idxs.append(ed - 1)
+                    do_sampling.append(seq_id)
+                    sampling_params.append(self.all_job_sequences[seq_id].sampling_params)
+                    #sampling_params.append(self.chunk_worker.job_sequences[seq_id].sampling_params)
+                #self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
+                st = ed
+                #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
+                #st = ed
+            chunk.set_idxs(idxs = idxs)
+            chunk.set_sampling_params_for_sampler(sampling_params_for_sampler = sampling_params)
+            chunk.set_do_sampling(do_sampling = do_sampling)
     
     def _reduce_outputs(self) -> None:
         #for _, sequence in self.job_sequences.items():

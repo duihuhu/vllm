@@ -10,6 +10,17 @@ class ChunkStatus(enum.Enum):
     RUNNING = enum.auto()
     PREFILLED = enum.auto()
 
+class ChunkSamplingParams:
+    def __init__(self,
+                 temperature: float,
+                 top_p: float,
+                 top_k: int) -> None:
+        self.temperature = temperature
+        self.top_p = top_p
+        self.top_k = top_k
+        self.use_beam_search = False
+        self.best_of = 1
+
 class Chunk:
     def __init__(self,
                  chunk_id: int,
@@ -43,17 +54,15 @@ class Chunk:
     def set_self_block(self, block: Block) -> None:
         self.cache_block = block
         self.cache_block_id = block.block_id
+    
+    def set_idxs(self, idxs: List[int]) -> None:
+        self.idxs = idxs
 
-class ChunkSamplingParams:
-    def __init__(self,
-                 temperature: float,
-                 top_p: float,
-                 top_k: int) -> None:
-        self.temperature = temperature
-        self.top_p = top_p
-        self.top_k = top_k
-        self.use_beam_search = False
-        self.best_of = 1
+    def set_sampling_params_for_sampler(self, sampling_params_for_sampler: List[ChunkSamplingParams]) -> None:
+        self.sampling_params_for_sampler = sampling_params_for_sampler
+
+    def set_do_sampling(self, do_sampling: List[str]) -> None:
+        self.do_sampling = do_sampling
 
 class Sequence:
     def __init__(self,
