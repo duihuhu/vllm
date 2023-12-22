@@ -22,7 +22,7 @@ The input of the model is flattened to a 1D tensor of tokens. The model uses
 InputMetadata to extract the original 2D shape of the input.
 """
 from typing import List, Optional, Tuple#, Dict
-import time
+#import time
 
 import torch
 from torch import nn
@@ -293,18 +293,18 @@ class OPTForCausalLM(nn.Module):
         cache_events: Optional[List[torch.cuda.Event]],
         chunkinputmetadata: ChunkInputMetadata
     ) -> Tuple[List[int], List[float]]: #torch.Tensor: #Tuple[Dict[int, SequenceOutputs], torch.Tensor]:
-        st1 = time.time()
+        #st1 = time.time()
         hidden_states = self.model(input_ids, positions, kv_caches, #input_metadata, 
                                    cache_events, chunkinputmetadata)
-        ed1 = time.time()
+        #ed1 = time.time()
         #print(f"In opt.py hidden_states is {hidden_states.shape}")
-        st2 = time.time()
+        #st2 = time.time()
         next_tokens_ids, logrobs = self.sampler(self.lm_head_weight, 
                                                 hidden_states,
                                                 chunkinputmetadata.idxs,
                                                 chunkinputmetadata.sampling_params_for_sampler)
-        ed2 = time.time()
-        print(f"compute costs {ed1 - st1}/s while sample costs {ed2 - st2}/s")
+        #ed2 = time.time()
+        #print(f"compute costs {ed1 - st1}/s while sample costs {ed2 - st2}/s")
         #return (next_tokens, hidden_states)
         return (next_tokens_ids, logrobs)
 
