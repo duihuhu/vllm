@@ -220,7 +220,7 @@ class Scheduler:
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
                     break
-                print(seq_group.request_id)
+                # print(seq_group.request_id)
                 seq_group = self.waiting.pop(0)
                 self._allocate(seq_group)
                 self.running.append(seq_group)
