@@ -147,8 +147,8 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         interation = 0
-        st = time.time()
-        print(f"Start Prefill at {st}")
+        # st = time.time()
+        # print(f"Start Prefill at {st}")
         #if split_two_phase == 1:
         #    total_num_token = 0
         #iteration_time = []
