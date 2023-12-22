@@ -51,7 +51,7 @@ class AsyncLLMEngine:
         elif self.worker_use_ray:
             engine_class = ray.remote(num_cpus=0)(LLMEngine).remote
         else:
-            engine_class = ray.remote(num_gpus=1)(LLMEngine).remote
+            engine_class = ray.remote(num_gpus=0.5)(LLMEngine).remote
         self.engine = engine_class(*args, **kwargs)
         # Request id -> request output.
         self.request_outputs: Dict[str, RequestOutput] = {}
