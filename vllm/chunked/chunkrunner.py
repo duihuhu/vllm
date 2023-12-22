@@ -179,7 +179,8 @@ class ChunkRunner:
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
         
-        for chunk in self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
+        for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
+            print(f"Chunk {i} start at {time.time()}")
             chunk.chunk_status = ChunkStatus.RUNNING
 
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
@@ -243,6 +244,7 @@ class ChunkRunner:
         output = all_outputs[0]
         for other_output in all_outputs[1:]:
             assert output == other_output
+        print(f"Now is {time.time()}")
         return output
     
     def _set_job_sequences(self) -> None:
