@@ -181,10 +181,15 @@ class LLM:
 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
+            #interation = 0
+            iteration = 0
+            while iteration < 3:
+                print(f"waiting Decode ")
+                interation = iteration + 1
+                time.sleep(1)
+                
             st2 = time.time()
             print(f"Start Decode at {st2}")
-            #interation = 0
-
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
