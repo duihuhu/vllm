@@ -147,8 +147,8 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         interation = 0
-        #st = time.time()
-        #print(f"Start Prefill at {st}")
+        st = time.time()
+        print(f"Start Prefill at {st}")
         #if split_two_phase == 1:
         #    total_num_token = 0
         #iteration_time = []
@@ -179,23 +179,23 @@ class LLM:
             #print(f"Prefill process {total_num_token} tokens")
             #print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
 
-        if split_two_phase == 1:
-            self.llm_engine.covert_prefilled_to_running()
-            #st2 = time.time()
-            #print(f"Start Decode at {st2}")
-            #interation = 0
+        # if split_two_phase == 1:
+        #     self.llm_engine.covert_prefilled_to_running()
+        #     #st2 = time.time()
+        #     #print(f"Start Decode at {st2}")
+        #     #interation = 0
 
-            while self.llm_engine.has_unfinished_requests():
-                #print("interation: ", interation)
-                step_outputs = self.llm_engine.step()
-                interation = interation  + 1
-                for output in step_outputs:
-                    if output.finished:
-                        # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
-                        outputs.append(output)
-                        # print(output)
-                        if use_tqdm:
-                            pbar.update(1)
+        #     while self.llm_engine.has_unfinished_requests():
+        #         #print("interation: ", interation)
+        #         step_outputs = self.llm_engine.step()
+        #         interation = interation  + 1
+        #         for output in step_outputs:
+        #             if output.finished:
+        #                 # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
+        #                 outputs.append(output)
+        #                 # print(output)
+        #                 if use_tqdm:
+        #                     pbar.update(1)
             #ed2 = time.time()
             #print(f"iteration {interation}")
             #print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
