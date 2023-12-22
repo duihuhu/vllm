@@ -284,9 +284,7 @@ class Worker:
             seq_group_metadata_list)
         
         # Execute the model.
-        # st = time.time()
-        st = time.perf_counter()
-
+        st = time.time()
         output = self.model(
             input_ids=input_tokens,
             positions=input_positions,
@@ -294,10 +292,8 @@ class Worker:
             input_metadata=input_metadata,
             cache_events=cache_events,
         )
-        # ed = time.time()
-        ed = time.perf_counter()
-        if self.rank == 0:
-            print(f"st at {st}, ed at {ed}, costs {ed - st}s ", self.rank)
+        ed = time.time()
+        print(f"st at {st}, ed at {ed}, costs {ed - st}s ", self.rank)
         # for seq_group_metadata in seq_group_metadata_list:
         #     print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
         return output
