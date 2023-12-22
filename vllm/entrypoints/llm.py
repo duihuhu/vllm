@@ -185,7 +185,7 @@ class LLM:
             iteration = 0
             while iteration < 3:
                 print(f"waiting Decode ")
-                interation = iteration + 1
+                iteration = iteration + 1
                 time.sleep(1)
                 
             st2 = time.time()
