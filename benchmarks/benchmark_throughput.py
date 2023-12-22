@@ -108,16 +108,16 @@ def run_vllm(
         
     
     elapsed_time = end-start 
-    total_num_tokens = sum(
-        len(output.prompt_token_ids) + 1
-        for output in outputs
-    )
-    total_num_tokens = total_num_tokens * m
-    print(f"End start is {start}, End end is {end}")
-    print("total_num_reqs: ", len(outputs))
-    print("total_num_tokens: ", total_num_tokens)
-    print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-         f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+    # total_num_tokens = sum(
+    #     len(output.prompt_token_ids) + 1
+    #     for output in outputs
+    # )
+
+    # print(f"End start is {start}, End end is {end}")
+    # print("total_num_reqs: ", len(outputs))
+    # print("total_num_tokens: ", total_num_tokens)
+    # print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
+    #      f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 
     return end - start
 
