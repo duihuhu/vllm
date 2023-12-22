@@ -83,9 +83,10 @@ def run_vllm(
         seed=seed,
         max_num_seqs=batch_size,
     )
-
+    start = time.time()
+    m  = 10
     # Add the requests to the engine.
-    for  i in range(2):
+    for  i in range(m):
         for prompt, _, output_len in requests:
             sampling_params = SamplingParams(
                 n=n,
@@ -102,17 +103,18 @@ def run_vllm(
                 sampling_params=sampling_params,
             )
 
-        start = time.time()
+
         # FIXME(woosuk): Do use internal method.
         outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
-        end = time.time()
+    end = time.time()
         
     
     elapsed_time = end-start 
     total_num_tokens = sum(
-        len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
+        len(output.prompt_token_ids) + 1
         for output in outputs
     )
+    total_num_tokens = total_num_tokens * m
     print(f"End start is {start}, End end is {end}")
     print("total_num_reqs: ", len(outputs))
     print("total_num_tokens: ", total_num_tokens)
