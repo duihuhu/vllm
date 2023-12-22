@@ -143,38 +143,44 @@ class ChunkedPagedAttention(nn.Module):
         num_valid_tokens = chunkinputmetadata.valid_tokens_num
         
         #prepare inputs
-        key_slices: List[torch.Tensor] = []
-        value_slices: List[torch.Tensor] = []
-        st = 0
-        for slice in chunkinputmetadata.prompt_lens:
-            ed = st + slice
-            key_slices.append(key[st: ed])
-            value_slices.append(value[st: ed])
-            st = ed
-        for i, items in enumerate(chunkinputmetadata.kv_prefixs_blocks.items()):
-            #prompt_len = items[0]
-            if items[1]:
-                for block_id, block_st, block_slice in reversed(items[1]):    
-                    block_ed = block_st + block_slice
-                    #if prompt_len == chunkinputmetadata.prompt_lens[i]:
-                    k_past = key_cache[block_id][block_st: block_ed]
-                    k_past = k_past.view(-1, self.num_heads, self.head_size)
-                    v_past = value_cache[block_id][block_st: block_ed]
-                    v_past = v_past.view(-1, self.num_heads, self.head_size)
-                    key_slices[i] = torch.cat((k_past, key_slices[i]), 0)
-                    value_slices[i] = torch.cat((v_past, value_slices[i]), 0)
-        for i in range(len(key_slices)):
-            if i != 0:
-                key_slices[0] = torch.cat((key_slices[0], key_slices[i]), 0)
-                value_slices[0] = torch.cat((value_slices[0], value_slices[i]), 0)
+        if chunkinputmetadata.do_cat:
+            key_slices: List[torch.Tensor] = []
+            value_slices: List[torch.Tensor] = []
+            st = 0
+            for slice in chunkinputmetadata.prompt_lens:
+                ed = st + slice
+                key_slices.append(key[st: ed])
+                value_slices.append(value[st: ed])
+                st = ed
+            for i, items in enumerate(chunkinputmetadata.kv_prefixs_blocks.items()):
+                #prompt_len = items[0]
+                if items[1]:
+                    for block_id, block_st, block_slice in reversed(items[1]):    
+                        block_ed = block_st + block_slice
+                        #if prompt_len == chunkinputmetadata.prompt_lens[i]:
+                        k_past = key_cache[block_id][block_st: block_ed]
+                        k_past = k_past.view(-1, self.num_heads, self.head_size)
+                        v_past = value_cache[block_id][block_st: block_ed]
+                        v_past = v_past.view(-1, self.num_heads, self.head_size)
+                        key_slices[i] = torch.cat((k_past, key_slices[i]), 0)
+                        value_slices[i] = torch.cat((v_past, value_slices[i]), 0)
+            key_input = torch.cat(key_slices, 0)
+            value_input = torch.cat(value_slices, 0)
+        else:
+            key_input = key
+            value_input = value
+        #for i in range(len(key_slices)):
+        #    if i != 0:
+        #        key_slices[0] = torch.cat((key_slices[0], key_slices[i]), 0)
+        #        value_slices[0] = torch.cat((value_slices[0], value_slices[i]), 0)
         
         # do attention op
         self.set_attn_bias(chunkedinputmetadata = chunkinputmetadata)
         self.multi_query_kv_attention(
                             output[: num_valid_tokens],
                             query[: num_valid_tokens],
-                            key_slices[0],
-                            value_slices[0],
+                            key_input, #key_slices[0],
+                            value_input, #value_slices[0],
                             chunkinputmetadata
                         )
 

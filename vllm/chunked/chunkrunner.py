@@ -117,7 +117,7 @@ class ChunkRunner:
     
     def _add_requests_to_self(self) -> None:
         #for prompt_token_ids in self.requests:
-        for _ in range(11):
+        for _ in range(21):
             cold_start_token_ids = [random.randint(0, 100) for _ in range(self.chunk_size)]
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
@@ -192,7 +192,8 @@ class ChunkRunner:
                                                     kv_prefixs_blocks = kv_cache_ids, 
                                                     kv_block = chunk.cache_block_id,
                                                     idxs = chunk.idxs,
-                                                    sampling_params_for_sampler = chunk.sampling_params_for_sampler)
+                                                    sampling_params_for_sampler = chunk.sampling_params_for_sampler,
+                                                    do_cat = chunk.do_cat)
             
             output_token_list, logprobs = self._run_workers("execute_model",
                                         inputs = input_tokens_tensor,

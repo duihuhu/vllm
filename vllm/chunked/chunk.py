@@ -38,6 +38,11 @@ class Chunk:
         if len(self.raw_sequence_ids) > 0 and len(self.prompt_lens) > 0 and len(self.kv_prefixs) > 0:
             self.seqs_to_lens = self._set_seqs_to_lens()
             self.seqs_to_prefixs = self._set_seqs_to_prefixs()
+            self.do_cat = False
+            for _, prefix in self.seqs_to_prefixs.items():
+                if prefix > 0:
+                    self.do_cat = True
+                    break
 
     def _set_seqs_to_lens(self) -> Dict[str, int]:
         out: Dict[str, int] = {}
@@ -139,7 +144,8 @@ class ChunkInputMetadata:
                  kv_prefixs_blocks: Dict[int, List[Tuple[int, int, int]]],
                  kv_block: int,
                  idxs: List[int],
-                 sampling_params_for_sampler: List[ChunkSamplingParams]) -> None:
+                 sampling_params_for_sampler: List[ChunkSamplingParams],
+                 do_cat: bool) -> None:
         self.prompt_lens = prompt_lens
         self.kv_prefixs = kv_prefixs
         self.kv_prefixs_blocks = kv_prefixs_blocks
@@ -148,3 +154,4 @@ class ChunkInputMetadata:
         self.attn_bias: List[AttentionBias] = []
         self.idxs = idxs
         self.sampling_params_for_sampler = sampling_params_for_sampler
+        self.do_cat = do_cat
