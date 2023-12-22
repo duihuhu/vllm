@@ -293,7 +293,8 @@ class Worker:
             cache_events=cache_events,
         )
         ed = time.time()
-        print(f"st at {st}, ed at {ed}, costs {ed - st}s ", self.rank)
+        if self.rank == 0:
+            print(f"st at {st}, ed at {ed}, costs {ed - st}s ", self.rank)
         # for seq_group_metadata in seq_group_metadata_list:
         #     print("seq_group_metadata:",seq_group_metadata, seq_group_metadata.is_prompt)
         return output
