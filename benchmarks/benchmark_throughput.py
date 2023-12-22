@@ -209,6 +209,7 @@ def main(args: argparse.Namespace):
         prompt_len + 1
         for _, prompt_len, output_len in requests
     )
+    total_num_tokens = total_num_tokens * 10
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
           f"{total_num_tokens / elapsed_time:.2f} tokens/s")
     
