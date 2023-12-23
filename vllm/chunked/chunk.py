@@ -77,7 +77,8 @@ class Sequence:
                  account: int = 0,
                  start_time: float = -1.0,
                  end_time: float = -1.0,
-                 count: int = 0) -> None:
+                 count: int = 0,
+                 add_time = 0.0) -> None:
         self.seq_id = seq_id
         self.prompt_token_ids = prompt_token_ids
         self.prompt_len = len(prompt_token_ids)
@@ -88,6 +89,7 @@ class Sequence:
         self.start_time = start_time
         self.end_time = end_time
         self.count = count
+        self.add_time = add_time
 
     def append_outputs(self, input: torch.Tensor) -> None:
         self.outputs.append(input)
