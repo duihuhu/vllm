@@ -21,7 +21,7 @@ def main(args: argparse.Namespace):
         tokenizer=args.tokenizer,
         tensor_parallel_size=args.tensor_parallel_size,
         max_num_seqs=args.batch_size,
-        max_num_batched_tokens=9216,
+        max_num_batched_tokens=4096,
     )
 
     sampling_params = SamplingParams(
@@ -39,7 +39,7 @@ def main(args: argparse.Namespace):
         temp_input = [random.randint(0, 100) for _ in range(prompt_len)]
         dummy_prompt_token_ids.append(temp_input)'''
     
-    dummy_prompt_token_ids = [[1] * args.input_len] * 1
+    dummy_prompt_token_ids = [[1] * args.input_len] * args.batch_size
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
@@ -64,7 +64,7 @@ def main(args: argparse.Namespace):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
     #print(latencies)
-    print(f'Avg throughput: {args.input_len  / np.mean(latencies):.2f} token/s')
+    print(f'Avg throughput: {args.input_len * args.batch_size  / np.mean(latencies):.2f} token/s')
 
 
 if __name__ == '__main__':
