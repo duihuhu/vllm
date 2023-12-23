@@ -24,7 +24,7 @@ def main(args: argparse.Namespace):
 
     with open("/workspace/vllm/vllm/chunked/logs/logs_2_1.txt", 'a') as file:
         for seq_id, sequence in chunkrunner.all_job_sequences.items():
-            file.write(f"Seq ID {seq_id}, prompt len {sequence.prompt_len}, add at {sequence.add_time}, start at {sequence.start_time}, end at {sequence.end_time}\n")
+            file.write(f"Seq ID {seq_id}, prompt len {sequence.prompt_len}, start at {sequence.start_time}, end at {sequence.end_time}\n")
         #print(f"Sequence ID is {seq_id}")
         #print(f"The shape of the sequence's output is {sequence.outputs[0].shape}")
         #print(f"The first token id is {sequence.first_token_id} and the first token prob is {sequence.first_token_logprob}")

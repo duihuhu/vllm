@@ -35,7 +35,7 @@ class ChunkRunner:
         self.all_total_sequences.append(Sequence(seq_id = seq_id, 
                                              prompt_token_ids = prompt_token_ids,
                                              sampling_params = sampling_params,
-                                             add_time = now_time)) 
+                                             start_time = now_time)) 
 
     def set_self_configs(self, model: str, tensor_parallel_size: int) -> None:
         model_config = ModelConfig(model = model, tokenizer = None, tokenizer_mode = 'auto', 
