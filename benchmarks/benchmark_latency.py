@@ -33,13 +33,14 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
-    '''dummy_prompt_token_ids = []
-    prompt_lens = [41, 45, 40, 45, 45, 40, 41, 43, 40, 46, 49, 44, 44, 43, 40, 45, 48, 43, 49, 49, 42, 44, 40, 42, 1000]
+    dummy_prompt_token_ids = []
+    prompt_lens = [82, 95, 89, 122, 5, 60, 53, 48, 101, 91, 95, 113, 73, 120, 89, 12, 112, 117, 112, 79, 119, 32, 120, 106, 47, 21, 122, 81, 119, 30, 111, 109, 
+                   75, 60, 49, 26, 49, 115, 85, 62, 62, 78, 97, 116, 66, 126, 76, 40, 119, 110]
     for prompt_len in prompt_lens:
-        temp_input = [random.randint(0, 100) for _ in range(prompt_len)]
-        dummy_prompt_token_ids.append(temp_input)'''
+        temp_input = [random.randint(1, 9) for _ in range(prompt_len)]
+        dummy_prompt_token_ids.append(temp_input)
     
-    dummy_prompt_token_ids = [[1] * args.input_len] * args.batch_size
+    #dummy_prompt_token_ids = [[1] * args.input_len] * args.batch_size
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
@@ -64,7 +65,7 @@ def main(args: argparse.Namespace):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
     #print(latencies)
-    print(f'Avg throughput: {args.input_len * args.batch_size  / np.mean(latencies):.2f} token/s')
+    #print(f'Avg throughput: {args.input_len * args.batch_size  / np.mean(latencies):.2f} token/s')
 
 
 if __name__ == '__main__':
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=4)
     parser.add_argument('--input-len', type=int, default=32)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--batch-size', type=int, default=2)
+    parser.add_argument('--batch-size', type=int, default=55)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')
