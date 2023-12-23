@@ -34,8 +34,9 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
     dummy_prompt_token_ids = []
-    prompt_lens = [82, 95, 89, 122, 5, 60, 53, 48, 101, 91, 95, 113, 73, 120, 89, 12, 112, 117, 112, 79, 119, 32, 120, 106, 47, 21, 122, 81, 119, 30, 111, 109, 
-                   75, 60, 49, 26, 49, 115, 85, 62, 62, 78, 97, 116, 66, 126, 76, 40, 119, 110]
+    prompt_lens = [23, 50, 49, 20, 12, 59, 41, 40, 57, 27, 14, 61, 47, 63, 51, 40, 60, 16, 61, 47, 48, 49, 51, 50, 
+                   18, 19, 32, 55, 33, 20, 18, 9, 33, 44, 28, 45, 55, 54, 53, 17, 26, 48, 22, 23, 39, 26, 39, 512, 
+                   768, 1024]
     for prompt_len in prompt_lens:
         temp_input = [random.randint(1, 9) for _ in range(prompt_len)]
         dummy_prompt_token_ids.append(temp_input)
@@ -72,7 +73,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single batch of '
                     'requests till completion.')
-    parser.add_argument('--model', type=str, default='facebook/opt-125m')
+    parser.add_argument('--model', type=str, default='/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/')
     parser.add_argument('--tokenizer', type=str, default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=4)
     parser.add_argument('--input-len', type=int, default=32)
