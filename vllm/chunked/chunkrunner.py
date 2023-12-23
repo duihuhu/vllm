@@ -117,20 +117,18 @@ class ChunkRunner:
     
     def _add_requests_to_self(self) -> None:
         #for prompt_token_ids in self.requests:
-        for _ in range(21):
-            cold_start_token_ids = [random.randint(0, 100) for _ in range(self.chunk_size)]
+        for _ in range(3):
+            cold_start_token_ids = [random.randint(1, 9) for _ in range(self.chunk_size)]
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                         sampling_params = cold_start_sampling_params)
-        '''prompt_lens = [41, 45, 40, 45, 45, 40, 256,
-                       41, 43, 40, 46, 49, 44, 249, 
-                       43, 40, 45, 48, 43, 49, 244, 
-                       42, 44, 40, 42, 344]
+        prompt_lens = [82, 95, 89, 122, 5, 60, 53, 48, 101, 91, 95, 113, 73, 120, 89, 12, 112, 117, 112, 79, 119, 32, 120, 106, 47, 21, 122, 81, 119, 30, 111, 
+                       109, 75, 60, 49, 26, 49, 115, 85, 62, 62, 78, 97, 116, 66, 126, 76, 40, 119, 110]
         for prompt_len in prompt_lens:
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
-            dummy_prompt_token_ids = [random.randint(0, 100) for _ in range(prompt_len)]
-            self._add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)'''
+            dummy_prompt_token_ids = [random.randint(1, 9) for _ in range(prompt_len)]
+            self._add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
     def _start_worker(self) -> None:
         self._add_requests_to_self()
