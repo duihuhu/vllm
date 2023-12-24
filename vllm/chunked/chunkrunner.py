@@ -173,17 +173,18 @@ class ChunkRunner:
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                         sampling_params = cold_start_sampling_params)
-        prompt_lens = [50, 22, 26, 47, 59, 20, 19, 61, 208, 20, 27, 39, 23, 63, 57, 55, 228, 60, 14, 16, 23, 40, 32, 
-                       18, 9, 51, 249, 12, 45, 49, 33, 48, 50, 54, 83, 138, 51, 61, 53, 44, 28, 47, 228, 40, 41, 26, 
-                       49, 55, 17, 48, 146, 90, 33, 39, 18, 422, 512]
-        fake_lens = [50, 61, 9, 1024, 20, 27, 33, 51, 55, 20, 47, 55, 23, 39, 54, 63, 60, 53, 51, 33, 50, 512, 18, 
-                     17, 23, 16, 19, 49, 26, 18, 40, 14, 44, 57, 32, 47, 61, 28, 22, 39, 48, 59, 768, 40, 45, 49, 
-                     48, 12, 41, 26]
+        prompt_lens = [23, 50, 49, 20, 12, 59, 41, 40, 57, 27, 14, 61, 47, 63, 51, 40, 60, 16, 61, 47, 48, 49, 51, 
+                       50, 18, 19, 32, 55, 33, 20, 18, 9, 33, 44, 28, 45, 55, 54, 53, 17, 26, 48, 22, 23, 39, 26, 
+                       39, 512, 512, 512]
+        prompt_lens.sort()
+        #fake_lens = [50, 61, 9, 1024, 20, 27, 33, 51, 55, 20, 47, 55, 23, 39, 54, 63, 60, 53, 51, 33, 50, 512, 18, 
+        #             17, 23, 16, 19, 49, 26, 18, 40, 14, 44, 57, 32, 47, 61, 28, 22, 39, 48, 59, 768, 40, 45, 49, 
+        #             48, 12, 41, 26]
         #random.seed(2023)
         #random.shuffle(prompt_lens)
         #print(prompt_lens)
-        time_slot = self._test_time_for_mixed(data = fake_lens)
-        print(f"sort costs {time_slot} seconds")
+        #time_slot = self._test_time_for_mixed(data = fake_lens)
+        #print(f"sort costs {time_slot} seconds")
         for prompt_len in prompt_lens:
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
