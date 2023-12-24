@@ -23,9 +23,11 @@ app = FastAPI()
 mdecode_status = "init_mdecode_prefill"
 mprefill_status_curr = "mprefill_execute"
 
-decode_event = asyncio.Event()
+# decode_event = asyncio.Event()
 
 prefill_event = asyncio.Event()
+
+decode_event = threading.Event()
 
 @app.post("/notify_mdecode")
 async def notify_mdecode(request: Request) -> Response:
@@ -40,27 +42,31 @@ async def notify_mdecode(request: Request) -> Response:
     ret = {"text": 'test'}
     return JSONResponse(ret)
 
-async def init_mdecode_prefill(request_dict):
+def init_mdecode_prefill(request_dict):
     global mdecode_status
-    global decode_event 
     while True:
         # print("init_mdecode_prefill ", mdecode_status)
         if mdecode_status == "init_mdecode_prefill":
-            request_ids = request_dict.pop("request_ids")
-            prompts = request_dict.pop("prompts")
-            output_lens = request_dict.pop("output_lens")
-            stream = request_dict.pop("stream", False)
-            sampling_params_list = []
-            for i in range(len(prompts)):
-                sampling_params = SamplingParams(**request_dict)
-                sampling_params_list.append(sampling_params)
-            results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mdecode_status)
+            decode_event.wait()
+            # request_ids = request_dict.pop("request_ids")
+            # prompts = request_dict.pop("prompts")
+            # output_lens = request_dict.pop("output_lens")
+            # stream = request_dict.pop("stream", False)
+            # sampling_params_list = []
+            # for i in range(len(prompts)):
+            #     sampling_params = SamplingParams(**request_dict)
+            #     sampling_params_list.append(sampling_params)
+            results_generator = engine.generate_mdecode_prefill()
         elif mdecode_status == "decode":
             print("status is chanage, mdecode start exec decode", mdecode_status)
-            await engine.generate_decode()
+            engine.generate_decode()
         decode_event.clear()
-        await decode_event.wait()
-
+        decode_event.wait()
+        
+@app.on_event("startup")
+def startup_decode_event():
+    threading.Thread(target=init_mdecode_prefill, daemon=True).start()
+        
 async def mprefill_exec_prefill(request_dict):
     global mprefill_status_curr
     while True:
@@ -122,7 +128,20 @@ async def init_mdecode(request: Request, background_tasks: BackgroundTasks) -> R
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = await request.json()
-    background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
+    
+    request_ids = request_dict.pop("request_ids")
+    prompts = request_dict.pop("prompts")
+    output_lens = request_dict.pop("output_lens")
+    stream = request_dict.pop("stream", False)
+    sampling_params_list = []
+    for i in range(len(prompts)):
+        sampling_params = SamplingParams(**request_dict)
+        sampling_params_list.append(sampling_params)
+    results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status="")
+    decode_event.set()
+    
+    # background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
+    
     # background_tasks.add_task(init_mdecode_prefill(request_dict))
     # thread = threading.Thread(target=init_mdecode_prefill, args=(request_dict))
     # thread.start()

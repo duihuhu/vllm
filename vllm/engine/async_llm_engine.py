@@ -83,8 +83,16 @@ class AsyncLLMEngine:
 
     def convert_reqs_status(self,request_ids: List[str]):
         self.engine.convert_reqs_status(request_ids)
-
-    async def generate_decode(self):
+        
+    def generate_mdecode_prefill(self):
+        while self.engine.has_unfinished_requests():
+            print("mdecode prefill iteration")
+            step_outputs = self.engine.step()
+            prefilled_num = self.engine.covert_running_to_prefilled()
+            self.engine.send_mdecode_prefilled_controller(prefilled_num)
+        print("already complish prefill request ")
+        
+    def generate_decode(self):
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_requests():
             # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
@@ -92,7 +100,6 @@ class AsyncLLMEngine:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-            await asyncio.sleep(0)
             
     def generate_prefill(
         self,
@@ -146,15 +153,15 @@ class AsyncLLMEngine:
                                         sampling_param,
                                         prompt_token_ids=prompt_token_ids,
                                         arrival_time=arrival_time)
-        if status == 'init_mdecode_prefill':
-            # outputs: List[RequestOutput] = []
-            while self.engine.has_unfinished_requests():
-                print("mdecode prefill iteration")
-                step_outputs = self.engine.step()
-                prefilled_num = self.engine.covert_running_to_prefilled()
-                self.engine.send_mdecode_prefilled_controller(prefilled_num)
-            print("already complish prefill request ")
-        elif status == 'mprefill_execute':
+        # if status == 'init_mdecode_prefill':
+        #     # outputs: List[RequestOutput] = []
+        #     while self.engine.has_unfinished_requests():
+        #         # print("mdecode prefill iteration")
+        #         step_outputs = self.engine.step()
+        #         prefilled_num = self.engine.covert_running_to_prefilled()
+        #         self.engine.send_mdecode_prefilled_controller(prefilled_num)
+            # print("already complish prefill request ")
+        if status == 'mprefill_execute':
             while self.engine.has_unfinished_requests():
                 print("mprefill prefill iteration")
                 step_outputs = self.engine.step()
