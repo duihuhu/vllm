@@ -126,7 +126,7 @@ class ChunkRunner:
                         50, 18, 19, 32, 55, 33, 20, 18, 9, 33, 44, 28, 45, 55, 54, 53, 17, 26, 48, 22, 23, 39, 26, 
                         39, 512, 768, 1024]
         sst = time.time()
-        prompt_lens.sort()
+        prompt_lens.sort(reverse=True)
         est = time.time()
         #random.seed(2023)
         #random.shuffle(prompt_lens)
