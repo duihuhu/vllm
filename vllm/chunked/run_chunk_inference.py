@@ -22,7 +22,7 @@ def main(args: argparse.Namespace):
 
     chunkrunner.run_worker()
 
-    with open("/workspace/vllm/vllm/chunked/logs/logs_4_3_1.txt", 'a') as file:
+    with open("/workspace/vllm/vllm/chunked/logs/logs_4_4_1.txt", 'a') as file:
         for seq_id, sequence in chunkrunner.all_job_sequences.items():
             file.write(f"Seq ID {seq_id}, prompt len {sequence.prompt_len}, start at {sequence.start_time}, end at {sequence.end_time}\n")
         #print(f"Sequence ID is {seq_id}")

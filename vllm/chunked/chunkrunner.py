@@ -115,6 +115,57 @@ class ChunkRunner:
                 break
         self.requests = filtered_dataset
     
+    def _test_time_for_mixed(self, data: List[int]) -> float:
+        st = time.time()
+        data.sort()
+        ans = 0
+        ans2 = []
+        slit = []
+        temp = []
+        data2 = []
+        data3 = []
+        for i,x in enumerate(data):
+            if x >= 512:
+                data2.append(x)
+            else:
+                data3.append(x)
+        for i,x in enumerate(data3):
+            ans += x
+            temp.append(x)
+            if ans >= 256 or i == (len(data3)-1):
+                ans = 0
+                slit.append(temp)
+                ans2.append(sum(temp))
+                temp = []
+        #print(slit)
+        last = {}
+        for x2 in data2:
+            t = x2
+            for i, sums in enumerate(ans2):
+                if sums >= 512:
+                    continue
+                n = 512 - sums
+                if x2 >= n:
+                    slit[i].append(n)
+                    x2 -= n
+                    ans2[i] += n
+                else:
+                    slit[i].append(x2)
+                    ans2[i] += x2
+                    x2 = 0
+                    print(f"{t} in {i}")
+                    break
+            if x2 != 0:
+                last[t] = [x2]
+        for l,d in last.items():
+            slit.append(d)
+            print(f"{l} in {len(slit)-1}")
+        data_f = []
+        for s in slit:
+            data_f.extend(s)
+        ed = time.time()
+        return ed - st
+
     def _add_requests_to_self(self) -> None:
         #for prompt_token_ids in self.requests:
         for _ in range(3):
@@ -122,16 +173,17 @@ class ChunkRunner:
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                         sampling_params = cold_start_sampling_params)
-        prompt_lens = [23, 50, 49, 20, 12, 59, 41, 40, 57, 27, 14, 61, 47, 63, 51, 40, 60, 16, 61, 47, 48, 49, 51, 
-                        50, 18, 19, 32, 55, 33, 20, 18, 9, 33, 44, 28, 45, 55, 54, 53, 17, 26, 48, 22, 23, 39, 26, 
-                        39, 512, 768, 1024]
-        sst = time.time()
-        prompt_lens.sort(reverse=True)
-        est = time.time()
+        prompt_lens = [9, 12, 14, 16, 17, 18, 18, 19, 20, 20, 22, 23, 23, 26, 255, 26, 27, 28, 32, 33, 33, 39, 39, 
+                       255, 40, 40, 41, 44, 45, 47, 2, 253, 47, 48, 48, 49, 49, 50, 221, 50, 51, 51, 53, 54, 253, 
+                       55, 55, 57, 59, 60, 41, 185, 61, 61, 63, 327, 512]
+        fake_lens = [50, 61, 9, 1024, 20, 27, 33, 51, 55, 20, 47, 55, 23, 39, 54, 63, 60, 53, 51, 33, 50, 512, 18, 
+                     17, 23, 16, 19, 49, 26, 18, 40, 14, 44, 57, 32, 47, 61, 28, 22, 39, 48, 59, 768, 40, 45, 49, 
+                     48, 12, 41, 26]
         #random.seed(2023)
         #random.shuffle(prompt_lens)
-        print(prompt_lens)
-        print(f"sort costs {est - sst} seconds")
+        #print(prompt_lens)
+        time_slot = self._test_time_for_mixed(data = fake_lens)
+        print(f"sort costs {time_slot} seconds")
         for prompt_len in prompt_lens:
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
