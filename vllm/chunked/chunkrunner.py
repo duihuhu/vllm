@@ -117,7 +117,7 @@ class ChunkRunner:
     
     def _test_time_for_mixed(self, data: List[int]) -> float:
         st = time.time()
-        data.sort()
+        #data.sort()
         ans = 0
         ans2 = []
         slit = []
@@ -173,9 +173,9 @@ class ChunkRunner:
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                         sampling_params = cold_start_sampling_params)
-        prompt_lens = [9, 12, 14, 16, 17, 18, 18, 19, 20, 20, 22, 23, 23, 26, 255, 26, 27, 28, 32, 33, 33, 39, 39, 
-                       255, 40, 40, 41, 44, 45, 47, 2, 253, 47, 48, 48, 49, 49, 50, 221, 50, 51, 51, 53, 54, 253, 
-                       55, 55, 57, 59, 60, 41, 185, 61, 61, 63, 327, 512]
+        prompt_lens = [50, 22, 26, 47, 59, 20, 19, 61, 208, 20, 27, 39, 23, 63, 57, 55, 228, 60, 14, 16, 23, 40, 32, 
+                       18, 9, 51, 249, 12, 45, 49, 33, 48, 50, 54, 83, 138, 51, 61, 53, 44, 28, 47, 228, 40, 41, 26, 
+                       49, 55, 17, 48, 146, 90, 33, 39, 18, 422, 512]
         fake_lens = [50, 61, 9, 1024, 20, 27, 33, 51, 55, 20, 47, 55, 23, 39, 54, 63, 60, 53, 51, 33, 50, 512, 18, 
                      17, 23, 16, 19, 49, 26, 18, 40, 14, 44, 57, 32, 47, 61, 28, 22, 39, 48, 59, 768, 40, 45, 49, 
                      48, 12, 41, 26]
