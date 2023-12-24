@@ -125,9 +125,13 @@ class ChunkRunner:
         prompt_lens = [23, 50, 49, 20, 12, 59, 41, 40, 57, 27, 14, 61, 47, 63, 51, 40, 60, 16, 61, 47, 48, 49, 51, 
                         50, 18, 19, 32, 55, 33, 20, 18, 9, 33, 44, 28, 45, 55, 54, 53, 17, 26, 48, 22, 23, 39, 26, 
                         39, 512, 768, 1024]
-        random.seed(2023)
-        random.shuffle(prompt_lens)
+        sst = time.time()
+        prompt_lens.sort()
+        est = time.time()
+        #random.seed(2023)
+        #random.shuffle(prompt_lens)
         print(prompt_lens)
+        print(f"sort costs {est - sst} seconds")
         for prompt_len in prompt_lens:
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
