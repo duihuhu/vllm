@@ -38,13 +38,13 @@ async def generate(request: Request) -> Response:
     request_id = random_uuid()
     prompt_token_ids = [0] * 512
 
-    st = time.time()
+    #st = time.time()
     results_generator = engine.generate(prompt=None,
                                         sampling_params=sampling_params, 
                                         request_id=request_id, 
                                         prompt_token_ids=prompt_token_ids)
-    ed = time.time()
-    print(f"start at {st}, end at {ed}, costs {ed-st}")
+    #ed = time.time()
+    #print(f"start at {st}")
     
     # Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:

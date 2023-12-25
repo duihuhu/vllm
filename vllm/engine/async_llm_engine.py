@@ -62,6 +62,7 @@ class AsyncLLMEngine:
 
     async def engine_step(self, kicking_request_id: Optional[str] = None):
         """Kick the engine to process the waiting requests."""
+        print(f"start at {time.time()}")
         self.is_engine_running = True
         self.kicking_request_id = kicking_request_id
         if self.engine_use_ray:
@@ -167,6 +168,7 @@ class AsyncLLMEngine:
 
             # Once finished, release the resources of the sequence group.
             if request_output.finished:
+                print(f"end at {time.time()}")
                 if self.log_requests:
                     logger.info(f"Finished request {request_id}.")
 
