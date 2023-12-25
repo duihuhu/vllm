@@ -147,7 +147,7 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         interation = 0
-        st = time.time()
+        #st = time.time()
         #print(f"Start Prefill at {st}")
         #if split_two_phase == 1:
         #    total_num_token = 0
@@ -156,6 +156,7 @@ class LLM:
             #print("interation: ", interation)
             #iteration_start = time.time()
             step_outputs = self.llm_engine.step()
+            ted = time.time()
             #iteartion_end = time.time()
             #iteration_time.append(iteartion_end-iteration_start)
             interation = interation  + 1
@@ -163,6 +164,8 @@ class LLM:
                 if output.finished:
                     # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
+                    with open("/workspace/vllm/benchmarks/logs_2",'a') as file:
+                        file.write(f"req {output.request_id}, prompt len {len(output.prompt_token_ids)}, end at {ted}\n")
                     # print(output)
                     if use_tqdm:
                         pbar.update(1)

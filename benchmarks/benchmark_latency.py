@@ -33,20 +33,20 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
-    #dummy_prompt_token_ids = []
-    #prompt_lens = [9, 12, 14, 16, 17, 18, 18, 19, 20, 20, 22, 23, 23, 26, 26, 27, 28, 32, 33, 33, 39, 39, 40, 40, 
-    #               41, 44, 45, 47, 47, 48, 48, 49, 49, 50, 50, 51, 51, 53, 54, 55, 55, 57, 59, 60, 61, 61, 63, 
-    #               128, 128, 128]
-    #for prompt_len in prompt_lens:
-    #    temp_input = [random.randint(1, 9) for _ in range(prompt_len)]
-    #    dummy_prompt_token_ids.append(temp_input)
+    dummy_prompt_token_ids = []
+    prompt_lens = [82, 95, 89, 122, 5, 60, 53, 48, 101, 91, 95, 113, 73, 120, 89, 12, 112, 117, 112, 79, 119, 32, 
+                   120, 106, 47, 21, 122, 81, 119, 30, 111, 109, 75, 60, 49, 26, 49, 115, 85, 62, 62, 78, 97, 116, 
+                   66, 126, 76, 40, 119, 110]
+    for prompt_len in prompt_lens:
+        temp_input = [random.randint(1, 9) for _ in range(prompt_len)]
+        dummy_prompt_token_ids.append(temp_input)
     
-    dummy_prompt_token_ids = [[1] * args.input_len] * 1
+    #dummy_prompt_token_ids = [[1] * args.input_len] * 1
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
-
+        print(f"start at {start_time}")
         llm.generate(prompt_token_ids=dummy_prompt_token_ids,
                      sampling_params=sampling_params,
                      use_tqdm=False)
@@ -62,7 +62,7 @@ def main(args: argparse.Namespace):
 
     # Benchmark.
     latencies = []
-    for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
+    for i in tqdm(range(args.num_iters), desc="Profiling iterations"):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
     #print(latencies)
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=4)
     parser.add_argument('--input-len', type=int, default=1)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--batch-size', type=int, default=2)
+    parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')
