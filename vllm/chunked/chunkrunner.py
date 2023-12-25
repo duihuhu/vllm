@@ -168,15 +168,19 @@ class ChunkRunner:
 
     def _add_requests_to_self(self) -> None:
         #for prompt_token_ids in self.requests:
+        random.seed(42)
         for _ in range(3):
             cold_start_token_ids = [random.randint(1, 9) for _ in range(self.chunk_size)]
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                         sampling_params = cold_start_sampling_params)
-        prompt_lens = [23, 50, 49, 20, 12, 59, 41, 40, 57, 27, 14, 61, 47, 63, 51, 40, 60, 16, 61, 47, 48, 49, 51, 
-                       50, 18, 19, 32, 55, 33, 20, 18, 9, 33, 44, 28, 45, 55, 54, 53, 17, 26, 48, 22, 23, 39, 26, 
-                       39, 512, 512, 512]
-        prompt_lens.sort()
+        prompt_lens = [91, 88, 75, 966, 3, 2047, 42, 103, 15, 717, 1589, 385, 49, 306, 228, 315, 21, 104, 30, 182, 
+                       103, 53, 390, 1129, 387, 22, 871, 546, 347, 273, 117, 276, 422, 269, 243, 24, 88, 93, 107, 
+                       248, 2047, 1845, 75, 108, 878, 939, 72, 108, 264, 339, 775, 328, 1021, 62, 47, 592, 2, 513, 
+                       76, 61, 1020, 178, 52, 60, 2, 89, 955, 59, 931, 21, 92, 125, 497, 64, 235, 505, 189, 1795, 
+                       1500, 345, 942, 58, 38, 87, 15, 344, 100, 899, 83, 22, 191, 130, 1413, 561, 62, 80, 33, 122, 
+                       308, 60]
+        #prompt_lens.sort()
         #fake_lens = [50, 61, 9, 1024, 20, 27, 33, 51, 55, 20, 47, 55, 23, 39, 54, 63, 60, 53, 51, 33, 50, 512, 18, 
         #             17, 23, 16, 19, 49, 26, 18, 40, 14, 44, 57, 32, 47, 61, 28, 22, 39, 48, 59, 768, 40, 45, 49, 
         #             48, 12, 41, 26]

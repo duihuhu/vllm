@@ -22,7 +22,7 @@ def main(args: argparse.Namespace):
 
     chunkrunner.run_worker()
 
-    with open("/workspace/vllm/vllm/chunked/logs/logs_5_1_1.txt", 'a') as file:
+    with open("/workspace/vllm/vllm/chunked/logs/logs_2_1.txt", 'a') as file:
         for seq_id, sequence in chunkrunner.all_job_sequences.items():
             file.write(f"Seq ID {seq_id}, prompt len {sequence.prompt_len}, start at {sequence.start_time}, end at {sequence.end_time}\n")
         #print(f"Sequence ID is {seq_id}")
@@ -37,12 +37,12 @@ if __name__ == "__main__":
     #parser.add_argument("--dataset", type=str, required=True,
     #                    help="Path to the dataset.")
     parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
-    parser.add_argument("--tp", type=int, default=4)
+    parser.add_argument("--tp", type=int, default=2)
     parser.add_argument("--tokenizer", type=str, default=None)
     #parser.add_argument("--num-prompts", type=int, default=10,
     #                    help="Number of prompts to process.")
     parser.add_argument("--chunk-size", type=int, default=512)
-    parser.add_argument("--chunk-num", type=int, default=13)
+    parser.add_argument("--chunk-num", type=int, default=17)
     args = parser.parse_args()
 
     if args.tokenizer is None:
