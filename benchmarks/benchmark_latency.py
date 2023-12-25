@@ -33,10 +33,13 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
+    random.seed(42)
     dummy_prompt_token_ids = []
-    prompt_lens = [82, 95, 89, 122, 5, 60, 53, 48, 101, 91, 95, 113, 73, 120, 89, 12, 112, 117, 112, 79, 119, 32, 
-                   120, 106, 47, 21, 122, 81, 119, 30, 111, 109, 75, 60, 49, 26, 49, 115, 85, 62, 62, 78, 97, 116, 
-                   66, 126, 76, 40, 119, 110]
+    prompt_lens = [63, 18, 90, 44, 34, 74, 62, 100, 14, 95, 48, 15, 72, 78, 87, 124, 121, 62, 40, 85, 80, 109, 82, 
+                   111, 53, 24, 26, 89, 124, 60, 124, 109, 41, 29, 15, 45, 65, 89, 71, 9, 88, 1, 108, 8, 88, 63, 11, 
+                   115, 81, 8, 35, 35, 33, 123, 5, 106, 103, 122, 41, 28, 7, 73, 72, 12, 34, 33, 48, 119, 23, 62, 88, 
+                   37, 99, 44, 104, 86, 91, 35, 65, 99, 101, 47, 78, 3, 1, 5, 90, 119, 127, 14, 103, 27, 9, 79, 15, 90, 
+                   42, 124, 77, 51]
     for prompt_len in prompt_lens:
         temp_input = [random.randint(1, 9) for _ in range(prompt_len)]
         dummy_prompt_token_ids.append(temp_input)
@@ -75,10 +78,10 @@ if __name__ == '__main__':
                     'requests till completion.')
     parser.add_argument('--model', type=str, default='/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/')
     parser.add_argument('--tokenizer', type=str, default=None)
-    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=4)
+    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=1)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--batch-size', type=int, default=8)
+    parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')
