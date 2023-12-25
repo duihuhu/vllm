@@ -1,6 +1,7 @@
 import argparse
 import json
 from typing import AsyncGenerator
+import time
 
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
@@ -26,12 +27,25 @@ async def generate(request: Request) -> Response:
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = await request.json()
-    prompt = request_dict.pop("prompt")
+    #prompt = request_dict.pop("prompt")
     stream = request_dict.pop("stream", False)
-    sampling_params = SamplingParams(**request_dict)
+    sampling_params = SamplingParams(   n=1,
+                                        temperature=1.0,
+                                        top_p=1.0,
+                                        use_beam_search=False,
+                                        ignore_eos=True,
+                                        max_tokens=1)
     request_id = random_uuid()
-    results_generator = engine.generate(prompt, sampling_params, request_id)
+    prompt_token_ids = [0] * 512
 
+    st = time.time()
+    results_generator = engine.generate(prompt=None,
+                                        sampling_params=sampling_params, 
+                                        request_id=request_id, 
+                                        prompt_token_ids=prompt_token_ids)
+    ed = time.time()
+    print(f"start at {st}, end at {ed}, costs {ed-st}")
+    
     # Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
