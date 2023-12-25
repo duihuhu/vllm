@@ -164,7 +164,7 @@ class LLM:
                 if output.finished:
                     # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
-                    with open("/workspace/vllm/benchmarks/logs/logs_2_1",'a') as file:
+                    with open("/workspace/vllm/benchmarks/logs/logs_2_1.txt",'a') as file:
                         file.write(f"req {output.request_id}, prompt len {len(output.prompt_token_ids)}, end at {ted}\n")
                     # print(output)
                     if use_tqdm:
