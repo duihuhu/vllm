@@ -180,7 +180,9 @@ class ChunkRunner:
                        76, 61, 1020, 178, 52, 60, 2, 89, 955, 59, 931, 21, 92, 125, 497, 64, 235, 505, 189, 1795, 
                        1500, 345, 942, 58, 38, 87, 15, 344, 100, 899, 83, 22, 191, 130, 1413, 561, 62, 80, 33, 122, 
                        308, 60]
-        #prompt_lens.sort()
+        sts = time.time()
+        prompt_lens.sort()
+        eds = time.time()
         #fake_lens = [50, 61, 9, 1024, 20, 27, 33, 51, 55, 20, 47, 55, 23, 39, 54, 63, 60, 53, 51, 33, 50, 512, 18, 
         #             17, 23, 16, 19, 49, 26, 18, 40, 14, 44, 57, 32, 47, 61, 28, 22, 39, 48, 59, 768, 40, 45, 49, 
         #             48, 12, 41, 26]
@@ -188,7 +190,7 @@ class ChunkRunner:
         #random.shuffle(prompt_lens)
         #print(prompt_lens)
         #time_slot = self._test_time_for_mixed(data = fake_lens)
-        #print(f"sort costs {time_slot} seconds")
+        print(f"sort costs {eds - sts} seconds")
         for prompt_len in prompt_lens:
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
