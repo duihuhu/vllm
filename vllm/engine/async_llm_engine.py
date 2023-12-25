@@ -73,6 +73,7 @@ class AsyncLLMEngine:
             # requests into the queue.
             await asyncio.sleep(0)
             request_outputs = self.engine.step()
+        print(f"end at {time.time()}")
         self.is_engine_running = False
         self.kicking_request_id = None
 
@@ -168,7 +169,7 @@ class AsyncLLMEngine:
 
             # Once finished, release the resources of the sequence group.
             if request_output.finished:
-                print(f"end at {time.time()}")
+                #print(f"end at {time.time()}")
                 if self.log_requests:
                     logger.info(f"Finished request {request_id}.")
 
