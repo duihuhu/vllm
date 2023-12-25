@@ -249,11 +249,11 @@ class LLMEngine:
             # Nothing to do.
             return []
         
-        tst = time.time()
-        with open('/workspace/vllm/benchmarks/logs/logs_3_2.txt', 'a') as file:
-             for seq_group_metadata in seq_group_metadata_list:
+        #tst = time.time()
+        #with open('/workspace/vllm/benchmarks/logs/logs_3_2.txt', 'a') as file:
+        #     for seq_group_metadata in seq_group_metadata_list:
         #         s = "req " + seq_group_metadata.request_id + " is prompt " + str(seq_group_metadata.is_prompt) + "\n"
-                 file.write(f"req {seq_group_metadata.request_id}, start at {tst}\n")
+        #         file.write(f"req {seq_group_metadata.request_id}, start at {tst}\n")
         #     file.write("iter end\n")
         
         # Execute the model.
