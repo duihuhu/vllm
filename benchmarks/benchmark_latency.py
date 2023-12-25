@@ -85,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')
-    parser.add_argument('--num-iters', type=int, default=3,
+    parser.add_argument('--num-iters', type=int, default=10,
                         help='Number of iterations to run.')
     args = parser.parse_args()
     main(args)
