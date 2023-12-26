@@ -93,7 +93,7 @@ class AsyncLLMEngine:
         
     def generate_decode(self):
         outputs: List[RequestOutput] = []
-        while self.engine.has_unfinished_requests():
+        while self.engine.has_unfinished_decode_requests():
             # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
             step_outputs = self.engine.step()
             for output in step_outputs:
