@@ -16,7 +16,7 @@ import time
 import multiprocessing
 # manager = multiprocessing.Manager()
 
-def start_server(port, parser):
+def start_server(port, parser, shared_request_queue):
     TIMEOUT_KEEP_ALIVE = 5  # seconds.
     TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
     app = FastAPI()
@@ -32,8 +32,8 @@ def start_server(port, parser):
 
     @app.post("/notify_mdecode")
     async def notify_mdecode(request: Request) -> Response:
-        global decode_event
-        global mdecode_status
+        # global decode_event
+        # global mdecode_status
         print("mdecode recv signal from mprefill ", time.time())
         request_dict = await request.json()
         request_ids = request_dict.pop("request_ids")
@@ -44,19 +44,11 @@ def start_server(port, parser):
         return JSONResponse(ret)
 
     def init_mdecode_prefill():
-        global mdecode_status
+        # global mdecode_status
         while True:
             # print("init_mdecode_prefill ", mdecode_status)
             if mdecode_status == "init_mdecode_prefill":
                 decode_event.wait()
-                # request_ids = request_dict.pop("request_ids")
-                # prompts = request_dict.pop("prompts")
-                # output_lens = request_dict.pop("output_lens")
-                # stream = request_dict.pop("stream", False)
-                # sampling_params_list = []
-                # for i in range(len(prompts)):
-                #     sampling_params = SamplingParams(**request_dict)
-                #     sampling_params_list.append(sampling_params)
                 results_generator = engine.generate_mdecode_prefill()
             elif mdecode_status == "decode":
                 print("status is chanage, mdecode start exec decode", mdecode_status)
@@ -69,7 +61,7 @@ def start_server(port, parser):
         threading.Thread(target=init_mdecode_prefill, daemon=True).start()
             
     async def mprefill_exec_prefill(request_dict):
-        global mprefill_status_curr
+        # global mprefill_status_curr
         while True:
             if mprefill_status_curr == "mprefill_execute":
                 print("mprefill exec prefill request ")
@@ -90,7 +82,7 @@ def start_server(port, parser):
 
     async def mprefill_add_prefill(request_dict):
         print("mprefill add prefill request ")
-        global mprefill_status_curr
+        # global mprefill_status_curr
         request_ids = request_dict.pop("request_ids")
         prompts = request_dict.pop("prompts")
         output_lens = request_dict.pop("output_lens")
@@ -263,9 +255,10 @@ def start_server(port, parser):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    print(parser)
-    process1 = multiprocessing.Process(target=start_server, args=(7001,parser,))
-    process2 = multiprocessing.Process(target=start_server, args=(7002,parser,))
+    shared_request_queue = multiprocessing.Queue()
+    
+    process1 = multiprocessing.Process(target=start_server, args=(7001,parser, shared_request_queue))
+    process2 = multiprocessing.Process(target=start_server, args=(7002,parser, shared_request_queue))
     # 启动进程
     process1.start()
     process2.start()
