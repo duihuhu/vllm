@@ -63,9 +63,9 @@ def start_server(port, parser, shared_request_queue):
     async def mprefill_exec_prefill(request_dict):
         global mprefill_status_curr
         while True:
-            print("mprefill_status_curr in mprefill_exec_prefill ", mprefill_status_curr, time.time())
+            # print("mprefill_status_curr in mprefill_exec_prefill ", mprefill_status_curr, time.time())
             if mprefill_status_curr == "mprefill_execute":
-                print("mprefill exec prefill request ")
+                # print("mprefill exec prefill request ")
                 request_ids = request_dict.pop("request_ids")
                 prompts = request_dict.pop("prompts")
                 output_lens = request_dict.pop("output_lens")
@@ -82,7 +82,6 @@ def start_server(port, parser, shared_request_queue):
             await prefill_event.wait()
 
     async def mprefill_add_prefill(request_dict):
-        print("mprefill add prefill request ")
         global mprefill_status_curr
         request_ids = request_dict.pop("request_ids")
         prompts = request_dict.pop("prompts")
@@ -94,7 +93,6 @@ def start_server(port, parser, shared_request_queue):
             sampling_params = SamplingParams(**request_dict)
             sampling_params_list.append(sampling_params)
         results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
-        print("mprefill_status_curr in mprefill_add_prefill ", mprefill_status_curr, time.time())
         mprefill_status_curr = "mprefill_add"
         prefill_event.set()
 
@@ -134,7 +132,7 @@ def start_server(port, parser, shared_request_queue):
             sampling_params_list.append(sampling_params)
         results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status="")
         decode_event.set()
-        print("init_mdecode return ")
+        # print("init_mdecode return ")
         ret = {"text": 'test'}
         return JSONResponse(ret)
 

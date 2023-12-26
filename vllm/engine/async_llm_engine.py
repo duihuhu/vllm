@@ -86,11 +86,10 @@ class AsyncLLMEngine:
         
     def generate_mdecode_prefill(self):
         while self.engine.has_unfinished_requests():
-            print("mdecode prefill iteration")
             step_outputs = self.engine.step()
             prefilled_num = self.engine.covert_running_to_prefilled()
             self.engine.send_mdecode_prefilled_controller(prefilled_num)
-        print("already complish prefill request ")
+        print("mdecode!!: already complish mdecode prefill request ")
         
     def generate_decode(self):
         outputs: List[RequestOutput] = []
@@ -164,11 +163,11 @@ class AsyncLLMEngine:
             # print("already complish prefill request ")
         if status == 'mprefill_execute':
             while self.engine.has_unfinished_requests():
-                print("mprefill prefill iteration")
+                # print("mprefill prefill iteration")
                 step_outputs = self.engine.step()
                 out_request_ids = [ output.request_id for output in step_outputs]
-                print("mprefill prefill iteration step")
                 self.engine.send_mprefilled_to_mdecode(out_request_ids)
+            print("mprefill!!:  prefill iteration now is no unfinished")
             #todo list
             # print("todo ")
      
