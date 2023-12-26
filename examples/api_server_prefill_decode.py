@@ -247,11 +247,8 @@ def start_server(port):
         return JSONResponse(ret)
     
     
-    parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="127.0.0.1")
     parser.add_argument("--port", type=int, default=port)
-    parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
-    parser.add_argument("--tensor-parallel-size", type=int, default=2)
 
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
@@ -265,6 +262,8 @@ def start_server(port):
             timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    print(parser)
     process1 = multiprocessing.Process(target=start_server, args=(7001,))
     process2 = multiprocessing.Process(target=start_server, args=(7002,))
     # 启动进程
