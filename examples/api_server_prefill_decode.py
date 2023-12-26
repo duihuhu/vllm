@@ -16,7 +16,7 @@ import time
 import multiprocessing
 # manager = multiprocessing.Manager()
 
-def start_server(port):
+def start_server(port, parser):
     TIMEOUT_KEEP_ALIVE = 5  # seconds.
     TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
     app = FastAPI()
@@ -264,8 +264,8 @@ def start_server(port):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     print(parser)
-    process1 = multiprocessing.Process(target=start_server, args=(7001,))
-    process2 = multiprocessing.Process(target=start_server, args=(7002,))
+    process1 = multiprocessing.Process(target=start_server, args=(7001,parser,))
+    process2 = multiprocessing.Process(target=start_server, args=(7002,parser,))
     # 启动进程
     process1.start()
     process2.start()
