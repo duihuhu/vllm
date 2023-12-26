@@ -15,14 +15,15 @@ import threading
 import time
 import multiprocessing
 # manager = multiprocessing.Manager()
-
+mdecode_status = "init_mdecode_prefill"
+mprefill_status_curr = "mprefill_execute"
 def start_server(port, parser, shared_request_queue):
     TIMEOUT_KEEP_ALIVE = 5  # seconds.
     TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
     app = FastAPI()
 
-    mdecode_status = "init_mdecode_prefill"
-    mprefill_status_curr = "mprefill_execute"
+    # mdecode_status = "init_mdecode_prefill"
+    # mprefill_status_curr = "mprefill_execute"
 
     # decode_event = asyncio.Event()
 
@@ -134,112 +135,10 @@ def start_server(port, parser, shared_request_queue):
             sampling_params_list.append(sampling_params)
         results_generator = engine.generate_prefill(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status="")
         decode_event.set()
-        
-        # background_task_future = asyncio.ensure_future(init_mdecode_prefill(request_dict))
-        
-        # background_tasks.add_task(init_mdecode_prefill(request_dict))
-        # thread = threading.Thread(target=init_mdecode_prefill, args=(request_dict))
-        # thread.start()
-        # prompts = request_dict.pop("prompt")
-        # output_lens = request_dict.pop("output_lens")
-        
-        
-        # stream = request_dict.pop("stream", False)
-        # sampling_params_list = []
-        # for i in range(len(prompts)):
-        #     sampling_params = SamplingParams(**request_dict)
-        #     sampling_params_list.append(sampling_params)
-        
-        # # # request_id = random_uuid()
-        
-        # results_generator = engine.mul_generate(prompts, output_lens, sampling_params_list)
-
-        # # Streaming case
-        # async def stream_results() -> AsyncGenerator[bytes, None]:
-        #     async for request_output in results_generator:
-        #         prompt = request_output.prompt
-        #         text_outputs = [
-        #             prompt + output.text for output in request_output.outputs
-        #         ]
-        #         ret = {"text": text_outputs}
-        #         yield (json.dumps(ret) + "\0").encode("utf-8")
-
-        # async def abort_request() -> None:
-        #     await engine.abort(request_id)
-
-        # if stream:
-        #     background_tasks = BackgroundTasks()
-        #     # Abort the request if the client disconnects.
-        #     background_tasks.add_task(abort_request)
-        #     return StreamingResponse(stream_results(), background=background_tasks)
-
-        # # Non-streaming case
-        # final_output = None
-        # async for request_output in results_generator:
-        #     if await request.is_disconnected():
-        #         # Abort the request if the client disconnects.
-        #         await engine.abort(request_id)
-        #         return Response(status_code=499)
-        #     final_output = request_output
-
-        # assert final_output is not None
-        # prompt = final_output.prompt
-        # text_outputs = [prompt + output.text for output in final_output.outputs]
-        # ret = {"text": text_outputs}
         print("init_mdecode return ")
         ret = {"text": 'test'}
         return JSONResponse(ret)
 
-    @app.post("/generate")
-    async def generate(request: Request) -> Response:
-        """Generate completion for the request.
-
-        The request should be a JSON object with the following fields:
-        - prompt: the prompt to use for the generation.
-        - stream: whether to stream the results or not.
-        - other fields: the sampling parameters (See `SamplingParams` for details).
-        """
-        request_dict = await request.json()
-        prompt = request_dict.pop("prompt")
-        stream = request_dict.pop("stream", False)
-        sampling_params = SamplingParams(**request_dict)
-        request_id = random_uuid()
-        results_generator = engine.generate(prompt, sampling_params, request_id)
-
-        # Streaming case
-        async def stream_results() -> AsyncGenerator[bytes, None]:
-            async for request_output in results_generator:
-                prompt = request_output.prompt
-                text_outputs = [
-                    prompt + output.text for output in request_output.outputs
-                ]
-                ret = {"text": text_outputs}
-                yield (json.dumps(ret) + "\0").encode("utf-8")
-
-        async def abort_request() -> None:
-            await engine.abort(request_id)
-
-        if stream:
-            background_tasks = BackgroundTasks()
-            # Abort the request if the client disconnects.
-            background_tasks.add_task(abort_request)
-            return StreamingResponse(stream_results(), background=background_tasks)
-
-        # Non-streaming case
-        final_output = None
-        async for request_output in results_generator:
-            if await request.is_disconnected():
-                # Abort the request if the client disconnects.
-                await engine.abort(request_id)
-                return Response(status_code=499)
-            final_output = request_output
-
-        assert final_output is not None
-        prompt = final_output.prompt
-        text_outputs = [prompt + output.text for output in final_output.outputs]
-        ret = {"text": text_outputs}
-        return JSONResponse(ret)
-    
     
     parser.add_argument("--host", type=str, default="127.0.0.1")
     parser.add_argument("--port", type=int, default=port)
@@ -259,8 +158,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     shared_request_queue = multiprocessing.Queue()
     
-    process1 = multiprocessing.Process(target=start_server, args=(7001,parser, shared_request_queue))
-    process2 = multiprocessing.Process(target=start_server, args=(7002,parser, shared_request_queue))
+    process1 = multiprocessing.Process(target=start_server, args=(7001, parser, shared_request_queue))
+    process2 = multiprocessing.Process(target=start_server, args=(7002, parser, shared_request_queue))
     # 启动进程
     process1.start()
     process2.start()
