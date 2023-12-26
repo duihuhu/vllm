@@ -89,12 +89,12 @@ class AsyncLLMEngine:
             step_outputs = self.engine.step()
             prefilled_num = self.engine.covert_running_to_prefilled()
             self.engine.send_mdecode_prefilled_controller(prefilled_num)
-        print("mdecode!!: already complish mdecode prefill request ")
+        print("mdecode!!: complish mdecode prefill request ")
         
     def generate_decode(self):
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_decode_requests():
-            print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
+            # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
             step_outputs = self.engine.step()
             for output in step_outputs:
                 if output.finished:
