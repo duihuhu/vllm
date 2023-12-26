@@ -32,8 +32,8 @@ def start_server(port, parser, shared_request_queue):
 
     @app.post("/notify_mdecode")
     async def notify_mdecode(request: Request) -> Response:
-        # global decode_event
-        # global mdecode_status
+        global decode_event
+        global mdecode_status
         print("mdecode recv signal from mprefill ", time.time())
         request_dict = await request.json()
         request_ids = request_dict.pop("request_ids")
@@ -44,7 +44,7 @@ def start_server(port, parser, shared_request_queue):
         return JSONResponse(ret)
 
     def init_mdecode_prefill():
-        # global mdecode_status
+        global mdecode_status
         while True:
             # print("init_mdecode_prefill ", mdecode_status)
             if mdecode_status == "init_mdecode_prefill":
@@ -61,7 +61,7 @@ def start_server(port, parser, shared_request_queue):
         threading.Thread(target=init_mdecode_prefill, daemon=True).start()
             
     async def mprefill_exec_prefill(request_dict):
-        # global mprefill_status_curr
+        global mprefill_status_curr
         while True:
             print("mprefill_status_curr in mprefill_exec_prefill ", mprefill_status_curr, time.time())
             if mprefill_status_curr == "mprefill_execute":
@@ -83,7 +83,7 @@ def start_server(port, parser, shared_request_queue):
 
     async def mprefill_add_prefill(request_dict):
         print("mprefill add prefill request ")
-        # global mprefill_status_curr
+        global mprefill_status_curr
         request_ids = request_dict.pop("request_ids")
         prompts = request_dict.pop("prompts")
         output_lens = request_dict.pop("output_lens")
