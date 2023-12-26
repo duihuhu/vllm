@@ -251,6 +251,8 @@ def start_server(port):
     parser.add_argument("--host", type=str, default="127.0.0.1")
     parser.add_argument("--port", type=int, default=port)
     parser.add_argument("--model", tyep=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
+    parser.add_argument("--tensor-parallel-size", tyep=int, default=2)
+
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
 
