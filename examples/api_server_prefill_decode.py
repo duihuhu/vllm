@@ -43,7 +43,7 @@ def start_server(port, parser):
         ret = {"text": 'test'}
         return JSONResponse(ret)
 
-    def init_mdecode_prefill(request_dict):
+    def init_mdecode_prefill():
         global mdecode_status
         while True:
             # print("init_mdecode_prefill ", mdecode_status)
