@@ -17,6 +17,7 @@ import multiprocessing
 # manager = multiprocessing.Manager()
 mdecode_status = "init_mdecode_prefill"
 mprefill_status_curr = "mprefill_execute"
+decode_event = threading.Event()
 def start_server(port, parser, shared_request_queue):
     TIMEOUT_KEEP_ALIVE = 5  # seconds.
     TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
@@ -29,7 +30,7 @@ def start_server(port, parser, shared_request_queue):
 
     prefill_event = asyncio.Event()
 
-    decode_event = threading.Event()
+
 
     @app.post("/notify_mdecode")
     async def notify_mdecode(request: Request) -> Response:
