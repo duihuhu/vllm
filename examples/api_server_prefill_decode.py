@@ -30,8 +30,6 @@ def start_server(port, parser, shared_request_queue):
 
     prefill_event = asyncio.Event()
 
-
-
     @app.post("/notify_mdecode")
     async def notify_mdecode(request: Request) -> Response:
         global decode_event

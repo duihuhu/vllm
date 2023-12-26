@@ -76,6 +76,7 @@ class Scheduler:
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
         # self.running_stay: List[SequenceGroup] = []
+        self.running_waiting: List[SequenceGroup] = []
         
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
@@ -123,7 +124,7 @@ class Scheduler:
             if seq_group.request_id in request_ids:
                 for seq in seq_group.get_seqs():
                     seq.status = SequenceStatus.RUNNING
-                self.running.append(seq_group)
+                self.running_waiting.append(seq_group)
             else:
                 prefilled.append(seq_group)
         self.prefilled = prefilled
@@ -193,6 +194,10 @@ class Scheduler:
         # the sequence groups in the RUNNING state.
         # In this case, the policy is responsible for deciding which sequence
         # groups to preempt.
+        if self.running_waiting:
+            while self.running_waiting:
+                self.running.append(self.running_waiting.pop(0))
+                
         self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
