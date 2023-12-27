@@ -252,6 +252,9 @@ class LLMEngine:
     def convert_reqs_status(self, request_ids):
         self.scheduler.convert_reqs_status(request_ids)
 
+    def convert_reqs_status_by_num(self, request_num):
+        self.scheduler.convert_reqs_status_by_num(request_num)
+
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 

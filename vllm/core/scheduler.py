@@ -131,7 +131,17 @@ class Scheduler:
             else:
                 prefilled.append(seq_group)
         self.prefilled = prefilled
-    
+        
+    def convert_reqs_status_by_num(self, request_num):
+        nums = request_num
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.RUNNING
+            self.running_waiting.append(seq_group)
+            nums = nums - 1
+            if nums == 0:
+                break
     def covert_running_to_prefilled(self):
         num = 0
         while self.running:

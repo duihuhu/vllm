@@ -18,6 +18,12 @@ import multiprocessing
 mdecode_status = "init_mdecode_prefill"
 mprefill_status_curr = "mprefill_execute"
 decode_event = threading.Event()
+shared_request_queue = multiprocessing.Queue()
+
+# 用于获取队列的依赖项
+def get_shared_queue():
+    return shared_queue
+
 def start_server(port, parser, shared_request_queue):
     TIMEOUT_KEEP_ALIVE = 5  # seconds.
     TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
@@ -153,7 +159,6 @@ def start_server(port, parser, shared_request_queue):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    shared_request_queue = multiprocessing.Queue()
     
     process1 = multiprocessing.Process(target=start_server, args=(7001, parser, shared_request_queue))
     process2 = multiprocessing.Process(target=start_server, args=(7002, parser, shared_request_queue))
