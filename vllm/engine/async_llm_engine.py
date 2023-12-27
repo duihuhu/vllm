@@ -135,7 +135,7 @@ class AsyncLLMEngine:
                                             arrival_time=arrival_time)
 
     def mprefill_generate_prefill(
-        self, mm, prefill_nums) -> RequestOutput:
+        self, mm, prefill_nums) -> int:
         while self.engine.has_unfinished_requests():
             # print("mprefill prefill iteration")
             step_outputs = self.engine.step()
@@ -151,6 +151,7 @@ class AsyncLLMEngine:
             combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + request_num.to_bytes(1, byteorder='big')
             mm.seek(0)
             mm.write(combined_info_bytes)
+            return prefill_nums
             
         print("mprefill!!:  prefill iteration now is no unfinished")
     

@@ -48,7 +48,7 @@ def notify_mdecode():
         while True:
             if prefill_nums != mm[0:1]:
                 prefill_nums = mm[0:1]
-                request_num = int(mm[1:2])
+                request_num = int.from_bytes(mm[1:2], byteorder='big')
                 print("mdecode recv signal from mprefill ", time.time())
                 engine.convert_reqs_status(request_num)
                 mdecode_status = "decode"
