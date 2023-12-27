@@ -62,6 +62,7 @@ async def mprefill_exec_prefill(request_dict):
                 engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
                 results_generator = engine.mprefill_generate_prefill(mm, prefill_nums)
             elif mprefill_status_curr == "mprefill_add_exec":
+                print("mprefill exec mprefill_add_exec ")
                 results_generator = engine.mprefill_generate_prefill(mm, prefill_nums)
             prefill_event.clear()
             await prefill_event.wait()     

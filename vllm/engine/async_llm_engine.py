@@ -140,8 +140,9 @@ class AsyncLLMEngine:
             # print("mprefill prefill iteration")
             step_outputs = self.engine.step()
             
-            # out_request_ids = [ output.request_id for output in step_outputs]
+            out_request_ids = [ output.request_id for output in step_outputs]
             # self.engine.send_mprefilled_to_mdecode(out_request_ids)
+            self.engine.convert_outputs_reqs_status(out_request_ids)
             #write request num to 
             prefill_nums = prefill_nums + 1
             request_num = len(step_outputs)

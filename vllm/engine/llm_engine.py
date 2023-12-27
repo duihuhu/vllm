@@ -246,6 +246,11 @@ class LLMEngine:
     def send_mprefilled_to_mdecode(self, out_request_ids):
         self.scheduler.send_mprefilled_to_mdecode(out_request_ids)
 
+    def convert_outputs_reqs_status(self, out_request_ids):
+        self.scheduler.convert_outputs_reqs_status(out_request_ids)
+
+
+
     def covert_prefilled_to_running(self):
         self.scheduler.covert_prefilled_to_running()
 

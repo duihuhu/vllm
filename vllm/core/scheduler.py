@@ -152,6 +152,19 @@ class Scheduler:
             num = num + 1
         return num
             # print(f"req {seq_group.request_id} is finished prefill ", time.time())
+    def convert_outputs_reqs_status(self, out_request_ids):
+        request_ids = []
+        running: List[SequenceGroup] = []
+        while self.running:
+            seq_group = self.running.pop(0)
+            if seq_group.request_id in out_request_ids:
+                for seq in seq_group.get_seqs():
+                    seq.status = SequenceStatus.PREFILLED
+                self.prefilled.append(seq_group)
+            else:
+                running.append(seq_group)
+        self.running = running 
+        
     def send_mprefilled_to_mdecode(self, out_request_ids):
         #first to convert to prefilled
         #then to send to mdecode
