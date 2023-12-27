@@ -26,7 +26,7 @@ mprefill_status_curr = "mprefill_execute"
 
 
  
-mp_dp = 'mprefill_to_dispatcher.txt'
+mp_dp = 'mprefill_to_mdispatcher.txt'
 
 if not os.path.isfile(mp_dp):
     # create initial file
