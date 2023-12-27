@@ -145,6 +145,9 @@ class AsyncLLMEngine:
             #write request num to 
             prefill_nums = prefill_nums + 1
             request_num = len(step_outputs)
+            print(prefill_nums)
+            print(step_outputs)
+
             combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + request_num.to_bytes(1, byteorder='big')
             mm.seek(0)
             mm.write(combined_info_bytes)
