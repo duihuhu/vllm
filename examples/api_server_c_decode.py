@@ -34,7 +34,7 @@ if not os.path.isfile(dp_md):
         fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
 
 # @app.post("/notify_mdecode")
-async def notify_mdecode():
+def notify_mdecode():
     global decode_event
     global mdecode_status
     hex_char = b'\x0F'
