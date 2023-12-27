@@ -106,7 +106,7 @@ class AsyncLLMEngine:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                    print("decode ", output.request_id)
+                    # print("decode ", output.request_id)
                     
     def add_mprefill_request(self,
         prompts: Optional[List[str]],
@@ -173,7 +173,7 @@ class AsyncLLMEngine:
             #write request num to 
             prefill_nums = prefill_nums + 1
             request_num = len(step_outputs)
-            print("mprefill_generate_prefill: " ,prefill_nums, len(step_outputs), time.time())
+            # print("mprefill_generate_prefill: " ,prefill_nums, len(step_outputs), time.time())
 
             combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + request_num.to_bytes(1, byteorder='big')
             mm.seek(0)

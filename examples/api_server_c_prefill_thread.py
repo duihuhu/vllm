@@ -51,7 +51,7 @@ def mprefill_exec_prefill():
         fd.close()
         
 async def mprefill_add_prefill(request_dict):
-    print("mprefill add prefill request ")
+    print("mprefill add prefill request ", time.time())
     request_ids = request_dict.pop("request_ids")
     prompts = request_dict.pop("prompts")
     output_lens = request_dict.pop("output_lens")
