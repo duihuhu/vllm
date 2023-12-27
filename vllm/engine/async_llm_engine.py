@@ -90,8 +90,12 @@ class AsyncLLMEngine:
     def generate_mdecode_prefill(self):
         while self.engine.has_unfinished_requests():
             step_outputs = self.engine.step()
-            prefilled_num = self.engine.covert_running_to_prefilled()
+            # prefilled_num = self.engine.covert_running_to_prefilled()
+            out_request_ids = [ output.request_id for output in step_outputs]
+            self.engine.convert_outputs_reqs_status(out_request_ids)
+            prefilled_num = len(out_request_ids)
             self.engine.send_mdecode_prefilled_controller(prefilled_num)
+            
         print("mdecode!!: complish mdecode prefill request ")
         
     def generate_decode(self):
@@ -103,7 +107,29 @@ class AsyncLLMEngine:
                 if output.finished:
                     outputs.append(output)
                     print("decode ", output.request_id)
-            
+                    
+    def add_mprefill_request(self,
+        prompts: Optional[List[str]],
+        output_lens: Optional[List[int]],
+        request_ids: Optional[List[str]],
+        sampling_params: List[SamplingParams],
+        prompt_token_ids: Optional[List[List[int]]] = None):
+            arrival_time = time.time()
+            for prompt, request_id, output_len, sampling_param in zip(prompts, request_ids, output_lens, sampling_params):
+                sampling_param.max_tokens = int(output_len)
+                if self.engine_use_ray:
+                    self.engine.add_mprefill_request.remote(
+                        request_id,
+                        prompt,
+                        sampling_param,
+                        prompt_token_ids=prompt_token_ids,
+                        arrival_time=arrival_time)
+                else:
+                    self.engine.add_mprefill_request(request_id,
+                                            prompt,
+                                            sampling_param,
+                                            prompt_token_ids=prompt_token_ids,
+                                            arrival_time=arrival_time)        
     def add_request(self,
         prompts: Optional[List[str]],
         output_lens: Optional[List[int]],

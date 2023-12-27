@@ -162,6 +162,51 @@ class LLMEngine:
                      log_stats=not engine_args.disable_log_stats)
         return engine
 
+    def add_mprefill_request(
+        self,
+        request_id: str,
+        prompt: Optional[str],
+        sampling_params: SamplingParams,
+        prompt_token_ids: Optional[List[int]] = None,
+        arrival_time: Optional[float] = None,
+    ) -> None:
+        """Add a request to the engine's request pool.
+
+        The request is added to the request pool and will be processed by the
+        scheduler as `engine.step()` is called. The exact scheduling policy is
+        determined by the scheduler.
+
+        Args:
+            request_id: The unique ID of the request.
+            prompt: The prompt string. Can be None if prompt_token_ids is
+                provided.
+            sampling_params: The sampling parameters for text generation.
+            prompt_token_ids: The token IDs of the prompt. If None, we
+                use the tokenizer to convert the prompts to token IDs.
+            arrival_time: The arrival time of the request. If None, we use
+                the current time.
+        """
+        if arrival_time is None:
+            arrival_time = time.time()
+        if prompt_token_ids is None:
+            assert prompt is not None
+            prompt_token_ids = self.tokenizer.encode(prompt)
+
+        # Create the sequences.
+        block_size = self.cache_config.block_size
+        seqs: List[Sequence] = []
+        for _ in range(sampling_params.best_of):
+            seq_id = next(self.seq_counter)
+            seq = Sequence(seq_id, prompt, prompt_token_ids, block_size)
+            seqs.append(seq)
+
+        # Create the sequence group.
+        seq_group = SequenceGroup(request_id, seqs, sampling_params,
+                                  arrival_time)
+
+        # Add the sequence group to the scheduler.
+        self.scheduler.add_mprefill_seq_group(seq_group)
+        
     def add_request(
         self,
         request_id: str,
@@ -226,6 +271,9 @@ class LLMEngine:
     def has_unfinished_requests(self) -> bool:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
+
+    def has_unfinished_prefill_requests(self) -> bool:
+        return self.scheduler.has_unfinished_prefill_requests()
 
     def has_unfinished_decode_requests(self) -> bool:
         return self.scheduler.has_unfinished_decode_requests()

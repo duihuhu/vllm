@@ -73,6 +73,7 @@ class Scheduler:
 
         # Sequence groups in the WAITING state.
         self.waiting: List[SequenceGroup] = []
+        self.waiting_add: List[SequenceGroup] = []
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
         # self.running_stay: List[SequenceGroup] = []
@@ -89,6 +90,9 @@ class Scheduler:
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
+        
+    def add_mprefill_seq_group(self, seq_group: SequenceGroup) -> None:
+        self.waiting_add.append(seq_group)
 
     def abort_seq_group(self, request_id: str) -> None:
         for state_queue in [self.waiting, self.running, self.swapped]:
@@ -106,6 +110,9 @@ class Scheduler:
         # return self.waiting or self.running or self.swapped or self.running_stay
         return self.waiting or self.running or self.swapped
 
+    def has_unfinished_prefill_requests(self) -> bool:
+        return self.waiting or self.running or self.swapped or self.waiting_add
+    
     def has_unfinished_decode_requests(self) -> bool:
         return self.waiting or self.running or self.swapped or self.running_waiting
     
