@@ -45,8 +45,10 @@ int main(void)
       gettimeofday(&mp_md_dp_tv, NULL);
       long long timestamp_microseconds = (long long)mp_md_dp_tv.tv_sec * 1000000 + mp_md_dp_tv.tv_usec;
       printf("Current timestamp: 0x%02X, 0x%02X, %lld \n", mprefill_num, prefilled_request_num , timestamp_microseconds);
-      mdecode_shared = mprefill_num;
-      mdecode_shared = prefilled_request_num;
+      
+      lseek(dp_md_fd, 0, SEEK_SET);
+      mdecode_shared[0] = mprefill_num;
+      mdecode_shared[1] = prefilled_request_num;
     }
   } 
 
