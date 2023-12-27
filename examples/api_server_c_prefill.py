@@ -59,7 +59,7 @@ async def mprefill_exec_prefill(request_dict):
                 for i in range(len(prompts)):
                     sampling_params = SamplingParams(**request_dict)
                     sampling_params_list.append(sampling_params)
-                engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list, status=mprefill_status)
+                engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
                 results_generator = engine.mprefill_generate_prefill(mm, prefill_nums)
             elif mprefill_status_curr == "mprefill_add_exec":
                 results_generator = engine.mprefill_generate_prefill(mm, prefill_nums)
