@@ -162,8 +162,9 @@ class AsyncLLMEngine:
 
     def mprefill_generate_prefill(
         self, mm, prefill_nums) -> int:
-        while self.engine.has_unfinished_requests():
+        while self.engine.has_unfinished_prefill_requests():
             # print("mprefill prefill iteration")
+            self.engine.move_waitingadd_to_waiting()
             step_outputs = self.engine.step()
             
             out_request_ids = [ output.request_id for output in step_outputs]

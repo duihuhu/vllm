@@ -119,6 +119,13 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
+    def move_waitingadd_to_waiting(self):
+        while self.waiting_add:
+            seq_group = self.waiting_add.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.WAITING
+            self.waiting.append(seq_group)
+            
     def covert_prefilled_to_running(self):
         while self.prefilled:
             seq_group = self.prefilled.pop(0)

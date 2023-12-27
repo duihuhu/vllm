@@ -22,10 +22,6 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 
-mprefill_status_curr = "mprefill_execute"
-
-
- 
 mp_dp = 'mprefill_to_mdispatcher.txt'
 
 if not os.path.isfile(mp_dp):
