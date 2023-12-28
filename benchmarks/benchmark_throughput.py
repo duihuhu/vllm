@@ -227,13 +227,16 @@ def run_vllm(
     decode_time = np.median(decode_time_list)
     decode_token = np.median(decode_token)
 
-    print("Execute median time: ", execute_time, " prefill time: ", prefill_time, " prefill thput ", f"{(prefill_token / prefill_time):.2f}",
-          " ", " decode time ", decode_time, " ", " decode thput ",  f"{(decode_token / decode_time):.2f}")
-    
+    print("Execute median time: ", execute_time)
+    print("prefill time: ", prefill_time)
+    print("prefill thput ", f"{(prefill_token / prefill_time):.2f}")
+    print("decode time ", decode_time)
+    print("decode thput ",  f"{(decode_token / decode_time):.2f}")
+    print("total thput ", f"{total_num_tokens / execute_time:.2f} tokens/s")
     # print("total_num_reqs: ", len(outputs))
     # print("total_num_tokens: ", total_num_tokens)
-    print(f"Throughput: {len(requests) / execute_time:.2f} requests/s, "
-         f"{total_num_tokens / execute_time:.2f} tokens/s")
+    # print(f"Throughput: {len(requests) / execute_time:.2f} requests/s, "
+    #      f"{total_num_tokens / execute_time:.2f} tokens/s")
 
     return end - start
 
@@ -316,8 +319,8 @@ def main(args: argparse.Namespace):
         prompt_len + output_len
         for _, prompt_len, output_len in requests
     )
-    print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-          f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+    # print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
+    #       f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 
 
 if __name__ == "__main__":
