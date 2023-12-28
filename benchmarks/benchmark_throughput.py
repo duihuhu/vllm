@@ -18,6 +18,7 @@ def sample_requests(
     num_requests: int,
     mix_num_prompts: int,
     tokenizer: PreTrainedTokenizerBase,
+    prompt_line: int
 ) -> List[Tuple[str, int, int]]:
     # Load the dataset.
     with open(dataset_path) as f:
@@ -42,8 +43,8 @@ def sample_requests(
     index = 0 
     for i in range(len(dataset)):
         # if index < 3 :
-        output_len = len(completion_token_ids[1090])
-        tokenized_dataset.append((prompts[1090], prompt_token_ids[1090], 6))
+        output_len = len(completion_token_ids[prompt_line])
+        tokenized_dataset.append((prompts[prompt_line], prompt_token_ids[prompt_line], 6))
         index = index + 1   
         # else:
         #     output_len = len(completion_token_ids[4])
@@ -304,7 +305,7 @@ def main(args: argparse.Namespace):
 
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
-    requests, mix_requests = sample_requests(args.dataset, args.num_prompts, args.mix_num_prompts, tokenizer)
+    requests, mix_requests = sample_requests(args.dataset, args.num_prompts, args.mix_num_prompts, tokenizer, args.prompt_line)
 
     if args.backend == "vllm":
         elapsed_time = run_vllm(
@@ -344,6 +345,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--split-two-phase", type=int, default=0)
     parser.add_argument("--mix-num-prompts", type=int, default=0)
+    parser.add_argument("--prompt-line", type=int, default=0)
     args = parser.parse_args()
 
     if args.backend == "vllm":
