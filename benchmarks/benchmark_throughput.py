@@ -41,14 +41,14 @@ def sample_requests(
     tokenized_dataset = []
     index = 0 
     for i in range(len(dataset)):
-        if index < 3 :
-            output_len = len(completion_token_ids[8])
-            tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
-            index = index + 1   
-        else:
-            output_len = len(completion_token_ids[4])
-            tokenized_dataset.append((prompts[4], prompt_token_ids[4], output_len))
-            index = 0 
+        # if index < 3 :
+        output_len = len(completion_token_ids[1090])
+        tokenized_dataset.append((prompts[1090], prompt_token_ids[1090], output_len))
+        index = index + 1   
+        # else:
+        #     output_len = len(completion_token_ids[4])
+        #     tokenized_dataset.append((prompts[4], prompt_token_ids[4], output_len))
+        #     index = 0 
           
     # print(prompts[71])
     # Filter out too long sequences.
