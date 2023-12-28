@@ -46,8 +46,8 @@ def sample_requests(
             tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
             index = index + 1   
         else:
-            output_len = len(completion_token_ids[30])
-            tokenized_dataset.append((prompts[30], prompt_token_ids[30], 6))
+            output_len = len(completion_token_ids[4])
+            tokenized_dataset.append((prompts[4], prompt_token_ids[4], output_len))
             index = 0 
           
     # print(prompts[71])
