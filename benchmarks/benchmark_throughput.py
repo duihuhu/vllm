@@ -43,7 +43,7 @@ def sample_requests(
     for i in range(len(dataset)):
         # if index < 3 :
         output_len = len(completion_token_ids[1090])
-        tokenized_dataset.append((prompts[1090], prompt_token_ids[1090], output_len))
+        tokenized_dataset.append((prompts[1090], prompt_token_ids[1090], 6))
         index = index + 1   
         # else:
         #     output_len = len(completion_token_ids[4])
