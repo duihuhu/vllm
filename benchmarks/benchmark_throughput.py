@@ -226,7 +226,7 @@ def run_vllm(
     prefill_token = np.median(prefill_token_list)
     decode_time = np.median(decode_time_list)
     decode_token = np.median(decode_token)
-
+    print("result -------------- ")
     print("decode thput ",  f"{(decode_token / decode_time):.2f}")
     print("decode time ", decode_time)
     print("Execute median time: ", execute_time)
