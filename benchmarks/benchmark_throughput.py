@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from vllm import LLM, SamplingParams
 from vllm.transformers_utils.tokenizer import get_tokenizer
-
+import numpy as np
 
 def sample_requests(
     dataset_path: str,
@@ -91,7 +91,11 @@ def run_vllm(
         seed=seed,
         max_num_seqs=batch_size,
     )
-
+    execute_time_list = []
+    prefill_time_list = []
+    prefill_token_list = []
+    decode_time_list = []
+    decode_token_list = []
     # Add the requests to the engine.
     for prompt, _, output_len in requests:
         sampling_params = SamplingParams(
@@ -111,10 +115,14 @@ def run_vllm(
 
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    outputs, prefill_time, prefill_token, decode_time, decode_token = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     end = time.time()
     print(f"Execute1 End start is {start}, End end is {end}", end-start)
-
+    # execute_time_list.append(end-start)
+    # prefill_time_list.append(prefill_time)
+    # prefill_token_list.append(prefill_token)
+    # decode_time_list.append(decode_time)
+    # decode_token_list.append(decode_token)
     
     for prompt, _, output_len in requests:
         sampling_params = SamplingParams(
@@ -134,7 +142,7 @@ def run_vllm(
         
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    outputs, prefill_time, prefill_token, decode_time, decode_token = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     end = time.time()
     elapsed_time = end-start 
     total_num_tokens = sum(
@@ -142,7 +150,12 @@ def run_vllm(
         for output in outputs
     )
     print(f"Execute2 End start is {start}, End end is {end}", end-start)
-
+    execute_time_list.append(end-start)
+    prefill_time_list.append(prefill_time)
+    prefill_token_list.append(prefill_token)
+    decode_time_list.append(decode_time)
+    decode_token_list.append(decode_token)
+    
     for prompt, _, output_len in requests:
         sampling_params = SamplingParams(
             n=n,
@@ -161,7 +174,7 @@ def run_vllm(
         
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    outputs, prefill_time, prefill_token, decode_time, decode_token = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     end = time.time()
     elapsed_time = end-start 
     total_num_tokens = sum(
@@ -169,6 +182,11 @@ def run_vllm(
         for output in outputs
     )
     print(f"Execute3 End start is {start}, End end is {end}", end-start)
+    execute_time_list.append(end-start)
+    prefill_time_list.append(prefill_time)
+    prefill_token_list.append(prefill_token)
+    decode_time_list.append(decode_time)
+    decode_token_list.append(decode_token)
     
     for prompt, _, output_len in requests:
         sampling_params = SamplingParams(
@@ -188,19 +206,34 @@ def run_vllm(
         
     start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    outputs, prefill_time, prefill_token, decode_time, decode_token = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     end = time.time()
     elapsed_time = end-start 
     total_num_tokens = sum(
         len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
         for output in outputs
     )
-    
     print(f"Execute4 End start is {start}, End end is {end}", end-start)
-    print("total_num_reqs: ", len(outputs))
-    print("total_num_tokens: ", total_num_tokens)
-    print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-         f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+    
+    execute_time_list.append(end-start)
+    prefill_time_list.append(prefill_time)
+    prefill_token_list.append(prefill_token)
+    decode_time_list.append(decode_time)
+    decode_token_list.append(decode_token)
+
+    execute_time = np.median(execute_time_list)
+    prefill_time = np.median(prefill_time_list)
+    prefill_token = np.median(prefill_token_list)
+    decode_time = np.median(decode_time_list)
+    decode_token = np.median(decode_token)
+
+    print("Execute median time: ", execute_time, " prefill time: ", prefill_time, " prefill thput ", f"{(prefill_token / prefill_time):.2f}",
+          " ", " decode time ", decode_time, " ", " decode thput ",  f"{(decode_token / decode_time):.2f}")
+    
+    # print("total_num_reqs: ", len(outputs))
+    # print("total_num_tokens: ", total_num_tokens)
+    print(f"Throughput: {len(requests) / execute_time:.2f} requests/s, "
+         f"{total_num_tokens / execute_time:.2f} tokens/s")
 
     return end - start
 

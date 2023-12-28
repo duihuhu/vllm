@@ -151,6 +151,10 @@ class LLM:
 
     def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int]) -> List[RequestOutput]:
         # Initialize tqdm.
+        prefill_time = 0
+        prefill_token = 0
+        decode_time = 0
+        decode_token = 0 
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
             pbar = tqdm(total=num_requests, desc="Processed prompts")
@@ -188,9 +192,12 @@ class LLM:
         # print(f"iteration {interation}")
         if split_two_phase == 1:
             ed = time.time()
-            print(f"End Prefill at {ed}", "total prefill time: ", ed-st)
-            print(f"Prefill process {total_num_token} tokens")
-            print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
+            prefill_time = ed-st
+            prefill_token = total_num_token
+            
+            # print(f"End Prefill at {ed}", "total prefill time: ", ed-st)
+            # print(f"Prefill process {total_num_token} tokens")
+            # print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
@@ -211,10 +218,13 @@ class LLM:
                             pbar.update(1)
             ed2 = time.time()
             # print(f"iteration {interation}")
-            print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
+
+            # print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
-            print(f"Decode process {total_num_token2} tokens")
-            print(f"Decode Throughput {(total_num_token2 / (ed2-st2)):.2f} tokens/s")
+            # print(f"Decode process {total_num_token2} tokens")
+            # print(f"Decode Throughput {(total_num_token2 / (ed2-st2)):.2f} tokens/s")
+            decode_time = ed2-st2
+            decode_token = total_num_token2
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
@@ -222,4 +232,4 @@ class LLM:
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
         # print(outputs)            
-        return outputs
+        return outputs, prefill_time, prefill_token, decode_time, decode_token
