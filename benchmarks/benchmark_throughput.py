@@ -299,9 +299,9 @@ def run_vllm(
     decode_token = np.median(decode_token)
     print("result start -------------- ")
     print("median decode time: ", median_decode_time)
-    print("median decode thput: ",  f"{(decode_token / median_decode_time):.2f}")
+    print("median decode thput: ",  f"{((decode_token-1) / median_decode_time):.2f}")
     print("mean decode time: ", mean_decode_time)
-    print("mean decode thput: ",  f"{(decode_token / mean_decode_time):.2f}")
+    print("mean decode thput: ",  f"{((decode_token-1) / mean_decode_time):.2f}")
 
     print("Execute median time: ", median_execute_time)
     print("median total thput ", f"{total_num_tokens / median_execute_time:.2f} tokens/s")
