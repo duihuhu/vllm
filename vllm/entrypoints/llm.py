@@ -162,7 +162,7 @@ class LLM:
         outputs: List[RequestOutput] = []
         # interation = 0
         st = time.time()
-        print(f"Start Prefill at {st}")
+        # print(f"Start Prefill at {st}")
         if split_two_phase == 1:
             total_num_token = 0
         # iteration_time = []
@@ -202,7 +202,7 @@ class LLM:
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
             st2 = time.time()
-            print(f"Start Decode at {st2}")
+            # print(f"Start Decode at {st2}")
             # interation = 0
 
             while self.llm_engine.has_unfinished_requests():

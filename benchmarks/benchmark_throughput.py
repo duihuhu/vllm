@@ -221,19 +221,96 @@ def run_vllm(
     prefill_token_list.append(prefill_token)
     decode_time_list.append(decode_time)
     decode_token_list.append(decode_token)
+    
+    for prompt, _, output_len in requests:
+        sampling_params = SamplingParams(
+            n=n,
+            temperature=0.0 if use_beam_search else 1.0,
+            top_p=1.0,
+            use_beam_search=use_beam_search,
+            ignore_eos=True,
+            max_tokens=output_len,
+        )
+        # FIXME(woosuk): Do not use internal method.
+        llm._add_request(
+            prompt=prompt,
+            prompt_token_ids=None,
+            sampling_params=sampling_params,
+        )
+        
+    start = time.time()
+    # FIXME(woosuk): Do use internal method.
+    outputs, prefill_time, prefill_token, decode_time, decode_token = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    end = time.time()
+    elapsed_time = end-start 
+    total_num_tokens = sum(
+        len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
+        for output in outputs
+    )
+    print(f"Execute5 End start is {start}, End end is {end}", end-start)
+    
+    execute_time_list.append(end-start)
+    prefill_time_list.append(prefill_time)
+    prefill_token_list.append(prefill_token)
+    decode_time_list.append(decode_time)
+    decode_token_list.append(decode_token)
 
-    execute_time = np.median(execute_time_list)
-    prefill_time = np.median(prefill_time_list)
+    for prompt, _, output_len in requests:
+        sampling_params = SamplingParams(
+            n=n,
+            temperature=0.0 if use_beam_search else 1.0,
+            top_p=1.0,
+            use_beam_search=use_beam_search,
+            ignore_eos=True,
+            max_tokens=output_len,
+        )
+        # FIXME(woosuk): Do not use internal method.
+        llm._add_request(
+            prompt=prompt,
+            prompt_token_ids=None,
+            sampling_params=sampling_params,
+        )
+        
+    start = time.time()
+    # FIXME(woosuk): Do use internal method.
+    outputs, prefill_time, prefill_token, decode_time, decode_token = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    end = time.time()
+    elapsed_time = end-start 
+    total_num_tokens = sum(
+        len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
+        for output in outputs
+    )
+    print(f"Execute6 End start is {start}, End end is {end}", end-start)
+    
+    execute_time_list.append(end-start)
+    prefill_time_list.append(prefill_time)
+    prefill_token_list.append(prefill_token)
+    decode_time_list.append(decode_time)
+    decode_token_list.append(decode_token)
+
+    median_execute_time = np.median(execute_time_list)
+    mean_execute_time = np.mean(execute_time_list)
+    median_prefill_time = np.median(prefill_time_list)
+    mean_prefill_time = np.mean(prefill_time_list)
     prefill_token = np.median(prefill_token_list)
-    decode_time = np.median(decode_time_list)
+    median_decode_time = np.median(decode_time_list)
+    mean_decode_time = np.mean(decode_time_list)
     decode_token = np.median(decode_token)
-    print("result -------------- ")
-    print("decode thput ",  f"{(decode_token / decode_time):.2f}")
-    print("decode time ", decode_time)
-    print("Execute median time: ", execute_time)
-    print("total thput ", f"{total_num_tokens / execute_time:.2f} tokens/s")
-    print("prefill time: ", prefill_time)
-    print("prefill thput ", f"{(prefill_token / prefill_time):.2f}")
+    print("result start -------------- ")
+    print("median decode time: ", median_decode_time)
+    print("median decode thput: ",  f"{(decode_token / median_decode_time):.2f}")
+    print("mean decode time: ", mean_decode_time)
+    print("mean decode thput: ",  f"{(decode_token / mean_decode_time):.2f}")
+
+    print("Execute median time: ", median_execute_time)
+    print("median total thput ", f"{total_num_tokens / median_execute_time:.2f} tokens/s")
+    print("Execute mean time: ", mean_execute_time)
+    print("mean total thput ", f"{total_num_tokens / mean_execute_time:.2f} tokens/s")
+    print("median prefill time ", median_prefill_time)
+    print("median prefill thput ", f"{(prefill_token / median_prefill_time):.2f}")
+    print("mean prefill time ", mean_prefill_time)
+    print("mean prefill thput ", f"{(prefill_token / mean_prefill_time):.2f}")
+    print("result end -------------- ")
 
     # print("total_num_reqs: ", len(outputs))
     # print("total_num_tokens: ", total_num_tokens)
