@@ -24,8 +24,22 @@ class ChunkRunner:
         self.all_total_sequences: List[Sequence] = []
         self.all_job_sequences: Dict[str, Sequence] = {}
         self.all_job_chunks: List[Chunk] = []
+        self.processed_chunks: List[Chunk] = []
         self.counter = Counter()
         self.cacheblock = ChunkCacheBlocks(blocks_num = self.chunk_num)
+
+    def add_requests_to_job_sequences(self,
+                                      prompt_token_ids_s: List[List[int]],
+                                      sampling_params_s: List[ChunkSamplingParams]) -> None:
+        for prompt_token_ids, sampling_params in zip(prompt_token_ids_s, sampling_params_s):
+            seq_id = random_uuid()
+            now_time = time.time()
+            a_sequence = Sequence(seq_id = seq_id, 
+                                  prompt_token_ids = prompt_token_ids,
+                                  sampling_params = sampling_params,
+                                  start_time = now_time)
+            self.all_job_sequences[seq_id] = a_sequence
+        self._set_job_chunks()
 
     def _add_requests(self, 
                       prompt_token_ids: List[int], 
@@ -174,12 +188,12 @@ class ChunkRunner:
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                         sampling_params = cold_start_sampling_params)
-        prompt_lens = [91,88,75,3,255,42,103,15,352,385,127,49,306,157,228,75,209,315,197,21,104,30,182,175,103,53,
-                       356,390,122,387,125,22,347,143,273,239,117,276,119,422,90,269,243,243,24,29,216,88,93,107,224,
-                       248,75,189,108,72,108,88,264,248,339,173,328,184,62,47,2,76,61,178,86,52,60,2,89,59,21,283,92,
-                       125,295,497,15,64,235,213,505,7,189,3,320,345,167,58,38,87,15,314,344,168,100,83,22,191,116,130,
-                       62,80,44,196,33,122,308,49,626,546,2047,1845,878,939,775,1021,592,513,1020,955,931,1795,1500,942,
-                       899,1413,561]
+        #prompt_lens = [91,88,75,3,255,42,103,15,352,385,127,49,306,157,228,75,209,315,197,21,104,30,182,175,103,53,
+        #               356,390,122,387,125,22,347,143,273,239,117,276,119,422,90,269,243,243,24,29,216,88,93,107,224,
+        #               248,75,189,108,72,108,88,264,248,339,173,328,184,62,47,2,76,61,178,86,52,60,2,89,59,21,283,92,
+        #               125,295,497,15,64,235,213,505,7,189,3,320,345,167,58,38,87,15,314,344,168,100,83,22,191,116,130,
+        #               62,80,44,196,33,122,308,49,626,546,2047,1845,878,939,775,1021,592,513,1020,955,931,1795,1500,942,
+        #               899,1413,561]
         '''prompt_lens = [2, 2, 3, 15, 15, 21, 21, 22, 22, 24, 30, 33, 38,264, 42, 47, 49, 52, 53, 58, 211,
         59, 60, 60, 61, 62, 62, 210,64, 72, 75, 75,239,75,76,80,83,42,156,87,88,88,249,89,91,92,240,93,100,103,216,
         103,104,107,198,108,108,117,179,122,125,130,135,178,182,152,189,191,132,228,235,49,243,248,21,264,248,269,72,
@@ -188,24 +202,24 @@ class ChunkRunner:
         1413, 561]'''
         #sts = time.time()
         #prompt_lens.sort()
-        eds = time.time()
-        fake_lens = [91,88,75,3,255,42,103,15,352,385,127,49,306,157,228,75,209,315,197,21,104,30,182,175,103,53,
-                       356,390,122,387,125,22,347,143,273,239,117,276,119,422,90,269,243,243,24,29,216,88,93,107,224,
-                       248,75,189,108,72,108,88,264,248,339,173,328,184,62,47,2,76,61,178,86,52,60,2,89,59,21,283,92,
-                       125,295,497,15,64,235,213,505,7,189,3,320,345,167,58,38,87,15,314,344,168,100,83,22,191,116,130,
-                       62,80,44,196,33,122,308,49,626,546,2047,1845,878,939,775,1021,592,513,1020,955,931,1795,1500,942,
-                       899,1413,561]
+        #eds = time.time()
+        #fake_lens = [91,88,75,3,255,42,103,15,352,385,127,49,306,157,228,75,209,315,197,21,104,30,182,175,103,53,
+        #               356,390,122,387,125,22,347,143,273,239,117,276,119,422,90,269,243,243,24,29,216,88,93,107,224,
+        #               248,75,189,108,72,108,88,264,248,339,173,328,184,62,47,2,76,61,178,86,52,60,2,89,59,21,283,92,
+        #               125,295,497,15,64,235,213,505,7,189,3,320,345,167,58,38,87,15,314,344,168,100,83,22,191,116,130,
+        #               62,80,44,196,33,122,308,49,626,546,2047,1845,878,939,775,1021,592,513,1020,955,931,1795,1500,942,
+        #               899,1413,561]
         #random.seed(2023)
         #random.shuffle(prompt_lens)
         #print(prompt_lens)
-        time_slot = self._test_time_for_mixed(data = fake_lens)
+        #time_slot = self._test_time_for_mixed(data = fake_lens)
         #print(f"sort costs {eds - sts} seconds")
-        print(f"mixed costs {time_slot} seconds")
-        for prompt_len in prompt_lens:
-            sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
-            #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
-            dummy_prompt_token_ids = [random.randint(1, 9) for _ in range(prompt_len)]
-            self._add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
+        #print(f"mixed costs {time_slot} seconds")
+        #for prompt_len in prompt_lens:
+        #    sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
+        #    #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
+        #    dummy_prompt_token_ids = [random.randint(1, 9) for _ in range(prompt_len)]
+        #    self._add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
     def _start_worker(self) -> None:
         self._add_requests_to_self()
@@ -255,7 +269,9 @@ class ChunkRunner:
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
         
-        for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
+        while self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
+            chunk = self.all_job_chunks.pop(0)
+
             start_time = time.time()
 
             chunk.chunk_status = ChunkStatus.RUNNING
@@ -290,7 +306,9 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[id].add_first_token_id(output_token_list[i])
                 #self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
                 #self.chunk_worker.job_sequences[id].set_end_time(end_time)
-        
+
+            self.processed_chunks.append(chunk)
+
         self._reduce_outputs()
   
         #self.chunk_worker.reduce_outputs()
@@ -343,9 +361,13 @@ class ChunkRunner:
         all_token_ids: List[int] = []
         all_token_seqs: List[str] = []
         for _, sequence in self.all_job_sequences.items():
-            for token_id in sequence.prompt_token_ids:
-                all_token_ids.append(token_id)
-                all_token_seqs.append(sequence.seq_id)
+            if sequence.processed:
+                continue
+            else:
+                sequence.processed = True
+                for token_id in sequence.prompt_token_ids:
+                    all_token_ids.append(token_id)
+                    all_token_seqs.append(sequence.seq_id)
         st = 0
         token_num = len(all_token_ids)
         while st < token_num:
@@ -404,6 +426,40 @@ class ChunkRunner:
         #        if i != 0:
         #            sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
         # free all chunks' cache
-        for chunk in self.all_job_chunks:
+        while self.processed_chunks:
+            chunk = self.processed_chunks.pop(0)
             self.cacheblock.free_block(block = chunk.cache_block)
             chunk.chunk_status = ChunkStatus.PREFILLED
+    
+    def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
+        output_num = 0
+        while self.all_job_chunks:
+            chunk = self.all_job_chunks.pop(0)
+            start_time = time.time()
+            chunk.chunk_status = ChunkStatus.RUNNING
+            input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
+            chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
+                                                    kv_prefixs = chunk.kv_prefixs,
+                                                    kv_prefixs_blocks = kv_cache_ids, 
+                                                    kv_block = chunk.cache_block_id,
+                                                    idxs = chunk.idxs,
+                                                    sampling_params_for_sampler = chunk.sampling_params_for_sampler,
+                                                    do_cat = chunk.do_cat)
+            output_token_list, logprobs = self._run_workers("execute_model",
+                                        inputs = input_tokens_tensor,
+                                        inputs_positions = input_positions_tensor,
+                                        chunkmetadata = chunkinputmetadata)
+            end_time = time.time()
+            output_num += len(chunk.do_sampling)
+            for i, id in enumerate(chunk.do_sampling):
+                self.all_job_sequences[id].add_first_token_id(output_token_list[i])
+                self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
+                self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
+            self.processed_chunks.append(chunk)
+        self._reduce_outputs()
+        prefill_nums += 1
+        combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + output_num.to_bytes(1, byteorder='big')
+        mm.seek(0)
+        mm.write(combined_info_bytes)
+        return prefill_nums       
+    print("mprefill!!:  prefill iteration now is no unfinished")
