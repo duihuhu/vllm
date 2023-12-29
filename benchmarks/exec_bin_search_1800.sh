@@ -8,7 +8,7 @@ python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_
 
 sleep 5
 echo "1810 40422"
-python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --tensor-parallel-size 4 --num-prompts 8 --batch-size 8 --split-two-phase 1 --prompt-line 40422
+python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --tensor-parallel-size 4 --num-prompts 8 --batch-size 8 --split-two-phase 1 --prompt-line 40421
 sleep 5
 
 echo "1750 78767"
