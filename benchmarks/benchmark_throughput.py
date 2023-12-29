@@ -41,6 +41,7 @@ def sample_requests(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     index = 0 
+    print("prompts info: ", len(prompts[prompt_line]), len(prompt_token_ids[prompt_line]))
     for i in range(len(dataset)):
         # if index < 3 :
         output_len = len(completion_token_ids[prompt_line])

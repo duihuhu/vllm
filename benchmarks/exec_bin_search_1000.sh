@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "600 8332"
+echo "1000 8332"
 python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --tensor-parallel-size 4 --num-prompts 1 --batch-size 4 --split-two-phase 1 --prompt-line 8332
 
 sleep 5
