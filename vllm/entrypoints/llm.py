@@ -203,12 +203,12 @@ class LLM:
             self.llm_engine.covert_prefilled_to_running()
             st2 = time.time()
             # print(f"Start Decode at {st2}")
-            # interation = 0
+            iteration = 0
 
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
-                # interation = interation  + 1
+                iteration = iteration  + 1
                 for output in step_outputs:
                     if output.finished:
                         # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
@@ -217,7 +217,7 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
-            # print(f"iteration {interation}")
+            print(f"decode iteration {iteration}")
 
             # print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
