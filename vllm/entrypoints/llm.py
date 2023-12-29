@@ -163,7 +163,6 @@ class LLM:
                 if output.finished:
                     # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
-                    # print(output)
                     if use_tqdm:
                         pbar.update(1)
             if split_two_phase == 1:
@@ -193,7 +192,6 @@ class LLM:
                     if output.finished:
                         # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                         outputs.append(output)
-                        # print(output)
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
@@ -208,5 +206,4 @@ class LLM:
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        # print(outputs)            
         return outputs
