@@ -120,6 +120,7 @@ class Scheduler:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
     def get_mprefill_num_unfinished_seq_groups(self):
+        print("get_mprefill_num_unfinished_seq_groups ", type(len(self.waiting) + len(self.waiting_add)))
         return len(self.waiting) + len(self.waiting_add),
 
     def get_mprefill_num_unfinished_tokens(self):
