@@ -225,8 +225,8 @@ class AsyncLLMEngine:
      
          ## add monitor information function 
     def monitor_mprefill_info(self):
-        unfinished_req, unfinished_tokens = self.engine.monitor_mprefill_info()
-        return unfinished_req, unfinished_tokens
+        return self.engine.monitor_mprefill_info()
+        # return unfinished_req, unfinished_tokens
     
     async def generate(
             self,

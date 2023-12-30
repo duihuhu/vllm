@@ -104,9 +104,9 @@ def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinis
 def monitor_prefill_info(host, service_port, ):
     machine_type = "prefill"
     while True:
-        unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
-        print("unfinished_req ", type(unfinished_req))    
-        post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens)
+        mprefill_info = engine.monitor_mprefill_info()
+        print("unfinished_req ", type(mprefill_info[0]), type(mprefill_info[1]))    
+        post_mprefill_info(host, service_port, machine_type, mprefill_info[0], mprefill_info[1])
         time.sleep(10)
     return
     
