@@ -75,7 +75,7 @@ async def mprefill_add(request: Request) -> Response:
 @app.on_event("startup")
 def startup_decode_event():
     threading.Thread(target=mprefill_exec_prefill, daemon=True).start()
-    threading.Thread(target=monitor_prefill_info, args=(args.host, args.port) ,daemon=True).start()
+    # threading.Thread(target=monitor_prefill_info, args=(args.host, args.port) ,daemon=True).start()
 
 def post_monitor_request(monitor_url: str,
                       host: str,
@@ -103,7 +103,7 @@ def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinis
     response = post_monitor_request(monitor_url, host, service_port, machine_type, unfinished_req, unfinished_tokens)
     
 def monitor_prefill_info(host, service_port):
-    global engine
+    # global engine
     machine_type = "prefill"
     while True:
         unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
@@ -123,9 +123,9 @@ if __name__ == "__main__":
     engine = AsyncLLMEngine.from_engine_args(engine_args)
     
     # 创建一个新的进程
-    # process = multiprocessing.Process(target=monitor_prefill_info, args=(args.host,args.port,))
-    # # 启动进程
-    # process.start()
+    process = multiprocessing.Process(target=monitor_prefill_info, args=(args.host,args.port,))
+    # 启动进程
+    process.start()
 
     uvicorn.run(app,
                 host=args.host,
