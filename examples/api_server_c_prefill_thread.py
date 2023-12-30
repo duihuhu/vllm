@@ -53,8 +53,9 @@ async def mprefill_add_prefill(request_dict):
     print("mprefill add prefill request ", time.time())
     #request_ids = request_dict.pop("request_ids")
     prompts_s = request_dict.pop("prompts")
-    prompts_token_ids_s = tokenizer(prompts_s).input_ids
-    print(prompts_token_ids_s)
+    prompts_token_ids_s: List[List[int]] = []
+    temp = tokenizer(prompts_s).input_ids
+    prompts_token_ids_s.append(temp)
     sampling_params_s: List[sampling_params] = []
     for _ in range(len(prompts_token_ids_s)):
         sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
