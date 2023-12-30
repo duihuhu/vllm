@@ -36,7 +36,6 @@ async def mprefill_monitor_report(request: Request) -> Response:
     unfinished_tokens = request_dict.pop("unfinished_tokens")  
     timestamp = request_dict.pop("timestamp")    
     key = host + "_" + str(service_port) + "_" + machine_type
-    print(key, type(unfinished_req), unfinished_tokens)
     if monitor_mprefill_info.get(key):
         prefill_info = monitor_mprefill_info[key]
         prefill_info.unfinished_req = unfinished_req
