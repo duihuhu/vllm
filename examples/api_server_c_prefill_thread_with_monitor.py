@@ -107,7 +107,7 @@ def monitor_prefill_info(host, service_port, ):
     while True:
         unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
         post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens)
-        time.sleep(1)
+        time.sleep(0.2)
     return
     
 if __name__ == "__main__":
