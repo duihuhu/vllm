@@ -102,7 +102,8 @@ def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinis
     monitor_url = "http://127.0.0.1:9000/mprefill_monitor_report"
     response = post_monitor_request(monitor_url, host, service_port, machine_type, unfinished_req, unfinished_tokens)
     
-def monitor_prefill_info(host, service_port, ):
+def monitor_prefill_info(host, service_port):
+    global engine
     machine_type = "prefill"
     while True:
         unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
