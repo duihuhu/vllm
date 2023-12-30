@@ -162,6 +162,7 @@ class AsyncLLMEngine:
 
     def mprefill_generate_prefill(
         self, mm, prefill_nums) -> int:
+        
         while self.engine.has_unfinished_prefill_requests():
             # print("mprefill prefill iteration")
             req_num, tokens_num  = self.engine.monitor_mprefill_info()
@@ -180,10 +181,9 @@ class AsyncLLMEngine:
             combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + request_num.to_bytes(1, byteorder='big')
             mm.seek(0)
             mm.write(combined_info_bytes)
-            return prefill_nums
-            
         print("mprefill!!:  prefill iteration now is no unfinished")
-    
+        return prefill_nums
+
     def generate_prefill(
         self) -> RequestOutput:
         """Generate outputs for a request.
