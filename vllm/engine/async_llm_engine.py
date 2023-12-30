@@ -164,6 +164,8 @@ class AsyncLLMEngine:
         self, mm, prefill_nums) -> int:
         while self.engine.has_unfinished_prefill_requests():
             # print("mprefill prefill iteration")
+            req_num, tokens_num  = self.engine.monitor_mprefill_info()
+            print("unfinished ", req_num, tokens_num)
             self.engine.move_waitingadd_to_waiting()
             step_outputs = self.engine.step()
             
