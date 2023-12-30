@@ -223,7 +223,11 @@ class AsyncLLMEngine:
             #todo list
             # print("todo ")
      
-               
+         ## add monitor information function 
+    def monitor_mprefill_info(self):
+        unfinished_req, unfinished_tokens = self.engine.monitor_mprefill_info()
+        return unfinished_req, unfinished_tokens
+    
     async def generate(
             self,
             prompt: Optional[str],
@@ -380,3 +384,5 @@ class AsyncLLMEngine:
                      log_requests=not engine_args.disable_log_requests,
                      log_stats=not engine_args.disable_log_stats)
         return engine
+
+

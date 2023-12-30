@@ -74,7 +74,7 @@ def startup_decode_event():
 
 #background threads
 @app.post("/init_mdecode")
-async def init_mdecode(request: Request, background_tasks: BackgroundTasks) -> Response:
+async def init_mdecode(request: Request) -> Response:
     """init mdecode machine before execute. 
     add request to queue
     """

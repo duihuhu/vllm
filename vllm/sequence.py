@@ -71,6 +71,9 @@ class SequenceData:
     def get_len(self) -> int:
         return len(self.output_token_ids) + len(self.prompt_token_ids)
 
+    def get_input_len(self) ->int:
+        return len(self.prompt_token_ids)
+    
     def get_output_len(self) -> int:
         return len(self.output_token_ids)
 

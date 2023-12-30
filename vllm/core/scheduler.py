@@ -119,6 +119,24 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
+    def get_mprefill_num_unfinished_seq_groups(self):
+        return len(self.waiting) + len(self.waiting_add),
+
+    def get_mprefill_num_unfinished_tokens(self):
+        waiting_tokens = sum(
+            waiting.seqs[0].data.get_input_len()
+            for waiting in self.waiting
+        )
+        waiting_add_tokens = sum(
+            waiting.seqs[0].data.get_input_len()
+            for waiting in self.waiting_add
+        )
+        return waiting_tokens + waiting_add_tokens
+
+    
+    def monitor_mprefill_info(self):
+        return self.get_mprefill_num_unfinished_seq_groups(), self.get_mprefill_num_unfinished_tokens()
+    
     def move_waitingadd_to_waiting(self):
         while self.waiting_add:
             seq_group = self.waiting_add.pop(0)
