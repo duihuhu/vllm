@@ -104,9 +104,10 @@ if __name__ == "__main__":
                               chunk_num = args.chunk_num)
     model_name = args.model
     chunkrunner.set_self_configs(model = model_name, tensor_parallel_size = args.tp)
+    chunkrunner.set_parallel_chunkworkers()
     
     print("warm up...")
-    chunkrunner._start_worker()
+    chunkrunner.run_worker()
     print("end warm up")
 
     #engine_args = AsyncEngineArgs.from_cli_args(args)
