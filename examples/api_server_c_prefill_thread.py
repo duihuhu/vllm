@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 import uvicorn
 
-from vllm.transformers_utils import get_tokenizer
+from vllm.transformers_utils.tokenizer import get_tokenizer
 from vllm.chunked.chunkrunner import ChunkRunner
 from vllm.chunked.chunk import ChunkSamplingParams
 
