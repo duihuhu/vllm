@@ -54,7 +54,7 @@ def compose_mprefill_url():
     mprefill_local_add_request = "mprefill_add"
     min_unfinished_tokens = 0
     for key, value in monitor_mprefill_info.items():
-        if value.unfinished_tokens >  min_unfinished_tokens:
+        if value.unfinished_tokens >=  min_unfinished_tokens:
             host = value.host
             service_port = value.service_port
     mprefill_url =  "http://" + host + ":" + service_port + "/" + mprefill_local_add_request
