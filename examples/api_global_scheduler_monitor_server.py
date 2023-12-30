@@ -68,6 +68,7 @@ async def forward_request_to_another_server(request: Request) -> Response:
     original_content = await request.body()
 
     forward_url = compose_mprefill_url()
+    print(forward_url)
     # 构建转发请求
     # forward_url = "http://example.com/destination_endpoint"
     async with httpx.AsyncClient() as client:
