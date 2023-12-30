@@ -57,7 +57,7 @@ def compose_mprefill_url():
         if value.unfinished_tokens >=  min_unfinished_tokens:
             host = value.host
             service_port = value.service_port
-    mprefill_url =  "http://" + host + ":" + service_port + "/" + mprefill_local_add_request
+    mprefill_url =  "http://" + host + ":" + str(service_port) + "/" + mprefill_local_add_request
     return mprefill_url
 
 async def forward_request_to_another_server(request: Request) -> Response:
