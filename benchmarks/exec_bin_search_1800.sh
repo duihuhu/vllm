@@ -12,10 +12,10 @@ python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_
 sleep 5
 
 echo "1750 78767"
-python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --tensor-parallel-size 4 --num-prompts 8 --batch-size 8 --split-two-phase 1 --prompt-line 78767
+python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --tensor-parallel-size 4 --num-prompts 8 --batch-size 8 --split-two-phase 1 --prompt-line 78766
 sleep 5
 echo "1851 62265"
-python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --tensor-parallel-size 4 --num-prompts 8 --batch-size 8 --split-two-phase 1 --prompt-line 62265
+python3 benchmark_throughput.py --backend vllm --dataset /workspace/ShareGPT_V3_unfiltered_cleaned_split.json --model /workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/ --tensor-parallel-size 4 --num-prompts 8 --batch-size 8 --split-two-phase 1 --prompt-line 62264
 sleep 5
 
 echo "1700 46147"
