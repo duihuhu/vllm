@@ -94,9 +94,10 @@ async def post_prefill_exec(prompts: List[str],
         #     mprefill_status = "mprefill_execute"
         #     api_url = api_url_execute_prefill
         # else:
-        mprefill_status = "global_prefill_req_pool "
-        api_url = api_url_add_prefill
-            
+        mprefill_status = "mprefill_add "
+        host = "127.0.0.1"
+        api_url = f"http://{host}:{9000}/global_prefill_req_pool"
+
         headers = {"User-Agent": "Test Client"}
         pload = {
             "prompts": prompts[alread_send:alread_send + batch_size],
