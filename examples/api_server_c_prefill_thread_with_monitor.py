@@ -103,9 +103,10 @@ def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinis
     response = post_monitor_request(monitor_url, host, service_port, machine_type, unfinished_req, unfinished_tokens)
     
 def monitor_prefill_info(host, service_port):
-    # global engine
+    global engine
     machine_type = "prefill"
     while True:
+        print("local ", id(engine))
         unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
         print("unfinished_req, unfinished_tokens", unfinished_req, unfinished_tokens)
         post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens)
@@ -121,7 +122,8 @@ if __name__ == "__main__":
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args)
-    
+    print("global ", id(engine))
+
     # 创建一个新的进程
     process = multiprocessing.Process(target=monitor_prefill_info, args=(args.host,args.port,))
     # 启动进程
