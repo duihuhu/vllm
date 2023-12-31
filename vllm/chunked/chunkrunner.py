@@ -188,7 +188,7 @@ class ChunkRunner:
         1413, 561]'''
         #sts = time.time()
         #prompt_lens.sort()
-        eds = time.time()
+        #eds = time.time()
         fake_lens = [91,88,75,3,255,42,103,15,352,385,127,49,306,157,228,75,209,315,197,21,104,30,182,175,103,53,
                        356,390,122,387,125,22,347,143,273,239,117,276,119,422,90,269,243,243,24,29,216,88,93,107,224,
                        248,75,189,108,72,108,88,264,248,339,173,328,184,62,47,2,76,61,178,86,52,60,2,89,59,21,283,92,
@@ -340,63 +340,78 @@ class ChunkRunner:
                 break
     
     def _set_job_chunks(self) -> None:
-        all_token_ids: List[int] = []
-        all_token_seqs: List[str] = []
+        ALL_SIZE = 128
+        ALL_ST = 0
+        Sequences: List[Sequence] = []
         for _, sequence in self.all_job_sequences.items():
-            for token_id in sequence.prompt_token_ids:
-                all_token_ids.append(token_id)
-                all_token_seqs.append(sequence.seq_id)
-        st = 0
-        token_num = len(all_token_ids)
-        while st < token_num:
-            ed = st + self.chunk_size
-            if ed >= token_num:
-                ed = token_num
-            chunk_id = self.counter.__next__()
-            chunk = Chunk(chunk_id = chunk_id, chunk_size = self.chunk_size, 
-                          chunk_status = ChunkStatus.WAITING)
-            temp_seqtoken_count: Dict[str, int] = {}
-            for i in range(st, ed):
-                chunk.prompt_token_ids.append(all_token_ids[i])
-                temp_seqtoken_count[all_token_seqs[i]] = temp_seqtoken_count.setdefault(all_token_seqs[i], 0) + 1
-                self.all_job_sequences[all_token_seqs[i]].chunks_to_prompts[chunk_id] = self.all_job_sequences[all_token_seqs[i]].chunks_to_prompts.setdefault(chunk_id, 0) + 1
-            for temp_seq_id, temp_token_len in temp_seqtoken_count.items():
-                chunk.raw_sequence_ids.append(temp_seq_id)
-                chunk.prompt_lens.append(temp_token_len)
-                ans = 0
-                for temp_chunk_id, used_token_num in self.all_job_sequences[temp_seq_id].chunks_to_prompts.items():
-                    if temp_chunk_id == chunk_id:
-                        break
-                    else:
-                        ans += used_token_num
-                chunk.kv_prefixs.append(ans)
-            chunk.set_seqs_to_lens_and_prefixs()
-            temp_block = self.cacheblock.allocate_block()
-            chunk.set_self_block(block = temp_block)
-            self.all_job_chunks.append(chunk)
-            st += self.chunk_size
+            Sequences.append(sequence)
         
-        for chunk in self.all_job_chunks:
+        while ALL_ST < ALL_SIZE:
+            ALL_END = ALL_ST + 16
+            temp_sequences = Sequences[ALL_ST: ALL_END]
+
+            all_token_ids: List[int] = []
+            all_token_seqs: List[str] = []
+            temp_chunks: List[Chunk] = []
+            for sequence in temp_sequences:
+                for token_id in sequence.prompt_token_ids:
+                    all_token_ids.append(token_id)
+                    all_token_seqs.append(sequence.seq_id)
             st = 0
-            idxs: List[int] = []
-            sampling_params: List[ChunkSamplingParams] = []
-            do_sampling: List[str] = []
-            for seq_id, prompt_len in chunk.seqs_to_lens.items():
-                ed = st + prompt_len
-                self.all_job_sequences[seq_id].update_count(prompt_len)
-                #self.chunk_worker.job_sequences[seq_id].update_count(prompt_len)
-                if self.all_job_sequences[seq_id].is_full(): #if self.chunk_worker.job_sequences[seq_id].is_full():
-                    idxs.append(ed - 1)
-                    do_sampling.append(seq_id)
-                    sampling_params.append(self.all_job_sequences[seq_id].sampling_params)
-                    #sampling_params.append(self.chunk_worker.job_sequences[seq_id].sampling_params)
-                #self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
-                st = ed
-                #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
-                #st = ed
-            chunk.set_idxs(idxs = idxs)
-            chunk.set_sampling_params_for_sampler(sampling_params_for_sampler = sampling_params)
-            chunk.set_do_sampling(do_sampling = do_sampling)
+            token_num = len(all_token_ids)
+            while st < token_num:
+                ed = st + self.chunk_size
+                if ed >= token_num:
+                    ed = token_num
+                chunk_id = self.counter.__next__()
+                chunk = Chunk(chunk_id = chunk_id, chunk_size = self.chunk_size, 
+                            chunk_status = ChunkStatus.WAITING)
+                temp_seqtoken_count: Dict[str, int] = {}
+                for i in range(st, ed):
+                    chunk.prompt_token_ids.append(all_token_ids[i])
+                    temp_seqtoken_count[all_token_seqs[i]] = temp_seqtoken_count.setdefault(all_token_seqs[i], 0) + 1
+                    self.all_job_sequences[all_token_seqs[i]].chunks_to_prompts[chunk_id] = self.all_job_sequences[all_token_seqs[i]].chunks_to_prompts.setdefault(chunk_id, 0) + 1
+                for temp_seq_id, temp_token_len in temp_seqtoken_count.items():
+                    chunk.raw_sequence_ids.append(temp_seq_id)
+                    chunk.prompt_lens.append(temp_token_len)
+                    ans = 0
+                    for temp_chunk_id, used_token_num in self.all_job_sequences[temp_seq_id].chunks_to_prompts.items():
+                        if temp_chunk_id == chunk_id:
+                            break
+                        else:
+                            ans += used_token_num
+                    chunk.kv_prefixs.append(ans)
+                chunk.set_seqs_to_lens_and_prefixs()
+                temp_block = self.cacheblock.allocate_block()
+                chunk.set_self_block(block = temp_block)
+                temp_chunks.append(chunk)
+                st += self.chunk_size
+        
+            for chunk in temp_chunks:
+                st = 0
+                idxs: List[int] = []
+                sampling_params: List[ChunkSamplingParams] = []
+                do_sampling: List[str] = []
+                for seq_id, prompt_len in chunk.seqs_to_lens.items():
+                    ed = st + prompt_len
+                    self.all_job_sequences[seq_id].update_count(prompt_len)
+                    #self.chunk_worker.job_sequences[seq_id].update_count(prompt_len)
+                    if self.all_job_sequences[seq_id].is_full(): #if self.chunk_worker.job_sequences[seq_id].is_full():
+                        idxs.append(ed - 1)
+                        do_sampling.append(seq_id)
+                        sampling_params.append(self.all_job_sequences[seq_id].sampling_params)
+                        #sampling_params.append(self.chunk_worker.job_sequences[seq_id].sampling_params)
+                    #self.chunk_worker.job_sequences[seq_id].outputs.append(output[st: ed])
+                    st = ed
+                    #self.chunk_worker.job_sequences[seq_id].add_start_and_end_time(st = start_time, ed = end_time)
+                    #st = ed
+                chunk.set_idxs(idxs = idxs)
+                chunk.set_sampling_params_for_sampler(sampling_params_for_sampler = sampling_params)
+                chunk.set_do_sampling(do_sampling = do_sampling)
+            
+            self.all_job_chunks.extend(temp_chunks)
+
+            ALL_ST = ALL_END
     
     def _reduce_outputs(self) -> None:
         #for _, sequence in self.job_sequences.items():
