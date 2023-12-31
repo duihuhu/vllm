@@ -1,5 +1,5 @@
 """Multi-head attention."""
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import torch
 import torch.nn as nn

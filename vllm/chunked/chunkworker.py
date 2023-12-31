@@ -41,7 +41,8 @@ class ChunkWorker:
                                            rank = self.rank, 
                                            distributed_init_method = self.distributed_init_method)
         set_random_seed(seed = self.model_config.seed)
-        self.model = get_model(model_config = self.model_config)
+        self.model = get_model(model_config = self.model_config,
+                               Chunked = True)
         initialize_all_reduce_launcher(
             self.chunk_size,
             #2560,
