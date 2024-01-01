@@ -73,7 +73,7 @@ async def mprefill_add_prefill(request_dict):
         chunkrunner.request_waiting[0].append(request_id)
         chunkrunner.request_waiting[1].append(prompt_token_ids)
         chunkrunner.request_waiting[2].append(sampling_params)
-        chunkrunner.request_waiting[3].append(prompts)
+        chunkrunner.request_waiting[3].append(prompt)
 
     # for _ in range(len(prompts_token_ids_s)):
     #     sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
