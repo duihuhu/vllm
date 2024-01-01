@@ -28,6 +28,8 @@ class ChunkRunner:
         self.counter = Counter()
         self.cacheblock = ChunkCacheBlocks(blocks_num = self.chunk_num)
 
+        self.request_waiting  = [[],[], []]
+        
     def monitor_mprefill_info(self):
         unfinished_chunked_token = 0
         for job_chunk in self.all_job_chunks:

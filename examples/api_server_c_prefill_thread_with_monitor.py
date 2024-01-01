@@ -19,6 +19,8 @@ import requests
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
+
+prefill_sched_batch = 16
 app = FastAPI()
 
 mp_dp = 'mprefill_to_mdispatcher.txt'
@@ -62,23 +64,33 @@ async def mprefill_add_prefill(request_dict):
     temperature = request_dict.pop("temperature")
     ignore_eos = request_dict.pop("ignore_eos")
     prompts_token_ids_s: List[List[int]] = []
-    for prompt in prompts:
+    sampling_params_s: List[sampling_params] = []
+    
+    for request_id, prompt in zip(request_ids,prompts):
         prompt_token_ids = tokenizer(prompt).input_ids
         prompts_token_ids_s.append(prompt_token_ids) 
-    sampling_params_s: List[sampling_params] = []
+        sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
+        chunkrunner.request_waiting[0].append(request_id)
+        chunkrunner.request_waiting[1].append(prompts_token_ids_s)
+        chunkrunner.request_waiting[2].append(sampling_params)
+
     for _ in range(len(prompts_token_ids_s)):
         sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
         sampling_params_s.append(sampling_params)
     
+    if len(chunkrunner.request_waiting[0]) >=  prefill_sched_batch:
     #sampling_params_list = []
     #for i in range(len(prompts)):
     #    sampling_params = SamplingParams(**request_dict)
     #    sampling_params_list.append(sampling_params)
     # engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
-    chunkrunner.add_requests_to_job_sequences(prompt_token_ids_s = prompts_token_ids_s, 
-                                              sampling_params_s = sampling_params_s)
-    prefill_event.set()
+        chunkrunner.add_requests_to_job_sequences(prompt_token_ids_s = chunkrunner.request_waiting[1], 
+                                                sampling_params_s = chunkrunner.request_waiting[2])
+        chunkrunner.request_waiting[0] = []
+        chunkrunner.request_waiting[1] = []
+        chunkrunner.request_waiting[2] = []
+        prefill_event.set()
 
 @app.post("/mprefill_add")
 async def mprefill_add(request: Request) -> Response:
