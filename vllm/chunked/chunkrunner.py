@@ -358,6 +358,7 @@ class ChunkRunner:
                 break
     
     def _set_job_chunks(self) -> None:
+        self.counter.reset()
         all_token_ids: List[int] = []
         all_token_seqs: List[str] = []
         for _, sequence in self.all_job_sequences.items():
