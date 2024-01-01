@@ -39,7 +39,7 @@ class ChunkRunner:
                                   sampling_params = sampling_params,
                                   start_time = now_time)
             self.all_job_sequences[seq_id] = a_sequence
-        #self._set_job_chunks()
+        self._set_job_chunks()
 
     def _add_requests(self, 
                       prompt_token_ids: List[int], 
@@ -252,15 +252,19 @@ class ChunkRunner:
                     if chunk_id == chunk.chunk_id:
                         break
                     else:
-                        block_id = self.all_job_chunks[chunk_id].cache_block_id
-                        st = 0
-                        for a_seq_id, slice_token_num in self.all_job_chunks[chunk_id].seqs_to_lens.items():
-                            if a_seq_id == seq_id:
-                                break
-                            else:
-                                st += slice_token_num
-                        prompt_len = chunk.seqs_to_lens.get(seq_id)
-                        kv_cache_ids.setdefault(prompt_len, []).append((block_id, st, used_token_num))
+                        if chunk_id >= 0 and chunk_id < len(self.all_job_chunks):
+                            block_id = self.all_job_chunks[chunk_id].cache_block_id
+                            st = 0
+                            for a_seq_id, slice_token_num in self.all_job_chunks[chunk_id].seqs_to_lens.items():
+                                if a_seq_id == seq_id:
+                                    break
+                                else:
+                                    st += slice_token_num
+                            prompt_len = chunk.seqs_to_lens.get(seq_id)
+                            kv_cache_ids.setdefault(prompt_len, []).append((block_id, st, used_token_num))
+                        else:
+                            print(f"chunk id is {chunk_id}")
+                            print(f"has {len(self.all_job_chunks)} chunks")
         return (input_tokens_tensor, input_positions_tensor, kv_cache_ids)
     
     def run_worker(self) -> None:
@@ -269,9 +273,8 @@ class ChunkRunner:
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
         
-        while self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
-            chunk = self.all_job_chunks[0]
-
+        for chunk in  self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
+            #chunk = self.all_job_chunks[0]
             start_time = time.time()
 
             chunk.chunk_status = ChunkStatus.RUNNING
@@ -307,11 +310,11 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
                 #self.chunk_worker.job_sequences[id].set_end_time(end_time)
 
-            self.processed_chunks.append(chunk)
-            self.all_job_chunks.pop(0)
+            #self.processed_chunks.append(chunk)
+            #self.all_job_chunks.pop(0)
 
         self._reduce_outputs()
-  
+        #self.all_job_chunks.clear()
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
         #self.chunk_worker.generate_first_token_str(tokenizer = self.tokenizer)
@@ -428,18 +431,16 @@ class ChunkRunner:
         #        if i != 0:
         #            sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
         # free all chunks' cache
-        while self.processed_chunks:
-            chunk = self.processed_chunks.pop(0)
+        for chunk in self.all_job_chunks:
+            #chunk = self.processed_chunks.pop(0)
             self.cacheblock.free_block(block = chunk.cache_block)
             chunk.chunk_status = ChunkStatus.PREFILLED
-        self.processed_chunks.clear()
+        self.all_job_chunks.clear()
     
     def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
-        self._set_job_chunks()
-
+        #self._set_job_chunks()
         output_num = 0
-        while self.all_job_chunks:
-            chunk = self.all_job_chunks[0]
+        for chunk in self.all_job_chunks:
             start_time = time.time()
             chunk.chunk_status = ChunkStatus.RUNNING
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
@@ -460,8 +461,8 @@ class ChunkRunner:
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
                 self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
-            self.processed_chunks.append(chunk)
-            self.all_job_chunks.pop(0)
+            #self.processed_chunks.append(chunk)
+        #self.all_job_chunks.clear()
         self._reduce_outputs()
         prefill_nums += 1
         combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + output_num.to_bytes(1, byteorder='big')
