@@ -37,17 +37,24 @@ class ChunkRunner:
         
 
     def add_requests_to_job_sequences(self,
+                                      prompts_s: List[str],
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams]) -> None:
-        for prompt_token_ids, sampling_params in zip(prompt_token_ids_s, sampling_params_s):
-            seq_id = random_uuid()
+        seq_ids: List[str] = []
+        for _ in range(len(sampling_params_s)):
+            seq_ids.append(random_uuid())
+        this_labels = self._do_predict(inputs = prompts_s,
+                                       seq_ids = seq_ids)
+        for prompts, prompt_token_ids, sampling_params, seq_id, label in zip(prompts_s, prompt_token_ids_s, sampling_params_s, seq_ids, this_labels):
             now_time = time.time()
             a_sequence = Sequence(seq_id = seq_id, 
-                                  prompt = "Who is Messi",
+                                  prompt = prompts,
                                   prompt_token_ids = prompt_token_ids,
                                   sampling_params = sampling_params,
-                                  start_time = now_time)
+                                  start_time = now_time,
+                                  label = label)
             self.all_job_sequences[seq_id] = a_sequence
+        
         self._set_job_chunks()
 
     def _add_requests(self, 
@@ -283,7 +290,7 @@ class ChunkRunner:
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
         
-        self._do_predict()
+        #self._do_predict()
 
         for chunk in  self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
             #chunk = self.all_job_chunks[0]
@@ -483,14 +490,15 @@ class ChunkRunner:
         return prefill_nums       
     #print("mprefill!!:  prefill iteration now is no unfinished")
 
-    def _do_predict(self) -> None:
-        for seq_id, sequence in self.all_job_sequences.items():
-            test_encoded = self.predict_tokenizer(sequence.prompt, 
-                                                  padding="max_length", 
-                                                  truncation=True, 
-                                                  return_tensors="pt", 
-                                                  max_length=2048)
-            predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
-                                             attention_mask = test_encoded['attention_mask'])
-            predicted_label = torch.argmax(predictions.logits, dim = 1).item()
-            print(f"{seq_id}'s label is {predicted_label}")
+    def _do_predict(self, inputs: List[str], seq_ids: List[str]) -> List[int]:
+        test_encoded = self.predict_tokenizer(inputs, 
+                                              padding = "max_length", 
+                                              truncation = True, 
+                                              return_tensors = "pt", 
+                                              max_length = 2048)
+        predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
+        predicted_labels = torch.argmax(predictions.logits, dim = 1).tolist()
+        for seq_id, label in zip(seq_ids, predicted_labels):
+            print(f"{seq_id}'s label is {label}")
+        return predicted_labels

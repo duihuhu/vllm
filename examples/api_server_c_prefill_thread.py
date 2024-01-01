@@ -75,7 +75,8 @@ async def mprefill_add_prefill(request_dict):
     #    sampling_params_list.append(sampling_params)
     # engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
-    chunkrunner.add_requests_to_job_sequences(prompt_token_ids_s = prompts_token_ids_s, 
+    chunkrunner.add_requests_to_job_sequences(prompts_s = prompts,
+                                              prompt_token_ids_s = prompts_token_ids_s, 
                                               sampling_params_s = sampling_params_s)
     prefill_event.set()
 

@@ -79,7 +79,8 @@ class Sequence:
                  start_time: float = -1.0,
                  end_time: float = -1.0,
                  count: int = 0,
-                 processed: bool = False) -> None:
+                 processed: bool = False,
+                 label: int = -1) -> None:
         self.seq_id = seq_id
         self.prompt_token_ids = prompt_token_ids
         self.prompt_len = len(prompt_token_ids)
@@ -92,6 +93,7 @@ class Sequence:
         self.count = count
         self.processed = processed
         self.prompt = prompt
+        self.label = label
 
     def append_outputs(self, input: torch.Tensor) -> None:
         self.outputs.append(input)
