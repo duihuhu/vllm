@@ -1,4 +1,4 @@
-from transformers import PreTrainedTokenizerBase
+from transformers import PreTrainedTokenizerBase, AutoModelForSequenceClassification, AutoTokenizer
 import json
 from typing import List, Dict, Tuple, Any
 import torch
@@ -28,6 +28,14 @@ class ChunkRunner:
         self.counter = Counter()
         self.cacheblock = ChunkCacheBlocks(blocks_num = self.chunk_num)
 
+    def set_predict_model_and_tokenizer(self, 
+                                        predict_tokenizer_path: str, 
+                                        predict_model_path: str) -> None:
+        self.predict_tokenizer = AutoTokenizer.from_pretrained(predict_tokenizer_path)
+        self.predict_model = AutoModelForSequenceClassification.from_pretrained(predict_model_path,
+                                                                                num_labels = 10)
+        
+
     def add_requests_to_job_sequences(self,
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams]) -> None:
@@ -35,6 +43,7 @@ class ChunkRunner:
             seq_id = random_uuid()
             now_time = time.time()
             a_sequence = Sequence(seq_id = seq_id, 
+                                  prompt = "Who is Messi",
                                   prompt_token_ids = prompt_token_ids,
                                   sampling_params = sampling_params,
                                   start_time = now_time)
@@ -273,6 +282,8 @@ class ChunkRunner:
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
         
+        self._do_predict()
+
         for chunk in  self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
             #chunk = self.all_job_chunks[0]
             start_time = time.time()
@@ -470,3 +481,16 @@ class ChunkRunner:
         mm.write(combined_info_bytes)
         return prefill_nums       
     print("mprefill!!:  prefill iteration now is no unfinished")
+
+    @torch.inference_mode
+    def _do_predict(self) -> None:
+        for seq_id, sequence in self.all_job_sequences.items():
+            test_encoded = self.predict_tokenizer(sequence.prompt, 
+                                                  padding="max_length", 
+                                                  truncation=True, 
+                                                  return_tensors="pt", 
+                                                  max_length=2048)
+            predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                             attention_mask = test_encoded['attention_mask'])
+            predicted_label = torch.argmax(predictions.logits, dim = 1).item()
+            print(f"{seq_id}'s label is {predicted_label}")

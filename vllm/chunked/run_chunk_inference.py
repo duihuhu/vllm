@@ -13,6 +13,9 @@ def main(args: argparse.Namespace):
     model_name = args.model
     chunkrunner.set_self_configs(model = model_name, tensor_parallel_size = args.tp)
 
+    chunkrunner.set_predict_model_and_tokenizer(predict_model_path = args.predict_model,
+                                                predict_tokenizer_path = args.predict_tokenizer)
+
     #chunk_size = args.chunk_size
     #chunk_num = args.chunk_num
     #chunkrunner.set_self_chunkworker(chunk_size = chunk_size, chunk_num = chunk_num)
@@ -42,7 +45,9 @@ if __name__ == "__main__":
     #parser.add_argument("--num-prompts", type=int, default=10,
     #                    help="Number of prompts to process.")
     parser.add_argument("--chunk-size", type=int, default=512)
-    parser.add_argument("--chunk-num", type=int, default=78)
+    parser.add_argument("--chunk-num", type=int, default=5)
+    parser.add_argument("--predict-model", type=str, default="/workspace/opt_125m_model_sharegpt")
+    parser.add_argument("--predict-tokenizer", type=str, default="/workspace/opt-125m")
     args = parser.parse_args()
 
     if args.tokenizer is None:

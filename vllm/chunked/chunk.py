@@ -72,6 +72,7 @@ class Chunk:
 class Sequence:
     def __init__(self,
                  seq_id: str,
+                 prompt: str,
                  prompt_token_ids: List[int],
                  sampling_params: ChunkSamplingParams,
                  account: int = 0,
@@ -90,6 +91,7 @@ class Sequence:
         self.end_time = end_time
         self.count = count
         self.processed = processed
+        self.prompt = prompt
 
     def append_outputs(self, input: torch.Tensor) -> None:
         self.outputs.append(input)
