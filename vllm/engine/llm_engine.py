@@ -312,6 +312,8 @@ class LLMEngine:
     def monitor_mprefill_info(self):
         return self.scheduler.monitor_mprefill_info()
 
+    def monitor_mdecode_info(self):
+        return self.scheduler.monitor_mdecode_info()
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 

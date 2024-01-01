@@ -75,7 +75,7 @@ async def mprefill_add(request: Request) -> Response:
 @app.on_event("startup")
 def startup_decode_event():
     threading.Thread(target=mprefill_exec_prefill, daemon=True).start()
-    threading.Thread(target=monitor_prefill_info, args=(args.host, args.port) ,daemon=True).start()
+    threading.Thread(target=monitor_mprefill_info, args=(args.host, args.port) ,daemon=True).start()
 
 def post_monitor_request(monitor_url: str,
                       host: str,
@@ -102,7 +102,7 @@ def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinis
     monitor_url = "http://127.0.0.1:9000/mprefill_monitor_report"
     response = post_monitor_request(monitor_url, host, service_port, machine_type, unfinished_req, unfinished_tokens)
     
-def monitor_prefill_info(host, service_port):
+def monitor_mprefill_info(host, service_port):
     global engine
     machine_type = "prefill"
     while True:
