@@ -385,7 +385,7 @@ class PagedAttention(nn.Module):
                 output[num_prompt_tokens:num_valid_tokens],
                 query[num_prompt_tokens:num_valid_tokens], key_cache,
                 value_cache, input_metadata)
-            done_d += 1
+            #done_d += 1
         
         # with open('/workspace/vllm/benchmarks/output/count.txt', 'a') as file:
         #     if done_p == 0 and done_d == 0:
