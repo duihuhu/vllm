@@ -48,12 +48,15 @@ class ChunkRunner:
                                       prompts_s,
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams],
-                                      request_ids=None) -> None:
+                                      request_ids: List[str]) -> None:
         seq_ids: List[str] = []
         for _ in range(len(sampling_params_s)):
             seq_ids.append(random_uuid())
+        start  = time.time()
         this_labels = self._do_predict(inputs = prompts_s,
                                        seq_ids = seq_ids)
+        end = time.time()
+        print("this labels ", this_labels , end-start)
         for prompt_token_ids, sampling_params, request_id, label in zip(prompt_token_ids_s, sampling_params_s, request_ids, this_labels):
             seq_id = random_uuid()
             now_time = time.time()
