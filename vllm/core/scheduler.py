@@ -119,6 +119,12 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
+    #todo
+    def get_mdecode_reqs_label(self):
+        return [1,2,3,4]
+    def monitor_mdecode_info(self):
+        return self.get_mdecode_reqs_label()
+    
     def move_waitingadd_to_waiting(self):
         while self.waiting_add:
             seq_group = self.waiting_add.pop(0)

@@ -34,6 +34,7 @@ class ChunkRunner:
             if job_chunk.chunk_status == ChunkStatus.RUNNING or job_chunk.chunk_status == ChunkStatus.WAITING:
                 unfinished_chunked_token = unfinished_chunked_token + len(job_chunk.prompt_token_ids)
         return unfinished_chunked_token
+    
     def add_requests_to_job_sequences(self,
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams]) -> None:

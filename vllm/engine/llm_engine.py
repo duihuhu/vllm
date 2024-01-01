@@ -308,7 +308,10 @@ class LLMEngine:
 
     def convert_reqs_status_by_num(self, request_num):
         self.scheduler.convert_reqs_status_by_num(request_num)
-
+        
+    def monitor_mdecode_info(self):
+        return self.scheduler.monitor_mdecode_info()
+    
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 

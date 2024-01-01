@@ -71,14 +71,14 @@ def init_mdecode_prefill():
 def startup_decode_event():
     threading.Thread(target=init_mdecode_prefill, daemon=True).start()
     threading.Thread(target=notify_mdecode, daemon=True).start()
-    threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port) ,daemon=True).start()
+    # threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port) ,daemon=True).start()
 
 def monitor_mdecode_info(host, service_port):
     global engine
     machine_type = "decode"
     while True:
         num_labels = engine.monitor_mdecode_info()
-
+        time.sleep(1)
         
 #background threads
 @app.post("/init_mdecode")
