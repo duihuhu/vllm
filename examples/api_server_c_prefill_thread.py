@@ -100,6 +100,8 @@ if __name__ == "__main__":
     parser.add_argument("--chunk-size", type=int, default=512)
     parser.add_argument("--chunk-num", type=int, default=30)
     parser.add_argument("--tp", type=int, default=2)
+    parser.add_argument("--predict-model", type=str, default="/workspace/opt_125m_model_sharegpt")
+    parser.add_argument("--predict-tokenizer", type=str, default="/workspace/opt-125m")
     args = parser.parse_args()
 
     if args.tokenizer == None:
@@ -111,6 +113,8 @@ if __name__ == "__main__":
                               chunk_num = args.chunk_num)
     model_name = args.model
     chunkrunner.set_self_configs(model = model_name, tensor_parallel_size = args.tp)
+    chunkrunner.set_predict_model_and_tokenizer(predict_tokenizer_path = args.predict_tokenizer,
+                                                predict_model_path = args.predict_model)
     chunkrunner.set_parallel_chunkworkers()
     
     print("warm up...")
