@@ -87,7 +87,7 @@ async def mprefill_add_prefill(request_dict):
     # engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
         chunkrunner.add_requests_to_job_sequences(prompts_s = chunkrunner.request_waiting[3], prompt_token_ids_s = chunkrunner.request_waiting[1], 
-                                                sampling_params_s = chunkrunner.request_waiting[2])
+                                                sampling_params_s = chunkrunner.request_waiting[2], request_ids=chunkrunner.request_waiting[0])
         chunkrunner.request_waiting[0] = []
         chunkrunner.request_waiting[1] = []
         chunkrunner.request_waiting[2] = []
