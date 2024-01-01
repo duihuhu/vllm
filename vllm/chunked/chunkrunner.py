@@ -434,10 +434,10 @@ class ChunkRunner:
     
     def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
         self._set_job_chunks()
-        
+
         output_num = 0
         while self.all_job_chunks:
-            chunk = self.all_job_chunks.pop(0)
+            chunk = self.all_job_chunks[0]
             start_time = time.time()
             chunk.chunk_status = ChunkStatus.RUNNING
             input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
@@ -459,6 +459,7 @@ class ChunkRunner:
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
                 self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
             self.processed_chunks.append(chunk)
+            self.all_job_chunks.pop(0)
         self._reduce_outputs()
         prefill_nums += 1
         combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + output_num.to_bytes(1, byteorder='big')
