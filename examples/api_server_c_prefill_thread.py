@@ -51,18 +51,24 @@ def mprefill_exec_prefill():
         
 async def mprefill_add_prefill(request_dict):
     print("mprefill add prefill request ", time.time())
-    #request_ids = request_dict.pop("request_ids")
-    prompts_s = request_dict.pop("prompts")
+    request_ids = request_dict.pop("request_ids")
+    prompts = request_dict.pop("prompts")
+    output_lens = request_dict.pop("output_lens")
+    stream = request_dict.pop("stream", False)
+    mprefill_status = request_dict.pop("mprefill_status")
+    n = request_dict.pop("n")
+    use_beam_search = request_dict.pop("use_beam_search")
+    temperature = request_dict.pop("temperature")
+    ignore_eos = request_dict.pop("ignore_eos")
     prompts_token_ids_s: List[List[int]] = []
-    temp = tokenizer(prompts_s).input_ids
-    prompts_token_ids_s.append(temp)
+    for prompt in prompts:
+        prompt_token_ids = tokenizer(prompt).input_ids
+        prompts_token_ids_s.append(prompt_token_ids) 
     sampling_params_s: List[sampling_params] = []
     for _ in range(len(prompts_token_ids_s)):
-        sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
+        sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
         sampling_params_s.append(sampling_params)
-    #output_lens = request_dict.pop("output_lens")
-    #stream = request_dict.pop("stream", False)
-    #mprefill_status = request_dict.pop("mprefill_status")
+    
     #sampling_params_list = []
     #for i in range(len(prompts)):
     #    sampling_params = SamplingParams(**request_dict)
