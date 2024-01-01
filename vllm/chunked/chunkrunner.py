@@ -270,7 +270,7 @@ class ChunkRunner:
         #print(f"Added in working pool at {now_time}")
         
         while self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
-            chunk = self.all_job_chunks.pop(0)
+            chunk = self.all_job_chunks[0]
 
             start_time = time.time()
 
@@ -308,6 +308,7 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[id].set_end_time(end_time)
 
             self.processed_chunks.append(chunk)
+            self.all_job_chunks.pop(0)
 
         self._reduce_outputs()
   
@@ -431,6 +432,7 @@ class ChunkRunner:
             chunk = self.processed_chunks.pop(0)
             self.cacheblock.free_block(block = chunk.cache_block)
             chunk.chunk_status = ChunkStatus.PREFILLED
+        self.processed_chunks.clear()
     
     def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
         self._set_job_chunks()
