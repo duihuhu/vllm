@@ -66,13 +66,14 @@ async def mprefill_add_prefill(request_dict):
     prompts_token_ids_s: List[List[int]] = []
     sampling_params_s: List[sampling_params] = []
     
-    for request_id, prompt in zip(request_ids,prompts):
+    for request_id, prompt in zip(request_ids, prompts):
         prompt_token_ids = tokenizer(prompt).input_ids
         # prompts_token_ids_s.append(prompt_token_ids) 
         sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
         chunkrunner.request_waiting[0].append(request_id)
         chunkrunner.request_waiting[1].append(prompt_token_ids)
         chunkrunner.request_waiting[2].append(sampling_params)
+        chunkrunner.request_waiting[3].append(prompts)
 
     # for _ in range(len(prompts_token_ids_s)):
     #     sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
@@ -85,11 +86,12 @@ async def mprefill_add_prefill(request_dict):
     #    sampling_params_list.append(sampling_params)
     # engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
-        chunkrunner.add_requests_to_job_sequences(prompt_token_ids_s = chunkrunner.request_waiting[1], 
+        chunkrunner.add_requests_to_job_sequences(prompts_s = chunkrunner.request_waiting[3], prompt_token_ids_s = chunkrunner.request_waiting[1], 
                                                 sampling_params_s = chunkrunner.request_waiting[2])
         chunkrunner.request_waiting[0] = []
         chunkrunner.request_waiting[1] = []
         chunkrunner.request_waiting[2] = []
+        chunkrunner.request_waiting[3] = []
         prefill_event.set()
 
 @app.post("/mprefill_add")
@@ -149,6 +151,9 @@ if __name__ == "__main__":
     parser.add_argument("--chunk-size", type=int, default=512)
     parser.add_argument("--chunk-num", type=int, default=30)
     parser.add_argument("--tp", type=int, default=2)
+    parser.add_argument("--predict-model", type=str, default="/workspace/opt_125m_model_sharegpt")
+    parser.add_argument("--predict-tokenizer", type=str, default="/workspace/opt-125m")
+
     args = parser.parse_args()
 
     if args.tokenizer == None:
@@ -160,6 +165,10 @@ if __name__ == "__main__":
                               chunk_num = args.chunk_num)
     model_name = args.model
     chunkrunner.set_self_configs(model = model_name, tensor_parallel_size = args.tp)
+    
+    chunkrunner.set_predict_model_and_tokenizer(predict_tokenizer_path = args.predict_tokenizer,
+                                            predict_model_path = args.predict_model)
+
     chunkrunner.set_parallel_chunkworkers()
     
     print("warm up...")

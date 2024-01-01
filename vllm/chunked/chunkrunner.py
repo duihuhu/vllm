@@ -1,4 +1,4 @@
-from transformers import PreTrainedTokenizerBase
+from transformers import PreTrainedTokenizerBase, AutoModelForSequenceClassification, AutoTokenizer
 import json
 from typing import List, Dict, Tuple, Any
 import torch
@@ -28,7 +28,14 @@ class ChunkRunner:
         self.counter = Counter()
         self.cacheblock = ChunkCacheBlocks(blocks_num = self.chunk_num)
 
-        self.request_waiting  = [[],[], []]
+        self.request_waiting  = [[],[], [], []]
+        
+    def set_predict_model_and_tokenizer(self, 
+                                        predict_tokenizer_path: str, 
+                                        predict_model_path: str) -> None:
+        self.predict_tokenizer = AutoTokenizer.from_pretrained(predict_tokenizer_path)
+        self.predict_model = AutoModelForSequenceClassification.from_pretrained(predict_model_path,
+                                                                                num_labels = 10)
         
     def monitor_mprefill_info(self):
         unfinished_chunked_token = 0
@@ -38,17 +45,24 @@ class ChunkRunner:
         return unfinished_chunked_token
     
     def add_requests_to_job_sequences(self,
+                                      prompts_s,
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams],
                                       request_ids=None) -> None:
-        for prompt_token_ids, sampling_params, request_id in zip(prompt_token_ids_s, sampling_params_s, request_ids):
+        seq_ids: List[str] = []
+        for _ in range(len(sampling_params_s)):
+            seq_ids.append(random_uuid())
+        this_labels = self._do_predict(inputs = prompts_s,
+                                       seq_ids = seq_ids)
+        for prompt_token_ids, sampling_params, request_id, label in zip(prompt_token_ids_s, sampling_params_s, request_ids, this_labels):
             seq_id = random_uuid()
             now_time = time.time()
             a_sequence = Sequence(seq_id = seq_id, 
                                   prompt_token_ids = prompt_token_ids,
                                   sampling_params = sampling_params,
                                   start_time = now_time,
-                                  request_id=request_id)
+                                  request_id=request_id,
+                                   label = label)
             self.all_job_sequences[seq_id] = a_sequence
         self._set_job_chunks()
 
@@ -481,3 +495,16 @@ class ChunkRunner:
         mm.write(combined_info_bytes)
         return prefill_nums       
     print("mprefill!!:  prefill iteration now is no unfinished")
+    
+    def _do_predict(self, inputs: List[str], seq_ids: List[str]) -> List[int]:
+        test_encoded = self.predict_tokenizer(inputs, 
+                                                padding = "max_length", 
+                                                truncation = True, 
+                                                return_tensors = "pt", 
+                                                max_length = 2048)
+        predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                            attention_mask = test_encoded['attention_mask'])
+        predicted_labels = torch.argmax(predictions.logits, dim = 1).tolist()
+        for seq_id, label in zip(seq_ids, predicted_labels):
+            print(f"{seq_id}'s label is {label}")
+        return predicted_labels
