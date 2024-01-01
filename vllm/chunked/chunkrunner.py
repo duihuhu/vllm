@@ -481,9 +481,8 @@ class ChunkRunner:
         mm.seek(0)
         mm.write(combined_info_bytes)
         return prefill_nums       
-    print("mprefill!!:  prefill iteration now is no unfinished")
+    #print("mprefill!!:  prefill iteration now is no unfinished")
 
-    @torch.inference_mode
     def _do_predict(self) -> None:
         for seq_id, sequence in self.all_job_sequences.items():
             test_encoded = self.predict_tokenizer(sequence.prompt, 
