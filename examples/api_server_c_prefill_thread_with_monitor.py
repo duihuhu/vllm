@@ -68,15 +68,15 @@ async def mprefill_add_prefill(request_dict):
     
     for request_id, prompt in zip(request_ids,prompts):
         prompt_token_ids = tokenizer(prompt).input_ids
-        prompts_token_ids_s.append(prompt_token_ids) 
+        # prompts_token_ids_s.append(prompt_token_ids) 
         sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
         chunkrunner.request_waiting[0].append(request_id)
-        chunkrunner.request_waiting[1].append(prompts_token_ids_s)
+        chunkrunner.request_waiting[1].append(prompt_token_ids)
         chunkrunner.request_waiting[2].append(sampling_params)
 
-    for _ in range(len(prompts_token_ids_s)):
-        sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
-        sampling_params_s.append(sampling_params)
+    # for _ in range(len(prompts_token_ids_s)):
+    #     sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
+    #     sampling_params_s.append(sampling_params)
     
     if len(chunkrunner.request_waiting[0]) >=  prefill_sched_batch:
     #sampling_params_list = []
