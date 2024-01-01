@@ -97,7 +97,7 @@ if __name__ == "__main__":
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/models/facebook/opt-125m")
     parser.add_argument("--chunk-size", type=int, default=512)
-    parser.add_argument("--chunk-num", type=int, default=20)
+    parser.add_argument("--chunk-num", type=int, default=30)
     parser.add_argument("--tp", type=int, default=2)
     args = parser.parse_args()
 

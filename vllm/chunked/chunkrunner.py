@@ -39,7 +39,7 @@ class ChunkRunner:
                                   sampling_params = sampling_params,
                                   start_time = now_time)
             self.all_job_sequences[seq_id] = a_sequence
-        self._set_job_chunks()
+        #self._set_job_chunks()
 
     def _add_requests(self, 
                       prompt_token_ids: List[int], 
@@ -433,6 +433,8 @@ class ChunkRunner:
             chunk.chunk_status = ChunkStatus.PREFILLED
     
     def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
+        self._set_job_chunks()
+        
         output_num = 0
         while self.all_job_chunks:
             chunk = self.all_job_chunks.pop(0)
