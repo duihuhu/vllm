@@ -50,7 +50,7 @@ def mprefill_exec_prefill():
         while True:
             prefill_event.wait() 
             #prefill_nums = engine.mprefill_generate_prefill(mm, prefill_nums)
-            prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums)
+            prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label)
             prefill_event.clear()
             prefill_event.wait()     
         mm.close()
@@ -107,7 +107,7 @@ async def mprefill_add(request: Request) -> Response:
 
 @app.on_event("startup")
 def startup_decode_event():
-    threading.Thread(target=mprefill_exec_prefill, daemon=True).start()
+    threading.Thread(target=mprefill_exec_prefill, args=(request_label,) daemon=True).start()
     threading.Thread(target=monitor_mprefill_info, args=(args.host, args.port) ,daemon=True).start()
 
 def post_monitor_request(monitor_url: str,

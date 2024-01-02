@@ -468,7 +468,7 @@ class ChunkRunner:
             chunk.chunk_status = ChunkStatus.PREFILLED
         self.all_job_chunks.clear()
     
-    def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
+    def mprefill_generate_prefill(self, mm, prefill_nums, request_label) -> int:
         #self._set_job_chunks()
         output_num = 0
         sended_request_id = set()
@@ -497,6 +497,8 @@ class ChunkRunner:
             
             for request_id in chunk.do_sampling:
                 if request_id not in sended_request_id:
+                    label = request_label.get(request_id)
+                    print(request_id, label)
                     prefill_nums += 1
                     combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big')
                     mm.seek(0)
