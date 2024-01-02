@@ -26,11 +26,11 @@ class PrefillInfo:
         self.timestamp = timestamp
 
 class DecodeInfo:
-    def __init__(self, host, service_port, req_num, req_labels, timestamp) -> None:
+    def __init__(self, host, service_port, req_num, num_labels, timestamp) -> None:
         self.host = host
         self.service_port = service_port
         self.req_num = req_num
-        self.req_labels = req_labels
+        self.num_labels = num_labels
         self.timestamp = timestamp
 
 @app.post("/mprefill_monitor_report")
@@ -61,16 +61,16 @@ async def mdecode_monitor_report(request: Request) -> Response:
     host = request_dict.pop("host")
     service_port = request_dict.pop("service_port")
     machine_type = request_dict.pop("machine_type")
-    req_labels = request_dict.pop("req_labels") 
+    num_labels = request_dict.pop("num_labels") 
     timestamp = request_dict.pop("timestamp")    
     key = host + "_" + str(service_port) + "_" + machine_type
     # print(key, unfinished_req, unfinished_tokens)
     if monitor_mdecode_info.get(key):
         mdecode_info = monitor_mdecode_info[key]
-        mdecode_info.req_labels = req_labels
+        mdecode_info.num_labels = num_labels
         mdecode_info.timestamp = timestamp
     else:
-      mdecode_info = DecodeInfo(host, service_port, req_labels, timestamp)
+      mdecode_info = DecodeInfo(host, service_port, num_labels, timestamp)
       monitor_mdecode_info[key] = mdecode_info
     ret = {"text": 'test'}
     return JSONResponse(ret)
