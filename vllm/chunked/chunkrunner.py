@@ -486,6 +486,7 @@ class ChunkRunner:
                                         chunkmetadata = chunkinputmetadata)
             end_time = time.time()
             output_num += len(chunk.do_sampling)
+            print("output_num ", output_num)
             for i, id in enumerate(chunk.do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])

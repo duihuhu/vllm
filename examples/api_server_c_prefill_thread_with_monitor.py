@@ -135,15 +135,16 @@ def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinis
     for key, value in data.items():
         mdecode_info[key] = value
         
-    print("mdecode_info: ", mdecode_info)
+    # print("mdecode_info: ", mdecode_info)
+    
 def monitor_mprefill_info(host, service_port):
     global chunkrunner
     machine_type = "prefill"
     while True:
         unfinished_tokens = chunkrunner.monitor_mprefill_info()
-        print("unfinished_tokens ", unfinished_tokens)
+        # print("unfinished_tokens ", unfinished_tokens)
         post_mprefill_info(host, service_port, machine_type, 0, unfinished_tokens)
-        time.sleep(0.01)
+        time.sleep(0.1)
     return
 
 
