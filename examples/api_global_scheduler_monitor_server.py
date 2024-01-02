@@ -55,7 +55,7 @@ async def mprefill_monitor_report(request: Request) -> Response:
         mprefill_info.timestamp = timestamp
     else:
       mprefill_info = PrefillInfo(host, service_port, unfinished_req, unfinished_tokens, timestamp)
-      monitor_mprefill_info[key] = mprefill_info.__dict__
+      monitor_mprefill_info[key] = mprefill_info
     # ret = {"mdecode_info": monitor_mdecode_info}
     ret = {"text": "a"}
     print(type(monitor_mdecode_info))
@@ -79,7 +79,7 @@ async def mdecode_monitor_report(request: Request) -> Response:
         mdecode_info.timestamp = timestamp
     else:
       mdecode_info = DecodeInfo(host, service_port, machine_type, num_labels, timestamp)
-      monitor_mdecode_info[key] = mdecode_info
+      monitor_mdecode_info[key] = mdecode_info.__dict__
     ret = {"text": 'test'}
     return JSONResponse(ret)
 
