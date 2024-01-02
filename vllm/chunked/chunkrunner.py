@@ -472,6 +472,7 @@ class ChunkRunner:
         #self._set_job_chunks()
         output_num = 0
         sended_request_id = set()
+        pass_time = 0
         num = 1
         for chunk in self.all_job_chunks:
             start_time = time.time()
@@ -498,9 +499,10 @@ class ChunkRunner:
             for request_id in chunk.do_sampling:
                 if request_id not in sended_request_id:
                     label = request_label.get(request_id)
+                    time.sleep(0.1)
                     print(request_id, label)
-                    prefill_nums += 1
-                    combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big')
+                    pass_time += 1
+                    combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big')
                     mm.seek(0)
                     mm.write(combined_info_bytes)
                     sended_request_id.add(request_id)
