@@ -100,7 +100,7 @@ async def mprefill_add(request: Request) -> Response:
     request_dict = await request.json()
     await mprefill_add_prefill(request_dict)
     ret = {"text": 'test'}
-    return JSONResponse(monitor_mprefill_info)
+    return JSONResponse(ret)
 
 @app.on_event("startup")
 def startup_decode_event():
@@ -135,7 +135,7 @@ def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinis
     for key, value in data.items():
         mdecode_info[key] = value
         
-    # print("mdecode_info: ", mdecode_info)
+    print("mdecode_info: ", mdecode_info)
     
 def monitor_mprefill_info(host, service_port):
     global chunkrunner
