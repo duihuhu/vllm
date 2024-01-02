@@ -52,7 +52,7 @@ async def mprefill_monitor_report(request: Request) -> Response:
     else:
       mprefill_info = PrefillInfo(host, service_port, unfinished_req, unfinished_tokens, timestamp)
       monitor_mprefill_info[key] = mprefill_info
-    ret = {"decode": monitor_mdecode_info}
+    ret = {"mdecode_info": monitor_mdecode_info}
     return JSONResponse(ret)
 
 @app.post("/mdecode_monitor_report")

@@ -130,7 +130,8 @@ def post_monitor_request(monitor_url: str,
 def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens):
     monitor_url = "http://127.0.0.1:9000/mprefill_monitor_report"
     response = post_monitor_request(monitor_url, host, service_port, machine_type, unfinished_req, unfinished_tokens)
-    print(response)
+    data = response.json()
+    print(data.get("mdecode_info"))
 def monitor_mprefill_info(host, service_port):
     global chunkrunner
     machine_type = "prefill"
