@@ -31,7 +31,10 @@ class DecodeInfo:
         self.service_port = service_port
         self.num_labels = num_labels
         self.timestamp = timestamp
-
+        
+    def __json__(self):
+        return {"host": self.host, "service_port": self.service_port, "num_labels": self.num_labels, "timestamp": self.timestamp,}
+    
 @app.post("/mprefill_monitor_report")
 async def mprefill_monitor_report(request: Request) -> Response:
     request_dict = await request.json()
