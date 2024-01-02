@@ -49,7 +49,7 @@ int main(void)
       // dispatcher_shared[0] = mprefill_num;
       // dispatcher_shared[1] = prefilled_request_num;
 
-      memcpy(dispatcher_shared[alread_num*35], mprefill_shared[alread_num*35], 35);
+      memcpy(dispatcher_shared+(alread_num*35), mprefill_shared+(alread_num*35), 35);
       alread_num = alread_num + 1;
     }
   } 

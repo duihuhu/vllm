@@ -52,7 +52,7 @@ int main(void)
       // mdecode_shared[0] = mprefill_num;
       // mdecode_shared[1] = prefilled_request_num;
 
-      memcpy(mdecode_shared[alread_num*35], dispatcher_shared[alread_num*35], 35);
+      memcpy(mdecode_shared+(alread_num*35), dispatcher_shared+(alread_num*35), 35);
       alread_num = alread_num + 1;
     }
   } 
