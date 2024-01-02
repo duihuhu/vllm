@@ -32,8 +32,9 @@ class ChunkRunner:
                                         predict_tokenizer_path: str, 
                                         predict_model_path: str) -> None:
         self.predict_tokenizer = AutoTokenizer.from_pretrained(predict_tokenizer_path)
-        self.predict_model = AutoModelForSequenceClassification.from_pretrained(predict_model_path,
+        model = AutoModelForSequenceClassification.from_pretrained(predict_model_path,
                                                                                 num_labels = 10)
+        self.predict_model = model.to('cuda:1')
         
 
     def add_requests_to_job_sequences(self,
@@ -491,14 +492,25 @@ class ChunkRunner:
     #print("mprefill!!:  prefill iteration now is no unfinished")
 
     def _do_predict(self, inputs: List[str], seq_ids: List[str]) -> List[int]:
+        st = time.time()
         test_encoded = self.predict_tokenizer(inputs, 
                                               padding = "max_length", 
                                               truncation = True, 
                                               return_tensors = "pt", 
                                               max_length = 2048)
-        predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
-                                         attention_mask = test_encoded['attention_mask'])
+        ed = time.time()
+        st2 = time.time()
+        predictions = self._execute_predict_model(test_encoded)
+        ed2 = time.time()
         predicted_labels = torch.argmax(predictions.logits, dim = 1).tolist()
         for seq_id, label in zip(seq_ids, predicted_labels):
             print(f"{seq_id}'s label is {label}")
+        print(f"tokenizer costs {ed - st} seconds")
+        print(f"predict model in 1tp costs {ed2 - st2} seconds")
         return predicted_labels
+    
+    @torch.inference_mode
+    def _execute_predict_model(self, test_encoded) -> Any:
+        predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
+        return predictions

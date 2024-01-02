@@ -96,12 +96,12 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--tokenizer", type=str, default=None)
-    parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
+    parser.add_argument("--model", type=str, default="/workspace/models/facebook/opt-125m")
     parser.add_argument("--chunk-size", type=int, default=512)
     parser.add_argument("--chunk-num", type=int, default=30)
     parser.add_argument("--tp", type=int, default=2)
     parser.add_argument("--predict-model", type=str, default="/workspace/opt_125m_model_sharegpt")
-    parser.add_argument("--predict-tokenizer", type=str, default="/workspace/opt-125m")
+    parser.add_argument("--predict-tokenizer", type=str, default="/workspace/models/facebook/opt-125m")
     args = parser.parse_args()
 
     if args.tokenizer == None:
