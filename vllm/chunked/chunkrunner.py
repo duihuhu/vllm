@@ -36,6 +36,7 @@ class ChunkRunner:
         self.predict_tokenizer = AutoTokenizer.from_pretrained(predict_tokenizer_path)
         self.predict_model = AutoModelForSequenceClassification.from_pretrained(predict_model_path,
                                                                                 num_labels = 10)
+        self.predict_model = self.predict_model.to("cuda")
         
     def monitor_mprefill_info(self):
         unfinished_chunked_token = 0
@@ -505,6 +506,7 @@ class ChunkRunner:
                                                 truncation = True, 
                                                 return_tensors = "pt", 
                                                 max_length = 2048)
+        test_encoded = {key: value.to("cuda") for key, value in test_encoded.items()}
         predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
                                             attention_mask = test_encoded['attention_mask'])
         predicted_labels = torch.argmax(predictions.logits, dim = 1).tolist()
