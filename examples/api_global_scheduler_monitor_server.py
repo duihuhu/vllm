@@ -26,10 +26,9 @@ class PrefillInfo:
         self.timestamp = timestamp
 
 class DecodeInfo:
-    def __init__(self, host, service_port, req_num, num_labels, timestamp) -> None:
+    def __init__(self, host, service_port, num_labels, timestamp) -> None:
         self.host = host
         self.service_port = service_port
-        self.req_num = req_num
         self.num_labels = num_labels
         self.timestamp = timestamp
 
