@@ -57,8 +57,9 @@ class ChunkRunner:
         #     seq_ids.append(random_uuid())
 
         start  = time.time()
-        this_labels = self._do_predict(inputs = prompts_s,
-                                       request_ids = request_ids, request_label = request_label)
+        # this_labels = self._do_predict(inputs = prompts_s,
+        #                                request_ids = request_ids, request_label = request_label)
+        this_labels = [0] * len(request_ids)
         end = time.time()
         print("this labels ", this_labels , end-start)
         for prompt_token_ids, sampling_params, request_id, label in zip(prompt_token_ids_s, sampling_params_s, request_ids, this_labels):
