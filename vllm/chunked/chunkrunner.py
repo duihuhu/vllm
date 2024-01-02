@@ -514,6 +514,7 @@ class ChunkRunner:
                                             attention_mask = test_encoded['attention_mask'])
         predicted_labels = torch.argmax(predictions.logits, dim = 1).tolist()
         for request_id, label in zip(request_ids, predicted_labels):
-            print(f"{request_id}'s label is {label}", type(label))
+            # print(f"{request_id}'s label is {label}", type(label))
             request_label[request_id] = label
+        print("request_label " , request_label)
         return predicted_labels
