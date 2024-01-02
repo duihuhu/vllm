@@ -20,6 +20,7 @@ import requests
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 
+mdecode_info = {}
 prefill_sched_batch = 16
 app = FastAPI()
 
