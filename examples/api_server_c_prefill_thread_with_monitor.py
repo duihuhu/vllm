@@ -29,10 +29,10 @@ app = FastAPI()
 
 mp_dp = 'mprefill_to_mdispatcher.txt'
 
-if not os.path.isfile(mp_dp):
+# if not os.path.isfile(mp_dp):
     # create initial file
-    with open(mp_dp, "w+b") as fd:
-        fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+with open(mp_dp, "w+b") as fd:
+    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
 
 mp_md_dp = 'mprefill_mdispatcher_to_mdecode_mdispatcher.txt'
 

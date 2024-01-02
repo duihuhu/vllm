@@ -29,10 +29,10 @@ decode_event = threading.Event()
 
 dp_md = 'mdispatcher_to_mdecode.txt'
 
-if not os.path.isfile(dp_md):
+# if not os.path.isfile(dp_md):
     # create initial file
-    with open(dp_md, "w+b") as fd:
-        fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+with open(dp_md, "w+b") as fd:
+    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
 
 # @app.post("/notify_mdecode")
 def notify_mdecode():
