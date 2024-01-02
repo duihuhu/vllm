@@ -50,6 +50,7 @@ int main(void)
       // dispatcher_shared[1] = prefilled_request_num;
 
       memcpy(dispatcher_shared+(alread_num*35), mprefill_shared+(alread_num*35), 35);
+      printf("alread_num %d", alread_num);
       alread_num = alread_num + 1;
     }
   } 

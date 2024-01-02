@@ -53,6 +53,7 @@ int main(void)
       // mdecode_shared[1] = prefilled_request_num;
 
       memcpy(mdecode_shared+(alread_num*35), dispatcher_shared+(alread_num*35), 35);
+      printf("alread_num %d", alread_num);
       alread_num = alread_num + 1;
     }
   } 
