@@ -50,6 +50,7 @@ def mmap_warm():
     p_num = 1
     num = 0
     request_id = "00000000000000000000000000000000"
+    label = 0 
     combined_info_bytes = p_num.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
     print("combined_info_bytes ", len(combined_info_bytes))
     mm.seek(0)
@@ -183,7 +184,7 @@ if __name__ == "__main__":
     if args.tokenizer == None:
         args.tokenizer = args.model
     
-    mmap_warm()
+
     
     tokenizer = get_tokenizer(args.tokenizer)
     chunkrunner = ChunkRunner(tokenizer = tokenizer,
@@ -200,6 +201,8 @@ if __name__ == "__main__":
     print("warm up...")
     chunkrunner.run_worker()
     print("end warm up")
+    
+    mmap_warm()
 
     #engine_args = AsyncEngineArgs.from_cli_args(args)
     #engine = AsyncLLMEngine.from_engine_args(engine_args)
