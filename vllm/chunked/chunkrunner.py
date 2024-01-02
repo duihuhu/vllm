@@ -467,6 +467,10 @@ class ChunkRunner:
             self.cacheblock.free_block(block = chunk.cache_block)
             chunk.chunk_status = ChunkStatus.PREFILLED
         self.all_job_chunks.clear()
+
+    #todo
+    def find_decode_host(self,):
+        return 
     
     def mprefill_generate_prefill(self, mm, prefill_nums, request_label) -> int:
         #self._set_job_chunks()
@@ -501,8 +505,9 @@ class ChunkRunner:
                     label = request_label.get(request_id)
                     # time.sleep(0.1)
                     print(request_id, label)
+                    self.find_decode_host(request_label)
                     pass_time += 1
-                    combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big')
+                    combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + request_label.to_bytes(1, byteorder='big')
                     mm.seek(0)
                     mm.write(combined_info_bytes)
                     sended_request_id.add(request_id)
@@ -512,6 +517,8 @@ class ChunkRunner:
 
         print("mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
+    
+        
     
     def _do_predict(self, inputs: List[str], request_ids: List[str], request_label: Dict[str, int]) -> List[int]:
         test_encoded = self.predict_tokenizer(inputs, 
