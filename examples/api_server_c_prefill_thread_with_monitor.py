@@ -67,7 +67,7 @@ def mprefill_exec_prefill(request_label):
     while True:
         prefill_event.wait() 
         #prefill_nums = engine.mprefill_generate_prefill(mm, prefill_nums)
-        prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label)
+        prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label, mdecode_info)
         prefill_event.clear()
         prefill_event.wait()     
         # mm.close()

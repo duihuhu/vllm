@@ -470,7 +470,7 @@ class ChunkRunner:
         self.all_job_chunks.clear()
 
     #todo
-    def find_decode_host(self,request_label):
+    def find_decode_host(self,mdecode_info):
         return 
     
     def write_to_mdispatcher(self, prefill_nums, num, request_id, label, mm):
@@ -479,7 +479,7 @@ class ChunkRunner:
         mm.seek((prefill_nums-1)*35)
         mm.write(combined_info_bytes)
 
-    def mprefill_generate_prefill(self, mm, prefill_nums, request_label) -> int:
+    def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info) -> int:
         #self._set_job_chunks()
         output_num = 0
         sended_request_id = set()
@@ -512,11 +512,8 @@ class ChunkRunner:
             for request_id in chunk.do_sampling:
                 if request_id not in sended_request_id:
                     label = request_label.get(request_id)
-                    
-
-                    # time.sleep(0.01)
                     print(request_id, label)
-                    self.find_decode_host(request_label)
+                    self.find_decode_host(mdecode_info)
                     prefill_nums += 1
                     threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
                                                                              , label ,mm)).start()

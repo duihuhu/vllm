@@ -105,7 +105,7 @@ class AsyncLLMEngine:
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_decode_requests():
             # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
-            step_outputs = self.engine.step()
+            step_outputs = self.engine.mdecode_step()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)

@@ -372,6 +372,62 @@ class LLMEngine:
         # self.scheduler.store_prompt_kv_cache()
         return request_outputs
 
+    def mdecode_step(self) -> List[RequestOutput]:
+        """Performs one decoding iteration and returns newly generated results.
+
+        This function performs one decoding iteration of the engine. It first
+        schedules the sequences to be executed in the next iteration and the
+        token blocks to be swapped in/out/copy. Then, it executes the model
+        and updates the scheduler with the model outputs. Finally, it decodes
+        the sequences and returns the newly generated results.
+        """
+        (seq_group_metadata_list, scheduler_outputs,
+         ignored_seq_groups) = self.scheduler.mdecode_schedule()
+        if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
+                and (not ignored_seq_groups)):
+            # Nothing to do.
+            return []
+        
+        # with open('/workspace/vllm/benchmarks/output/count2.txt', 'a') as file:
+        #     for seq_group_metadata in seq_group_metadata_list:
+        #         s = "req " + seq_group_metadata.request_id + " is prompt " + str(seq_group_metadata.is_prompt) + "\n"
+        #         file.write(s)
+        #     file.write("iter end\n")
+        
+        # Execute the model.
+        output = self._run_workers(
+            "execute_model",
+            seq_group_metadata_list=seq_group_metadata_list,
+            blocks_to_swap_in=scheduler_outputs.blocks_to_swap_in,
+            blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
+            blocks_to_copy=scheduler_outputs.blocks_to_copy,
+        )
+        
+        # print who get the output
+        # first_token_time = time.time()
+        # for seq_group_metadata in seq_group_metadata_list:
+        #    seq_group_id = seq_group_metadata.request_id
+        #    if seq_group_id not in self.first_token_output:
+            #    print(f"seq {seq_group_id} gets its' first token at {first_token_time}")
+            #    self.first_token_output[seq_group_id] = 1
+
+        # Update the scheduler with the model outputs.
+        seq_groups = self.scheduler.update(output)
+
+        # Decode the sequences.
+        self._decode_sequences(seq_groups)
+        # Stop the sequences that meet the stopping criteria.
+        self._stop_sequences(seq_groups)
+        # Free the finished sequence groups.
+        self.scheduler.free_finished_seq_groups()
+        # Create the outputs.
+        request_outputs: List[RequestOutput] = []
+        for seq_group in seq_groups + ignored_seq_groups:
+            request_output = RequestOutput.from_seq_group(seq_group)
+            request_outputs.append(request_output)
+            
+        return request_outputs
+
     def _decode_sequences(self, seq_groups: List[SequenceGroup]) -> None:
         """Decodes the sequence outputs."""
         for seq_group in seq_groups:
