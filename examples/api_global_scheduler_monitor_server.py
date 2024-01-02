@@ -53,6 +53,8 @@ async def mprefill_monitor_report(request: Request) -> Response:
       monitor_mprefill_info[key] = mprefill_info
     # ret = {"mdecode_info": monitor_mdecode_info}
     ret = {"text": "a"}
+    print(type(monitor_mdecode_info))
+    print(monitor_mdecode_info)
     return JSONResponse(monitor_mdecode_info)
 
 @app.post("/mdecode_monitor_report")
