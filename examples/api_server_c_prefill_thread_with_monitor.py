@@ -43,7 +43,7 @@ with open(mp_md_dp, "w+b") as fd:
 
 prefill_event = threading.Event()
 
-def mprefill_exec_prefill():
+def mprefill_exec_prefill(request_label):
     with open(mp_dp, "r+b") as fd:
         mm = mmap.mmap(fd.fileno(), 8, access=mmap.ACCESS_WRITE, offset=0)
         prefill_nums = 0 
