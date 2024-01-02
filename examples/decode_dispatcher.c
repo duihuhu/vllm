@@ -40,15 +40,17 @@ int main(void)
   {
     if (mprefill_num!=dispatcher_shared[0])
     {
-      mprefill_num = dispatcher_shared[0];
-      prefilled_request_num = dispatcher_shared[1];
-      gettimeofday(&mp_md_dp_tv, NULL);
-      long long timestamp_microseconds = (long long)mp_md_dp_tv.tv_sec * 1000000 + mp_md_dp_tv.tv_usec;
-      printf("Current timestamp: 0x%02X, 0x%02X, %lld \n", mprefill_num, prefilled_request_num , timestamp_microseconds);
+      // mprefill_num = dispatcher_shared[0];
+      // prefilled_request_num = dispatcher_shared[1];
+      // gettimeofday(&mp_md_dp_tv, NULL);
+      // long long timestamp_microseconds = (long long)mp_md_dp_tv.tv_sec * 1000000 + mp_md_dp_tv.tv_usec;
+      // printf("Current timestamp: 0x%02X, 0x%02X, %lld \n", mprefill_num, prefilled_request_num , timestamp_microseconds);
       
-      lseek(dp_md_fd, 0, SEEK_SET);
-      mdecode_shared[0] = mprefill_num;
-      mdecode_shared[1] = prefilled_request_num;
+      // lseek(dp_md_fd, 0, SEEK_SET);
+      // mdecode_shared[0] = mprefill_num;
+      // mdecode_shared[1] = prefilled_request_num;
+
+      memcpy(mdecode_shared, dispatcher_shared, 35);
     }
   } 
 
