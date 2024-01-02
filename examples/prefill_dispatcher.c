@@ -20,7 +20,7 @@ int main(void)
   // periodically read the file contents
   unsigned char mprefill_num = 0x00;
   unsigned char prefilled_request_num = 0x00;
-
+  int alread_num = 0;
 
   struct timeval md_dp_tv;
   int md_dp_fd = -1;
@@ -37,7 +37,7 @@ int main(void)
   int flag = 0;
   while (1)
   {
-    if (mprefill_num!=mprefill_shared[0])
+    if (mprefill_num!=mprefill_shared[alread_num*35])
     {
       // mprefill_num = mprefill_shared[0];
       // prefilled_request_num = mprefill_shared[1];
@@ -48,9 +48,9 @@ int main(void)
       // lseek(md_dp_fd, 0, SEEK_SET);
       // dispatcher_shared[0] = mprefill_num;
       // dispatcher_shared[1] = prefilled_request_num;
-      
-        memcpy(dispatcher_shared, mprefill_shared, 35);
 
+      memcpy(dispatcher_shared[alread_num*35], mprefill_shared[alread_num*35], 35);
+      alread_num = alread_num + 1;
     }
   } 
 

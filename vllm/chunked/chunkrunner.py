@@ -476,7 +476,7 @@ class ChunkRunner:
         #self._set_job_chunks()
         output_num = 0
         sended_request_id = set()
-        pass_time = 0
+        # pass_time = 0
         num = 1
         for chunk in self.all_job_chunks:
             start_time = time.time()
@@ -506,10 +506,10 @@ class ChunkRunner:
                     # time.sleep(0.01)
                     print(request_id, label)
                     self.find_decode_host(request_label)
-                    pass_time += 1
-                    combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
+                    prefill_nums += 1
+                    combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
                     print("combined_info_bytes ", len(combined_info_bytes))
-                    mm.seek(0)
+                    mm.seek((prefill_nums-1)*35)
                     mm.write(combined_info_bytes)
                     sended_request_id.add(request_id)
                     time.sleep(0.000005)

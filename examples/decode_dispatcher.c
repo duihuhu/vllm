@@ -22,6 +22,8 @@ int main(void)
   unsigned char mprefill_num = 0x00;
   unsigned char prefilled_request_num = 0x00;
 
+  int alread_num = 0;
+
   //from mdecode's mdispatcher to decode
   struct timeval dp_md_tv;
   int dp_md_fd = -1;
@@ -38,7 +40,7 @@ int main(void)
   int flag = 0;
   while (1)
   {
-    if (mprefill_num!=dispatcher_shared[0])
+    if (mprefill_num!=dispatcher_shared[alread_num*35])
     {
       // mprefill_num = dispatcher_shared[0];
       // prefilled_request_num = dispatcher_shared[1];
@@ -50,7 +52,8 @@ int main(void)
       // mdecode_shared[0] = mprefill_num;
       // mdecode_shared[1] = prefilled_request_num;
 
-      memcpy(mdecode_shared, dispatcher_shared, 35);
+      memcpy(mdecode_shared[alread_num*35], dispatcher_shared[alread_num*35], 35);
+      alread_num = alread_num + 1;
     }
   } 
 
