@@ -84,6 +84,9 @@ class AsyncLLMEngine:
     def convert_reqs_status(self,request_ids: List[str]):
         self.engine.convert_reqs_status(request_ids)
         
+    def convert_req_label_status(self,request_id, label):
+        self.engine.convert_req_label_status(request_id, label)
+
     def convert_reqs_status_by_num(self,request_num):
         self.engine.convert_reqs_status_by_num(request_num)
 

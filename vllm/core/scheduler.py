@@ -218,7 +218,20 @@ class Scheduler:
             else:
                 prefilled.append(seq_group)
         self.prefilled = prefilled
-        
+    
+    def convert_req_label_status(self, request_id, label):
+        prefilled: List[SequenceGroup] = []
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            if seq_group.request_id == request_id:
+                seq_group.label = label
+                for seq in seq_group.get_seqs():
+                    seq.status = SequenceStatus.RUNNING  
+                self.running_waiting.append(seq_group)
+            else:
+                prefilled.append(seq_group)
+        self.prefilled = prefilled
+    
     def convert_reqs_status_by_num(self, request_num):
         nums = request_num
         while self.prefilled:

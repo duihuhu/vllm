@@ -59,7 +59,10 @@ def notify_mdecode():
             # print("mdecode recv signal from mprefill ", time.time())
             print("request info ", request_id, request_num, label)
             # if request_num > 0:
-            engine.convert_reqs_status_by_num(request_num)
+            # engine.convert_reqs_status_by_num(request_num)
+            # engine.convert_reqs_status(request_id)
+            engine.convert_req_label_status(request_id, label)
+
             mdecode_status = "decode"
             already_num = already_num + 1
             decode_event.set()
