@@ -135,21 +135,21 @@ class Scheduler:
                 label0 = label0 + 1
             elif seq_group.label == 1:
                 label1 = label1 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 2:
                 label2 = label2 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 3:
                 label3 = label3 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 4:
                 label4 = label4 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 5:
                 label5 = label5 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 6:
                 label6 = label6 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 7:
                 label7 = label7 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 8:
                 label8 = label8 + 1
-            elif seq_group.label == 0:
+            elif seq_group.label == 9:
                 label9 = label9 + 1
         return label0, label1, label2, label3, label4, label5, label6, label7, label8, label9
     def sum_label_num(self, label0, nlabel0, label1, nlabel1,label2, nlabel2,label3, nlabel3,label4, nlabel4,label5, nlabel5,label6, nlabel6,
