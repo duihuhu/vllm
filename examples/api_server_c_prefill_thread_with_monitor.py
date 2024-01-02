@@ -203,7 +203,7 @@ if __name__ == "__main__":
     chunkrunner.run_worker()
     print("end warm up")
     
-    mmap_warm()
+    # mmap_warm()
 
     #engine_args = AsyncEngineArgs.from_cli_args(args)
     #engine = AsyncLLMEngine.from_engine_args(engine_args)
