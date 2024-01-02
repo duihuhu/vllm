@@ -36,10 +36,10 @@ with open(mp_dp, "w+b") as fd:
 
 mp_md_dp = 'mprefill_mdispatcher_to_mdecode_mdispatcher.txt'
 
-if not os.path.isfile(mp_md_dp):
-    # create initial file
-    with open(mp_md_dp, "w+b") as fd:
-        fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+# if not os.path.isfile(mp_md_dp):
+#     # create initial file
+with open(mp_md_dp, "w+b") as fd:
+    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
 
 prefill_event = threading.Event()
 
@@ -107,7 +107,7 @@ async def mprefill_add(request: Request) -> Response:
 
 @app.on_event("startup")
 def startup_decode_event():
-    threading.Thread(target=mprefill_exec_prefill, args=(request_label,) daemon=True).start()
+    threading.Thread(target=mprefill_exec_prefill, args=(request_label,), daemon=True).start()
     threading.Thread(target=monitor_mprefill_info, args=(args.host, args.port) ,daemon=True).start()
 
 def post_monitor_request(monitor_url: str,
