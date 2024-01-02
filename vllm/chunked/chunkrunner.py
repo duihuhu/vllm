@@ -12,6 +12,7 @@ from vllm.chunked.chunk import Chunk, ChunkInputMetadata, ChunkSamplingParams, C
 from vllm.worker.worker import _pad_to_max
 from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.utils import random_uuid, Counter
+import threading
 
 class ChunkRunner:
     def __init__(self,
@@ -472,6 +473,12 @@ class ChunkRunner:
     def find_decode_host(self,request_label):
         return 
     
+    def write_to_mdispatcher(self, prefill_nums, num, request_id, label, mm):
+        combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
+        print("combined_info_bytes ", len(combined_info_bytes))
+        mm.seek((prefill_nums-1)*35)
+        mm.write(combined_info_bytes)
+
     def mprefill_generate_prefill(self, mm, prefill_nums, request_label) -> int:
         #self._set_job_chunks()
         output_num = 0
@@ -500,17 +507,24 @@ class ChunkRunner:
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
                 self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
             
+
+            
             for request_id in chunk.do_sampling:
                 if request_id not in sended_request_id:
                     label = request_label.get(request_id)
+                    
+
                     # time.sleep(0.01)
                     print(request_id, label)
                     self.find_decode_host(request_label)
                     prefill_nums += 1
-                    combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
-                    print("combined_info_bytes ", len(combined_info_bytes))
-                    mm.seek((prefill_nums-1)*35)
-                    mm.write(combined_info_bytes)
+                    threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
+                                                                             , label ,mm)).start()
+                    #put in thread
+                    # combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
+                    # print("combined_info_bytes ", len(combined_info_bytes))
+                    # mm.seek((prefill_nums-1)*35)
+                    # mm.write(combined_info_bytes)
                     sended_request_id.add(request_id)
                     # time.sleep(0.000005)
             #self.processed_chunks.append(chunk)
