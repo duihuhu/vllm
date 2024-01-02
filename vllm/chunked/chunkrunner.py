@@ -507,7 +507,7 @@ class ChunkRunner:
                     print(request_id, label)
                     self.find_decode_host(request_label)
                     pass_time += 1
-                    combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + request_label.to_bytes(1, byteorder='big')
+                    combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
                     print("combined_info_bytes ", len(combined_info_bytes))
                     mm.seek(0)
                     mm.write(combined_info_bytes)
