@@ -17,7 +17,7 @@ int main(void)
      return 0;
      }
   // open the file in shared memory
-  char* dispatcher_shared = (char*) mmap(NULL, 8, PROT_READ | PROT_WRITE, MAP_SHARED, md_md_dp_fd, 0);
+  char* dispatcher_shared = (char*) mmap(NULL, 35, PROT_READ | PROT_WRITE, MAP_SHARED, md_md_dp_fd, 0);
   // periodically read the file contents
   unsigned char mprefill_num = 0x00;
   unsigned char prefilled_request_num = 0x00;
@@ -31,7 +31,7 @@ int main(void)
      return 0;
      }
   // open the file in shared memory
-  char* mdecode_shared = (char*) mmap(NULL, 8, PROT_READ | PROT_WRITE, MAP_SHARED, dp_md_fd, 0);
+  char* mdecode_shared = (char*) mmap(NULL, 35, PROT_READ | PROT_WRITE, MAP_SHARED, dp_md_fd, 0);
   // periodically read the file contents
 
   // execute 

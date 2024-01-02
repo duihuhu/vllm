@@ -32,20 +32,20 @@ mp_dp = 'mprefill_to_mdispatcher.txt'
 # if not os.path.isfile(mp_dp):
     # create initial file
 with open(mp_dp, "w+b") as fd:
-    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+    fd.write(b'\x00' * 35)
 
 mp_md_dp = 'mprefill_mdispatcher_to_mdecode_mdispatcher.txt'
 
 # if not os.path.isfile(mp_md_dp):
 #     # create initial file
 with open(mp_md_dp, "w+b") as fd:
-    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+    fd.write(b'\x00' * 35)
 
 prefill_event = threading.Event()
 
 def mprefill_exec_prefill(request_label):
     with open(mp_dp, "r+b") as fd:
-        mm = mmap.mmap(fd.fileno(), 8, access=mmap.ACCESS_WRITE, offset=0)
+        mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
         prefill_nums = 0 
         while True:
             prefill_event.wait() 

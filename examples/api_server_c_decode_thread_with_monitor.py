@@ -32,7 +32,7 @@ dp_md = 'mdispatcher_to_mdecode.txt'
 # if not os.path.isfile(dp_md):
     # create initial file
 with open(dp_md, "w+b") as fd:
-    fd.write(b'\x00\x00\x00\x00\x00\x00\x00\x00')
+    fd.write(b'\x00' * 35)
 
 # @app.post("/notify_mdecode")
 def notify_mdecode():
@@ -44,7 +44,7 @@ def notify_mdecode():
     request_num =  b'\x00'
     
     with open(dp_md, "r+b") as fd:
-        mm = mmap.mmap(fd.fileno(), 8, access=mmap.ACCESS_WRITE, offset=0)
+        mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
         # 读取内存映射区域的数据
         while True:
             if prefill_nums != mm[0:1]:
