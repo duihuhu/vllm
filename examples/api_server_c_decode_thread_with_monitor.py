@@ -56,7 +56,7 @@ def notify_mdecode():
             label = int.from_bytes(mm[34:-1], byteorder='big')
             # print("mdecode recv signal from mprefill ", time.time())
             print("request info ", request_id, request_num, label)
-            if request_num !=0:
+            if request_num > 0:
                 engine.convert_reqs_status_by_num(request_num)
                 mdecode_status = "decode"
             decode_event.set()

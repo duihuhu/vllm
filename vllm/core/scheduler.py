@@ -227,7 +227,7 @@ class Scheduler:
                 seq.status = SequenceStatus.RUNNING
             self.running_waiting.append(seq_group)
             nums = nums - 1
-            if nums == 0:
+            if nums <= 0:
                 break
     def covert_running_to_prefilled(self):
         num = 0

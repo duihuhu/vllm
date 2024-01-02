@@ -512,6 +512,7 @@ class ChunkRunner:
                     mm.seek(0)
                     mm.write(combined_info_bytes)
                     sended_request_id.add(request_id)
+                    time.sleep(0.000005)
             #self.processed_chunks.append(chunk)
         #self.all_job_chunks.clear()
         self._reduce_outputs()
