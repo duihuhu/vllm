@@ -120,16 +120,16 @@ class Scheduler:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
     def get_label_from_seq_queue(self, seq_queue):
-        nlabel0 = 0
-        nlabel1 = 0
-        nlabel2 = 0 
-        nlabel3 = 0 
-        nlabel4 = 0 
-        nlabel5 = 0 
-        nlabel6 = 0 
-        nlabel7 = 0 
-        nlabel8 = 0 
-        nlabel9 = 0 
+        label0 = 0
+        label1 = 0
+        label2 = 0 
+        label3 = 0 
+        label4 = 0 
+        label5 = 0 
+        label6 = 0 
+        label7 = 0 
+        label8 = 0 
+        label9 = 0 
         for seq_group in seq_queue:
             if seq_group.label == 0:
                 label0 = label0 + 1
