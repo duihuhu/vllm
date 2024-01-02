@@ -50,7 +50,7 @@ def notify_mdecode():
     # 读取内存映射区域的数据
     while True:
         if prefill_nums != mm[(already_num*35):(already_num*35+1)]:
-            prefill_nums = mm[(already_num*35):(already_num*35+1)]
+            # prefill_nums = mm[(already_num*35):(already_num*35+1)]
             request_num = int.from_bytes(mm[(already_num*35+1):(already_num*35+2)], byteorder='big')
             
             request_id = mm[(already_num*35+2):(already_num*35+34)].decode("utf-8")
