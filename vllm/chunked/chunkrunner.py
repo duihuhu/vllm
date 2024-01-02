@@ -469,7 +469,7 @@ class ChunkRunner:
         self.all_job_chunks.clear()
 
     #todo
-    def find_decode_host(self,):
+    def find_decode_host(self,request_label):
         return 
     
     def mprefill_generate_prefill(self, mm, prefill_nums, request_label) -> int:
@@ -508,6 +508,7 @@ class ChunkRunner:
                     self.find_decode_host(request_label)
                     pass_time += 1
                     combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + request_label.to_bytes(1, byteorder='big')
+                    print("combined_info_bytes ", len(combined_info_bytes))
                     mm.seek(0)
                     mm.write(combined_info_bytes)
                     sended_request_id.add(request_id)
