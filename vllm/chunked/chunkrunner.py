@@ -499,7 +499,7 @@ class ChunkRunner:
             for request_id in chunk.do_sampling:
                 if request_id not in sended_request_id:
                     label = request_label.get(request_id)
-                    time.sleep(0.1)
+                    # time.sleep(0.1)
                     print(request_id, label)
                     pass_time += 1
                     combined_info_bytes = pass_time.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big')
