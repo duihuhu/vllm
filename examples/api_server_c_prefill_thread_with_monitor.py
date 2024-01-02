@@ -32,19 +32,19 @@ mp_dp = 'mprefill_to_mdispatcher.txt'
 # if not os.path.isfile(mp_dp):
     # create initial file
 with open(mp_dp, "w+b") as fd:
-    fd.write(b'\x00' * 35)
+    fd.write(b'\x00' * 35 * 1024)
 
 mp_md_dp = 'mprefill_mdispatcher_to_mdecode_mdispatcher.txt'
 
 # if not os.path.isfile(mp_md_dp):
 #     # create initial file
 with open(mp_md_dp, "w+b") as fd:
-    fd.write(b'\x00' * 35)
+    fd.write(b'\x00' * 35 * 1024)
 
 prefill_event = threading.Event()
 
 fd = open(mp_dp, "r+b")
-mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
+mm = mmap.mmap(fd.fileno(), 35 * 1024, access=mmap.ACCESS_WRITE, offset=0)
 
 def mmap_warm():
     p_num = 1

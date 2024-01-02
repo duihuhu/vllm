@@ -32,11 +32,11 @@ dp_md = 'mdispatcher_to_mdecode.txt'
 # if not os.path.isfile(dp_md):
     # create initial file
 with open(dp_md, "w+b") as fd:
-    fd.write(b'\x00' * 35)
+    fd.write(b'\x00' * 35 * 1024)
 
 # init   
 fd = open(dp_md, "r+b")
-mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
+mm = mmap.mmap(fd.fileno(), 35 * 1024, access=mmap.ACCESS_WRITE, offset=0)
 
 # @app.post("/notify_mdecode")
 def notify_mdecode():
