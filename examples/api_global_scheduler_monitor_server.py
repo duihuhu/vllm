@@ -47,7 +47,7 @@ async def mprefill_monitor_report(request: Request) -> Response:
     unfinished_tokens = request_dict.pop("unfinished_tokens")  
     timestamp = request_dict.pop("timestamp")    
     key = host + "_" + str(service_port) + "_" + machine_type
-    print(key, unfinished_req, unfinished_tokens)
+    # print(key, unfinished_req, unfinished_tokens)
     if monitor_mprefill_info.get(key):
         mprefill_info = monitor_mprefill_info[key]
         mprefill_info.unfinished_req = unfinished_req
@@ -57,9 +57,9 @@ async def mprefill_monitor_report(request: Request) -> Response:
       mprefill_info = PrefillInfo(host, service_port, unfinished_req, unfinished_tokens, timestamp)
       monitor_mprefill_info[key] = mprefill_info
     # ret = {"mdecode_info": monitor_mdecode_info}
-    ret = {"text": "a"}
-    print(type(monitor_mdecode_info))
-    print(monitor_mdecode_info)
+    # ret = {"text": "a"}
+    # print(type(monitor_mdecode_info))
+    # print(monitor_mdecode_info)
     return JSONResponse(monitor_mdecode_info)
 
 @app.post("/mdecode_monitor_report")
