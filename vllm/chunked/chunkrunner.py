@@ -334,6 +334,8 @@ class ChunkRunner:
             #self.all_job_chunks.pop(0)
 
         self._reduce_outputs()
+        
+        torch.cuda.empty_cache()
         #self.all_job_chunks.clear()
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
