@@ -500,17 +500,12 @@ class ChunkRunner:
                                               max_length = 2048)
         ed = time.time()
         st2 = time.time()
-        predictions = self._execute_predict_model(test_encoded)
+        predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
         ed2 = time.time()
-        predicted_labels = torch.argmax(predictions.logits, dim = 1).tolist()
+        predicted_labels = torch.argmax(predictions.logits, dim = 1).item()
         for seq_id, label in zip(seq_ids, predicted_labels):
             print(f"{seq_id}'s label is {label}")
         print(f"tokenizer costs {ed - st} seconds")
         print(f"predict model in 1tp costs {ed2 - st2} seconds")
         return predicted_labels
-    
-    @torch.inference_mode
-    def _execute_predict_model(self, test_encoded) -> Any:
-        predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
-                                         attention_mask = test_encoded['attention_mask'])
-        return predictions
