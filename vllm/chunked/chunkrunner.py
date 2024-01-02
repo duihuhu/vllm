@@ -471,6 +471,8 @@ class ChunkRunner:
     def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
         #self._set_job_chunks()
         output_num = 0
+        sended_request_id = set()
+        num = 1
         for chunk in self.all_job_chunks:
             start_time = time.time()
             chunk.chunk_status = ChunkStatus.RUNNING
@@ -488,18 +490,22 @@ class ChunkRunner:
                                         chunkmetadata = chunkinputmetadata)
             end_time = time.time()
             output_num += len(chunk.do_sampling)
-            print("output_num ", output_num)
             for i, id in enumerate(chunk.do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
                 self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
+            
+            for request_id in chunk.do_sampling:
+                if request_id not in sended_request_id:
+                    prefill_nums += 1
+                    combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big')
+                    mm.seek(0)
+                    mm.write(combined_info_bytes)
+                    sended_request_id.add(request_id)
             #self.processed_chunks.append(chunk)
         #self.all_job_chunks.clear()
         self._reduce_outputs()
-        prefill_nums += 1
-        combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + output_num.to_bytes(1, byteorder='big')
-        mm.seek(0)
-        mm.write(combined_info_bytes)
+
         print("mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
     
