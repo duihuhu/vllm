@@ -49,19 +49,21 @@ class ChunkRunner:
                                       prompts_s,
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams],
-                                      request_ids: List[str]) -> None:
+                                      request_ids: List[str],
+                                      request_label: Dict[str, int]) -> None:
         seq_ids: List[str] = []
         for _ in range(len(sampling_params_s)):
             seq_ids.append(random_uuid())
+
         start  = time.time()
         this_labels = self._do_predict(inputs = prompts_s,
-                                       seq_ids = seq_ids)
+                                       request_ids = request_ids, request_label = request_label)
         end = time.time()
         print("this labels ", this_labels , end-start)
         for prompt_token_ids, sampling_params, request_id, label in zip(prompt_token_ids_s, sampling_params_s, request_ids, this_labels):
             seq_id = random_uuid()
             now_time = time.time()
-            a_sequence = Sequence(seq_id = seq_id, 
+            a_sequence = Sequence(seq_id = request_id, 
                                   prompt_token_ids = prompt_token_ids,
                                   sampling_params = sampling_params,
                                   start_time = now_time,
@@ -498,10 +500,10 @@ class ChunkRunner:
         combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + output_num.to_bytes(1, byteorder='big')
         mm.seek(0)
         mm.write(combined_info_bytes)
+        print("mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
-    print("mprefill!!:  prefill iteration now is no unfinished")
     
-    def _do_predict(self, inputs: List[str], seq_ids: List[str]) -> List[int]:
+    def _do_predict(self, inputs: List[str], request_ids: List[str], request_label: Dict[str, int]) -> List[int]:
         test_encoded = self.predict_tokenizer(inputs, 
                                                 padding = "max_length", 
                                                 truncation = True, 
@@ -511,6 +513,7 @@ class ChunkRunner:
         predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
                                             attention_mask = test_encoded['attention_mask'])
         predicted_labels = torch.argmax(predictions.logits, dim = 1).tolist()
-        for seq_id, label in zip(seq_ids, predicted_labels):
-            print(f"{seq_id}'s label is {label}")
+        for request_id, label in zip(request_ids, predicted_labels):
+            print(f"{request_id}'s label is {label}", type(label))
+            request_label[request_id] = label
         return predicted_labels
