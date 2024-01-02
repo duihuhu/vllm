@@ -74,9 +74,9 @@ async def mdecode_monitor_report(request: Request) -> Response:
     # print(key, unfinished_req, unfinished_tokens)
     if monitor_mdecode_info.get(key):
         mdecode_info = monitor_mdecode_info[key]
-        mdecode_info.machine_type = machine_type
-        mdecode_info.num_labels = num_labels
-        mdecode_info.timestamp = timestamp
+        mdecode_info['machine_type'] = machine_type
+        mdecode_info['num_labels'] = num_labels
+        mdecode_info['timestamp'] = timestamp
     else:
       mdecode_info = DecodeInfo(host, service_port, machine_type, num_labels, timestamp)
       monitor_mdecode_info[key] = mdecode_info.__dict__
