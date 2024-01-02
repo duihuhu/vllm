@@ -119,9 +119,76 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
-    #todo
+    def get_label_from_seq_queue(self, seq_queue):
+        nlabel0 = 0
+        nlabel1 = 0
+        nlabel2 = 0 
+        nlabel3 = 0 
+        nlabel4 = 0 
+        nlabel5 = 0 
+        nlabel6 = 0 
+        nlabel7 = 0 
+        nlabel8 = 0 
+        nlabel9 = 0 
+        for seq_group in seq_queue:
+            if seq_group.label == 0:
+                label0 = label0 + 1
+            elif seq_group.label == 1:
+                label1 = label1 + 1
+            elif seq_group.label == 0:
+                label2 = label2 + 1
+            elif seq_group.label == 0:
+                label3 = label3 + 1
+            elif seq_group.label == 0:
+                label4 = label4 + 1
+            elif seq_group.label == 0:
+                label5 = label5 + 1
+            elif seq_group.label == 0:
+                label6 = label6 + 1
+            elif seq_group.label == 0:
+                label7 = label7 + 1
+            elif seq_group.label == 0:
+                label8 = label8 + 1
+            elif seq_group.label == 0:
+                label9 = label9 + 1
+        return label0, label1, label2, label3, label4, label5, label6, label7, label8, label9
+    def sum_label_num(self, label0, nlabel0, label1, nlabel1,label2, nlabel2,label3, nlabel3,label4, nlabel4,label5, nlabel5,label6, nlabel6,
+                      label7, nlabel7, label8, nlabel8, label9, nlabel9):
+        return label0 + nlabel0, label1 + nlabel1 , label2 + nlabel2, label3 + nlabel3, label4 + nlabel4, label5 + nlabel5, label6 + nlabel6, label7 + nlabel7, label8 + nlabel8, label9 + nlabel9
+    
     def get_mdecode_reqs_label(self):
-        return [1,2,3,4]
+        nlabel0 = 0
+        nlabel1 = 0
+        nlabel2 = 0 
+        nlabel3 = 0 
+        nlabel4 = 0 
+        nlabel5 = 0 
+        nlabel6 = 0 
+        nlabel7 = 0 
+        nlabel8 = 0 
+        nlabel9 = 0 
+        #waiting
+        label0, label1, label2, label3, label4, label5, label6, label7, label8, label9 =  self.get_label_from_seq_queue(self.waiting)
+        nlabel0, nlabel1, nlabel2, nlabel3, nlabel4, nlabel5, nlabel6, nlabel7, nlabel8, nlabel9 \
+            = self.sum_label_num(label0, nlabel0, label1, nlabel1,label2, nlabel2,label3, nlabel3,label4, nlabel4,
+                                 label5, nlabel5,label6, nlabel6,label7, nlabel7, label8, nlabel8, label9, nlabel9)
+        #running
+        label0, label1, label2, label3, label4, label5, label6, label7, label8, label9 =  self.get_label_from_seq_queue(self.running)
+        nlabel0, nlabel1, nlabel2, nlabel3, nlabel4, nlabel5, nlabel6, nlabel7, nlabel8, nlabel9 \
+            = self.sum_label_num(label0, nlabel0, label1, nlabel1,label2, nlabel2,label3, nlabel3,label4, nlabel4,
+                                 label5, nlabel5,label6, nlabel6,label7, nlabel7, label8, nlabel8, label9, nlabel9)
+        #swapped
+        label0, label1, label2, label3, label4, label5, label6, label7, label8, label9 =  self.get_label_from_seq_queue(self.swapped)
+        nlabel0, nlabel1, nlabel2, nlabel3, nlabel4, nlabel5, nlabel6, nlabel7, nlabel8, nlabel9 \
+            = self.sum_label_num(label0, nlabel0, label1, nlabel1,label2, nlabel2,label3, nlabel3,label4, nlabel4,
+                                 label5, nlabel5,label6, nlabel6,label7, nlabel7, label8, nlabel8, label9, nlabel9)
+        #running_waiting
+        label0, label1, label2, label3, label4, label5, label6, label7, label8, label9 =  self.get_label_from_seq_queue(self.running_waiting)
+        nlabel0, nlabel1, nlabel2, nlabel3, nlabel4, nlabel5, nlabel6, nlabel7, nlabel8, nlabel9 \
+            = self.sum_label_num(label0, nlabel0, label1, nlabel1,label2, nlabel2,label3, nlabel3,label4, nlabel4,
+                                 label5, nlabel5,label6, nlabel6,label7, nlabel7, label8, nlabel8, label9, nlabel9)
+        return [nlabel0, nlabel1, nlabel2,nlabel3,nlabel4,nlabel5,nlabel6,nlabel7,nlabel8,nlabel9]
+    
     def monitor_mdecode_info(self):
         return self.get_mdecode_reqs_label()
     

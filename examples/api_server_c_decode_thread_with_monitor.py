@@ -15,6 +15,7 @@ import threading
 import time
 import mmap
 import os
+import requests
 # import multiprocessing
 # manager = multiprocessing.Manager()
 
@@ -71,15 +72,41 @@ def init_mdecode_prefill():
 def startup_decode_event():
     threading.Thread(target=init_mdecode_prefill, daemon=True).start()
     threading.Thread(target=notify_mdecode, daemon=True).start()
-    # threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port) ,daemon=True).start()
+    threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port) ,daemon=True).start()
 
+def post_monitor_request(monitor_url: str,
+                      host: str,
+                      service_port: int,
+                      machine_type: str, 
+                      num_labels: int ,
+                      ) -> requests.Response:
+    headers = {"User-Agent": "mdecode "}
+    timestamp = time.time()
+    pload = {
+        "host": host,
+        "service_port": service_port,
+        "machine_type": machine_type,
+        "num_labels": num_labels,
+        "timestamp":timestamp,
+    }
+    response = requests.post(monitor_url, headers=headers, json=pload)
+    
+    return response
+
+def post_mdecode_info(host, service_port, machine_type, num_labels):
+    monitor_url = "http://127.0.0.1:9000/mdecode_monitor_report"
+    response = post_monitor_request(monitor_url, host, service_port, machine_type, num_labels)
+
+    
 def monitor_mdecode_info(host, service_port):
     global engine
     machine_type = "decode"
     while True:
         num_labels = engine.monitor_mdecode_info()
-        time.sleep(1)
-        
+        post_mdecode_info(host, service_port, machine_type, num_labels)
+        time.sleep(0.1)
+
+
 #background threads
 @app.post("/init_mdecode")
 async def init_mdecode(request: Request) -> Response:

@@ -45,14 +45,14 @@ async def mprefill_monitor_report(request: Request) -> Response:
     key = host + "_" + str(service_port) + "_" + machine_type
     print(key, unfinished_req, unfinished_tokens)
     if monitor_mprefill_info.get(key):
-        prefill_info = monitor_mprefill_info[key]
-        prefill_info.unfinished_req = unfinished_req
-        prefill_info.unfinished_tokens = unfinished_tokens
-        prefill_info.timestamp = timestamp
+        mprefill_info = monitor_mprefill_info[key]
+        mprefill_info.unfinished_req = unfinished_req
+        mprefill_info.unfinished_tokens = unfinished_tokens
+        mprefill_info.timestamp = timestamp
     else:
-      prefill_info = PrefillInfo(host, service_port, unfinished_req, unfinished_tokens, timestamp)
-      monitor_mprefill_info[key] = prefill_info
-    ret = {"text": 'test'}
+      mprefill_info = PrefillInfo(host, service_port, unfinished_req, unfinished_tokens, timestamp)
+      monitor_mprefill_info[key] = mprefill_info
+    ret = {"decode": monitor_mdecode_info}
     return JSONResponse(ret)
 
 @app.post("/mdecode_monitor_report")
@@ -61,19 +61,17 @@ async def mdecode_monitor_report(request: Request) -> Response:
     host = request_dict.pop("host")
     service_port = request_dict.pop("service_port")
     machine_type = request_dict.pop("machine_type")
-    req_num = request_dict.pop("req_num") 
     req_labels = request_dict.pop("req_labels") 
     timestamp = request_dict.pop("timestamp")    
     key = host + "_" + str(service_port) + "_" + machine_type
     # print(key, unfinished_req, unfinished_tokens)
     if monitor_mdecode_info.get(key):
-        prefill_info = monitor_mdecode_info[key]
-        prefill_info.req_num = req_num
-        prefill_info.req_labels = req_labels
-        prefill_info.timestamp = timestamp
+        mdecode_info = monitor_mdecode_info[key]
+        mdecode_info.req_labels = req_labels
+        mdecode_info.timestamp = timestamp
     else:
-      prefill_info = PrefillInfo(host, service_port, req_num, req_labels, timestamp)
-      monitor_mdecode_info[key] = prefill_info
+      mdecode_info = DecodeInfo(host, service_port, req_labels, timestamp)
+      monitor_mdecode_info[key] = mdecode_info
     ret = {"text": 'test'}
     return JSONResponse(ret)
 
