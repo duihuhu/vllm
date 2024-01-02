@@ -100,7 +100,7 @@ async def mprefill_add(request: Request) -> Response:
     request_dict = await request.json()
     await mprefill_add_prefill(request_dict)
     ret = {"text": 'test'}
-    return JSONResponse(ret)
+    return JSONResponse(monitor_mprefill_info)
 
 @app.on_event("startup")
 def startup_decode_event():
