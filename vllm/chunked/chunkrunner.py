@@ -503,7 +503,7 @@ class ChunkRunner:
             for request_id in chunk.do_sampling:
                 if request_id not in sended_request_id:
                     label = request_label.get(request_id)
-                    time.sleep(0.01)
+                    # time.sleep(0.01)
                     print(request_id, label)
                     self.find_decode_host(request_label)
                     pass_time += 1

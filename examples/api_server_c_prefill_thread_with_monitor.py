@@ -43,18 +43,33 @@ with open(mp_md_dp, "w+b") as fd:
 
 prefill_event = threading.Event()
 
+fd = open(mp_dp, "r+b")
+mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
+
+def mmap_warm():
+    p_num = 1
+    num = 0
+    request_id = "00000000000000000000000000000000"
+    combined_info_bytes = p_num.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
+    print("combined_info_bytes ", len(combined_info_bytes))
+    mm.seek(0)
+    mm.write(combined_info_bytes)
+    time.sleep(1)
+    fd.write(b'\x00' * 35)
+    return
+
 def mprefill_exec_prefill(request_label):
-    with open(mp_dp, "r+b") as fd:
-        mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
-        prefill_nums = 0 
-        while True:
-            prefill_event.wait() 
-            #prefill_nums = engine.mprefill_generate_prefill(mm, prefill_nums)
-            prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label)
-            prefill_event.clear()
-            prefill_event.wait()     
-        mm.close()
-        fd.close()
+    # with open(mp_dp, "r+b") as fd:
+    #     mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
+    prefill_nums = 0 
+    while True:
+        prefill_event.wait() 
+        #prefill_nums = engine.mprefill_generate_prefill(mm, prefill_nums)
+        prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label)
+        prefill_event.clear()
+        prefill_event.wait()     
+        # mm.close()
+        # fd.close()
         
 async def mprefill_add_prefill(request_dict):
     print("mprefill add prefill request ", time.time())
@@ -167,6 +182,8 @@ if __name__ == "__main__":
 
     if args.tokenizer == None:
         args.tokenizer = args.model
+    
+    mmap_warm()
     
     tokenizer = get_tokenizer(args.tokenizer)
     chunkrunner = ChunkRunner(tokenizer = tokenizer,

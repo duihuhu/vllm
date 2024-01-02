@@ -34,6 +34,10 @@ dp_md = 'mdispatcher_to_mdecode.txt'
 with open(dp_md, "w+b") as fd:
     fd.write(b'\x00' * 35)
 
+# init   
+fd = open(dp_md, "r+b")
+mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
+
 # @app.post("/notify_mdecode")
 def notify_mdecode():
     global decode_event
@@ -42,21 +46,19 @@ def notify_mdecode():
     # 判断内存
     prefill_nums = b'\x00'
     request_num =  b'\x00'
-    
-    with open(dp_md, "r+b") as fd:
-        mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
-        # 读取内存映射区域的数据
-        while True:
-            if prefill_nums != mm[0:1]:
-                prefill_nums = mm[0:1]
-                request_num = int.from_bytes(mm[1:2], byteorder='big')
-                request_id = mm[2:34].decode("utf-8")
-                label = int.from_bytes(mm[34:-1], byteorder='big')
-                # print("mdecode recv signal from mprefill ", time.time())
-                print("request info ", request_id, request_num, label)
-                engine.convert_reqs_status_by_num(request_num)
-                mdecode_status = "decode"
-                decode_event.set()
+
+    # 读取内存映射区域的数据
+    while True:
+        if prefill_nums != mm[0:1]:
+            prefill_nums = mm[0:1]
+            request_num = int.from_bytes(mm[1:2], byteorder='big')
+            request_id = mm[2:34].decode("utf-8")
+            label = int.from_bytes(mm[34:-1], byteorder='big')
+            # print("mdecode recv signal from mprefill ", time.time())
+            print("request info ", request_id, request_num, label)
+            engine.convert_reqs_status_by_num(request_num)
+            mdecode_status = "decode"
+            decode_event.set()
 
 def init_mdecode_prefill():
     global mdecode_status
