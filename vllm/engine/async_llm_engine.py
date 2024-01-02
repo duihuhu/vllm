@@ -99,7 +99,7 @@ class AsyncLLMEngine:
             prefilled_num = len(out_request_ids)
             self.engine.send_mdecode_prefilled_controller(prefilled_num)
             
-        print("mdecode!!: complish mdecode prefill request ")
+        print("mdecode!!: complish mdecode prefill request ", prefilled_num)
         
     def generate_decode(self):
         outputs: List[RequestOutput] = []
