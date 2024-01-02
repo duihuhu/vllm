@@ -498,6 +498,7 @@ class ChunkRunner:
                                               truncation = True, 
                                               return_tensors = "pt", 
                                               max_length = 2048)
+        test_encoded = test_encoded.to("cuda:1")
         ed = time.time()
         st2 = time.time()
         predictions = self.predict_model(input_ids = test_encoded['input_ids'], 
