@@ -56,7 +56,8 @@ def mmap_warm():
     mm.seek(0)
     mm.write(combined_info_bytes)
     time.sleep(1)
-    fd.write(b'\x00' * 35)
+    mm.seek(0)
+    mm.write(b'\x00' * 35)
     return
 
 def mprefill_exec_prefill(request_label):
