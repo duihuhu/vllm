@@ -48,14 +48,14 @@ def notify_mdecode():
     request_num =  b'\x00'
     already_num = 0 
     # 读取内存映射区域的数据
+
     while True:
-        if prefill_nums != mm[(already_num*35):(already_num*35+1)]:
+        if prefill_nums != mm[(already_num*35+34):(already_num*35+35)]:
             # prefill_nums = mm[(already_num*35):(already_num*35+1)]
-            request_num = int.from_bytes(mm[(already_num*35+1):(already_num*35+2)], byteorder='big')
-            
-            request_id = mm[(already_num*35+2):(already_num*35+34)].decode("utf-8")
-            
-            label = int.from_bytes(mm[(already_num*35+34):(already_num*35+35)], byteorder='big')
+            request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
+            request_id = mm[(already_num*35+2):(already_num*35+33)].decode("utf-8")
+            label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
+
             # print("mdecode recv signal from mprefill ", time.time())
             print("request info ", request_id, request_num, label)
             # if request_num > 0:

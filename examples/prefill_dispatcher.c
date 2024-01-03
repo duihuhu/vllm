@@ -37,7 +37,7 @@ int main(void)
   int flag = 0;
   while (1)
   {
-    if (mprefill_num!=mprefill_shared[alread_num*35])
+    if (mprefill_num!=mprefill_shared[alread_num*35+34])
     {
       // mprefill_num = mprefill_shared[0];
       // prefilled_request_num = mprefill_shared[1];
