@@ -120,7 +120,7 @@ def monitor_mdecode_info(host, service_port):
     while True:
         num_labels = engine.monitor_mdecode_info()
         post_mdecode_info(host, service_port, machine_type, num_labels)
-        time.sleep(0.1)
+        time.sleep(1000)
 
 
 #background threads

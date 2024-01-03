@@ -179,7 +179,7 @@ def monitor_mprefill_info(host, service_port):
         unfinished_tokens = chunkrunner.monitor_mprefill_info()
         # print("unfinished_tokens ", unfinished_tokens)
         post_mprefill_info(host, service_port, machine_type, 0, unfinished_tokens)
-        time.sleep(0.1)
+        time.sleep(1000)
     return
 
 
