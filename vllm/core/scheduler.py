@@ -562,6 +562,7 @@ class Scheduler:
                 
             while not self.block_manager.can_append_slot(seq_group):
                 if self.running:
+                    print("has swap ")
                     # Preempt the lowest-priority sequence groups.
                     victim_seq_group = self.running.pop(-1)
                     self._preempt(victim_seq_group, blocks_to_swap_out)
@@ -569,6 +570,7 @@ class Scheduler:
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
+                    print("has swap ")
                     self._preempt(seq_group, blocks_to_swap_out)
                     preempted.append(seq_group)
                     break
@@ -586,6 +588,7 @@ class Scheduler:
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
         while self.swapped and not blocks_to_swap_out:
+            print("has swap ")
             seq_group = self.swapped[0]
             # If the sequence group has been preempted in this step, stop.
             if seq_group in preempted:
