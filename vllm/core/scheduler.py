@@ -528,9 +528,9 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        # while self.running_stay:
-        #     seq_group = self.running_stay.pop(0)
-        #     self.running.append(seq_group)
+        while self.running_stay:
+            seq_group = self.running_stay.pop(0)
+            self.running.append(seq_group)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
