@@ -53,7 +53,7 @@ def notify_mdecode():
         if prefill_nums != mm[(already_num*35+34):(already_num*35+35)]:
             # prefill_nums = mm[(already_num*35):(already_num*35+1)]
             request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
-            request_id = mm[(already_num*35+2):(already_num*35+33)].decode("utf-8")
+            request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
 
             # print("mdecode recv signal from mprefill ", time.time())

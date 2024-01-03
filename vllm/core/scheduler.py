@@ -527,10 +527,10 @@ class Scheduler:
         ignored_seq_groups: List[SequenceGroup] = []
 
         # Fix the current time.
-        now = time.time()
-        while self.running_stay:
-            seq_group = self.running_stay.pop(0)
-            self.running.append(seq_group)
+        # now = time.time()
+        # while self.running_stay:
+        #     seq_group = self.running_stay.pop(0)
+        #     self.running.append(seq_group)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
