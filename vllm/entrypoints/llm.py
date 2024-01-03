@@ -154,9 +154,10 @@ class LLM:
         # iteration_time = []
         while self.llm_engine.has_unfinished_requests():
             #print("interation: ", interation)
-            # iteration_start = time.time()
+            iteration_start = time.time()
             step_outputs = self.llm_engine.step()
-            # iteartion_end = time.time()
+            iteartion_end = time.time()
+            print("iteration " , iteartion_end-iteration_start)
             # iteration_time.append(iteartion_end-iteration_start)
             # interation = interation  + 1
             for output in step_outputs:
