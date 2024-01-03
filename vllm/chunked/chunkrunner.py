@@ -446,7 +446,7 @@ class ChunkRunner:
             st += self.chunk_size
         
         # for chunk in self.all_job_chunks:
-        for chunk in self.waiting_job_chunks:
+        for chunk in self.all_job_chunks:
             st = 0
             idxs: List[int] = []
             sampling_params: List[ChunkSamplingParams] = []
