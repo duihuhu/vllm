@@ -119,6 +119,7 @@ async def mprefill_add_prefill(request_dict):
         chunkrunner.request_waiting[1] = []
         chunkrunner.request_waiting[2] = []
         chunkrunner.request_waiting[3] = []
+        chunkrunner.request_waiting[4] = []
         prefill_event.set()
 
 @app.post("/mprefill_add")
