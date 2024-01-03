@@ -67,7 +67,7 @@ if __name__ == "__main__":
                                  tensor_parallel_size = 2)
     chunkrunner_13b.set_parallel_chunkworkers(num_gpus = 0.7)
 
-    tokenizer_125m = get_tokenizer("/workspace/opt_125m_model_sharegpt")
+    tokenizer_125m = get_tokenizer("/workspace/opt-125m")
     chunkrunner_125m = ChunkRunner(tokenizer = tokenizer_13b,
                               chunk_size = 512,
                               chunk_num = 10)
