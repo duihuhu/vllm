@@ -227,7 +227,7 @@ class Scheduler:
                 seq_group.label = label
                 for seq in seq_group.get_seqs():
                     seq.status = SequenceStatus.RUNNING  
-                self.running.append(seq_group)
+                self.running_waiting.append(seq_group)
             else:
                 prefilled.append(seq_group)
         self.prefilled = prefilled
@@ -578,7 +578,7 @@ class Scheduler:
                 #         seq_group = self.running.pop(0)
                 #         self.running_stay.append(seq_group)
         self.running = running
-
+        print("itertion len running " , len(self.running))
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
         while self.swapped and not blocks_to_swap_out:
