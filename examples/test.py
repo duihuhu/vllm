@@ -35,7 +35,7 @@ def set_inputs(tokenizer, dataset_path: str, num_requests: int):
             continue
         if prompt_len > 512 or output_len > 512:
             continue
-        filtered_dataset.append((prompt, prompt_token_ids))
+        filtered_dataset.append((prompt, prompt_token_ids, output_len))
         num_requests_count += 1
         if num_requests_count == num_requests:
             break
@@ -92,9 +92,10 @@ if __name__ == "__main__":
                                             do_cat = False)
     filtered_dataset = set_inputs(tokenizer = tokenizer_13b,
                                   dataset_path = "/workspace/ShareGPT_V3_unfiltered_cleaned_split.json",
-                                  num_requests =32)
+                                  num_requests = 1)
     
-    for input_prompt, input_tokens_ids in filtered_dataset:
+    for input_prompt, input_tokens_ids, output_len in filtered_dataset:
+        print(f"output_len is {output_len}")
         if len(input_tokens_ids) < 512:
             input_tokens_ids = _pad_to_max(input_tokens_ids, max_len = 512)
         else:
