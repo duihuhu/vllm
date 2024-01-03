@@ -92,11 +92,13 @@ class ChunkRunner:
                                     trust_remote_code = False, download_dir = None, use_np_weights = False,
                                     use_dummy_weights = False, dtype = 'auto', seed = 0)
             self.model_config = model_config
+            self.predict_model_config = None
         if predict_model:
             predict_model_config = ModelConfig(model = predict_model, tokenizer = None, tokenizer_mode = 'auto', 
                                     trust_remote_code = False, download_dir = None, use_np_weights = False,
                                     use_dummy_weights = False, dtype = 'auto', seed = 0)
             self.predict_model_config = predict_model_config
+            self.model_config = None
         if tensor_parallel_size > 1:
             worker_use_ray = True
         else:
