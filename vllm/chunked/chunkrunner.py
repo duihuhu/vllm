@@ -493,61 +493,68 @@ class ChunkRunner:
         mm.write(combined_info_bytes)
         # end = time.time()
         # print("write_to_mdispatcher ", request_id, start, end , start-end)
-        
+    
+    def unfinished_job_chunks(self):
+        for key, value in self.all_job_sequences.items():
+            if value.processed == False:
+                return True
+        return False
+    
     def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info) -> int:
-        self._set_job_chunks()
-        
-        # self.all_job_chunks.extend(self.waiting_job_chunks)
-        # self.waiting_job_chunks.clear()
-        
-        output_num = 0
-        sended_request_id = set()
-        # pass_time = 0
-        num = 1
-        for chunk in self.all_job_chunks:
-            start_time = time.time()
-            chunk.chunk_status = ChunkStatus.RUNNING
-            input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
-            chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
-                                                    kv_prefixs = chunk.kv_prefixs,
-                                                    kv_prefixs_blocks = kv_cache_ids, 
-                                                    kv_block = chunk.cache_block_id,
-                                                    idxs = chunk.idxs,
-                                                    sampling_params_for_sampler = chunk.sampling_params_for_sampler,
-                                                    do_cat = chunk.do_cat)
-            output_token_list, logprobs = self._run_workers("execute_model",
-                                        inputs = input_tokens_tensor,
-                                        inputs_positions = input_positions_tensor,
-                                        chunkmetadata = chunkinputmetadata)
-            end_time = time.time()
-            output_num += len(chunk.do_sampling)
-            for i, id in enumerate(chunk.do_sampling):
-                self.all_job_sequences[id].add_first_token_id(output_token_list[i])
-                self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
-                self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
+        while self.unfinished_job_chunks():
+            self._set_job_chunks()
             
-
+            # self.all_job_chunks.extend(self.waiting_job_chunks)
+            # self.waiting_job_chunks.clear()
             
-            for request_id in chunk.do_sampling:
-                if request_id not in sended_request_id:
-                    label = request_label.get(request_id)
-                    # print(request_id, label)
-                    self.find_decode_host(mdecode_info)
-                    prefill_nums += 1
-                    threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
-                                                                             , label ,mm)).start()
-                    #put in thread
-                    # combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
-                    # print("combined_info_bytes ", len(combined_info_bytes))
-                    # mm.seek((prefill_nums-1)*35)
-                    # mm.write(combined_info_bytes)
-                    sended_request_id.add(request_id)
-                    # time.sleep(0.000005)
-            #self.processed_chunks.append(chunk)
-        #self.all_job_chunks.clear()
-        self._reduce_outputs()
+            output_num = 0
+            sended_request_id = set()
+            # pass_time = 0
+            num = 1
+            for chunk in self.all_job_chunks:
+                start_time = time.time()
+                chunk.chunk_status = ChunkStatus.RUNNING
+                input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
+                chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
+                                                        kv_prefixs = chunk.kv_prefixs,
+                                                        kv_prefixs_blocks = kv_cache_ids, 
+                                                        kv_block = chunk.cache_block_id,
+                                                        idxs = chunk.idxs,
+                                                        sampling_params_for_sampler = chunk.sampling_params_for_sampler,
+                                                        do_cat = chunk.do_cat)
+                output_token_list, logprobs = self._run_workers("execute_model",
+                                            inputs = input_tokens_tensor,
+                                            inputs_positions = input_positions_tensor,
+                                            chunkmetadata = chunkinputmetadata)
+                end_time = time.time()
+                output_num += len(chunk.do_sampling)
+                for i, id in enumerate(chunk.do_sampling):
+                    self.all_job_sequences[id].add_first_token_id(output_token_list[i])
+                    self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
+                    self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
+                
 
-        print("mprefill!!:  prefill iteration now is no unfinished")
+                
+                for request_id in chunk.do_sampling:
+                    if request_id not in sended_request_id:
+                        label = request_label.get(request_id)
+                        # print(request_id, label)
+                        self.find_decode_host(mdecode_info)
+                        prefill_nums += 1
+                        threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
+                                                                                , label ,mm)).start()
+                        #put in thread
+                        # combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
+                        # print("combined_info_bytes ", len(combined_info_bytes))
+                        # mm.seek((prefill_nums-1)*35)
+                        # mm.write(combined_info_bytes)
+                        sended_request_id.add(request_id)
+                        # time.sleep(0.000005)
+                #self.processed_chunks.append(chunk)
+            #self.all_job_chunks.clear()
+            self._reduce_outputs()
+
+            print("mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
     
         
