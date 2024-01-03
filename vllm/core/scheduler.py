@@ -540,7 +540,11 @@ class Scheduler:
         # groups to preempt.
         if self.running_waiting:
             while self.running_waiting:
-                self.running.append(self.running_waiting.pop(0))
+                seq_group = self.running_waiting.pop(0)
+                self.running.append(seq_group)
+                add_to_running = time.time()
+                print("decode add_to_running ", add_to_running)
+                
                 
         self.running = self.policy.sort_by_priority(now, self.running)
 
@@ -712,12 +716,12 @@ class Scheduler:
             else:
                 cpu_cache_usage = 0.0
 
-            logger.info(f"Throughput: {avg_throughput:.1f} tokens/s, "
-                        f"Running: {len(self.running)} reqs, "
-                        f"Swapped: {len(self.swapped)} reqs, "
-                        f"Pending: {len(self.waiting)} reqs, "
-                        f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%, "
-                        f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
+            # logger.info(f"Throughput: {avg_throughput:.1f} tokens/s, "
+            #             f"Running: {len(self.running)} reqs, "
+            #             f"Swapped: {len(self.swapped)} reqs, "
+            #             f"Pending: {len(self.waiting)} reqs, "
+            #             f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%, "
+            #             f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
    
     def schedule(
