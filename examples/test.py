@@ -2,11 +2,15 @@ import torch
 import threading
 import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from typing import List
 
 from vllm.transformers_utils.tokenizer import get_tokenizer
 from vllm.chunked.chunkrunner import ChunkRunner
 from vllm.chunked.chunk import ChunkInputMetadata, ChunkSamplingParams
 from vllm.worker.worker import _pad_to_alignment
+
+def _pad_to_max_for_predict(x: List[int], max_len: int) -> List[int]:
+    return x + [1] * (max_len - len(x))
 
 def set_inputs(tokenizer, dataset_path: str, num_requests: int):
     with open(dataset_path) as f:
@@ -103,7 +107,7 @@ if __name__ == "__main__":
         print(f"output_len is {output_len}")
 
         small_input_tokens_ids = input_tokens_ids
-        small_input_tokens_ids = _pad_to_alignment(small_input_tokens_ids, multiple_of = 8)
+        small_input_tokens_ids = _pad_to_max_for_predict(small_input_tokens_ids, max_len = 2048)
       
         input_tokens_ids = _pad_to_alignment(input_tokens_ids, multiple_of = 8)
         input_positions = list(range(len(input_tokens_ids)))
