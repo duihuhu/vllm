@@ -8,7 +8,7 @@ from vllm.chunked.chunkrunner import ChunkRunner
 from vllm.chunked.chunk import ChunkInputMetadata, ChunkSamplingParams
 from vllm.worker.worker import _pad_to_max
 
-def set_inputs(self, dataset_path: str, num_requests: int):
+def set_inputs(tokenizer, dataset_path: str, num_requests: int):
     with open(dataset_path) as f:
         dataset = json.load(f)
     dataset = [
@@ -20,9 +20,9 @@ def set_inputs(self, dataset_path: str, num_requests: int):
         for data in dataset
     ]
     prompts = [prompt for prompt, _ in dataset]
-    prompt_token_ids = self.tokenizer(prompts).input_ids
+    prompt_token_ids = tokenizer(prompts).input_ids
     completions = [completion for _, completion in dataset]
-    completion_token_ids = self.tokenizer(completions).input_ids
+    completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for i in range(len(dataset)):
         output_len = len(completion_token_ids[i])
@@ -90,7 +90,8 @@ if __name__ == "__main__":
                                                                                             top_p = 1.0,
                                                                                             top_k = -1)],
                                             do_cat = False)
-    filtered_dataset = set_inputs(dataset_path = "/workspace/ShareGPT_V3_unfiltered_cleaned_split.json",
+    filtered_dataset = set_inputs(tokenizer = tokenizer_13b,
+                                  dataset_path = "/workspace/ShareGPT_V3_unfiltered_cleaned_split.json",
                                   num_requests =32)
     
     for input_prompt, input_tokens_ids in filtered_dataset:
