@@ -20,7 +20,8 @@ _MODEL_REGISTRY = {
     "LLaMAForCausalLM": LlamaForCausalLM,  # For decapoda-research/llama-*
     "MPTForCausalLM": MPTForCausalLM,
     "OPTForCausalLM": OPTForCausalLM,
-    "OPTChunkedForCausalLM": OPTChunkedForCausalLM
+    "OPTChunkedForCausalLM": OPTChunkedForCausalLM,
+    "OPTChunkedForSequenceClassification": OPTChunkedForSequenceClassification
 }
 
 
@@ -34,9 +35,11 @@ def _get_model_architecture(config: PretrainedConfig) -> Type[nn.Module]:
         f"Supported architectures: {list(_MODEL_REGISTRY.keys())}")
 
 
-def get_model(model_config: ModelConfig, Chunked: bool = False) -> nn.Module:
+def get_model(model_config: ModelConfig, Chunked: bool = False, Predicted: bool = False) -> nn.Module:
     if Chunked:
         model_class = _MODEL_REGISTRY["OPTChunkedForCausalLM"]
+    elif Predicted:
+        model_class = _MODEL_REGISTRY["OPTChunkedForSequenceClassification"]
     else:
         model_class = _get_model_architecture(model_config.hf_config)
     

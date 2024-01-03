@@ -191,8 +191,9 @@ class ChunkedPagedAttention(nn.Module):
         # Reshape the keys and values and store them in the cache.
         key = key.view(-1, self.num_heads * self.head_size)
         value = value.view(-1, self.num_heads * self.head_size)
-        key_cache[chunkinputmetadata.kv_block].copy_(key)
-        value_cache[chunkinputmetadata.kv_block].copy_(value)
+        if chunkinputmetadata.kv_block:
+            key_cache[chunkinputmetadata.kv_block].copy_(key)
+            value_cache[chunkinputmetadata.kv_block].copy_(value)
 
         return output.view(-1, self.num_heads * self.head_size)
 

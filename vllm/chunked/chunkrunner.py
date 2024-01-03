@@ -9,7 +9,7 @@ from vllm.config import ModelConfig, ParallelConfig
 from vllm.chunked.chunkworker import ChunkWorker
 from vllm.chunked.chunkcache import ChunkCacheBlocks
 from vllm.chunked.chunk import Chunk, ChunkInputMetadata, ChunkSamplingParams, ChunkStatus, Sequence
-from vllm.worker.worker import _pad_to_max
+from vllm.worker.worker import _pad_to_max, _pad_to_alignment
 from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.utils import random_uuid, Counter
 
@@ -22,9 +22,12 @@ class ChunkRunner:
         self.chunk_size = chunk_size
         self.chunk_num = chunk_num
         self.all_total_sequences: List[Sequence] = []
+        self.big_temp_sequences: List[Sequence] = []
+        self.small_temp_sequences: List[Sequence] = []
         self.all_job_sequences: Dict[str, Sequence] = {}
         self.all_job_chunks: List[Chunk] = []
-        self.processed_chunks: List[Chunk] = []
+        #self.processed_chunks: List[Chunk] = []
+        self.waiting_chunks: List[Chunk] = []
         self.counter = Counter()
         self.cacheblock = ChunkCacheBlocks(blocks_num = self.chunk_num)
 
@@ -40,23 +43,34 @@ class ChunkRunner:
     def add_requests_to_job_sequences(self,
                                       prompts_s: List[str],
                                       prompt_token_ids_s: List[List[int]],
-                                      sampling_params_s: List[ChunkSamplingParams]) -> None:
-        seq_ids: List[str] = []
-        for _ in range(len(sampling_params_s)):
-            seq_ids.append(random_uuid())
-        this_labels = self._do_predict(inputs = prompts_s,
-                                       seq_ids = seq_ids)
-        for prompts, prompt_token_ids, sampling_params, seq_id, label in zip(prompts_s, prompt_token_ids_s, sampling_params_s, seq_ids, this_labels):
+                                      sampling_params_s: List[ChunkSamplingParams],
+                                      big_size: int,
+                                      small_size: int) -> None:
+        for prompts, prompt_token_ids, sampling_params in zip(prompts_s, prompt_token_ids_s, sampling_params_s):
             now_time = time.time()
+            seq_id = random_uuid()
             a_sequence = Sequence(seq_id = seq_id, 
                                   prompt = prompts,
                                   prompt_token_ids = prompt_token_ids,
                                   sampling_params = sampling_params,
-                                  start_time = now_time,
-                                  label = label)
-            self.all_job_sequences[seq_id] = a_sequence
-        
-        self._set_job_chunks()
+                                  start_time = now_time)
+            self.big_temp_sequences.append(a_sequence)
+            self.small_temp_sequences.append(a_sequence)
+        if len(self.big_temp_sequences) >= big_size:
+            self.all_job_sequences.extend(self.big_temp_sequences)
+            self._set_job_chunks()
+            self.big_temp_sequences.clear()
+        if len(self.small_temp_sequences) >= small_size:
+            input_tokens_tensor, input_positions_tensor, chunkinputmetadata = self._prepare_predict_model_inputs()
+            predict_labels = self._run_workers("execute_predict_model",
+                              inputs = input_tokens_tensor,
+                              inputs_positions = input_positions_tensor,
+                              chunkmetadata = chunkinputmetadata)
+            for i, seq in enumerate(self.small_temp_sequences):
+                print(f"seq {seq.seq_id}'s label is {predict_labels[i]}")
+                if seq.seq_id in self.all_job_sequences:
+                    self.all_job_sequences[seq.seq_id].label = predict_labels[i]
+            self.small_temp_sequences.clear()
 
     def _add_requests(self, 
                       prompt_token_ids: List[int], 
@@ -64,16 +78,23 @@ class ChunkRunner:
         seq_id = random_uuid()
         now_time = time.time()
         self.all_total_sequences.append(Sequence(seq_id = seq_id, 
-                                                 prompt = "Who is Messi", 
+                                                 prompt = "debug", 
                                                  prompt_token_ids = prompt_token_ids,
                                                  sampling_params = sampling_params,
                                                  start_time = now_time)) 
 
-    def set_self_configs(self, model: str, tensor_parallel_size: int) -> None:
+    def set_self_configs(self, 
+                         model: str,
+                         predict_model: str, 
+                         tensor_parallel_size: int) -> None:
         model_config = ModelConfig(model = model, tokenizer = None, tokenizer_mode = 'auto', 
                                    trust_remote_code = False, download_dir = None, use_np_weights = False,
                                    use_dummy_weights = False, dtype = 'auto', seed = 0)
         self.model_config = model_config
+        predict_model_config = ModelConfig(model = predict_model, tokenizer = None, tokenizer_mode = 'auto', 
+                                   trust_remote_code = False, download_dir = None, use_np_weights = False,
+                                   use_dummy_weights = False, dtype = 'auto', seed = 0)
+        self.predict_model_config = predict_model_config
         if tensor_parallel_size > 1:
             worker_use_ray = True
         else:
@@ -112,7 +133,8 @@ class ChunkRunner:
                                 model_config = self.model_config,
                                 parallel_config = self.parallel_config,
                                 rank = rank,
-                                distributed_init_method = self.distributed_init_method)
+                                distributed_init_method = self.distributed_init_method,
+                                predict_model_config = self.predict_model_config)
             self.workers.append(worker)
                 
     
@@ -285,6 +307,29 @@ class ChunkRunner:
                             print(f"has {len(self.all_job_chunks)} chunks")
         return (input_tokens_tensor, input_positions_tensor, kv_cache_ids)
     
+    def _prepare_predict_model_inputs(self) -> Tuple[torch.Tensor, torch.Tensor, ChunkInputMetadata]:
+        input_tokens_ids: List[int] = []
+        input_positions: List[int] = []
+        idxs: List[int] = []
+        prompt_lens: List[int] = []
+        kv_prefixs: List[int] = [0] * len(self.small_temp_sequences)
+        for seq in self.small_temp_sequences:
+            input_tokens_ids.extend(seq.prompt_token_ids)
+            idxs.append(len(seq.prompt_token_ids) - 1)
+            input_positions.extend(list(range(seq.prompt_len)))
+            prompt_lens.append(seq.prompt_len)
+        chukinputmetadata = ChunkInputMetadata(prompt_lens = prompt_lens,
+                                               kv_prefixs = kv_prefixs,
+                                               kv_prefixs_blocks = None,
+                                               kv_block = None,
+                                               sampling_params_for_sampler = None,
+                                               do_cat = False)
+        input_tokens_ids = _pad_to_alignment(input_tokens_ids, 8)
+        input_tokens_ids_tensor = torch.cuda.LongTensor(input_tokens_ids)
+        input_positions = _pad_to_alignment(input_positions, 8)
+        input_positions_tensor = torch.cuad.LongTensor(input_positions)
+        return (input_tokens_ids_tensor, input_positions_tensor, chukinputmetadata)
+    
     def run_worker(self) -> None:
         self._start_worker()
 
@@ -292,7 +337,8 @@ class ChunkRunner:
         #print(f"Added in working pool at {now_time}")
         
         #self._do_predict()
-
+        self.all_job_chunks.extend(self.waiting_chunks)
+        self.waiting_chunks.clear()
         for chunk in  self.all_job_chunks: #for chunk in self.chunk_worker.job_chunks:
             #chunk = self.all_job_chunks[0]
             start_time = time.time()
@@ -422,10 +468,12 @@ class ChunkRunner:
             chunk.set_seqs_to_lens_and_prefixs()
             temp_block = self.cacheblock.allocate_block()
             chunk.set_self_block(block = temp_block)
-            self.all_job_chunks.append(chunk)
+            #self.all_job_chunks.append(chunk)
+            self.waiting_chunks.append(chunk)
             st += self.chunk_size
         
-        for chunk in self.all_job_chunks:
+        #for chunk in self.all_job_chunks:
+        for chunk in self.waiting_chunks:
             st = 0
             idxs: List[int] = []
             sampling_params: List[ChunkSamplingParams] = []
@@ -460,6 +508,8 @@ class ChunkRunner:
         self.all_job_chunks.clear()
     
     def mprefill_generate_prefill(self, mm, prefill_nums) -> int:
+        self.all_job_chunks.extend(self.waiting_chunks)
+        self.waiting_chunks.clear()
         #self._set_job_chunks()
         output_num = 0
         for chunk in self.all_job_chunks:

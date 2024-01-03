@@ -17,6 +17,7 @@ class ChunkWorker:
                  chunk_size: int,
                  chunk_num: int,
                  model_config: ModelConfig,
+                 predict_model_config: ModelConfig,
                  parallel_config: ParallelConfig,
                  rank: int,
                  distributed_init_method: str,
@@ -24,6 +25,7 @@ class ChunkWorker:
         self.chunk_size = chunk_size
         self.chunk_num = chunk_num
         self.model_config = model_config
+        self.predict_model_config = predict_model_config
         self.parallel_config = parallel_config
         self.rank = rank
         self.distributed_init_method = distributed_init_method
@@ -43,8 +45,12 @@ class ChunkWorker:
         set_random_seed(seed = self.model_config.seed)
         self.model = get_model(model_config = self.model_config,
                                Chunked = True)
+        self.predict_model = get_model(model_config = self.predict_model_config,
+                               Predicted = True)
+        self.num_layers = self.predict_model_config.get_num_layers(self.parallel_config)
         initialize_all_reduce_launcher(
-            self.chunk_size,
+            4096,
+            #self.chunk_size,
             #2560,
             self.model_config.get_hidden_size(),
             self.model_config.dtype,
@@ -214,3 +220,18 @@ class ChunkWorker:
         )
         #end_time = time.time()
         return output #(output, start_time, end_time)
+    
+    @torch.inference_mode()
+    def execute_predict_model(self,
+                              inputs: torch.Tensor,
+                              inputs_positions: torch.Tensor,
+                              chunkmetadata: ChunkInputMetadata) -> List[int]:
+        kv_cache = [(None, None)] * self.num_layers
+        output = self.predict_model(
+            input_ids = inputs,
+            positions = inputs_positions,
+            kv_caches = kv_cache,
+            cache_events = None,
+            chunkinputmetadata = chunkmetadata
+        )
+        return output
