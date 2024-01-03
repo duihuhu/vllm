@@ -3,6 +3,7 @@ import threading
 import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import List
+import time
 
 from vllm.transformers_utils.tokenizer import get_tokenizer
 from vllm.chunked.chunkrunner import ChunkRunner
@@ -54,10 +55,13 @@ def execute_big_model(input_tokens_ids_tensor, input_positions_tensor, chunkinpu
     print(f"logprobs: {logprobs}")
 
 def execute_small_model(input_tokens_ids_tensor, input_positions_tensor, chunkinputmetadata):
+    st = time.time()
     predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                 inputs = input_tokens_ids_tensor,
                                 inputs_positions = input_positions_tensor,
                                 chunkmetadata = chunkinputmetadata)
+    ed = time.time()
+    print(f"predict costs {ed - st} seconds")
     print(f"predict_labels: {predict_labels}")
 
 if __name__ == "__main__":
@@ -89,15 +93,6 @@ if __name__ == "__main__":
     predict_model = AutoModelForSequenceClassification.from_pretrained("/workspace/opt_125m_model_sharegpt", num_labels = 10)
     predict_model = predict_model.to('cuda:2')
     
-    chunkinputmetadata = ChunkInputMetadata(prompt_lens = [512],
-                                            kv_prefixs = [0],
-                                            kv_prefixs_blocks = None,
-                                            kv_block = None,
-                                            idxs = [511],
-                                            sampling_params_for_sampler = [ChunkSamplingParams(temperature = 0.0,
-                                                                                            top_p = 1.0,
-                                                                                            top_k = -1)],
-                                            do_cat = False)
     filtered_dataset = set_inputs(tokenizer = tokenizer_13b,
                                   #dataset_path = "/workspace/ShareGPT_V3_unfiltered_cleaned_split.json",
                                   dataset_path = "/workspace/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
