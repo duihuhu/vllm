@@ -47,9 +47,9 @@ class ChunkWorker:
             self.model = get_model(model_config = self.model_config,
                                    Chunked = True)
             initialize_all_reduce_launcher(
-                self.chunk_size,
                 #self.chunk_size,
-                #2560,
+                #self.chunk_size,
+                4096,
                 self.model_config.get_hidden_size(),
                 self.model_config.dtype,
             )
