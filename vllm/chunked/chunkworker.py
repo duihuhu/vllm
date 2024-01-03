@@ -34,7 +34,7 @@ class ChunkWorker:
         self.job_chunks: List[Chunk] = []
         self.counter = Counter()
         self._set_self_model()
-        self._set_self_kv_cache()
+        #self._set_self_kv_cache()
         #self._set_self_cacheblock()
     
     def _set_self_model(self) -> None:
@@ -52,7 +52,8 @@ class ChunkWorker:
                 #2560,
                 self.model_config.get_hidden_size(),
                 self.model_config.dtype,
-        )
+            )
+            self._set_self_kv_cache(this_model_config = self.model_config)
         if self.predict_model_config != None:
             set_random_seed(seed = self.predict_model_config.seed)
             self.predict_model = get_model(model_config = self.predict_model_config,
@@ -65,6 +66,7 @@ class ChunkWorker:
                 self.predict_model_config.get_hidden_size(),
                 self.predict_model_config.dtype,
             )
+            self._set_self_kv_cache(this_model_config = self.predict_model_config)
 
     def _init_distributed_environment(self, parallel_config: ParallelConfig, rank: int,
         distributed_init_method: str) -> None:
@@ -80,14 +82,14 @@ class ChunkWorker:
         initialize_model_parallel(parallel_config.tensor_parallel_size,
                                 parallel_config.pipeline_parallel_size)
 
-    def _set_self_kv_cache(self) -> None:
+    def _set_self_kv_cache(self, this_model_config: ModelConfig) -> None:
         kv_cache: List[Tuple[torch.Tensor, torch.Tensor]] = []
-        num_layers = self.model_config.get_num_layers(self.parallel_config)
+        num_layers = this_model_config.get_num_layers(self.parallel_config)
         num_tokens = self.chunk_size
-        head_size= self.model_config.get_head_size()
-        num_heads = self.model_config.get_num_heads(self.parallel_config)
+        head_size= this_model_config.get_head_size()
+        num_heads = this_model_config.get_num_heads(self.parallel_config)
         hidden_states = num_heads * head_size
-        dtype = self.model_config.dtype
+        dtype = this_model_config.dtype
         for _ in range(num_layers):
             k_block = torch.empty(
                 size = (self.chunk_num, num_tokens, hidden_states),
