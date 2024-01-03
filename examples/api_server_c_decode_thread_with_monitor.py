@@ -52,12 +52,14 @@ def notify_mdecode():
     while True:
         if prefill_nums != mm[(already_num*35+34):(already_num*35+35)]:
             # prefill_nums = mm[(already_num*35):(already_num*35+1)]
+            start = time.time()
             request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
             request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
-
+            end = time.time()
+            print("decode get data " , request_id, start, end, end-start)
             # print("mdecode recv signal from mprefill ", time.time())
-            print("request info ", request_id, request_num, label, time.time())
+            # print("request info ", request_id, request_num, label, time.time())
             # if request_num > 0:
             # engine.convert_reqs_status_by_num(request_num)
             # engine.convert_reqs_status(request_id)

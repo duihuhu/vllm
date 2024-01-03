@@ -9,6 +9,9 @@ int main(void)
 {
   // assume file exists
   //dispatcher to dispatcher
+  struct timeval start;
+  struct timeval end;
+
   struct timeval mp_md_dp_tv;
   int md_md_dp_fd = -1;
   if ((md_md_dp_fd = open("mprefill_mdispatcher_to_mdecode_mdispatcher.txt", O_RDWR, 0)) == -1)
@@ -51,9 +54,12 @@ int main(void)
       // lseek(dp_md_fd, 0, SEEK_SET);
       // mdecode_shared[0] = mprefill_num;
       // mdecode_shared[1] = prefilled_request_num;
-
+      gettimeofday(&start, NULL);
+      long long start_timestamp_microseconds = (long long)start.tv_sec * 1000000 + start.tv_usec;
       memcpy(mdecode_shared+(alread_num*35), dispatcher_shared+(alread_num*35), 35);
-      printf("alread_num %d\n", alread_num);
+      gettimeofday(&end, NULL);
+      long long end_timestamp_microseconds = (long long)start.tv_sec * 1000000 + start.tv_usec;
+      printf("alread_num %d , %lld\n", alread_num, start_timestamp_microseconds-end_timestamp_microseconds);
       alread_num = alread_num + 1;
     }
   } 

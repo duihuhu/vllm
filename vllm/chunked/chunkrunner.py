@@ -66,7 +66,7 @@ class ChunkRunner:
         this_labels = [0] * len(request_ids)
         
         end = time.time()
-        print("this labels ", this_labels , end-start)
+        # print("this labels ", this_labels , end-start)
         for prompt_token_ids, sampling_params, request_id, label in zip(prompt_token_ids_s, sampling_params_s, request_ids, this_labels):
             # seq_id = random_uuid()
             now_time = time.time()
@@ -481,10 +481,13 @@ class ChunkRunner:
     
     def write_to_mdispatcher(self, prefill_nums, num, request_id, label, mm):
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
-        print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
+        # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
+        start = time.time()
         mm.seek((prefill_nums-1)*35)
         mm.write(combined_info_bytes)
-
+        end = time.time()
+        print("write_to_mdispatcher ", request_id, start, end , start-end)
+        
     def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info) -> int:
         #self._set_job_chunks()
         output_num = 0
@@ -518,7 +521,7 @@ class ChunkRunner:
             for request_id in chunk.do_sampling:
                 if request_id not in sended_request_id:
                     label = request_label.get(request_id)
-                    print(request_id, label)
+                    # print(request_id, label)
                     self.find_decode_host(mdecode_info)
                     prefill_nums += 1
                     threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
