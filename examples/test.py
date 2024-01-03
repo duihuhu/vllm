@@ -68,11 +68,11 @@ if __name__ == "__main__":
     chunkrunner_13b.set_parallel_chunkworkers(num_gpus = 0.7)
 
     tokenizer_125m = get_tokenizer("/workspace/opt-125m")
-    chunkrunner_125m = ChunkRunner(tokenizer = tokenizer_13b,
+    chunkrunner_125m = ChunkRunner(tokenizer = tokenizer_125m,
                               chunk_size = 512,
                               chunk_num = 10)
-    chunkrunner_125m.set_self_configs(model = "/workspace/opt_125m_model_sharegpt",
-                                 predict_model = None,
+    chunkrunner_125m.set_self_configs(model = None,
+                                 predict_model = "/workspace/opt_125m_model_sharegpt",
                                  tensor_parallel_size = 2)
     chunkrunner_125m.set_parallel_chunkworkers(num_gpus = 0.3)
 
