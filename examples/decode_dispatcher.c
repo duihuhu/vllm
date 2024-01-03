@@ -54,12 +54,12 @@ int main(void)
       // lseek(dp_md_fd, 0, SEEK_SET);
       // mdecode_shared[0] = mprefill_num;
       // mdecode_shared[1] = prefilled_request_num;
-      gettimeofday(&start, NULL);
-      long long start_timestamp_microseconds = (long long)start.tv_sec * 1000000 + start.tv_usec;
+      // gettimeofday(&start, NULL);
+      // long long start_timestamp_microseconds = (long long)start.tv_sec * 1000000 + start.tv_usec;
       memcpy(mdecode_shared+(alread_num*35), dispatcher_shared+(alread_num*35), 35);
-      gettimeofday(&end, NULL);
-      long long end_timestamp_microseconds = (long long)start.tv_sec * 1000000 + start.tv_usec;
-      printf("alread_num %d , %lld\n", alread_num, start_timestamp_microseconds-end_timestamp_microseconds);
+      // gettimeofday(&end, NULL);
+      // long long end_timestamp_microseconds = (long long)start.tv_sec * 1000000 + start.tv_usec;
+      // printf("alread_num %d , %lld\n", alread_num, start_timestamp_microseconds-end_timestamp_microseconds);
       alread_num = alread_num + 1;
     }
   } 

@@ -62,6 +62,8 @@ def sample_requests(
     # Sample the requests.
     # sampled_requests = filtered_dataset[:num_requests]
     sampled_requests = random.sample(filtered_dataset, num_requests)
+    for req in sample_requests:
+        print("choose req info ", req[1], req[2])
     return sampled_requests
 
 
