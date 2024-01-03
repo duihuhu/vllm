@@ -95,6 +95,7 @@ async def mprefill_add_prefill(request_dict):
         chunkrunner.request_waiting[1].append(prompt_token_ids)
         chunkrunner.request_waiting[2].append(sampling_params)
         chunkrunner.request_waiting[3].append(prompt)
+        chunkrunner.request_waiting[4].append(len(prompt_token_ids))
 
     # for _ in range(len(prompts_token_ids_s)):
     #     sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
@@ -107,8 +108,12 @@ async def mprefill_add_prefill(request_dict):
     #    sampling_params_list.append(sampling_params)
     # engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
-        chunkrunner.add_requests_to_job_sequences(prompts_s = chunkrunner.request_waiting[3], prompt_token_ids_s = chunkrunner.request_waiting[1], 
-                                                sampling_params_s = chunkrunner.request_waiting[2], request_ids=chunkrunner.request_waiting[0], request_label=request_label)
+        sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0], chunkrunner.request_waiting[1],
+                                  chunkrunner.request_waiting[2], chunkrunner.request_waiting[3],
+                                  chunkrunner.request_waiting[4]), key=lambda x: x[4])
+
+        chunkrunner.add_requests_to_job_sequences(prompts_s = sorted_request_waiting[3], prompt_token_ids_s = sorted_request_waiting[1], 
+                                                sampling_params_s = sorted_request_waiting[2], request_ids=sorted_request_waiting[0], request_label=request_label)
         chunkrunner.request_waiting[0] = []
         chunkrunner.request_waiting[1] = []
         chunkrunner.request_waiting[2] = []

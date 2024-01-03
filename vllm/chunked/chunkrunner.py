@@ -25,11 +25,14 @@ class ChunkRunner:
         self.all_total_sequences: List[Sequence] = []
         self.all_job_sequences: Dict[str, Sequence] = {}
         self.all_job_chunks: List[Chunk] = []
+        
+        self.waiting_job_chunks: List[Chunk] = []
+        
         self.processed_chunks: List[Chunk] = []
         self.counter = Counter()
         self.cacheblock = ChunkCacheBlocks(blocks_num = self.chunk_num)
 
-        self.request_waiting  = [[],[], [], []]
+        self.request_waiting  = [[],[], [], [], []]
         
     def set_predict_model_and_tokenizer(self, 
                                         predict_tokenizer_path: str, 
@@ -438,10 +441,12 @@ class ChunkRunner:
             chunk.set_seqs_to_lens_and_prefixs()
             temp_block = self.cacheblock.allocate_block()
             chunk.set_self_block(block = temp_block)
-            self.all_job_chunks.append(chunk)
+            # self.all_job_chunks.append(chunk)
+            self.waiting_job_chunks.append(chunk)
             st += self.chunk_size
         
-        for chunk in self.all_job_chunks:
+        # for chunk in self.all_job_chunks:
+        for chunk in self.waiting_job_chunks:
             st = 0
             idxs: List[int] = []
             sampling_params: List[ChunkSamplingParams] = []
@@ -490,6 +495,9 @@ class ChunkRunner:
         
     def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info) -> int:
         #self._set_job_chunks()
+        self.all_job_chunks.extend(self.waiting_job_chunks)
+        self.waiting_job_chunks.clear()
+        
         output_num = 0
         sended_request_id = set()
         # pass_time = 0
