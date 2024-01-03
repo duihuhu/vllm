@@ -119,7 +119,7 @@ if __name__ == "__main__":
                                                                                             top_k = -1)],
                                             do_cat = False)
 
-        small_input_positions = list(range(small_input_tokens_ids))
+        small_input_positions = list(range(len(small_input_tokens_ids)))
         small_input_tokens_ids_tensor = torch.cuda.LongTensor(small_input_tokens_ids)
         small_input_positions_tensor = torch.cuad.LongTensor(small_input_positions)
         small_chunkinputmetadata = ChunkInputMetadata(prompt_lens = [len(small_input_tokens_ids)],
