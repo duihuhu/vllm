@@ -1,5 +1,6 @@
 import torch
 import threading
+import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from vllm.transformers_utils.tokenizer import get_tokenizer
@@ -7,16 +8,49 @@ from vllm.chunked.chunkrunner import ChunkRunner
 from vllm.chunked.chunk import ChunkInputMetadata, ChunkSamplingParams
 from vllm.worker.worker import _pad_to_max
 
-def execute_big_model():
-    output_token_list, logprobs = chunkrunner._run_workers("execute_model",
+def set_inputs(self, dataset_path: str, num_requests: int):
+    with open(dataset_path) as f:
+        dataset = json.load(f)
+    dataset = [
+        data for data in dataset
+        if len(data["conversations"]) >= 2
+    ]
+    dataset = [
+        (data["conversations"][0]["value"], data["conversations"][1]["value"])
+        for data in dataset
+    ]
+    prompts = [prompt for prompt, _ in dataset]
+    prompt_token_ids = self.tokenizer(prompts).input_ids
+    completions = [completion for _, completion in dataset]
+    completion_token_ids = self.tokenizer(completions).input_ids
+    tokenized_dataset = []
+    for i in range(len(dataset)):
+        output_len = len(completion_token_ids[i])
+        tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
+    filtered_dataset = []
+    num_requests_count = 0
+    for prompt, prompt_token_ids, output_len in tokenized_dataset:
+        prompt_len = len(prompt_token_ids)
+        if prompt_len < 4 or output_len < 4:
+            continue
+        if prompt_len > 512 or output_len > 512:
+            continue
+        filtered_dataset.append((prompt, prompt_token_ids))
+        num_requests_count += 1
+        if num_requests_count == num_requests:
+            break
+    return filtered_dataset
+
+def execute_big_model(input_tokens_ids_tensor, input_positions_tensor, chunkinputmetadata):
+    output_token_list, logprobs = chunkrunner_13b._run_workers("execute_model",
                                             inputs = input_tokens_ids_tensor,
                                             inputs_positions = input_positions_tensor,
                                             chunkmetadata = chunkinputmetadata)
     print(f"output_token_list: {output_token_list}")
     print(f"logprobs: {logprobs}")
 
-def execute_small_model():
-    predict_labels = chunkrunner._run_workers("execute_predict_model",
+def execute_small_model(input_tokens_ids_tensor, input_positions_tensor, chunkinputmetadata):
+    predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                 inputs = input_tokens_ids_tensor,
                                 inputs_positions = input_positions_tensor,
                                 chunkmetadata = chunkinputmetadata)
@@ -24,14 +58,24 @@ def execute_small_model():
 
 if __name__ == "__main__":
 
-    tokenizer = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
-    chunkrunner = ChunkRunner(tokenizer = tokenizer,
+    tokenizer_13b = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
+    chunkrunner_13b = ChunkRunner(tokenizer = tokenizer_13b,
                               chunk_size = 512,
                               chunk_num = 10)
-    chunkrunner.set_self_configs(model = "/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
-                                 predict_model = "/workspace/opt_125m_model_sharegpt",
+    chunkrunner_13b.set_self_configs(model = "/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
+                                 predict_model = None,
                                  tensor_parallel_size = 2)
-    chunkrunner.set_parallel_chunkworkers()
+    chunkrunner_13b.set_parallel_chunkworkers(num_gpus = 0.7)
+
+    tokenizer_125m = get_tokenizer("/workspace/opt_125m_model_sharegpt")
+    chunkrunner_125m = ChunkRunner(tokenizer = tokenizer_13b,
+                              chunk_size = 512,
+                              chunk_num = 10)
+    chunkrunner_125m.set_self_configs(model = "/workspace/opt_125m_model_sharegpt",
+                                 predict_model = None,
+                                 tensor_parallel_size = 2)
+    chunkrunner_125m.set_parallel_chunkworkers(num_gpus = 0.3)
+
 
     predict_tokenizer = AutoTokenizer.from_pretrained("/workspace/opt-125m")
     predict_model = AutoModelForSequenceClassification.from_pretrained("/workspace/opt_125m_model_sharegpt", num_labels = 10)
@@ -46,35 +90,37 @@ if __name__ == "__main__":
                                                                                             top_p = 1.0,
                                                                                             top_k = -1)],
                                             do_cat = False)
-    input_prompt = "test whether opt-13b and opt-125m can be co-runnging"
-    input_tokens_ids = tokenizer(input_prompt).input_ids
-    if len(input_tokens_ids) < 512:
-        input_tokens_ids = _pad_to_max(input_tokens_ids, max_len = 512)
-    else:
-        input_tokens_ids = input_tokens_ids[0: 512]
-    input_positions = list(range(512))
-    input_tokens_ids_tensor = torch.cuda.LongTensor(input_tokens_ids)
-    input_positions_tensor = torch.cuda.LongTensor(input_positions)
+    filtered_dataset = set_inputs(dataset_path = "/workspace/ShareGPT_V3_unfiltered_cleaned_split.json",
+                                  num_requests =32)
+    
+    for input_prompt, input_tokens_ids in filtered_dataset:
+        if len(input_tokens_ids) < 512:
+            input_tokens_ids = _pad_to_max(input_tokens_ids, max_len = 512)
+        else:
+            input_tokens_ids = input_tokens_ids[0: 512]
+        input_positions = list(range(512))
+        input_tokens_ids_tensor = torch.cuda.LongTensor(input_tokens_ids)
+        input_positions_tensor = torch.cuda.LongTensor(input_positions)
 
-    test_encoded = predict_tokenizer(input_prompt, 
-                                     padding = "max_length", 
-                                     truncation = True, 
-                                     return_tensors = "pt", 
-                                     max_length = 2048)
-    test_encoded = test_encoded.to('cuda:2')
-    predictions = predict_model(input_ids = test_encoded['input_ids'], 
-                                attention_mask = test_encoded['attention_mask'])
-    predicted_label = torch.argmax(predictions.logits, dim = 1).item()
-    print(f"original predicted label is {predicted_label}")
+        test_encoded = predict_tokenizer(input_prompt, 
+                                        padding = "max_length", 
+                                        truncation = True, 
+                                        return_tensors = "pt", 
+                                        max_length = 2048)
+        test_encoded = test_encoded.to('cuda:2')
+        predictions = predict_model(input_ids = test_encoded['input_ids'], 
+                                    attention_mask = test_encoded['attention_mask'])
+        predicted_label = torch.argmax(predictions.logits, dim = 1).item()
+        print(f"original predicted label is {predicted_label}")
 
-    thread_a = threading.Thread(target = execute_small_model)
-    thread_b = threading.Thread(target = execute_big_model)
+        thread_a = threading.Thread(target = execute_small_model, args = (input_tokens_ids_tensor, input_positions_tensor, chunkinputmetadata))
+        thread_b = threading.Thread(target = execute_big_model, args = (input_tokens_ids_tensor, input_positions_tensor, chunkinputmetadata))
 
-    thread_a.start()
-    thread_b.start()
+        thread_a.start()
+        thread_b.start()
 
-    thread_a.join()
-    thread_b.join()
+        thread_a.join()
+        thread_b.join()
 
 
     

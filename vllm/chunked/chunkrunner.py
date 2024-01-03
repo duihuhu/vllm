@@ -87,14 +87,16 @@ class ChunkRunner:
                          model: str,
                          predict_model: str, 
                          tensor_parallel_size: int) -> None:
-        model_config = ModelConfig(model = model, tokenizer = None, tokenizer_mode = 'auto', 
-                                   trust_remote_code = False, download_dir = None, use_np_weights = False,
-                                   use_dummy_weights = False, dtype = 'auto', seed = 0)
-        self.model_config = model_config
-        predict_model_config = ModelConfig(model = predict_model, tokenizer = None, tokenizer_mode = 'auto', 
-                                   trust_remote_code = False, download_dir = None, use_np_weights = False,
-                                   use_dummy_weights = False, dtype = 'auto', seed = 0)
-        self.predict_model_config = predict_model_config
+        if model:
+            model_config = ModelConfig(model = model, tokenizer = None, tokenizer_mode = 'auto', 
+                                    trust_remote_code = False, download_dir = None, use_np_weights = False,
+                                    use_dummy_weights = False, dtype = 'auto', seed = 0)
+            self.model_config = model_config
+        if predict_model:
+            predict_model_config = ModelConfig(model = predict_model, tokenizer = None, tokenizer_mode = 'auto', 
+                                    trust_remote_code = False, download_dir = None, use_np_weights = False,
+                                    use_dummy_weights = False, dtype = 'auto', seed = 0)
+            self.predict_model_config = predict_model_config
         if tensor_parallel_size > 1:
             worker_use_ray = True
         else:
@@ -119,22 +121,31 @@ class ChunkRunner:
                                    distributed_init_method = self.distributed_init_method)
         self.chunk_worker = chunk_worker
     
-    def set_parallel_chunkworkers(self) -> None:
+    def set_parallel_chunkworkers(self, num_gpus: float) -> None:
         self.workers: List[ChunkWorker] = []
         assert len(self.devices) == 1, "PP is under coding"
         for rank, node_resource, _ in self.devices[0]:
             worker_cls = ChunkWorker
             if self.worker_use_ray:
                 worker_cls = ray.remote(num_cpus = 0,
-                                        num_gpus = 1,
+                                        num_gpus = num_gpus,
                                         resources = {node_resource: 1e-3})(worker_cls).remote
-            worker = worker_cls(chunk_size = self.chunk_size,
-                                chunk_num = self.chunk_num,
-                                model_config = self.model_config,
-                                parallel_config = self.parallel_config,
-                                rank = rank,
-                                distributed_init_method = self.distributed_init_method,
-                                predict_model_config = self.predict_model_config)
+            if self.model_config:
+                worker = worker_cls(chunk_size = self.chunk_size,
+                                    chunk_num = self.chunk_num,
+                                    model_config = self.model_config,
+                                    parallel_config = self.parallel_config,
+                                    rank = rank,
+                                    distributed_init_method = self.distributed_init_method,
+                                    predict_model_config = None)
+            if self.predict_model_config:
+                worker = worker_cls(chunk_size = self.chunk_size,
+                                    chunk_num = self.chunk_num,
+                                    model_config = None,
+                                    parallel_config = self.parallel_config,
+                                    rank = rank,
+                                    distributed_init_method = self.distributed_init_method,
+                                    predict_model_config = self.predict_model_config)
             self.workers.append(worker)
                 
     

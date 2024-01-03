@@ -42,19 +42,29 @@ class ChunkWorker:
         self._init_distributed_environment(parallel_config = self.parallel_config, 
                                            rank = self.rank, 
                                            distributed_init_method = self.distributed_init_method)
-        set_random_seed(seed = self.model_config.seed)
-        self.model = get_model(model_config = self.model_config,
-                               Chunked = True)
-        self.predict_model = get_model(model_config = self.predict_model_config,
-                               Predicted = True)
-        self.num_layers = self.predict_model_config.get_num_layers(self.parallel_config)
-        initialize_all_reduce_launcher(
-            4096,
-            #self.chunk_size,
-            #2560,
-            self.model_config.get_hidden_size(),
-            self.model_config.dtype,
+        if self.model_config:
+            set_random_seed(seed = self.model_config.seed)
+            self.model = get_model(model_config = self.model_config,
+                                   Chunked = True)
+            initialize_all_reduce_launcher(
+                self.chunk_size,
+                #self.chunk_size,
+                #2560,
+                self.model_config.get_hidden_size(),
+                self.model_config.dtype,
         )
+        if self.predict_model_config:
+            set_random_seed(seed = self.predict_model_config.seed)
+            self.predict_model = get_model(model_config = self.predict_model_config,
+                                           Predicted = True)
+            self.num_layers = self.predict_model_config.get_num_layers(self.parallel_config)
+            initialize_all_reduce_launcher(
+                4096,
+                #self.chunk_size,
+                #2560,
+                self.predict_model_config.get_hidden_size(),
+                self.predict_model_config.dtype,
+            )
 
     def _init_distributed_environment(self, parallel_config: ParallelConfig, rank: int,
         distributed_init_method: str) -> None:
