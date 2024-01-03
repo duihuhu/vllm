@@ -227,7 +227,7 @@ class Scheduler:
                 seq_group.label = label
                 for seq in seq_group.get_seqs():
                     seq.status = SequenceStatus.RUNNING  
-                self.running_waiting.append(seq_group)
+                self.running.append(seq_group)
             else:
                 prefilled.append(seq_group)
         self.prefilled = prefilled
