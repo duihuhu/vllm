@@ -80,7 +80,7 @@ class ChunkRunner:
                                   request_id=request_id,
                                    label = label)
             self.all_job_sequences[request_id] = a_sequence
-        self._set_job_chunks()
+        # self._set_job_chunks()
 
     def _add_requests(self, 
                       prompt_token_ids: List[int], 
@@ -441,8 +441,8 @@ class ChunkRunner:
             chunk.set_seqs_to_lens_and_prefixs()
             temp_block = self.cacheblock.allocate_block()
             chunk.set_self_block(block = temp_block)
-            # self.all_job_chunks.append(chunk)
-            self.waiting_job_chunks.append(chunk)
+            self.all_job_chunks.append(chunk)
+            # self.waiting_job_chunks.append(chunk)
             st += self.chunk_size
         
         # for chunk in self.all_job_chunks:
@@ -495,10 +495,10 @@ class ChunkRunner:
         # print("write_to_mdispatcher ", request_id, start, end , start-end)
         
     def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info) -> int:
-        #self._set_job_chunks()
+        self._set_job_chunks()
         
-        self.all_job_chunks.extend(self.waiting_job_chunks)
-        self.waiting_job_chunks.clear()
+        # self.all_job_chunks.extend(self.waiting_job_chunks)
+        # self.waiting_job_chunks.clear()
         
         output_num = 0
         sended_request_id = set()
