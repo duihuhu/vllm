@@ -66,6 +66,8 @@ def mprefill_exec_prefill(request_label):
     prefill_nums = 0 
     while True:
         prefill_event.wait() 
+        execute_time = time.time()
+        print("prefill start execute time 1", execute_time)
         #prefill_nums = engine.mprefill_generate_prefill(mm, prefill_nums)
         prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label, mdecode_info)
         prefill_event.clear()
@@ -108,6 +110,8 @@ async def mprefill_add_prefill(request_dict):
     #    sampling_params_list.append(sampling_params)
     # engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
+        execute_time = time.time()
+        print("prefill start execute time ", execute_time)
         sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0], chunkrunner.request_waiting[1],
                                   chunkrunner.request_waiting[2], chunkrunner.request_waiting[3],
                                   chunkrunner.request_waiting[4]), key=lambda x: x[4])

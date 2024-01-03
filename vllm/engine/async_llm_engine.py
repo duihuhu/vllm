@@ -109,7 +109,8 @@ class AsyncLLMEngine:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                    print("decode ", output.request_id)
+                    end_time = time.time()
+                    print("decode ", output.request_id, end_time)
                     
     def add_mprefill_request(self,
         prompts: Optional[List[str]],
