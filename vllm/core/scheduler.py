@@ -543,7 +543,7 @@ class Scheduler:
                 seq_group = self.running_waiting.pop(0)
                 self.running.append(seq_group)
                 add_to_running = time.time()
-                print("decode add_to_running ", add_to_running)
+                print("decode add_to_running ", seq_group.request_id, add_to_running)
                 
                 
         self.running = self.policy.sort_by_priority(now, self.running)
