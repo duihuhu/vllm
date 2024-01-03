@@ -42,7 +42,7 @@ class ChunkWorker:
         self._init_distributed_environment(parallel_config = self.parallel_config, 
                                            rank = self.rank, 
                                            distributed_init_method = self.distributed_init_method)
-        if self.model_config:
+        if self.model_config != None:
             set_random_seed(seed = self.model_config.seed)
             self.model = get_model(model_config = self.model_config,
                                    Chunked = True)
@@ -53,7 +53,7 @@ class ChunkWorker:
                 self.model_config.get_hidden_size(),
                 self.model_config.dtype,
         )
-        if self.predict_model_config:
+        if self.predict_model_config != None:
             set_random_seed(seed = self.predict_model_config.seed)
             self.predict_model = get_model(model_config = self.predict_model_config,
                                            Predicted = True)

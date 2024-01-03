@@ -87,13 +87,13 @@ class ChunkRunner:
                          model: str,
                          predict_model: str, 
                          tensor_parallel_size: int) -> None:
-        if model:
+        if model != None:
             model_config = ModelConfig(model = model, tokenizer = None, tokenizer_mode = 'auto', 
                                     trust_remote_code = False, download_dir = None, use_np_weights = False,
                                     use_dummy_weights = False, dtype = 'auto', seed = 0)
             self.model_config = model_config
             self.predict_model_config = None
-        if predict_model:
+        if predict_model != None:
             predict_model_config = ModelConfig(model = predict_model, tokenizer = None, tokenizer_mode = 'auto', 
                                     trust_remote_code = False, download_dir = None, use_np_weights = False,
                                     use_dummy_weights = False, dtype = 'auto', seed = 0)
@@ -132,7 +132,7 @@ class ChunkRunner:
                 worker_cls = ray.remote(num_cpus = 0,
                                         num_gpus = num_gpus,
                                         resources = {node_resource: 1e-3})(worker_cls).remote
-            if self.model_config:
+            if self.model_config != None:
                 worker = worker_cls(chunk_size = self.chunk_size,
                                     chunk_num = self.chunk_num,
                                     model_config = self.model_config,
@@ -140,7 +140,7 @@ class ChunkRunner:
                                     rank = rank,
                                     distributed_init_method = self.distributed_init_method,
                                     predict_model_config = None)
-            if self.predict_model_config:
+            if self.predict_model_config != None:
                 worker = worker_cls(chunk_size = self.chunk_size,
                                     chunk_num = self.chunk_num,
                                     model_config = None,
