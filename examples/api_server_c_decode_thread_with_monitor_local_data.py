@@ -44,7 +44,7 @@ fd = open(dp_md, "r+b")
 mm = mmap.mmap(fd.fileno(), 35 * 1024, access=mmap.ACCESS_WRITE, offset=0)
 
 # @app.post("/notify_mdecode")
-def notify_mdecode(engine, num_prompts):
+def notify_mdecode(num_prompts):
     global decode_event
     global mdecode_status
     hex_char = b'\x0F'
@@ -79,7 +79,7 @@ def notify_mdecode(engine, num_prompts):
                 print("already_num ", already_num)
                 break
 
-def init_mdecode_prefill(engine):
+def init_mdecode_prefill():
     global mdecode_status
     while True:
         # print("init_mdecode_prefill ", mdecode_status)
@@ -190,7 +190,7 @@ def post_request_id(request_ids
     }
     response = requests.post(request_url, headers=headers, json=pload)
     
-def init_mdecode(engine, num_prompts):
+def init_mdecode(num_prompts):
     """init mdecode machine before execute. 
     add request to queue
     """
@@ -228,9 +228,9 @@ if __name__ == "__main__":
     engine = AsyncLLMEngine.from_engine_args(engine_args)
     
     td_list= []
-    t1 = threading.Thread(target=init_mdecode_prefill, args=(engine,))
+    t1 = threading.Thread(target=init_mdecode_prefill)
     td_list.append(t1)
-    t2 = threading.Thread(target=notify_mdecode, args=(engine, args.num_prompts))
+    t2 = threading.Thread(target=notify_mdecode, args=(args.num_prompts))
     td_list.append(t2)
     t3 = threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port))
     td_list.append(t3)
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     for td in td_list:
         td.start()
 
-    init_mdecode(engine, args.num_prompts)
+    init_mdecode(args.num_prompts)
     
     # while True:
     #     if mdecode_status == "decode":
