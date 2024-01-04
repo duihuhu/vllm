@@ -76,6 +76,7 @@ def notify_mdecode(engine, num_prompts):
             already_num = already_num + 1
             decode_event.set()
             if already_num == num_prompts:
+                print("already_num ", already_num)
                 break
 
 def init_mdecode_prefill(engine):
