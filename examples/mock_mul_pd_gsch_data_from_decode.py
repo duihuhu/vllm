@@ -31,7 +31,7 @@ request_prompts_token_ids = {}
 request_prompts = {}
 
 mdecode_prefilled_num = 0
-total_requests = 128
+total_requests = 64
 # batch_size = 4
 requestIds_event = manager.Event()
 request_ids = []
@@ -93,7 +93,7 @@ async def post_prefill_exec(prompts: List[str],
     print("request_ids ", request_ids)
 
     num_prompts = len(prompts)
-    batch_size = 128
+    batch_size = 64
     alread_send = 0
     while alread_send <= num_prompts:
         # if alread_send == 0:
