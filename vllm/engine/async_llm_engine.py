@@ -106,10 +106,10 @@ class AsyncLLMEngine:
         s_time = time.time()
         while self.engine.has_unfinished_decode_requests():
             # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
-            start_time =  time.time()
+            # start_time =  time.time()
             step_outputs = self.engine.mdecode_step()
-            end_time =  time.time()
-            print("iteration time ", end_time-start_time)
+            # end_time =  time.time()
+            # print("iteration time ", end_time-start_time)
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
