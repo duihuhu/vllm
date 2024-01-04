@@ -66,7 +66,7 @@ def post_init_decode_prefill(prompts: List[str],
 
 def post_prefill_execute(prompts: List[str],
                       output_lens: List[int],
-                      request_ids: List[str],
+                    #   request_ids: List[str],
                       api_url_execute_prefill: str,
                       api_url_add_prefill: str,
                       n: int = 1,
@@ -75,7 +75,7 @@ def post_prefill_execute(prompts: List[str],
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     # 运行异步函数
-    loop.run_until_complete(post_prefill_exec(prompts, output_lens, request_ids, api_url_execute_prefill, api_url_add_prefill, n, stream))
+    loop.run_until_complete(post_prefill_exec(prompts, output_lens, api_url_execute_prefill, api_url_add_prefill, n, stream))
     return
 
 async def post_prefill_exec(prompts: List[str],
