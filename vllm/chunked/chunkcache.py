@@ -10,7 +10,6 @@ class ChunkCacheBlocks:
     def __init__(self,
                  blocks_num: int) -> None:
         self.Blocks: List[Block] = []
-        self.st: int = 0
         for i in range(blocks_num):
             self.Blocks.append(Block(block_id = i))
     
@@ -25,10 +24,6 @@ class ChunkCacheBlocks:
             block = self.Blocks.pop()
             block.used = True
             return block
-        else:
-            ans = self.Blocks[self.st]
-            self.st += 1
-            return ans
     
     def free_block(self, block: Block):
         block.used = False
