@@ -72,8 +72,7 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
     iter = 0
     for input_prompt, _ in input_prompts:
         st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(prompt = input_prompt, 
-                                                   pad_len = 512)
+        _ = chunkrunner_125m.execute_predict_model(input_prompt, 512)
         '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
