@@ -30,7 +30,7 @@ mdecode_status = "init_mdecode_prefill"
  
 decode_event = threading.Event()
 
-execute_event = threading.Event()
+# execute_event = threading.Event()
 
 dp_md = 'mdispatcher_to_mdecode.txt'
 
@@ -77,10 +77,11 @@ def notify_mdecode(num_prompts):
             decode_event.set()
             if already_num == num_prompts:
                 print("already_num ", already_num)
-                break
+                time.sleep(100)
 
 def init_mdecode_prefill():
     global mdecode_status
+    global decode_event
     while True:
         # print("init_mdecode_prefill ", mdecode_status)
         if mdecode_status == "init_mdecode_prefill":
