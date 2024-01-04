@@ -103,6 +103,7 @@ class AsyncLLMEngine:
             
     def generate_decode(self):
         outputs: List[RequestOutput] = []
+        s_time = time.time()
         while self.engine.has_unfinished_decode_requests():
             # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
             start_time =  time.time()
@@ -113,7 +114,7 @@ class AsyncLLMEngine:
                 if output.finished:
                     outputs.append(output)
                     end_time = time.time()
-                    print("decode complish ", output.request_id, end_time, output.outputs[0].finish_reason)
+                    print("decode complish ", output.request_id, end_time, end_time-s_time output.outputs[0].finish_reason)
                     
     def add_mprefill_request(self,
         prompts: Optional[List[str]],
