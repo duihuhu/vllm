@@ -74,9 +74,9 @@ def notify_mdecode(engine, num_prompts):
 
             mdecode_status = "decode"
             already_num = already_num + 1
-            execute_event.set()
-        if already_num == num_prompts:
-            break
+            decode_event.set()
+            if already_num == num_prompts:
+                break
 
 def init_mdecode_prefill(engine):
     global mdecode_status
@@ -86,9 +86,9 @@ def init_mdecode_prefill(engine):
             decode_event.wait()
             results_generator = engine.generate_mdecode_prefill()
             break
-        # elif mdecode_status == "decode":
-        #     print("status is chanage, mdecode start exec decode", mdecode_status)
-        #     engine.generate_decode()
+        elif mdecode_status == "decode":
+            print("status is chanage, mdecode start exec decode", mdecode_status)
+            engine.generate_decode()
         decode_event.clear()
         decode_event.wait()
         
@@ -239,12 +239,12 @@ if __name__ == "__main__":
 
     init_mdecode(engine, args.num_prompts)
     
-    while True:
-        if mdecode_status == "decode":
-            print("status is chanage, mdecode start exec decode", mdecode_status)
-            engine.generate_decode()
-        execute_event.clear()
-        execute_event.wait()
+    # while True:
+    #     if mdecode_status == "decode":
+    #         print("status is chanage, mdecode start exec decode", mdecode_status)
+    #         engine.generate_decode()
+    #     execute_event.clear()
+    #     execute_event.wait()
         
     for td in td_list:
         td.join()
