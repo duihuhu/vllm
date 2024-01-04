@@ -209,8 +209,8 @@ if __name__ == "__main__":
     model_name = args.model
     chunkrunner.set_self_configs(model = model_name, tensor_parallel_size = args.tp)
     
-    chunkrunner.set_predict_model_and_tokenizer(predict_tokenizer_path = args.predict_tokenizer,
-                                            predict_model_path = args.predict_model)
+    # chunkrunner.set_predict_model_and_tokenizer(predict_tokenizer_path = args.predict_tokenizer,
+    #                                         predict_model_path = args.predict_model)
 
     chunkrunner.set_parallel_chunkworkers()
     
