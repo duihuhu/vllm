@@ -34,17 +34,19 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
     random.seed(42)
-    #dummy_prompt_token_ids = []
-    '''prompt_lens = [91, 88, 75, 966, 3, 2047, 42, 103, 15, 717, 1589, 385, 49, 306, 228, 315, 21, 104, 30, 182, 103, 
+    dummy_prompt_token_ids = []
+    prompt_lens = [91, 88, 75, 966, 3, 2047, 42, 103, 15, 717, 1589, 385, 49, 306, 228, 315, 21, 104, 30, 182, 103, 
                    53, 390, 1129, 387, 22, 871, 546, 347, 273, 117, 276, 422, 269, 243, 24, 88, 93, 107, 248, 2047, 
-                   1845, 75, 108, 878, 939, 72, 108, 264, 339, 775, 328, 1021, 62, 47, 592, 2, 513, 76, 61, 1020, 178, 
-                   52, 60, 2, 89, 955, 59, 931, 21, 92, 125, 497, 64, 235, 505, 189, 1795, 1500, 345, 942, 58, 38, 87, 
-                   15, 344, 100, 899, 83, 22, 191, 130, 1413, 561, 62, 80, 33, 122, 308, 60]'''
-    #for prompt_len in prompt_lens:
-    #    temp_input = [random.randint(1, 9) for _ in range(prompt_len)]
-    #    dummy_prompt_token_ids.append(temp_input)
+                   1845, 75, 108, 878, 939, 72, 108, 264, 339, 775, 328, 1021, 62, 47, 592, 2, 513, 76, 61, 1020, 
+                   178, 52, 60, 2, 89, 955, 59, 931, 21, 92, 125, 497, 64, 235, 505, 189, 1795, 1500, 345, 942, 58, 
+                   38, 87, 15, 344, 100, 899, 83, 22, 191, 130, 1413, 561, 62, 80, 33, 122, 308, 60, 100, 49, 871, 
+                   30, 122, 75, 89, 76, 42, 62, 59, 104, 955, 505, 191, 88, 61, 592, 273, 497, 308, 385, 80, 878, 
+                   228, 53, 2047, 15]
+    for prompt_len in prompt_lens:
+        temp_input = [random.randint(1, 9) for _ in range(prompt_len)]
+        dummy_prompt_token_ids.append(temp_input)
     
-    dummy_prompt_token_ids = [[1] * args.input_len] * 1
+    #dummy_prompt_token_ids = [[1] * args.input_len] * 1
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
@@ -69,7 +71,7 @@ def main(args: argparse.Namespace):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
     #print(latencies)
-    print(f'Avg throughput: {args.input_len * 1  / np.mean(latencies):.2f} token/s')
+    #print(f'Avg throughput: {args.input_len * 1  / np.mean(latencies):.2f} token/s')
 
 
 if __name__ == '__main__':
@@ -81,7 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=512)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--batch-size', type=int, default=2)
+    parser.add_argument('--batch-size', type=int, default=16)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')

@@ -156,7 +156,7 @@ class LLM:
             #print("interation: ", interation)
             #iteration_start = time.time()
             step_outputs = self.llm_engine.step()
-            #ted = time.time()
+            ted = time.time()
             #iteartion_end = time.time()
             #iteration_time.append(iteartion_end-iteration_start)
             interation = interation  + 1
@@ -164,8 +164,8 @@ class LLM:
                 if output.finished:
                     # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
-                    #with open("/workspace/vllm/benchmarks/logs/logs_3_1.txt",'a') as file:
-                    #    file.write(f"req {output.request_id}, prompt len {len(output.prompt_token_ids)}, end at {ted}\n")
+                    with open("/workspace/vllm/benchmarks/logs/logs_10_1.txt",'a') as file:
+                        file.write(f"req {output.request_id}, prompt len {len(output.prompt_token_ids)}, end at {ted}\n")
                     # print(output)
                     if use_tqdm:
                         pbar.update(1)

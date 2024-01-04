@@ -146,14 +146,14 @@ class OPTDecoderLayer(nn.Module):
         # 125m, 1.7B, ..., 175B applies layer norm BEFORE attention
         if self.do_layer_norm_before:
             hidden_states = self.self_attn_layer_norm(hidden_states)
-        st = time.time()
+        #st = time.time()
         hidden_states = self.self_attn(hidden_states=hidden_states,
                                        kv_cache=kv_cache,
                                        input_metadata=input_metadata,
                                        cache_event=cache_event)
-        ed = time.time()
-        with open("/workspace/vllm/benchmarks/logs7_1.txt", 'a') as file:
-            file.write(f"attn costs {ed - st}\n")
+        #ed = time.time()
+        #with open("/workspace/vllm/benchmarks/logs7_1.txt", 'a') as file:
+        #    file.write(f"attn costs {ed - st}\n")
         hidden_states = residual + hidden_states
         # 350m applies layer norm AFTER attention
         if not self.do_layer_norm_before:
@@ -239,12 +239,12 @@ class OPTDecoder(nn.Module):
             else:
                 cache_event = cache_events[i]
             layer = self.layers[i]
-            st = time.time()
+            #st = time.time()
             hidden_states = layer(hidden_states, kv_caches[i], input_metadata,
                                   cache_event)
-            ed = time.time()
-            with open("/workspace/vllm/benchmarks/logs7_1.txt", 'a') as file:
-                file.write(f"layer costs {ed - st}\n")
+            #ed = time.time()
+            #with open("/workspace/vllm/benchmarks/logs7_1.txt", 'a') as file:
+            #    file.write(f"layer costs {ed - st}\n")
 
         if self.final_layer_norm is not None:
             hidden_states = self.final_layer_norm(hidden_states)
