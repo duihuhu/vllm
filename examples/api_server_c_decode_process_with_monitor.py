@@ -31,13 +31,14 @@ if not os.path.isfile(dp_md):
 fd = open(dp_md, "r+b")
 mm = mmap.mmap(fd.fileno(), 35 * 1024, access=mmap.ACCESS_WRITE, offset=0)
 
-# 全局变量
-engine = None
+# 使用 multiprocessing.Value 共享 engine
+shared_engine = None
 
-def init_global_engine(args, manager):
+def init_global_engine(args, shared_engine):
     global engine
     engine_args = AsyncEngineArgs.from_cli_args(args)
-    engine = manager.AsyncLLMEngine.from_engine_args(engine_args)
+    engine = AsyncLLMEngine.from_engine_args(engine_args)
+    shared_engine.value = engine  # 将 engine 赋值给共享对象
 
 def notify_mdecode():
     global decode_event
@@ -67,10 +68,10 @@ def init_mdecode_prefill():
     while True:
         if mdecode_status == "init_mdecode_prefill":
             decode_event.wait()
-            results_generator = engine.generate_mdecode_prefill()
+            results_generator = shared_engine.value.generate_mdecode_prefill()  # 使用共享的 engine
         elif mdecode_status == "decode":
             print("status is chanage, mdecode start exec decode", mdecode_status)
-            engine.generate_decode()
+            shared_engine.value.generate_decode()  # 使用共享的 engine
         decode_event.clear()
         decode_event.wait()
 
@@ -100,7 +101,7 @@ def monitor_mdecode_info(host, service_port):
     global engine
     machine_type = "decode"
     while True:
-        num_labels = engine.monitor_mdecode_info()
+        num_labels = shared_engine.value.monitor_mdecode_info()  # 使用共享的 engine
         post_mdecode_info(host, service_port, machine_type, num_labels)
         time.sleep(1000)
 
@@ -116,9 +117,10 @@ def monitor_mdecode_info_process(host, service_port):
 
 @app.on_event("startup")
 def startup_decode_event():
-    global engine
+    global shared_engine
+    shared_engine = multiprocessing.Value('P', None)  # 使用 multiprocessing.Value 共享 engine
     with multiprocessing.Manager() as manager:
-        init_global_engine(args, manager)
+        init_global_engine(args, shared_engine)
 
         multiprocessing.Process(target=init_mdecode_process, daemon=True).start()
         multiprocessing.Process(target=notify_mdecode_process, daemon=True).start()
@@ -156,7 +158,7 @@ async def init_mdecode(request: Request) -> Response:
     for i in range(len(prompts)):
         sampling_params = SamplingParams(**request_dict)
         sampling_params_list.append(sampling_params)
-    engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
+    shared_engine.value.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)  # 使用共享的 engine
     decode_event.set()
     print("init_mdecode return ")
     ret = {"text": 'test'}
