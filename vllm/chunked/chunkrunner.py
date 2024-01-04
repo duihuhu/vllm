@@ -575,3 +575,23 @@ class ChunkRunner:
         print(f"tokenizer costs {ed - st} seconds")
         print(f"predict model in 1tp costs {ed2 - st2} seconds")
         return predicted_labels
+    
+    @torch.inference_mode
+    def execute_predict_model(self, 
+                               input_prompt: str,
+                               input_prompt_len: int) -> int:
+        if input_prompt_len % 2 == 0:
+            pad_len = input_prompt_len
+        else:
+            pad_len = input_prompt_len + 1
+        
+        test_encoded = self.predict_tokenizer(input_prompt,
+                                              padding = "max_length", 
+                                              truncation = True, 
+                                              return_tensors = "pt", 
+                                              max_length = pad_len)
+        test_encoded = test_encoded.to("cuda:1")
+        prediction = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
+        predicted_label = torch.argmax(prediction.logits, dim = 1).item()
+        return predicted_label
