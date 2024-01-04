@@ -59,7 +59,7 @@ def notify_mdecode():
             request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
             request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
-            arrive_time = time.time()
+            # arrive_time = time.time()
             # print("decode get data " , request_id, start, end, end-start)
             # print("mdecode recv signal from mprefill ", time.time())
             # print("request info ", request_id, request_num, label, time.time())
@@ -67,8 +67,8 @@ def notify_mdecode():
             # engine.convert_reqs_status_by_num(request_num)
             # engine.convert_reqs_status(request_id)
             engine.convert_req_label_status(request_id, label)
-            add_time = time.time()
-            print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
+            # add_time = time.time()
+            # print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
 
             mdecode_status = "decode"
             already_num = already_num + 1
