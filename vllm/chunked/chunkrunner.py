@@ -579,12 +579,7 @@ class ChunkRunner:
     @torch.inference_mode
     def execute_predict_model(self, 
                                input_prompt: str,
-                               input_prompt_len: int) -> int:
-        if input_prompt_len % 2 == 0:
-            pad_len = input_prompt_len
-        else:
-            pad_len = input_prompt_len + 1
-        
+                               pad_len: int) -> int:
         test_encoded = self.predict_tokenizer(input_prompt,
                                               padding = "max_length", 
                                               truncation = True, 

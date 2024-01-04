@@ -70,10 +70,10 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #chunkinputmetadata,
                         ) -> None:
     iter = 0
-    for input_prompt, input_prompt_len in input_prompts:
+    for input_prompt, _ in input_prompts:
         st = time.time()
         _ = chunkrunner_125m.execute_predict_model(input_prompt = input_prompt, 
-                                                   input_prompt_len =  input_prompt_len)
+                                                   pad_len = 512)
         '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
