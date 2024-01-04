@@ -498,7 +498,7 @@ class ChunkRunner:
                 break
             else:
                 print("request id not found ")
-                time.sleep(0.000005)
+                time.sleep(0.1)
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
         # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
         start_time = time.time()
@@ -609,7 +609,8 @@ class ChunkRunner:
         predicted_label = torch.argmax(prediction.logits, dim = 1).item()
        
         ## add to request labels for large model get
-        request_labels[request_id] = predicted_label[0] 
+        request_labels[request_id] = predicted_label[0]
+        print(request_labels)
         # return predicted_label
 
         
