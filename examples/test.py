@@ -65,14 +65,15 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
         #print(f"output_token_list: {output_token_list}")
         #print(f"logprobs: {logprobs}")
 
-def execute_small_model(
+def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #input_positions_tensor, 
                         #chunkinputmetadata,
                         ) -> None:
     iter = 0
     for input_prompt, input_prompt_len in input_prompts:
         st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(input_prompt, input_prompt_len)
+        _ = chunkrunner_125m.execute_predict_model(input_prompt = input_prompt, 
+                                                   input_prompt_len =  input_prompt_len)
         '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
@@ -156,7 +157,7 @@ if __name__ == "__main__":
         input_positions_tensors.append(input_positions_tensor)
         input_chunkinputmetadata.append(chunkinputmetadata)
 
-    thread_small = threading.Thread(target = execute_small_model)
+    thread_small = threading.Thread(target = execute_small_model, args = (input_prompts))
     thread_big = threading.Thread(target = execute_big_model, 
                                     args = (input_tokens_ids_tensors, 
                                             input_positions_tensors, 
