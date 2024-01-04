@@ -70,6 +70,9 @@ def notify_mdecode():
             mdecode_status = "decode"
             already_num = already_num + 1
             decode_event.set()
+            if already_num >= 128:
+                time.sleep(100)
+    
 
 def init_mdecode_prefill():
     global mdecode_status
