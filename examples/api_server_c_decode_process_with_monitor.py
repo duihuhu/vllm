@@ -32,13 +32,12 @@ fd = open(dp_md, "r+b")
 mm = mmap.mmap(fd.fileno(), 35 * 1024, access=mmap.ACCESS_WRITE, offset=0)
 
 # 全局变量
-manager = multiprocessing.Manager()
 engine = None
 
-def init_global_engine(args):
+def init_global_engine(args, manager):
     global engine
     engine_args = AsyncEngineArgs.from_cli_args(args)
-    engine = AsyncLLMEngine.from_engine_args(engine_args)
+    engine = manager.AsyncLLMEngine.from_engine_args(engine_args)
 
 def notify_mdecode():
     global decode_event
@@ -118,13 +117,12 @@ def monitor_mdecode_info_process(host, service_port):
 @app.on_event("startup")
 def startup_decode_event():
     global engine
-    global manager
+    with multiprocessing.Manager() as manager:
+        init_global_engine(args, manager)
 
-    init_global_engine(args)
-
-    multiprocessing.Process(target=init_mdecode_process, daemon=True).start()
-    multiprocessing.Process(target=notify_mdecode_process, daemon=True).start()
-    multiprocessing.Process(target=monitor_mdecode_info_process, args=(args.host, args.port), daemon=True).start()
+        multiprocessing.Process(target=init_mdecode_process, daemon=True).start()
+        multiprocessing.Process(target=notify_mdecode_process, daemon=True).start()
+        multiprocessing.Process(target=monitor_mdecode_info_process, args=(args.host, args.port), daemon=True).start()
 
 # background processes endpoint
 @app.post("/init_mdecode_process")
