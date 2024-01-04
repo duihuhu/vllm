@@ -258,7 +258,8 @@ class ChunkRunner:
 
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
-        
+        done = 0
+        done_chunk = 0
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
             start_time = time.time()
 
@@ -286,6 +287,8 @@ class ChunkRunner:
                                                             sampling_params = sampling_params)'''
             
             end_time = time.time()
+            done += len(chunk.do_sampling)
+            done_chunk += 1
             for i, id in enumerate(chunk.do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
@@ -294,8 +297,10 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[id].add_first_token_id(output_token_list[i])
                 #self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
                 #self.chunk_worker.job_sequences[id].set_end_time(end_time)
-        
-        self._reduce_outputs()
+            if done == slot:
+                self._reduce_outputs(slot = done_chunk)
+                done_chunk = 0
+                done = 0
   
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
@@ -417,12 +422,12 @@ class ChunkRunner:
 
             ALL_ST = ALL_END
     
-    def _reduce_outputs(self) -> None:
+    def _reduce_outputs(self, slot: int) -> None:
         #for _, sequence in self.job_sequences.items():
         #    for i in range(len(sequence.outputs)):
         #        if i != 0:
         #            sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
         # free all chunks' cache
-        for chunk in self.all_job_chunks:
+        for chunk in self.all_job_chunks[0: slot]:
             self.cacheblock.free_block(block = chunk.cache_block)
             chunk.chunk_status = ChunkStatus.PREFILLED
