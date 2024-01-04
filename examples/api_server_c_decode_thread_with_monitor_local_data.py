@@ -42,7 +42,7 @@ fd = open(dp_md, "r+b")
 mm = mmap.mmap(fd.fileno(), 35 * 1024, access=mmap.ACCESS_WRITE, offset=0)
 
 # @app.post("/notify_mdecode")
-def notify_mdecode():
+def notify_mdecode(engine):
     global decode_event
     global mdecode_status
     hex_char = b'\x0F'
@@ -74,7 +74,7 @@ def notify_mdecode():
             already_num = already_num + 1
             decode_event.set()
 
-def init_mdecode_prefill():
+def init_mdecode_prefill(engine):
     global mdecode_status
     while True:
         # print("init_mdecode_prefill ", mdecode_status)
@@ -224,7 +224,7 @@ if __name__ == "__main__":
     td_list= []
     t1 = threading.Thread(target=init_mdecode_prefill, args=(engine,))
     td_list.append(t1)
-    t2 = threading.Thread(target=notify_mdecode)
+    t2 = threading.Thread(target=notify_mdecode, args=(engine, ))
     td_list.append(t2)
     t3 = threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port))
     td_list.append(t3)
