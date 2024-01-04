@@ -592,15 +592,15 @@ class ChunkRunner:
         print("request_label " , request_label)
         return predicted_labels
 
-    def execute_predict(self, request_labels):
+    def execute_predict(self, request_label):
         while self.request125m_waiting:
             seq125m = self.request125m_waiting.pop(0)
-            self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_labels)
+            self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_label)
          
     @torch.inference_mode()
     def execute_predict_model(self, 
                                prompt: str,
-                               pad_len: int, request_id, request_labels) -> int:
+                               pad_len: int, request_id, request_label) -> int:
         test_encoded = self.predict_tokenizer(prompt,
                                               padding = "max_length", 
                                               truncation = True, 
@@ -612,8 +612,8 @@ class ChunkRunner:
         predicted_label = torch.argmax(prediction.logits, dim = 1).item()
        
         ## add to request labels for large model get
-        request_labels[request_id] = predicted_label[0]
-        print("already request id ", request_id, predicted_label[0])
+        request_label[request_id] = predicted_label
+        print("already request id ", request_id, predicted_label)
         # return predicted_label
 
         
