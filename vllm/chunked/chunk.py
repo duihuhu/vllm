@@ -69,6 +69,13 @@ class Chunk:
     def set_do_sampling(self, do_sampling: List[str]) -> None:
         self.do_sampling = do_sampling
 
+class Sequence125M:
+    def __init__(self, request_id: str, prompt: str, prompt_len):
+        self.request_id = request_id
+        self.prompt = prompt
+        self.prompt_len = prompt_len
+    
+        
 class Sequence:
     def __init__(self,
                  seq_id: str,

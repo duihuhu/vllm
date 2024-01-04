@@ -8,7 +8,7 @@ import random
 from vllm.config import ModelConfig, ParallelConfig
 from vllm.chunked.chunkworker import ChunkWorker
 from vllm.chunked.chunkcache import ChunkCacheBlocks
-from vllm.chunked.chunk import Chunk, ChunkInputMetadata, ChunkSamplingParams, ChunkStatus, Sequence
+from vllm.chunked.chunk import Chunk, ChunkInputMetadata, ChunkSamplingParams, ChunkStatus, Sequence, Sequence125M
 from vllm.worker.worker import _pad_to_max
 from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.utils import random_uuid, Counter
@@ -34,13 +34,15 @@ class ChunkRunner:
 
         self.request_waiting  = [[],[], [], [], []]
         
+        self.request125m_waiting: List[Sequence125M] = []
+        
     def set_predict_model_and_tokenizer(self, 
                                         predict_tokenizer_path: str, 
                                         predict_model_path: str) -> None:
         self.predict_tokenizer = AutoTokenizer.from_pretrained(predict_tokenizer_path)
-        self.predict_model = AutoModelForSequenceClassification.from_pretrained(predict_model_path,
+        model = AutoModelForSequenceClassification.from_pretrained(predict_model_path,
                                                                                 num_labels = 10)
-        # self.predict_model = self.predict_model.to("cuda")
+        self.predict_model = model.to('cuda:1')
         
     def monitor_mprefill_info(self):
         unfinished_chunked_token = 0
@@ -49,28 +51,32 @@ class ChunkRunner:
                 unfinished_chunked_token = unfinished_chunked_token + len(job_chunk.prompt_token_ids)
         return unfinished_chunked_token
     
+    def add_requests_125m_sequences(self, 
+                                    request_ids: List[str],
+                                    prompts: List[str],
+                                    prompt_lens: List[int]):
+        for request_id, prompt, prompt_len in zip(request_ids, prompts, prompt_lens):
+            seq125m = Sequence125M(request_id=request_id, prompt=prompt, prompt_len=prompt_len)
+            self.request125m_waiting.append(seq125m)
+    
     def add_requests_to_job_sequences(self,
                                       prompts_s,
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams],
                                       request_ids: List[str],
                                       request_label: Dict[str, int]) -> None:
-        # seq_ids: List[str] = []
-        # for _ in range(len(sampling_params_s)):
-        #     seq_ids.append(random_uuid())
-
-        start  = time.time()
+        # start  = time.time()
         # this_labels = self._do_predict(inputs = prompts_s,
         #                                request_ids = request_ids, request_label = request_label)
         
         #mock predict model result
-        for request_id  in request_ids:
-            request_label[request_id] = 0
-        this_labels = [0] * len(request_ids)
+        # for request_id  in request_ids:
+        #     request_label[request_id] = 0
+        # this_labels = [0] * len(request_ids)
         
-        end = time.time()
+        # end = time.time()
         # print("this labels ", this_labels , end-start)
-        for prompt_token_ids, sampling_params, request_id, label in zip(prompt_token_ids_s, sampling_params_s, request_ids, this_labels):
+        for prompt_token_ids, sampling_params, request_id in zip(prompt_token_ids_s, sampling_params_s, request_ids):
             # seq_id = random_uuid()
             now_time = time.time()
             a_sequence = Sequence(seq_id = request_id, 
@@ -78,7 +84,7 @@ class ChunkRunner:
                                   sampling_params = sampling_params,
                                   start_time = now_time,
                                   request_id=request_id,
-                                   label = label)
+                                   label = -1)
             self.all_job_sequences[request_id] = a_sequence
         # self._set_job_chunks()
 
@@ -484,7 +490,14 @@ class ChunkRunner:
     def find_decode_host(self,mdecode_info):
         return 
     
-    def write_to_mdispatcher(self, prefill_nums, num, request_id, label, mm):
+    def write_to_mdispatcher(self, prefill_nums, num, request_id, request_label, mm):
+        label = None
+        while True:
+            if request_label.get(request_id):
+                label = request_label[request_id]
+                break
+            else:
+                time.sleep(0.000005)
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
         # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
         start_time = time.time()
@@ -537,12 +550,12 @@ class ChunkRunner:
                 
                 for request_id in chunk.do_sampling:
                     if request_id not in sended_request_id:
-                        label = request_label.get(request_id)
+                        # label = request_label.get(request_id)
                         # print(request_id, label)
                         self.find_decode_host(mdecode_info)
                         prefill_nums += 1
                         threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
-                                                                                , label ,mm)).start()
+                                                                                , request_label ,mm)).start()
                         #put in thread
                         # combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
                         # print("combined_info_bytes ", len(combined_info_bytes))
@@ -574,3 +587,28 @@ class ChunkRunner:
             request_label[request_id] = label
         print("request_label " , request_label)
         return predicted_labels
+
+    def execute_predict(self, request_labels):
+        while self.request125m_waiting:
+            seq125m = self.request125m_waiting.pop(0)
+            self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_labels)
+         
+    @torch.inference_mode()
+    def execute_predict_model(self, 
+                               prompt: str,
+                               pad_len: int, request_id, request_labels) -> int:
+        test_encoded = self.predict_tokenizer(prompt,
+                                              padding = "max_length", 
+                                              truncation = True, 
+                                              return_tensors = "pt", 
+                                              max_length = pad_len)
+        test_encoded = test_encoded.to("cuda:1")
+        prediction = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
+        predicted_label = torch.argmax(prediction.logits, dim = 1).item()
+       
+        ## add to request labels for large model get
+        request_labels[request_id] = predicted_label[0] 
+        # return predicted_label
+
+        
