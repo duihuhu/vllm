@@ -60,7 +60,7 @@ def init_mdecode_prefill(shared_engine: SharedEngine, shared_string):
 
 def notify_mdecode(shared_engine: SharedEngine, shared_string):
     # Your implementation here
-    engine = shared_engine.engine
+    # engine = shared_engine.engine
     # global decode_event
     # global mdecode_status
     hex_char = b'\x0F'
@@ -84,7 +84,7 @@ def notify_mdecode(shared_engine: SharedEngine, shared_string):
             # if request_num > 0:
             # engine.convert_reqs_status_by_num(request_num)
             # engine.convert_reqs_status(request_id)
-            engine.convert_req_label_status(request_id, label)
+            shared_engine.engine.convert_req_label_status(request_id, label)
             add_time = time.time()
             print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
 
@@ -119,13 +119,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=8000)
-    parser = AsyncEngineArgs.add_cli_args(parser)
-    args = parser.parse_args()
 
-    engine_args = AsyncEngineArgs.from_cli_args(args)
     
     with multiprocessing.Manager() as manager:
         shared_engine = manager.Namespace()
+        parser = AsyncEngineArgs.add_cli_args(parser)
+        args = parser.parse_args()
+
+        engine_args = AsyncEngineArgs.from_cli_args(args)
         shared_engine.engine = AsyncLLMEngine.from_engine_args(engine_args)
         shared_string = manager.Value('c', "init_mdecode_prefill")
 
