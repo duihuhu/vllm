@@ -192,8 +192,9 @@ def main(args: argparse.Namespace):
         # elapsed_time = run_vllm(
         #     requests, args.model, args.tokenizer, args.tensor_parallel_size,
         #     args.seed, args.n, args.use_beam_search, args.batch_size, args.split_two_phase)
-        threading.Thread(run_vllm, args=(requests, args.model, args.tokenizer, args.tensor_parallel_size,
+        threading.Thread(target=run_vllm, args=(requests, args.model, args.tokenizer, args.tensor_parallel_size,
             args.seed, args.n, args.use_beam_search, args.batch_size, args.split_two_phase)).start()
+
     elif args.backend == "hf":
         assert args.tensor_parallel_size == 1
         elapsed_time = run_hf(requests, args.model, tokenizer, args.n,
