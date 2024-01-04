@@ -249,10 +249,10 @@ if __name__ == "__main__":
     chunkrunner_125m.set_predict_model_and_tokenizer(predict_tokenizer_path = args.predict_tokenizer,
                                                      predict_model_path = args.predict_model)
     
-    thread_13b = threading.Thread(target = execute_13b_model)
     thread_125m = threading.Thread(target = execute_125m_model)
-    thread_13b.start()
+    thread_13b = threading.Thread(target = execute_13b_model)
     thread_125m.start()
+    thread_13b.start()
     
     
     # mmap_warm()
