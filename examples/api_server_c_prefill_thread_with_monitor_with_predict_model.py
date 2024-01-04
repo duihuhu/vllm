@@ -23,6 +23,8 @@ TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 #to record request && label
 request_label = {}
 
+request_event = {}
+
 mdecode_info = {}
 prefill_sched_batch = 16
 app = FastAPI()
@@ -62,7 +64,7 @@ def mmap_warm():
     mm.write(b'\x00' * 35)
     return
 
-def mprefill_exec_prefill(request_label):
+def mprefill_exec_prefill(request_label, request_event):
     # with open(mp_dp, "r+b") as fd:
     #     mm = mmap.mmap(fd.fileno(), 35, access=mmap.ACCESS_WRITE, offset=0)
     prefill_nums = 0 
@@ -71,7 +73,7 @@ def mprefill_exec_prefill(request_label):
         execute_time = time.time()
         print("prefill start execute time 1", execute_time)
         #prefill_nums = engine.mprefill_generate_prefill(mm, prefill_nums)
-        prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label, mdecode_info)
+        prefill_nums = chunkrunner.mprefill_generate_prefill(mm, prefill_nums, request_label, mdecode_info, request_event)
         prefill_event.clear()
         prefill_event.wait()     
         # mm.close()
@@ -146,7 +148,7 @@ async def mprefill_add(request: Request) -> Response:
 
 @app.on_event("startup")
 def startup_decode_event():
-    threading.Thread(target=mprefill_exec_prefill, args=(request_label,), daemon=True).start()
+    threading.Thread(target=mprefill_exec_prefill, args=(request_label, request_event), daemon=True).start()
     threading.Thread(target=monitor_mprefill_info, args=(args.host, args.port) ,daemon=True).start()
 
 def post_monitor_request(monitor_url: str,
@@ -200,13 +202,14 @@ def execute_125m_model():
     global chunkrunner_125m
     global request_label
     global predict_event
+    global request_event
     chunkrunner_125m.warmup(request_label)
     while True:
         print("predict model start ")
         predict_event.wait() 
         execute_time = time.time()
         print("predict start execute time ", execute_time)
-        chunkrunner_125m.execute_predict(request_label)
+        chunkrunner_125m.execute_predict(request_label, request_event)
         predict_event.clear()
         predict_event.wait()     
 

@@ -490,7 +490,7 @@ class ChunkRunner:
     def find_decode_host(self,mdecode_info):
         return 
     
-    def write_to_mdispatcher(self, prefill_nums, num, request_id, request_label, mm):
+    def write_to_mdispatcher(self, prefill_nums, num, request_id, request_label, mm, request_event):
         label = None
         start_time = time.time()
         while True:
@@ -500,8 +500,10 @@ class ChunkRunner:
                 label = request_label[request_id]
                 break
             else:
+                event = threading.Event()
+                request_event[request_id] = event
+                event.wait()
                 # print("request id not found ", request_id)
-                time.sleep(0.000005)
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
         # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
         start_time = time.time()
@@ -517,7 +519,7 @@ class ChunkRunner:
                 return True
         return False
     
-    def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info) -> int:
+    def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info, request_event) -> int:
         while self.unfinished_job_chunks():
             self._set_job_chunks()
             
@@ -559,7 +561,7 @@ class ChunkRunner:
                         self.find_decode_host(mdecode_info)
                         prefill_nums += 1
                         threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
-                                                                                , request_label ,mm)).start()
+                                                                                , request_label ,mm, request_event)).start()
                         #put in thread
                         # combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
                         # print("combined_info_bytes ", len(combined_info_bytes))
@@ -592,22 +594,37 @@ class ChunkRunner:
         print("request_label " , request_label)
         return predicted_labels
 
-    def execute_predict(self, request_label):
+    def execute_predict(self, request_label, request_event):
         while self.request125m_waiting:
             seq125m = self.request125m_waiting.pop(0)
             start_time = time.time()
-            self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_label)
+            self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_label, request_event)
             end_time = time.time()
             print("execute_predict_model " , seq125m.request_id, start_time, end_time , end_time - start_time)
+    
     def warmup(self,request_label):
-        self.execute_predict_model("AAAA",1,"aaa", request_label)
-        self.execute_predict_model("AAAA",1,"aaa", request_label)
-        self.execute_predict_model("AAAA",1,"aaa", request_label)
-        
+        self.warm_predict_model("AAAA",1,"aaa")
+        self.warm_predict_model("AAAA",1,"aaa")
+        self.warm_predict_model("AAAA",1,"aaa", )
+     
+    @torch.inference_mode()
+    def warm_predict_model(self, 
+                               prompt: str,
+                               pad_len: int, request_id) -> int:
+        test_encoded = self.predict_tokenizer(prompt,
+                                              padding = "max_length", 
+                                              truncation = True, 
+                                              return_tensors = "pt", 
+                                              max_length = 512)
+        test_encoded = test_encoded.to("cuda:1")
+        prediction = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
+        predicted_label = torch.argmax(prediction.logits, dim = 1).item()
+       
     @torch.inference_mode()
     def execute_predict_model(self, 
                                prompt: str,
-                               pad_len: int, request_id, request_label) -> int:
+                               pad_len: int, request_id, request_label, request_event) -> int:
         test_encoded = self.predict_tokenizer(prompt,
                                               padding = "max_length", 
                                               truncation = True, 
@@ -620,6 +637,10 @@ class ChunkRunner:
        
         ## add to request labels for large model get
         request_label[request_id] = predicted_label
+        if request_id in request_event:
+            event = request_event[request_id]
+            event.set()
+
         # print("already request id ", request_id, predicted_label)
         # return predicted_label
 
