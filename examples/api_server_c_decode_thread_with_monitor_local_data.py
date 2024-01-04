@@ -188,7 +188,7 @@ def init_mdecode(engine, num_prompts):
     """init mdecode machine before execute. 
     add request to queue
     """
-    tokenizer = get_tokenizer("/workspace/opt-125m")
+    tokenizer = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     sampled_requests = sample_requests("/workspace/ShareGPT_V3_unfiltered_cleaned_split.json", num_prompts, tokenizer)
     request_ids = []
     for prompt, _, output_len in sampled_requests:
