@@ -65,7 +65,7 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
         #print(f"output_token_list: {output_token_list}")
         #print(f"logprobs: {logprobs}")
 
-def execute_small_model(input_prompts: List[Tuple[str, int]], 
+def execute_small_model(
                         #input_positions_tensor, 
                         #chunkinputmetadata,
                         ) -> None:
@@ -157,8 +157,7 @@ if __name__ == "__main__":
         input_positions_tensors.append(input_positions_tensor)
         input_chunkinputmetadata.append(chunkinputmetadata)
 
-    thread_small = threading.Thread(target = execute_small_model, 
-                                args = (input_prompts))
+    thread_small = threading.Thread(target = execute_small_model)
     thread_big = threading.Thread(target = execute_big_model, 
                                     args = (input_tokens_ids_tensors, 
                                             input_positions_tensors, 
