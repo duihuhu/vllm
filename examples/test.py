@@ -138,7 +138,7 @@ if __name__ == "__main__":
         else:
             input_tokens_ids = input_tokens_ids[0: 512]
         #input_positions = list(range(len(input_tokens_ids)))
-        input_positions = list(range(len(512)))
+        input_positions = list(range(512))
         input_tokens_ids_tensor = torch.cuda.LongTensor(input_tokens_ids)
         input_positions_tensor = torch.cuda.LongTensor(input_positions)
         chunkinputmetadata = ChunkInputMetadata(#prompt_lens = [len(input_tokens_ids)],
