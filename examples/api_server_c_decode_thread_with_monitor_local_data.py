@@ -231,7 +231,7 @@ if __name__ == "__main__":
     td_list= []
     t1 = threading.Thread(target=init_mdecode_prefill)
     td_list.append(t1)
-    t2 = threading.Thread(target=notify_mdecode, args=(args.num_prompts))
+    t2 = threading.Thread(target=notify_mdecode, args=(args.num_prompts,))
     td_list.append(t2)
     t3 = threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port))
     td_list.append(t3)
