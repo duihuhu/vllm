@@ -576,6 +576,7 @@ class ChunkRunner:
         print(f"predict model in 1tp costs {ed2 - st2} seconds")
         return predicted_labels
     
+    @torch.inference_mode
     def execute_predict_model(self, 
                                input_prompt: str,
                                input_prompt_len: int) -> int:
