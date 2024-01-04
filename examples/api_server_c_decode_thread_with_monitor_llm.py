@@ -73,7 +73,7 @@ def notify_mdecode():
             already_num = already_num + 1
             decode_event.set()
 
-def init_mdecode_prefill():
+def init_mdecode_prefill(engine):
     global mdecode_status
     while True:
         # print("init_mdecode_prefill ", mdecode_status)
