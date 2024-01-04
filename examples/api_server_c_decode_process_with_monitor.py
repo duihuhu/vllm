@@ -94,9 +94,9 @@ def notify_mdecode(shared_engine: SharedEngine, shared_string):
             decode_event.set()
 
 @app.post("/init_mdecode")
-async def init_mdecode(request: Request, shared_engine: SharedEngine):
+async def init_mdecode(request: Request):
     # Your implementation here
-    engine = shared_engine.engine
+    # engine = shared_engine.engine
     request_dict = await request.json()
 
     request_ids = request_dict.pop("request_ids")
@@ -107,7 +107,7 @@ async def init_mdecode(request: Request, shared_engine: SharedEngine):
     for i in range(len(prompts)):
         sampling_params = SamplingParams(**request_dict)
         sampling_params_list.append(sampling_params)
-    engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
+    shared_engine.engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     # Your logic here
     decode_event.set()
     return JSONResponse({"text": "test"})
