@@ -268,7 +268,7 @@ if __name__ == "__main__":
     api_url_execute_prefill = f"http://{host_prefill}:{port_prefill}/mprefill_execute"
     api_url_add_prefill = f"http://{host_prefill}:{port_prefill}/mprefill_add"
 
-    task_td.append(threading.Thread(target=post_prefill_execute, args=(prompts, output_lens, request_ids, api_url_execute_prefill, api_url_add_prefill, n, stream)))
+    task_td.append(threading.Thread(target=post_prefill_execute, args=(prompts, output_lens, api_url_execute_prefill, api_url_add_prefill, n, stream)))
       
     task_td.append(threading.Thread(target=receive_mdecode_prefilled_signal, args=(args.host, args.port)))
     
