@@ -594,11 +594,34 @@ class ChunkRunner:
         print("request_label " , request_label)
         return predicted_labels
 
+    def do_pad_len(prompt_len):
+        if prompt_len<=64:
+            return 64
+        elif prompt_len > 64 and prompt_len <=128:
+            return 128
+        elif prompt_len > 128 and prompt_len <= 256:
+            return 256
+        elif prompt_len > 256 and prompt_len <=512:
+            return 512
+        elif prompt_len > 512 and prompt_len <=768:
+            return 768
+        elif prompt_len > 768 and prompt_len <=1024:
+            return 1024
+        elif prompt_len > 1024 and prompt_len <=1280:
+            return 1280
+        elif prompt_len > 1280 and prompt_len <=1536:
+            return 1536
+        elif prompt_len > 1536 and prompt_len <=1792:
+            return 1792
+        elif prompt_len > 1792 and prompt_len <=2048:
+            return 2048
+        
     def execute_predict(self, request_label, request_event):
         while self.request125m_waiting:
             seq125m = self.request125m_waiting.pop(0)
             start_time = time.time()
-            self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_label, request_event)
+            pad_len = self.do_pad_len(seq125m.prompt_len)
+            self.execute_predict_model(seq125m.prompt, pad_len, seq125m.request_id, request_label, request_event)
             end_time = time.time()
             print("execute_predict_model " , seq125m.request_id, start_time, end_time , end_time - start_time)
     
@@ -629,7 +652,7 @@ class ChunkRunner:
                                               padding = "max_length", 
                                               truncation = True, 
                                               return_tensors = "pt", 
-                                              max_length = 512)
+                                              max_length = pad_len)
         test_encoded = test_encoded.to("cuda:1")
         prediction = self.predict_model(input_ids = test_encoded['input_ids'], 
                                          attention_mask = test_encoded['attention_mask'])
