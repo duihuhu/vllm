@@ -50,4 +50,6 @@ if __name__ == "__main__":
     if args.tokenizer is None:
         args.tokenizer = args.model
 
+    print(args)
+
     main(args)
