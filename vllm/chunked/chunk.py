@@ -57,6 +57,9 @@ class Chunk:
         return out
     
     def set_self_block(self, block: Block) -> None:
+        if block is None:
+            self.cache_block = None
+            self.cache_block_id = None
         self.cache_block = block
         self.cache_block_id = block.block_id
     
