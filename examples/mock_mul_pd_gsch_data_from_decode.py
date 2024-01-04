@@ -90,6 +90,8 @@ async def post_prefill_exec(prompts: List[str],
     prefilled_event.wait()
     requestIds_event.wait()
     print("after prefilled_event wait ")
+    print("request_ids ", request_ids)
+
     num_prompts = len(prompts)
     batch_size = 32
     alread_send = 0
