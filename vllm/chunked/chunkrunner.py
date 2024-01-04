@@ -601,6 +601,9 @@ class ChunkRunner:
             print("execute_predict_model " , seq125m.request_id, start_time, end_time , end_time - start_time)
     def warmup(self,request_label):
         self.execute_predict_model("AAAA",1,"aaa", request_label)
+        self.execute_predict_model("AAAA",1,"aaa", request_label)
+        self.execute_predict_model("AAAA",1,"aaa", request_label)
+        
     @torch.inference_mode()
     def execute_predict_model(self, 
                                prompt: str,
