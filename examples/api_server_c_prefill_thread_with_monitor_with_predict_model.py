@@ -200,6 +200,7 @@ def execute_125m_model():
     global chunkrunner_125m
     global request_label
     global predict_event
+    chunkrunner_125m.warmup(request_label)
     while True:
         print("predict model start ")
         predict_event.wait() 
