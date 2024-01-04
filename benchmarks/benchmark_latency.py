@@ -51,7 +51,7 @@ def main(args: argparse.Namespace):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
-        print(f"start at {start_time}")
+        #print(f"start at {start_time}")
         llm.generate(prompt_token_ids=dummy_prompt_token_ids,
                      sampling_params=sampling_params,
                      use_tqdm=False)
