@@ -252,6 +252,30 @@ class LLMEngine:
         # Add the sequence group to the scheduler.
         self.scheduler.add_seq_group(seq_group)
 
+
+
+    def add_requests(self,
+        prompts: Optional[List[str]],
+        output_lens: Optional[List[int]],
+        request_ids: Optional[List[str]],
+        sampling_params: List[SamplingParams],
+        prompt_token_ids: Optional[List[List[int]]] = None):
+            arrival_time = time.time()
+            for prompt, request_id, output_len, sampling_param in zip(prompts, request_ids, output_lens, sampling_params):
+                # if self.log_requests:
+                #     logger.info(f"Received request {request_id}: "
+                #                 f"prompt: {prompt!r}, "
+                #                 f"sampling params: {sampling_params}, "
+                #                 f"prompt token ids: {prompt_token_ids}.")
+
+                # Add the request into the vLLM engine's waiting queue.
+                sampling_param.max_tokens = int(output_len)
+                self.add_request(request_id,
+                                        prompt,
+                                        sampling_param,
+                                        prompt_token_ids=prompt_token_ids,
+                                        arrival_time=arrival_time)
+
     def abort_request(self, request_id: str) -> None:
         """Aborts a request with the given ID.
 
@@ -371,6 +395,32 @@ class LLMEngine:
             
         # self.scheduler.store_prompt_kv_cache()
         return request_outputs
+
+
+    def generate_mdecode_prefill(self):
+        while self.has_unfinished_requests():
+            step_outputs = self.step()
+            # prefilled_num = self.engine.covert_running_to_prefilled()
+            out_request_ids = [ output.request_id for output in step_outputs]
+            self.convert_outputs_reqs_status(out_request_ids)
+            prefilled_num = len(out_request_ids)
+            self.send_mdecode_prefilled_controller(prefilled_num)
+            
+    def generate_decode(self):
+        outputs: List[RequestOutput] = []
+        s_time = time.time()
+        while self.has_unfinished_decode_requests():
+            # print("mdecode decode iteration ", self.engine.get_num_unfinished_requests())
+            start_time =  time.time()
+            step_outputs = self.mdecode_step()
+            end_time =  time.time()
+            print("iteration time ", end_time-start_time)
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+                    end_time = time.time()
+                    print("decode complish ", output.request_id, end_time, end_time-s_time, output.outputs[0].finish_reason)
+                    
 
     def mdecode_step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
