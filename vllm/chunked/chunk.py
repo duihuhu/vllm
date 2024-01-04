@@ -60,8 +60,9 @@ class Chunk:
         if block is None:
             self.cache_block = None
             self.cache_block_id = None
-        self.cache_block = block
-        self.cache_block_id = block.block_id
+        else:
+            self.cache_block = block
+            self.cache_block_id = block.block_id
     
     def set_idxs(self, idxs: List[int]) -> None:
         self.idxs = idxs
