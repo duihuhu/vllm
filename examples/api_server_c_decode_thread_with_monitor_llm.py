@@ -155,8 +155,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    engine_args = EngineArgs.from_cli_args(args)
-    engine = LLMEngine.from_engine_args(engine_args)
+    # engine_args = EngineArgs.from_cli_args(args)
+    # engine = LLMEngine.from_engine_args(engine_args)
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args)
