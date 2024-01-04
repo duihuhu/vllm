@@ -240,7 +240,7 @@ if __name__ == "__main__":
 
     llm = LLM(
         model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
-        tokenizer=tokenizer,
+        tokenizer="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
         tensor_parallel_size=2,
         seed=0,
         max_num_seqs=256,
