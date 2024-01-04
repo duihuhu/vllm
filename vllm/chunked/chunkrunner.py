@@ -492,13 +492,16 @@ class ChunkRunner:
     
     def write_to_mdispatcher(self, prefill_nums, num, request_id, request_label, mm):
         label = None
+        start_time = time.time()
         while True:
             if request_id in request_label:
+                end_time = time.time()
+                print("request id found use time " , end_time-start_time)
                 label = request_label[request_id]
                 break
             else:
-                print("request id not found ", request_id)
-                time.sleep(1)
+                # print("request id not found ", request_id)
+                time.sleep(0.000005)
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
         # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
         start_time = time.time()
