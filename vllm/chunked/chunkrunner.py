@@ -598,7 +598,7 @@ class ChunkRunner:
             start_time = time.time()
             self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_label)
             end_time = time.time()
-            print("execute_predict_model " ,end_time - start_time)
+            print("execute_predict_model " , seq125m.request_id, start_time, end_time , end_time - start_time)
             
     @torch.inference_mode()
     def execute_predict_model(self, 
