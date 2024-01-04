@@ -595,8 +595,11 @@ class ChunkRunner:
     def execute_predict(self, request_label):
         while self.request125m_waiting:
             seq125m = self.request125m_waiting.pop(0)
+            start_time = time.time()
             self.execute_predict_model(seq125m.prompt, seq125m.prompt_len, seq125m.request_id, request_label)
-         
+            end_time = time.time()
+            print("execute_predict_model " ,end_time - start_time)
+            
     @torch.inference_mode()
     def execute_predict_model(self, 
                                prompt: str,
@@ -613,7 +616,7 @@ class ChunkRunner:
        
         ## add to request labels for large model get
         request_label[request_id] = predicted_label
-        print("already request id ", request_id, predicted_label)
+        # print("already request id ", request_id, predicted_label)
         # return predicted_label
 
         
