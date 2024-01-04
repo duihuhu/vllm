@@ -212,42 +212,13 @@ if __name__ == "__main__":
     # parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
 
-    # engine_args = AsyncEngineArgs.from_cli_args(args)
-    # engine = AsyncLLMEngine.from_engine_args(engine_args)
+    engine_args = AsyncEngineArgs.from_cli_args(args)
+    engine = AsyncLLMEngine.from_engine_args(engine_args)
     tokenizer = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     sampled_requests = sample_requests("/workspace/ShareGPT_V3_unfiltered_cleaned_split.json", 128, tokenizer)
 
-    # for prompt, _, output_len in sampled_requests:
-    #     request_id = random_uuid()
-    #     sampling_params = SamplingParams(
-    #         n=1,
-    #         # temperature=0.0 if use_beam_search else 1.0,
-    #         temperature=0.0,
-    #         top_p=1.0,
-    #         use_beam_search=False,
-    #         ignore_eos=True,
-    #         max_tokens=output_len,
-    #     )
-    #     engine.engine.add_request(request_id, prompt, sampling_params)
-    # engine.generate_decode()
-
-    # uvicorn.run(app,
-    #             host=args.host,
-    #             port=args.port,
-    #             log_level="debug",
-    #             timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
-
-
-    llm = LLM(
-        model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
-        tokenizer="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
-        tensor_parallel_size=2,
-        seed=0,
-        max_num_seqs=256,
-    )
-
-    # Add the requests to the engine.
     for prompt, _, output_len in sampled_requests:
+        request_id = random_uuid()
         sampling_params = SamplingParams(
             n=1,
             # temperature=0.0 if use_beam_search else 1.0,
@@ -257,14 +228,43 @@ if __name__ == "__main__":
             ignore_eos=True,
             max_tokens=output_len,
         )
-        # FIXME(woosuk): Do not use internal method.
-        llm._add_request(
-            prompt=prompt,
-            prompt_token_ids=None,
-            sampling_params=sampling_params,
-        )
+        engine.engine.add_request(request_id, prompt, sampling_params)
+    engine.generate_decode()
 
-    start = time.time()
-    # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=0)
-    end = time.time()
+    # uvicorn.run(app,
+    #             host=args.host,
+    #             port=args.port,
+    #             log_level="debug",
+    #             timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
+
+
+    # llm = LLM(
+    #     model="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
+    #     tokenizer="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
+    #     tensor_parallel_size=2,
+    #     seed=0,
+    #     max_num_seqs=256,
+    # )
+
+    # # Add the requests to the engine.
+    # for prompt, _, output_len in sampled_requests:
+    #     sampling_params = SamplingParams(
+    #         n=1,
+    #         # temperature=0.0 if use_beam_search else 1.0,
+    #         temperature=0.0,
+    #         top_p=1.0,
+    #         use_beam_search=False,
+    #         ignore_eos=True,
+    #         max_tokens=output_len,
+    #     )
+    #     # FIXME(woosuk): Do not use internal method.
+    #     llm._add_request(
+    #         prompt=prompt,
+    #         prompt_token_ids=None,
+    #         sampling_params=sampling_params,
+    #     )
+
+    # start = time.time()
+    # # FIXME(woosuk): Do use internal method.
+    # outputs = llm._run_engine(use_tqdm=False, split_two_phase=0)
+    # end = time.time()
