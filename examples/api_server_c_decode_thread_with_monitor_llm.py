@@ -88,7 +88,7 @@ def init_mdecode_prefill():
         
 @app.on_event("startup")
 def startup_decode_event():
-    threading.Thread(target=init_mdecode_prefill, daemon=True).start()
+    # threading.Thread(target=init_mdecode_prefill, daemon=True).start()
     threading.Thread(target=notify_mdecode, daemon=True).start()
     threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port) ,daemon=True).start()
 
@@ -141,7 +141,7 @@ async def init_mdecode(request: Request) -> Response:
     for i in range(len(prompts)):
         sampling_params = SamplingParams(**request_dict)
         sampling_params_list.append(sampling_params)
-    engine.add_requests(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
+    engine.add_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
     decode_event.set()
     print("init_mdecode return ")
     ret = {"text": 'test'}
@@ -151,16 +151,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=8000)
-    parser = EngineArgs.add_cli_args(parser)
+    parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
 
 
     engine_args = EngineArgs.from_cli_args(args)
     engine = LLMEngine.from_engine_args(engine_args)
 
-    # engine_args = AsyncEngineArgs.from_cli_args(args)
-    # engine = AsyncLLMEngine.from_engine_args(engine_args)
-
+    engine_args = AsyncEngineArgs.from_cli_args(args)
+    engine = AsyncLLMEngine.from_engine_args(engine_args)
+    threading.Thread(target=init_mdecode_prefill, args=(engine,)).start()
     uvicorn.run(app,
                 host=args.host,
                 port=args.port,
