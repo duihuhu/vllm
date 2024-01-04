@@ -497,8 +497,8 @@ class ChunkRunner:
                 label = request_label[request_id]
                 break
             else:
-                print("request id not found ")
-                time.sleep(0.1)
+                print("request id not found ", request_id)
+                time.sleep(1)
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
         # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
         start_time = time.time()
@@ -602,7 +602,7 @@ class ChunkRunner:
                                               padding = "max_length", 
                                               truncation = True, 
                                               return_tensors = "pt", 
-                                              max_length = pad_len)
+                                              max_length = 512)
         test_encoded = test_encoded.to("cuda:1")
         prediction = self.predict_model(input_ids = test_encoded['input_ids'], 
                                          attention_mask = test_encoded['attention_mask'])
@@ -610,7 +610,7 @@ class ChunkRunner:
        
         ## add to request labels for large model get
         request_labels[request_id] = predicted_label[0]
-        print(request_labels)
+        print("already request id ", request_id, predicted_label[0])
         # return predicted_label
 
         
