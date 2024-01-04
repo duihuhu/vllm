@@ -199,7 +199,9 @@ def execute_13b_model():
 def execute_125m_model():
     global chunkrunner_125m
     global request_label
+    global predict_event
     while True:
+        print("predict model start ")
         predict_event.wait() 
         execute_time = time.time()
         print("predict start execute time ", execute_time)
@@ -249,6 +251,9 @@ if __name__ == "__main__":
     
     thread_13b = threading.Thread(target = execute_13b_model)
     thread_125m = threading.Thread(target = execute_125m_model)
+    thread_13b.start()
+    thread_125m.start()
+    
     
     # mmap_warm()
 
