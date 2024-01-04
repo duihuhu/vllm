@@ -20,9 +20,9 @@ def main(args: argparse.Namespace):
 
     #chunkrunner.set_inputs(dataset_path = args.dataset, num_requests = args.num_prompts)
 
-    chunkrunner.run_worker()
+    chunkrunner.run_worker(slot = args.slot)
 
-    with open("/workspace/vllm/vllm/chunked/logs/logs_4_4_1.txt", 'a') as file:
+    with open(args.file_path, 'a') as file:
         for seq_id, sequence in chunkrunner.all_job_sequences.items():
             file.write(f"Seq ID {seq_id}, prompt len {sequence.prompt_len}, start at {sequence.start_time}, end at {sequence.end_time}\n")
         #print(f"Sequence ID is {seq_id}")
@@ -42,7 +42,9 @@ if __name__ == "__main__":
     #parser.add_argument("--num-prompts", type=int, default=10,
     #                    help="Number of prompts to process.")
     parser.add_argument("--chunk-size", type=int, default=512)
-    parser.add_argument("--chunk-num", type=int, default=85)
+    parser.add_argument("--chunk-num", type=int, default=110)
+    parser.add_argument("--slot", type=int, default=8)
+    parser.add_argument("--file-path", type=str, default="/workspace/vllm/vllm/chunked/logs/logs_10_8_1.txt")
     args = parser.parse_args()
 
     if args.tokenizer is None:

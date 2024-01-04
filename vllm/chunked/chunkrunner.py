@@ -174,43 +174,44 @@ class ChunkRunner:
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
                                         sampling_params = cold_start_sampling_params)
-        prompt_lens = [91,88,75,3,255,42,103,15,352,385,127,49,306,157,228,75,209,315,197,21,104,30,182,175,103,53,
-                       356,390,122,387,125,22,347,143,273,239,117,276,119,422,90,269,243,243,24,29,216,88,93,107,224,
-                       248,75,189,108,72,108,88,264,248,339,173,328,184,62,47,2,76,61,178,86,52,60,2,89,59,21,283,92,
-                       125,295,497,15,64,235,213,505,7,189,3,320,345,167,58,38,87,15,314,344,168,100,83,22,191,116,130,
-                       62,80,44,196,33,122,308,49,626,546,2047,1845,878,939,775,1021,592,513,1020,955,931,1795,1500,942,
-                       899,1413,561]
+        prompt_lens = [91, 88, 75, 966, 3, 2047, 42, 103, 15, 717, 1589, 385, 49, 306, 228, 315, 21, 104, 30, 182, 
+                       103, 53, 390, 1129, 387, 22, 871, 546, 347, 273, 117, 276, 422, 269, 243, 24, 88, 93, 107, 
+                       248, 2047, 1845, 75, 108, 878, 939, 72, 108, 264, 339, 775, 328, 1021, 62, 47, 592, 2, 513, 
+                       76, 61, 1020, 178, 52, 60, 2, 89, 955, 59, 931, 21, 92, 125, 497, 64, 235, 505, 189, 1795, 
+                       1500, 345, 942, 58, 38, 87, 15, 344, 100, 899, 83, 22, 191, 130, 1413, 561, 62, 80, 33, 122, 
+                       308, 60, 1845, 87, 61, 1129, 2, 103, 1589, 717, 104, 308, 315, 21, 130, 931, 878, 269, 76, 93, 
+                       38, 1413, 15, 125, 546, 191, 49, 513, 2047, 871]
         '''prompt_lens = [2, 2, 3, 15, 15, 21, 21, 22, 22, 24, 30, 33, 38,264, 42, 47, 49, 52, 53, 58, 211,
         59, 60, 60, 61, 62, 62, 210,64, 72, 75, 75,239,75,76,80,83,42,156,87,88,88,249,89,91,92,240,93,100,103,216,
         103,104,107,198,108,108,117,179,122,125,130,135,178,182,152,189,191,132,228,235,49,243,248,21,264,248,269,72,
         273,239,276,236,306,71,308,204,315,197,328,184,339,173,344,168,345,167,347,165,385,127,387,69,56,390,122,422,90,
         497,15,505,7,839,871, 546, 2047, 1845, 878, 939, 775, 1021, 592, 513, 1020, 955, 931, 1795, 1500, 942, 899, 
-        1413, 561]'''
-        #sts = time.time()
-        #prompt_lens.sort()
-        #eds = time.time()
+        1413, 561]
+        sts = time.time()
+        prompt_lens.sort()
+        eds = time.time()
         fake_lens = [91,88,75,3,255,42,103,15,352,385,127,49,306,157,228,75,209,315,197,21,104,30,182,175,103,53,
                        356,390,122,387,125,22,347,143,273,239,117,276,119,422,90,269,243,243,24,29,216,88,93,107,224,
                        248,75,189,108,72,108,88,264,248,339,173,328,184,62,47,2,76,61,178,86,52,60,2,89,59,21,283,92,
                        125,295,497,15,64,235,213,505,7,189,3,320,345,167,58,38,87,15,314,344,168,100,83,22,191,116,130,
                        62,80,44,196,33,122,308,49,626,546,2047,1845,878,939,775,1021,592,513,1020,955,931,1795,1500,942,
                        899,1413,561]
-        #random.seed(2023)
-        #random.shuffle(prompt_lens)
-        #print(prompt_lens)
+        random.seed(2023)
+        random.shuffle(prompt_lens)
+        print(prompt_lens)
         time_slot = self._test_time_for_mixed(data = fake_lens)
-        #print(f"sort costs {eds - sts} seconds")
-        print(f"mixed costs {time_slot} seconds")
+        print(f"sort costs {eds - sts} seconds")
+        print(f"mixed costs {time_slot} seconds")'''
         for prompt_len in prompt_lens:
             sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             #self.chunk_worker.add_requests(prompt_token_ids = prompt_token_ids, sampling_params = sampling_params)
             dummy_prompt_token_ids = [random.randint(1, 9) for _ in range(prompt_len)]
             self._add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
-    def _start_worker(self) -> None:
+    def _start_worker(self, slot: int) -> None:
         self._add_requests_to_self()
         self._set_job_sequences()
-        self._set_job_chunks()
+        self._set_job_chunks(slot = slot)
         #self.chunk_worker.set_job_sequences()
         #self.chunk_worker.set_job_chunks()
 
@@ -249,8 +250,8 @@ class ChunkRunner:
                         kv_cache_ids.setdefault(prompt_len, []).append((block_id, st, used_token_num))
         return (input_tokens_tensor, input_positions_tensor, kv_cache_ids)
     
-    def run_worker(self) -> None:
-        self._start_worker()
+    def run_worker(self, slot: int) -> None:
+        self._start_worker(slot = slot)
 
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
@@ -339,7 +340,7 @@ class ChunkRunner:
             else:
                 break
     
-    def _set_job_chunks(self) -> None:
+    def _set_job_chunks(self, slot: int) -> None:
         ALL_SIZE = 128
         ALL_ST = 0
         Sequences: List[Sequence] = []
@@ -347,9 +348,9 @@ class ChunkRunner:
             Sequences.append(sequence)
         
         while ALL_ST < ALL_SIZE:
-            ALL_END = ALL_ST + 16
+            ALL_END = ALL_ST + slot
             temp_sequences = Sequences[ALL_ST: ALL_END]
-
+            temp_sequences = sorted(temp_sequences, key = lambda x: x.prompt_len)
             all_token_ids: List[int] = []
             all_token_seqs: List[str] = []
             temp_chunks: List[Chunk] = []
