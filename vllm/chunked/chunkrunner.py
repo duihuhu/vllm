@@ -217,9 +217,6 @@ class ChunkRunner:
 
     def _prepare_model_inputs(self, 
                               chunk: Chunk) -> Tuple[torch.Tensor, torch.Tensor, Dict[int, List[Tuple[int, int, int]]]]:
-        if chunk.cache_block is None:
-            block = self.cacheblock.allocate_block()
-            chunk.set_self_block(block = block)
         chunk_size = self.chunk_size
         input_tokens = chunk.prompt_token_ids
         input_positions: List[int] = []
@@ -262,6 +259,9 @@ class ChunkRunner:
         done_chunk = 0
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
             start_time = time.time()
+            if chunk.cache_block is None:
+                block = self.cacheblock.allocate_block()
+                chunk.set_self_block(block = block)
 
             chunk.chunk_status = ChunkStatus.RUNNING
 
@@ -337,7 +337,7 @@ class ChunkRunner:
         return output
     
     def _set_job_sequences(self) -> None:
-        total_token_num = self.chunk_num * self.chunk_size
+        total_token_num = 100 * self.chunk_size
         count = 0
         while len(self.all_total_sequences) > 0:
             sequence = self.all_total_sequences[0]
@@ -349,14 +349,17 @@ class ChunkRunner:
                 break
     
     def _set_job_chunks(self, slot: int) -> None:
-        ALL_SIZE = 128
+        ALL_SIZE = 0
         ALL_ST = 0
         Sequences: List[Sequence] = []
         for _, sequence in self.all_job_sequences.items():
+            ALL_SIZE += 1
             Sequences.append(sequence)
         
         while ALL_ST < ALL_SIZE:
             ALL_END = ALL_ST + slot
+            if ALL_END > ALL_SIZE:
+                ALL_END = ALL_SIZE
             temp_sequences = Sequences[ALL_ST: ALL_END]
             temp_sequences = sorted(temp_sequences, key = lambda x: x.prompt_len)
             all_token_ids: List[int] = []
