@@ -117,7 +117,7 @@ class Scheduler:
                 print("seq id ", seq.get_cumulative_logprob(), seq.get_last_token_id(), seq.get_len())
                 
                 for log_token_block in  seq.logical_token_blocks:
-                    print("seq id ", log_token_block.block_number, log_token_block.block_size, 
+                    print("seq id log_token_block ", log_token_block.block_number, log_token_block.block_size, 
                           log_token_block.token_ids)
                
         return  
