@@ -366,7 +366,7 @@ class ChunkRunner:
             if ALL_END > ALL_SIZE:
                 ALL_END = ALL_SIZE
             temp_sequences = Sequences[ALL_ST: ALL_END]
-            #temp_sequences = sorted(temp_sequences, key = lambda x: x.prompt_len, reverse = True)
+            temp_sequences = sorted(temp_sequences, key = lambda x: x.prompt_len)
             all_token_ids: List[int] = []
             all_token_seqs: List[str] = []
             temp_chunks: List[Chunk] = []
