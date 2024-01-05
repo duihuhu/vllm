@@ -71,7 +71,7 @@ def execute_small_model(input_prompts: List[Tuple[str, List[int], int]]
                         #chunkinputmetadata,
                         ) -> None:
     iter = 0
-    for _, input_ids, _ in input_prompts:
+    for _, input_ids, output_len in input_prompts:
         positions = list(range(len(input_ids)))
         input_ids = _pad_to_alignment(input_ids, 8)
         positions = _pad_to_alignment(positions, 8)
@@ -97,7 +97,7 @@ def execute_small_model(input_prompts: List[Tuple[str, List[int], int]]
                                                        input_metadata = inputmetadata)
         ed = time.time()
         with open("/workspace/vllm/examples/logs/co_running_s_512_1.txt", 'a') as file:
-            file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds, and predict label is {predict_label}\n")
+            file.write(f"output len is  {output_len}, start at {st}, end at {ed}, costs {ed - st} seconds, and predict label is {predict_label}\n")
         iter += 1
         #print(f"predict costs {ed - st} seconds")
         #print(f"predict_labels: {predict_labels}")
@@ -146,16 +146,16 @@ if __name__ == "__main__":
 
     for input_prompt, input_tokens_ids, output_len in filtered_dataset:
         input_prompts.append((input_prompt, input_tokens_ids, len(input_tokens_ids)))
-        test_encoded = predict_tokenizer(input_prompt,
-                                         padding = "max_length", 
-                                         truncation = True, 
-                                         return_tensors = "pt", 
-                                         max_length = 2048)
+        test_encoded = predict_tokenizer(input_prompt)
+                                         #padding = "max_length", 
+                                         #truncation = True, 
+                                         #return_tensors = "pt", 
+                                         #max_length = 2048)
         test_encoded = test_encoded.to("cuda:2")
         prediction = predict_model(input_ids = test_encoded['input_ids'], 
                                          attention_mask = test_encoded['attention_mask'])
         predicted_label = torch.argmax(prediction.logits, dim = 1).item()
-        print(f"prompt len is {len(input_tokens_ids)} predicted label is {predicted_label}")
+        print(f"output len is {output_len} predicted label is {predicted_label}")
         #print(f"output_len is {output_len}")
 
         #small_input_tokens_ids = input_tokens_ids
