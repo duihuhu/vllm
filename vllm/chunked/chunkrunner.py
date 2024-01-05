@@ -84,7 +84,7 @@ class ChunkRunner:
         for prompt_token_ids, sampling_params, request_id in zip(prompt_token_ids_s, sampling_params_s, request_ids):
             # seq_id = random_uuid()
             now_time = time.time()
-            real_id = self.sequence_counter.counter()
+            real_id = self.sequence_counter.__next__()
             a_sequence = Sequence(seq_id = real_id, 
                                   prompt_token_ids = prompt_token_ids,
                                   sampling_params = sampling_params,
@@ -97,7 +97,7 @@ class ChunkRunner:
     def _add_requests(self, 
                       prompt_token_ids: List[int], 
                       sampling_params: ChunkSamplingParams) -> None:
-        seq_id = self.sequence_counter.counter()
+        seq_id = self.sequence_counter.__next__()
         now_time = time.time()
         self.all_total_sequences.append(Sequence(seq_id = seq_id, 
                                              prompt_token_ids = prompt_token_ids,
