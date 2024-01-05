@@ -225,6 +225,9 @@ class LLMEngine:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
 
+    def running_prefilled_info(self):
+        self.scheduler.running_prefilled_info()
+        
     def covert_running_to_prefilled(self):
         self.scheduler.covert_running_to_prefilled()
 

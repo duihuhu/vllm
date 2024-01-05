@@ -108,7 +108,13 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
-            
+
+    def running_prefilled_info(self):
+        for seq_group in self.running:
+            for seq in seq_group.get_seqs():
+                block_table = self.block_manager.block_tables[seq.seq_id]
+                print("seq id " , block_table)
+        return  
     def covert_running_to_prefilled(self):
         while self.running:
             seq_group = self.running.pop(0)
