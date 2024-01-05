@@ -8,7 +8,7 @@ from vllm.engine.llm_engine import LLMEngine
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
 from vllm.utils import Counter
-
+import copy
 
 class LLM:
     """An LLM for generating texts from given prompts and sampling parameters.
@@ -178,14 +178,17 @@ class LLM:
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
+                            
             for seq_group in self.llm_engine.scheduler.finished:
                 for seq in seq_group.get_seqs():
                     print("finish output_token_ids ", seq.prefill_data.output_token_ids)
                     print(seq.prefill_data.cumulative_logprob)
-                    seq.data = seq.prefill_data
+                    seq.data.output_token_ids = copy.deepcopy(seq.function.output_token_ids)
+                    seq.data.cumulative_logprob = seq.prefill_data.cumulative_logprob
+                    seq.output_logprobs = copy.deepcopy(seq.prefill_output_logprobs)
+                    seq.output_tokens = copy.deepcopy(seq.prefill_output_tokens)
                     seq.logical_token_blocks = []
                     seq._append_tokens_to_blocks(seq.data.prompt_token_ids)
-                    seq.output_tokens = seq.prefill_output_tokens
                     seq.output_logprobs = seq.prefill_output_logprobs
                     seq.output_text = seq.prefill_output_text
                     
