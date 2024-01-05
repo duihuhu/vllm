@@ -146,10 +146,10 @@ if __name__ == "__main__":
 
     for input_prompt, input_tokens_ids, output_len in filtered_dataset:
         input_prompts.append((input_prompt, input_tokens_ids, len(input_tokens_ids)))
-        test_encoded = predict_tokenizer(input_prompt)
+        test_encoded = predict_tokenizer(input_prompt,
                                          #padding = "max_length", 
                                          #truncation = True, 
-                                         #return_tensors = "pt", 
+                                         return_tensors = "pt")
                                          #max_length = 2048)
         test_encoded = test_encoded.to("cuda:2")
         prediction = predict_model(input_ids = test_encoded['input_ids'], 
