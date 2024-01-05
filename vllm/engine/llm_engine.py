@@ -263,7 +263,7 @@ class LLMEngine:
         num_free_gpu_blocks = self.scheduler.block_manager.get_num_free_gpu_blocks()
         num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
         gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
-        print(total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage)
+        print("before: " total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage)
         
         seq_groups = self.scheduler.update(output)
        
@@ -271,7 +271,7 @@ class LLMEngine:
         num_free_gpu_blocks = self.scheduler.block_manager.get_num_free_gpu_blocks()
         num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
         gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
-        print(total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage) 
+        print("after: ",total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage) 
         # self.running_prefilled_info()
 
         # Decode the sequences.
