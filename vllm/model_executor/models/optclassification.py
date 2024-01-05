@@ -25,6 +25,7 @@ from typing import Dict, List, Optional, Tuple
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 from transformers import OPTConfig
 
 from vllm.model_executor.input_metadata import InputMetadata
@@ -287,8 +288,9 @@ class OPTForClassification(nn.Module):
         
         hidden_states = hidden_states[-1]
         logits = self.score(hidden_states)
-        predict_label = torch.argmax(logits, dim = -1).item()
-        print(logits)
+        probabilities = F.softmax(logits, dim = -1)
+        predict_label = torch.argmax(probabilities, dim = -1).item()
+        #print(logits)
         return predict_label
 
     _column_parallel_weights = [

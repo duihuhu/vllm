@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 import threading
 import json
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -154,7 +155,9 @@ if __name__ == "__main__":
         test_encoded = test_encoded.to("cuda:2")
         prediction = predict_model(input_ids = test_encoded['input_ids'], 
                                          attention_mask = test_encoded['attention_mask'])
-        predicted_label = torch.argmax(prediction.logits, dim = 1).item()
+        print(prediction.shape)
+        probabilities = F.softmax(prediction.logits, dim = -1)
+        predicted_label = torch.argmax(probabilities, dim = -1).item()
         print(f"output len is {output_len} predicted label is {predicted_label}")
         #print(f"output_len is {output_len}")
 
