@@ -594,7 +594,7 @@ class ChunkRunner:
         print("request_label " , request_label)
         return predicted_labels
 
-    def do_pad_len(prompt_len):
+    def do_pad_len(self, prompt_len):
         if prompt_len<=64:
             return 64
         elif prompt_len > 64 and prompt_len <=128:
