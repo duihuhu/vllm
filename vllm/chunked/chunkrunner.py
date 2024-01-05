@@ -23,14 +23,19 @@ class ChunkRunner:
         self.chunk_size = chunk_size
         self.chunk_num = chunk_num
         self.all_total_sequences: List[Sequence] = []
-        self.all_job_sequences: Dict[str, Sequence] = {}
+        self.all_job_sequences: List[Sequence] = []
         self.all_job_chunks: List[Chunk] = []
         
         self.waiting_job_chunks: List[Chunk] = []
         
         self.processed_chunks: List[Chunk] = []
         self.counter = Counter()
-        self.cacheblock = ChunkCacheBlocks(blocks_num = self.chunk_num)
+        self.sequence_counter = Counter()
+        if chunk_num > 80:
+            num = 50
+        else:
+            num = chunk_num
+        self.cacheblock = ChunkCacheBlocks(blocks_num = num)
 
         self.request_waiting  = [[],[], [], [], []]
         
@@ -63,7 +68,7 @@ class ChunkRunner:
                                       prompts_s,
                                       prompt_token_ids_s: List[List[int]],
                                       sampling_params_s: List[ChunkSamplingParams],
-                                      request_ids: List[str],
+                                      request_ids: List[int],
                                       request_label: Dict[str, int]) -> None:
         # start  = time.time()
         # this_labels = self._do_predict(inputs = prompts_s,
@@ -79,19 +84,20 @@ class ChunkRunner:
         for prompt_token_ids, sampling_params, request_id in zip(prompt_token_ids_s, sampling_params_s, request_ids):
             # seq_id = random_uuid()
             now_time = time.time()
-            a_sequence = Sequence(seq_id = request_id, 
+            real_id = self.sequence_counter.counter()
+            a_sequence = Sequence(seq_id = real_id, 
                                   prompt_token_ids = prompt_token_ids,
                                   sampling_params = sampling_params,
                                   start_time = now_time,
                                   request_id=request_id,
                                    label = -1)
-            self.all_job_sequences[request_id] = a_sequence
+            self.all_job_sequences.append(a_sequence)
         # self._set_job_chunks()
 
     def _add_requests(self, 
                       prompt_token_ids: List[int], 
                       sampling_params: ChunkSamplingParams) -> None:
-        seq_id = random_uuid()
+        seq_id = self.sequence_counter.counter()
         now_time = time.time()
         self.all_total_sequences.append(Sequence(seq_id = seq_id, 
                                              prompt_token_ids = prompt_token_ids,
@@ -361,6 +367,11 @@ class ChunkRunner:
             #self.all_job_chunks.pop(0)
 
         self._reduce_outputs()
+        if self.all_job_chunks:
+            self.all_job_chunks.clear()
+        self.all_job_sequences.clear()
+        self.all_total_sequences.clear()
+        self.sequence_counter.reset()
         #self.all_job_chunks.clear()
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
@@ -397,7 +408,8 @@ class ChunkRunner:
         return output
     
     def _set_job_sequences(self) -> None:
-        total_token_num = self.chunk_num * self.chunk_size
+        #total_token_num = self.chunk_num * self.chunk_size
+        total_token_num = 1000 * self.chunk_size
         count = 0
         while len(self.all_total_sequences) > 0:
             sequence = self.all_total_sequences[0]
@@ -411,8 +423,8 @@ class ChunkRunner:
     def _set_job_chunks(self) -> None:
         self.counter.reset()
         all_token_ids: List[int] = []
-        all_token_seqs: List[str] = []
-        for _, sequence in self.all_job_sequences.items():
+        all_token_seqs: List[int] = []
+        for sequence in self.all_job_sequences:
             if sequence.processed:
                 continue
             else:
@@ -429,7 +441,7 @@ class ChunkRunner:
             chunk_id = self.counter.__next__()
             chunk = Chunk(chunk_id = chunk_id, chunk_size = self.chunk_size, 
                           chunk_status = ChunkStatus.WAITING)
-            temp_seqtoken_count: Dict[str, int] = {}
+            temp_seqtoken_count: Dict[int, int] = {}
             for i in range(st, ed):
                 chunk.prompt_token_ids.append(all_token_ids[i])
                 temp_seqtoken_count[all_token_seqs[i]] = temp_seqtoken_count.setdefault(all_token_seqs[i], 0) + 1
@@ -456,7 +468,7 @@ class ChunkRunner:
             st = 0
             idxs: List[int] = []
             sampling_params: List[ChunkSamplingParams] = []
-            do_sampling: List[str] = []
+            do_sampling: List[int] = []
             for seq_id, prompt_len in chunk.seqs_to_lens.items():
                 ed = st + prompt_len
                 self.all_job_sequences[seq_id].update_count(prompt_len)
@@ -514,12 +526,12 @@ class ChunkRunner:
         # print("write_to_mdispatcher ", request_id, start, end , start-end)
     
     def unfinished_job_chunks(self):
-        for key, value in self.all_job_sequences.items():
+        for value in self.all_job_sequences:
             if value.processed == False:
                 return True
         return False
     
-    def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info, request_event) -> int:
+    def mprefill_generate_prefill(self, mm, prefill_nums, request_label, mdecode_info, request_event, prefill_sched_batch) -> int:
         while self.unfinished_job_chunks():
             self._set_job_chunks()
             
@@ -533,6 +545,9 @@ class ChunkRunner:
             for chunk in self.all_job_chunks:
                 start_time = time.time()
                 chunk.chunk_status = ChunkStatus.RUNNING
+                if chunk.cache_block is None:
+                    temp_block = self.cacheblock.allocate_block()
+                    chunk.set_self_block(block = temp_block)
                 input_tokens_tensor, input_positions_tensor, kv_cache_ids = self._prepare_model_inputs(chunk)
                 chunkinputmetadata = ChunkInputMetadata(prompt_lens = chunk.prompt_lens, 
                                                         kv_prefixs = chunk.kv_prefixs,
@@ -552,9 +567,8 @@ class ChunkRunner:
                     self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
                     self.all_job_sequences[id].set_end_time(st = start_time, ed = end_time)
                 
-
-                
-                for request_id in chunk.do_sampling:
+                for seq_id in chunk.do_sampling:
+                    request_id = self.all_job_sequences[seq_id].request_id
                     if request_id not in sended_request_id:
                         # label = request_label.get(request_id)
                         # print(request_id, label)
@@ -571,7 +585,9 @@ class ChunkRunner:
                         # time.sleep(0.000005)
                 #self.processed_chunks.append(chunk)
             #self.all_job_chunks.clear()
-            self._reduce_outputs()
+                if output_num == prefill_sched_batch:
+                    self._reduce_outputs()
+                    output_num = 0
 
             print("mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
@@ -616,14 +632,26 @@ class ChunkRunner:
         elif prompt_len > 1792 and prompt_len <=2048:
             return 2048
         
-    def execute_predict(self, request_label, request_event):
+    def execute_predict(self, request_label, request_event, prefill_sched_batch):
+        prompts = []
+        request_ids = []
+        count = 0
         while self.request125m_waiting:
             seq125m = self.request125m_waiting.pop(0)
-            start_time = time.time()
-            pad_len = self.do_pad_len(seq125m.prompt_len)
-            self.execute_predict_model(seq125m.prompt, pad_len, seq125m.request_id, request_label, request_event)
-            end_time = time.time()
-            print("execute_predict_model " , seq125m.request_id, start_time, end_time , end_time - start_time)
+            prompts.append(seq125m.prompt)
+            request_ids.append(seq125m.request_id)
+            count += 1
+            if count == prefill_sched_batch:
+                start_time = time.time()
+                self.execute_predict_model_in_section(prompts = prompts,
+                                                      request_ids = request_ids,
+                                                      request_label = request_label,
+                                                      request_event = request_event)
+                end_time = time.time()
+                print("execute_predict_model " , request_ids, start_time, end_time, end_time - start_time)
+                prompts.clear()
+                request_ids.clear()
+                count = 0
     
     def warmup(self,request_label):
         self.warm_predict_model("AAAA",1,"aaa")
@@ -667,4 +695,58 @@ class ChunkRunner:
         # print("already request id ", request_id, predicted_label)
         # return predicted_label
 
+    @torch.inference_mode()
+    def execute_predict_model_in_section(self, 
+                                         prompts: List[str],
+                                         request_ids, 
+                                         request_label, 
+                                         request_event) -> None:
+        predicted_labels_list: List[int] = []
+        ites: List[Tuple[int, int]] = []
+
+        test_encoded = self.predict_tokenizer(prompts, return_tensors = "pt")
+        test_encoded = test_encoded.to("cuda:1")
+        test_encoded_token_ids = test_encoded['input_ids']
+        test_encoded_attention_masks = test_encoded['attention_mask']
+        test_encoded_token_ids_list = test_encoded_token_ids.tolist()
+
+        i = 0
+        while i < len(prompts):
+            if len(test_encoded_token_ids_list[i]) >= 1024:
+                ites.append((i, i))
+                i += 1
+            else:
+                j = i
+                sum = 0
+                while j < len(prompts):
+                    sum += len(test_encoded_token_ids_list[j])
+                    if sum <= 1024:
+                        if j == len(prompts) - 1:
+                            ites.append((i, j))
+                            break
+                        j += 1
+                    else:
+                        ites.append((i, j - 1))
+                        i = j
+                        break
         
+        for ite in ites:
+            st = ite[0]
+            ed = ite[1]
+            if st == ed:
+                prediction = self.predict_model(input_ids = test_encoded_token_ids[st],
+                                                attention_mask = test_encoded_attention_masks[st])
+                predicted_label = torch.argmax(prediction.logits, dim = -1).item()
+                predicted_labels_list.append(predicted_label)
+            else:
+                predictions = self.predict_model(input_ids = test_encoded_token_ids[st: ed + 1],
+                                                 attention_mask = test_encoded_attention_masks[st: ed + 1])
+                predicted_labels = torch.argmax(predictions.logits, dim = -1).tolist()
+                predicted_labels_list.extend(predicted_labels)
+       
+        ## add to request labels for large model get
+        for i in range(len(predicted_labels_list)):
+            request_label[request_ids[i]] = predicted_labels_list[i]
+            if request_ids[i] in request_event:
+                event = request_event[request_ids[i]]
+                event.set()

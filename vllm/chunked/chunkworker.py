@@ -65,6 +65,10 @@ class ChunkWorker:
                                 parallel_config.pipeline_parallel_size)
 
     def _set_self_kv_cache(self) -> None:
+        if self.chunk_num > 80:
+            num = 50
+        else:
+            num = self.chunk_num
         kv_cache: List[Tuple[torch.Tensor, torch.Tensor]] = []
         num_layers = self.model_config.get_num_layers(self.parallel_config)
         num_tokens = self.chunk_size
@@ -74,12 +78,12 @@ class ChunkWorker:
         dtype = self.model_config.dtype
         for _ in range(num_layers):
             k_block = torch.empty(
-                size = (self.chunk_num, num_tokens, hidden_states),
+                size = (num, num_tokens, hidden_states),
                 dtype = dtype,
                 device = "cuda"
             )
             v_block = torch.empty(
-                size = (self.chunk_num, num_tokens, hidden_states),
+                size = (num, num_tokens, hidden_states),
                 dtype = dtype,
                 device = "cuda"
             )

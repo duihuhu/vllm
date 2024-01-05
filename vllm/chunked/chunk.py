@@ -32,7 +32,7 @@ class Chunk:
         self.prompt_lens: List[int] = []
         self.prompt_token_ids: List[int] = []
         self.kv_prefixs: List[int] = []
-        self.raw_sequence_ids: List[str] = []
+        self.raw_sequence_ids: List[int] = []
     
     def set_seqs_to_lens_and_prefixs(self) -> None:
         if len(self.raw_sequence_ids) > 0 and len(self.prompt_lens) > 0 and len(self.kv_prefixs) > 0:
@@ -44,21 +44,25 @@ class Chunk:
                     self.do_cat = True
                     break
 
-    def _set_seqs_to_lens(self) -> Dict[str, int]:
-        out: Dict[str, int] = {}
+    def _set_seqs_to_lens(self) -> Dict[int, int]:
+        out: Dict[int, int] = {}
         for i, seq_id in enumerate(self.raw_sequence_ids):
             out[seq_id] = self.prompt_lens[i]
         return out
 
-    def _set_seqs_to_prefixs(self) -> Dict[str, int]:
-        out: Dict[str, int] = {}
+    def _set_seqs_to_prefixs(self) -> Dict[int, int]:
+        out: Dict[int, int] = {}
         for i, seq_id in enumerate(self.raw_sequence_ids):
             out[seq_id] = self.kv_prefixs[i]
         return out
     
     def set_self_block(self, block: Block) -> None:
-        self.cache_block = block
-        self.cache_block_id = block.block_id
+        if block is not None:
+            self.cache_block = block
+            self.cache_block_id = block.block_id
+        else:
+            self.cache_block = None
+            self.cache_block_id = None
     
     def set_idxs(self, idxs: List[int]) -> None:
         self.idxs = idxs
@@ -66,7 +70,7 @@ class Chunk:
     def set_sampling_params_for_sampler(self, sampling_params_for_sampler: List[ChunkSamplingParams]) -> None:
         self.sampling_params_for_sampler = sampling_params_for_sampler
 
-    def set_do_sampling(self, do_sampling: List[str]) -> None:
+    def set_do_sampling(self, do_sampling: List[int]) -> None:
         self.do_sampling = do_sampling
 
 class Sequence125M:
@@ -78,7 +82,7 @@ class Sequence125M:
         
 class Sequence:
     def __init__(self,
-                 seq_id: str,
+                 seq_id: int,
                  prompt_token_ids: List[int],
                  sampling_params: ChunkSamplingParams,
                  account: int = 0,
@@ -86,7 +90,7 @@ class Sequence:
                  end_time: float = -1.0,
                  count: int = 0,
                  processed: bool = False,
-                 request_id: List[str] = None,
+                 request_id: str = None,
                  label: int = -1) -> None:
         self.seq_id = seq_id
         self.prompt_token_ids = prompt_token_ids
