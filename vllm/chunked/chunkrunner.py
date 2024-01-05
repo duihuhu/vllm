@@ -269,8 +269,9 @@ class ChunkRunner:
         done = 0
         done_chunk = 0
 
+        start_time = time.time()
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
-            start_time = time.time()
+            #start_time = time.time()
             
             if chunk.cache_block is None:
                 block = self.cacheblock.allocate_block()
