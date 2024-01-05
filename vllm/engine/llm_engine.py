@@ -258,6 +258,8 @@ class LLMEngine:
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
         )
         # Update the scheduler with the model outputs.
+        self.running_prefilled_info()
+        
         seq_groups = self.scheduler.update(output)
         
         self.running_prefilled_info()
