@@ -248,7 +248,6 @@ class BlockSpaceManager:
             if block.block_number in seq.prefill_block_table_number:
                 block_table_keep.append(block)
                 continue
-            
             if block.device == Device.GPU:
                 self.gpu_allocator.free(block)
             else:

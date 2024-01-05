@@ -189,7 +189,7 @@ class LLM:
                     seq.data.cumulative_logprob = seq.prefill_data.cumulative_logprob
                     seq.output_logprobs = copy.deepcopy(seq.prefill_output_logprobs)
                     seq.output_tokens = copy.deepcopy(seq.prefill_output_tokens)
-                    seq.logical_token_blocks = []
+                    seq.logical_token_blocks.clear()
                     seq._append_tokens_to_blocks(seq.data.prompt_token_ids)
                     seq.output_logprobs = seq.prefill_output_logprobs
                     seq.output_text = seq.prefill_output_text
