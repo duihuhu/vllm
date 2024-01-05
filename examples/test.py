@@ -125,7 +125,7 @@ if __name__ == "__main__":
     #                                                 predict_model_path = "/workspace/opt_125m_model_sharegpt")
     chunkrunner_125m.set_self_configs(model = None,
                                  predict_model = "/workspace/opt_125m_model_sharegpt",
-                                 tensor_parallel_size = 2)
+                                 tensor_parallel_size = 1)
     chunkrunner_125m.set_parallel_chunkworkers(num_gpus = 1.0)
 
 
