@@ -154,6 +154,7 @@ class LLM:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
+                    print(output.outputs[0].token_ids)
                     # print(output)
                     if use_tqdm:
                         pbar.update(1)
@@ -175,6 +176,7 @@ class LLM:
                         print("last last ")
                         self.llm_engine.get_utilization()
                         outputs.append(output)
+                        print(output.outputs[0].token_ids)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
@@ -182,8 +184,8 @@ class LLM:
             for seq_group in self.llm_engine.scheduler.finished:
                 for seq in seq_group.get_seqs():
                     print("finish output_token_ids ", seq.prefill_data.output_token_ids)
-                    print(seq.prefill_data.cumulative_logprob)
-                    seq.data.output_token_ids = copy.deepcopy(seq.function.output_token_ids)
+                    # print(seq.prefill_data.cumulative_logprob)
+                    seq.data.output_token_ids = copy.deepcopy(seq.prefill_data.output_token_ids)
                     seq.data.cumulative_logprob = seq.prefill_data.cumulative_logprob
                     seq.output_logprobs = copy.deepcopy(seq.prefill_output_logprobs)
                     seq.output_tokens = copy.deepcopy(seq.prefill_output_tokens)
@@ -202,6 +204,7 @@ class LLM:
                         print("last last ")
                         self.llm_engine.get_utilization()
                         outputs.append(output)
+                        print(output.outputs[0].token_ids)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
