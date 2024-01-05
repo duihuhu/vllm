@@ -113,11 +113,11 @@ class Scheduler:
         for seq_group in self.running:
             for seq in seq_group.get_seqs():
                 block_table = self.block_manager.block_tables[seq.seq_id]
-                print("seq id " , block_table)
-                print("seq id ", seq.get_cumulative_logprob(), seq.get_last_token_id(), seq.get_len())
+                print("seq id " , seq.seq_id,  block_table)
+                print("seq id ",  seq.seq_id, seq.get_cumulative_logprob(), seq.get_last_token_id(), seq.get_len())
                 
                 for log_token_block in  seq.logical_token_blocks:
-                    print("seq id log_token_block ", log_token_block.block_number, log_token_block.block_size, 
+                    print("seq id log_token_block ",  seq.seq_id, log_token_block.block_number, log_token_block.block_size, 
                           log_token_block.token_ids)
                
         return  
