@@ -9,7 +9,7 @@ from vllm.logger import init_logger
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceOutputs,
                            SequenceStatus)
-
+import copy
 logger = init_logger(__name__)
 
 _LOGGING_INTERVAL_SEC = 5
@@ -115,10 +115,10 @@ class Scheduler:
         for seq_group in self.running:
             for seq in seq_group.get_seqs():
                 seq.prefill_data = SequenceData(seq.data.prompt_token_ids)
-                seq.prefill_data.output_token_ids = seq.data.output_token_ids
+                seq.prefill_data.output_token_ids = copy.deepcopy(seq.data.output_token_ids)
                 seq.prefill_data.cumulative_logprob = seq.data.cumulative_logprob
-                seq.prefill_output_logprobs = seq.output_logprobs
-                seq.prefill_output_tokens = seq.output_tokens
+                seq.prefill_output_logprobs = copy.deepcopy(seq.output_logprobs)
+                seq.prefill_output_tokens = copy.deepcopy(seq.output_tokens)
                 seq.prefill_output_text = seq.output_text
                 block_table = self.block_manager.block_tables[seq.seq_id]
                 for tb in block_table:
