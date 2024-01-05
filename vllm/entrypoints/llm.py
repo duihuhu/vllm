@@ -171,13 +171,19 @@ class LLM:
                 step_outputs = self.llm_engine.step()
                 # interation = interation  + 1
                 for output in step_outputs:
-                    print("last last ")
-                    self.llm_engine.get_utilization()
                     if output.finished:
+                        print("last last ")
+                        self.llm_engine.get_utilization()
                         outputs.append(output)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
+            for seq_group in self.llm_engine.scheduler.finished:
+                for seq in seq_group:
+                    print(seq.data.cumulative_logprob)
+                    print(seq.prefill_data.cumulative_logprob)
+                    print(seq.prefill_cumulative_logprob)
+
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.

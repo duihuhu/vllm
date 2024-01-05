@@ -76,6 +76,8 @@ class Scheduler:
         self.swapped: List[SequenceGroup] = []
         self.prefilled: List[SequenceGroup] = []
         
+        self.finished: List[SequenceGroup] = []
+        
         self.last_logging_time: float = 0.0
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
@@ -389,7 +391,11 @@ class Scheduler:
     def free_finished_seq_groups(self) -> None:
         # for seq_group in self.running:
         #     print("finished ", seq_group.is_finished())
-            
+        self.finished =  [
+            seq_group for seq_group in self.running
+            if seq_group.is_finished()
+        ]
+        
         self.running = [
             seq_group for seq_group in self.running
             if not seq_group.is_finished()
