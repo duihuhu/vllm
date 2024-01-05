@@ -416,7 +416,8 @@ class ChunkRunner:
             if count + sequence.prompt_len <= total_token_num:
                 sequence = self.all_total_sequences.pop(0)
                 count += sequence.prompt_len
-                self.all_job_sequences[sequence.seq_id] = sequence
+                # self.all_job_sequences[sequence.seq_id] = sequence
+                self.all_job_sequences.append(sequence)
             else:
                 break
     
