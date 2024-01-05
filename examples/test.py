@@ -145,7 +145,7 @@ if __name__ == "__main__":
     input_chunkinputmetadata: List[ChunkInputMetadata] = []'''
 
     for input_prompt, input_tokens_ids, output_len in filtered_dataset:
-        input_prompts.append((input_prompt, input_tokens_ids, len(input_tokens_ids)))
+        input_prompts.append((input_prompt, input_tokens_ids, output_len))
         test_encoded = predict_tokenizer(input_prompt,
                                          #padding = "max_length", 
                                          #truncation = True, 
