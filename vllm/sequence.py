@@ -126,6 +126,7 @@ class Sequence:
         self.prefill_output_tokens: List[str] = []
         self.prefill_output_text = ""
         self.prefill_block_table_number = []
+        self.prefill_logical_token_blocks = []
 
     def _append_logical_block(self) -> None:
         block = LogicalTokenBlock(

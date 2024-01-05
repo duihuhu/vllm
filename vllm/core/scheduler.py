@@ -128,6 +128,8 @@ class Scheduler:
                 seq.prefill_output_logprobs = copy.deepcopy(seq.output_logprobs)
                 seq.prefill_output_tokens = copy.deepcopy(seq.output_tokens)
                 seq.prefill_output_text = seq.output_text
+                seq.prefill_logical_token_blocks = copy.deepcopy(seq.logical_token_blocks)
+                
                 block_table = self.block_manager.block_tables[seq.seq_id]
                 for tb in block_table:
                     seq.prefill_block_table_number.append(tb.block_number)
