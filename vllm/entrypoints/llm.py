@@ -176,7 +176,7 @@ class LLM:
                         print("last last ")
                         self.llm_engine.get_utilization()
                         outputs.append(output)
-                        print(output.outputs[0].token_ids)
+                        print("decode1", output.outputs[0].token_ids)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
@@ -200,12 +200,11 @@ class LLM:
                 step_outputs = self.llm_engine.step()
                 # interation = interation  + 1
                 for output in step_outputs:
-                    print(output.outputs[0].token_ids)
                     if output.finished:
                         print("last last ")
                         self.llm_engine.get_utilization()
                         outputs.append(output)
-                        print(output.outputs[0].token_ids)
+                        print("decode2", output.outputs[0].token_ids)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
