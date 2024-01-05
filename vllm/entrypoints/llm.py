@@ -179,7 +179,7 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             for seq_group in self.llm_engine.scheduler.finished:
-                for seq in seq_group:
+                for seq in seq_group.get_seqs():
                     print(seq.data.cumulative_logprob)
                     print(seq.prefill_data.cumulative_logprob)
                     print(seq.prefill_cumulative_logprob)
