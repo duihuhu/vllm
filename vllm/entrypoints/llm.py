@@ -200,6 +200,7 @@ class LLM:
                 step_outputs = self.llm_engine.step()
                 # interation = interation  + 1
                 for output in step_outputs:
+                    print(output.outputs[0].token_ids)
                     if output.finished:
                         print("last last ")
                         self.llm_engine.get_utilization()
