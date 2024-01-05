@@ -20,7 +20,9 @@ def main(args: argparse.Namespace):
 
     #chunkrunner.set_inputs(dataset_path = args.dataset, num_requests = args.num_prompts)
 
-    chunkrunner.run_worker(slot = args.slot)
+    chunkrunner.run_worker(slot = args.slot,
+                           need_sort = args.sort,
+                           is_reversed = args.reversed)
 
     with open(args.file_path, 'a') as file:
         data = sorted(chunkrunner.all_job_sequences.items(), key = lambda x: x[1].end_time)
@@ -46,6 +48,8 @@ if __name__ == "__main__":
     parser.add_argument("--chunk-num", type=int, default=85)
     parser.add_argument("--slot", type=int, default=8)
     parser.add_argument("--file-path", type=str, default="/workspace/vllm/vllm/chunked/logs/logs_11_8_1.txt")
+    parser.add_argument("--sort", type=int, default=1)
+    parser.add_argument("--reversed", type=int, default=0)
     args = parser.parse_args()
 
     if args.tokenizer is None:

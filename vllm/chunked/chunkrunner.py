@@ -31,11 +31,11 @@ class ChunkRunner:
                       prompt_token_ids: List[int], 
                       sampling_params: ChunkSamplingParams) -> None:
         seq_id = random_uuid()
-        now_time = time.time()
+        #now_time = time.time()
         self.all_total_sequences.append(Sequence(seq_id = seq_id, 
                                              prompt_token_ids = prompt_token_ids,
-                                             sampling_params = sampling_params,
-                                             start_time = now_time)) 
+                                             sampling_params = sampling_params))
+                                             #start_time = now_time)) 
 
     def set_self_configs(self, model: str, tensor_parallel_size: int) -> None:
         model_config = ModelConfig(model = model, tokenizer = None, tokenizer_mode = 'auto', 
@@ -208,10 +208,15 @@ class ChunkRunner:
             dummy_prompt_token_ids = [random.randint(1, 9) for _ in range(prompt_len)]
             self._add_requests(prompt_token_ids = dummy_prompt_token_ids, sampling_params = sampling_params)
     
-    def _start_worker(self, slot: int) -> None:
+    def _start_worker(self, 
+                      slot: int,
+                      need_sort: bool,
+                      is_reversed: bool) -> None:
         self._add_requests_to_self()
         self._set_job_sequences()
-        self._set_job_chunks(slot = slot)
+        self._set_job_chunks(slot = slot,
+                             need_sort = need_sort,
+                              is_reversed =  is_reversed)
         #self.chunk_worker.set_job_sequences()
         #self.chunk_worker.set_job_chunks()
 
@@ -250,8 +255,13 @@ class ChunkRunner:
                         kv_cache_ids.setdefault(prompt_len, []).append((block_id, st, used_token_num))
         return (input_tokens_tensor, input_positions_tensor, kv_cache_ids)
     
-    def run_worker(self, slot: int) -> None:
-        self._start_worker(slot = slot)
+    def run_worker(self, 
+                   slot: int,
+                   need_sort: bool,
+                   is_reversed: bool) -> None:
+        self._start_worker(slot = slot,
+                           need_sort = need_sort,
+                           is_reversed = is_reversed)
 
         self._cold_start()
         #now_time = time.time()
@@ -353,7 +363,7 @@ class ChunkRunner:
             else:
                 break
     
-    def _set_job_chunks(self, slot: int) -> None:
+    def _set_job_chunks(self, slot: int, need_sort: bool, is_reversed: bool) -> None:
         ALL_SIZE = 0
         ALL_ST = 0
         Sequences: List[Sequence] = []
@@ -366,7 +376,8 @@ class ChunkRunner:
             if ALL_END > ALL_SIZE:
                 ALL_END = ALL_SIZE
             temp_sequences = Sequences[ALL_ST: ALL_END]
-            temp_sequences = sorted(temp_sequences, key = lambda x: x.prompt_len)
+            if need_sort:
+                temp_sequences = sorted(temp_sequences, key = lambda x: x.prompt_len, reverse = is_reversed)
             all_token_ids: List[int] = []
             all_token_seqs: List[str] = []
             temp_chunks: List[Chunk] = []
