@@ -287,7 +287,7 @@ class OPTForClassification(nn.Module):
         
         hidden_states = hidden_states[-1]
         logits = self.score(hidden_states)
-        predict_label = torch.argmax(logits, dim = 1).item()
+        predict_label = torch.argmax(logits, dim = -1).item()
         return predict_label
 
     _column_parallel_weights = [
