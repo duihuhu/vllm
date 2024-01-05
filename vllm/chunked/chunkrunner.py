@@ -169,11 +169,11 @@ class ChunkRunner:
     def _add_requests_to_self(self) -> None:
         #for prompt_token_ids in self.requests:
         random.seed(42)
-        for _ in range(3):
+        '''for _ in range(3):
             cold_start_token_ids = [random.randint(1, 9) for _ in range(self.chunk_size)]
             cold_start_sampling_params = ChunkSamplingParams(temperature = 0, top_p = 1.0, top_k = -1)
             self._add_requests(prompt_token_ids = cold_start_token_ids, 
-                                        sampling_params = cold_start_sampling_params)
+                                        sampling_params = cold_start_sampling_params)'''
         prompt_lens = [91, 88, 75, 966, 3, 2047, 42, 103, 15, 717, 1589, 385, 49, 306, 228, 315, 21, 104, 30, 182, 
                        103, 53, 390, 1129, 387, 22, 871, 546, 347, 273, 117, 276, 422, 269, 243, 24, 88, 93, 107, 
                        248, 2047, 1845, 75, 108, 878, 939, 72, 108, 264, 339, 775, 328, 1021, 62, 47, 592, 2, 513, 
@@ -253,12 +253,15 @@ class ChunkRunner:
     def run_worker(self, slot: int) -> None:
         self._start_worker(slot = slot)
 
+        self._cold_start()
         #now_time = time.time()
         #print(f"Added in working pool at {now_time}")
         done = 0
         done_chunk = 0
+
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
             start_time = time.time()
+            
             if chunk.cache_block is None:
                 block = self.cacheblock.allocate_block()
                 chunk.set_self_block(block = block)
@@ -287,8 +290,10 @@ class ChunkRunner:
                                                             sampling_params = sampling_params)'''
             
             end_time = time.time()
+            
             done += len(chunk.do_sampling)
             done_chunk += 1
+            
             for i, id in enumerate(chunk.do_sampling):
                 self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                 self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
@@ -337,7 +342,7 @@ class ChunkRunner:
         return output
     
     def _set_job_sequences(self) -> None:
-        total_token_num = 100 * self.chunk_size
+        total_token_num = 200 * self.chunk_size
         count = 0
         while len(self.all_total_sequences) > 0:
             sequence = self.all_total_sequences[0]
@@ -434,3 +439,23 @@ class ChunkRunner:
         for chunk in self.all_job_chunks[0: slot]:
             self.cacheblock.free_block(block = chunk.cache_block)
             chunk.chunk_status = ChunkStatus.PREFILLED
+    
+    def _cold_start(self) -> None:
+        input_tokens_ids = [random.randint(1, 9) for _ in range(self.chunk_size)]
+        input_positions = list(range(self.chunk_size))
+        input_tokens_ids_tensor = torch.cuda.LongTensor(input_tokens_ids)
+        input_positions_tensor = torch.cuda.LongTensor(input_positions)
+        chunkinputmetadata = ChunkInputMetadata(prompt_lens = [self.chunk_size],
+                                                kv_prefixs = [0],
+                                                kv_prefixs_blocks = None,
+                                                kv_block = None,
+                                                idxs = [self.chunk_size - 1],
+                                                sampling_params_for_sampler = [ChunkSamplingParams(temperature = 0.0,
+                                                                                                   top_p = 1.0,
+                                                                                                   top_k = -1)],
+                                                do_cat = False)
+        for _ in range(3):
+              _, _ = self._run_workers("execute_model",
+                                        inputs = input_tokens_ids_tensor,
+                                        inputs_positions = input_positions_tensor,
+                                        chunkmetadata = chunkinputmetadata)
