@@ -79,7 +79,7 @@ def run_vllm(
     )
 
     # Add the requests to the engine.
-    for i in range(2):
+    for i in range(1):
         for prompt, _, output_len in requests:
             sampling_params = SamplingParams(
                 n=n,

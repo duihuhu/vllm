@@ -112,13 +112,21 @@ class Scheduler:
     def running_prefilled_info(self):
         for seq_group in self.running:
             for seq in seq_group.get_seqs():
+                seq.prefill_output_logprobs = seq.output_logprobs
+                seq.prefill_output_tokens = seq.output_tokens
+                seq.prefill_output_text = seq.output_text
+                seq.prefill_logical_token_blocks_len = len(seq.logical_token_blocks)
+                seq.prefill_cumulative_logprob = seq.data.cumulative_logprob
                 block_table = self.block_manager.block_tables[seq.seq_id]
-                print("seq id " , seq.seq_id,  block_table)
-                print("seq id ",  seq.seq_id, seq.get_cumulative_logprob(), seq.get_last_token_id(), seq.get_len())
+                for tb in block_table:
+                    seq.prefill_block_table_number.append(tb.block_number)
                 
-                for log_token_block in  seq.logical_token_blocks:
-                    print("seq id log_token_block ",  seq.seq_id, log_token_block.block_number, log_token_block.block_size, 
-                          log_token_block.token_ids)
+                # print("seq id " , seq.seq_id,  block_table)
+                # print("seq id ",  seq.seq_id, seq.get_cumulative_logprob(), seq.get_last_token_id(), seq.get_len())
+                
+                # for log_token_block in  seq.logical_token_blocks:
+                #     print("seq id log_token_block ",  seq.seq_id, log_token_block.block_number, log_token_block.block_size, 
+                #           log_token_block.token_ids)
                
         return  
     def covert_running_to_prefilled(self):
@@ -376,7 +384,7 @@ class Scheduler:
 
     def free_seq(self, seq: Sequence, finish_status: SequenceStatus) -> None:
         seq.status = finish_status
-        self.block_manager.free(seq)
+        self.block_manager.free_decode(seq)
 
     def free_finished_seq_groups(self) -> None:
         # for seq_group in self.running:

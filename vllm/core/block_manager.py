@@ -242,6 +242,23 @@ class BlockSpaceManager:
         self._free_block_table(block_table)
         del self.block_tables[seq.seq_id]
 
+    def _free_block_table_decode(self, seq, block_table) -> None:
+        for block in block_table:
+            if block.block_number in seq.prefill_block_table_number:
+                continue
+            if block.device == Device.GPU:
+                self.gpu_allocator.free(block)
+            else:
+                self.cpu_allocator.free(block)
+                
+    def free_decode(self, seq: Sequence) -> None:
+        if seq.seq_id not in self.block_tables:
+            # Already freed or haven't been scheduled yet.
+            return
+        block_table = self.block_tables[seq.seq_id]
+        self._free_block_table_decode(seq, block_table)
+        # del self.block_tables[seq.seq_id]
+
     def reset(self) -> None:
         for block_table in self.block_tables.values():
             self._free_block_table(block_table)

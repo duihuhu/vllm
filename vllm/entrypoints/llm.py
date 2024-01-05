@@ -158,7 +158,8 @@ class LLM:
                     if use_tqdm:
                         pbar.update(1)
             if split_two_phase == 1:
-                # self.llm_engine.running_prefilled_info()
+                self.llm_engine.running_prefilled_info()
+                self.llm_engine.get_utilization()
                 self.llm_engine.covert_running_to_prefilled()
                 
         if split_two_phase == 1:
@@ -169,6 +170,7 @@ class LLM:
                 step_outputs = self.llm_engine.step()
                 # interation = interation  + 1
                 for output in step_outputs:
+                    self.llm_engine.get_utilization()
                     if output.finished:
                         outputs.append(output)
                         # print(output)
