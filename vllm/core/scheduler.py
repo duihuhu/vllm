@@ -114,7 +114,9 @@ class Scheduler:
     def running_prefilled_info(self):
         for seq_group in self.running:
             for seq in seq_group.get_seqs():
-                seq.prefill_data = seq.data
+                seq.prefill_data = SequenceData(seq.data.prompt_token_ids)
+                seq.prefill_data.output_token_ids = seq.data.output_token_ids
+                seq.prefill_data.cumulative_logprob = seq.data.cumulative_logprob
                 seq.prefill_output_logprobs = seq.output_logprobs
                 seq.prefill_output_tokens = seq.output_tokens
                 seq.prefill_output_text = seq.output_text
