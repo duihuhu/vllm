@@ -180,7 +180,7 @@ class LLM:
                             pbar.update(1)
             for seq_group in self.llm_engine.scheduler.finished:
                 for seq in seq_group.get_seqs():
-                    print(seq.prefill_data.output_token_ids)
+                    print("finish output_token_ids ", seq.prefill_data.output_token_ids)
                     print(seq.prefill_data.cumulative_logprob)
                     seq.data = seq.prefill_data
                     seq.logical_token_blocks = []
@@ -188,7 +188,7 @@ class LLM:
                     seq.output_tokens = seq.prefill_output_tokens
                     seq.output_logprobs = seq.prefill_output_logprobs
                     seq.output_text = seq.prefill_output_text
-                    
+
 
         if use_tqdm:
             pbar.close()

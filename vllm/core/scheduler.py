@@ -111,9 +111,17 @@ class Scheduler:
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
 
+    def covert_finished_to_running(self):
+        while self.finished:
+            seq_group = self.finished.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.RUNNING
+            self.running.append(seq_group)
+            
     def running_prefilled_info(self):
         for seq_group in self.running:
             for seq in seq_group.get_seqs():
+                print("seq data ", seq.data.output_token_ids)
                 seq.prefill_data = SequenceData(seq.data.prompt_token_ids)
                 seq.prefill_data.output_token_ids = copy.deepcopy(seq.data.output_token_ids)
                 seq.prefill_data.cumulative_logprob = seq.data.cumulative_logprob

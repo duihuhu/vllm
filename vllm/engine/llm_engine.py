@@ -238,9 +238,15 @@ class LLMEngine:
     def covert_running_to_prefilled(self):
         self.scheduler.covert_running_to_prefilled()
 
+
     def covert_prefilled_to_running(self):
         self.scheduler.covert_prefilled_to_running()
 
+
+    def covert_finished_to_running(self):
+        self.scheduler.covert_finished_to_running()
+
+        
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
