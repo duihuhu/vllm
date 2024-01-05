@@ -40,14 +40,22 @@ class InputMetadata:
 
         self.num_prompts = len(prompt_lens)
         self.num_prompt_tokens = sum(prompt_lens)
-        self.num_generation_tokens = context_lens.shape[0]
-        self.num_valid_tokens = slot_mapping.shape[0]
-        if block_tables.numel() > 0:
-            self.max_num_blocks_per_seq = block_tables.shape[1]
+        if context_lens is not None: 
+            self.num_generation_tokens = context_lens.shape[0]
         else:
-            self.max_num_blocks_per_seq = 0
-        assert block_tables.shape[0] == self.num_generation_tokens
-        assert context_lens.shape[0] == self.num_generation_tokens
+            self.num_generation_tokens = 0
+        if slot_mapping is not None:
+            self.num_valid_tokens = slot_mapping.shape[0]
+        else:
+            self.num_valid_tokens = sum(prompt_lens)
+        if block_tables is not None:
+            if block_tables.numel() > 0:
+                self.max_num_blocks_per_seq = block_tables.shape[1]
+            else:
+                self.max_num_blocks_per_seq = 0
+        if block_tables is not None and context_lens is not None:
+            assert block_tables.shape[0] == self.num_generation_tokens
+            assert context_lens.shape[0] == self.num_generation_tokens
 
         # Set during the execution of the first attention op.
         self.attn_bias: List[AttentionBias] = []

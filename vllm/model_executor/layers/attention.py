@@ -386,17 +386,6 @@ class PagedAttention(nn.Module):
                 output[num_prompt_tokens:num_valid_tokens],
                 query[num_prompt_tokens:num_valid_tokens], key_cache,
                 value_cache, input_metadata)
-            #done_d += 1
-        
-        # with open('/workspace/vllm/benchmarks/output/count.txt', 'a') as file:
-        #     if done_p == 0 and done_d == 0:
-        #         file.write("no\n")
-        #     if done_p == 1 and done_d == 0:
-        #         file.write("p\n")
-        #     if done_p == 0 and done_d == 1:
-        #         file.write("d\n")
-        #     if done_p == 1 and done_d == 1:
-        #         file.write("pd\n")
 
         # Reshape the output tensor.
         # NOTE(woosuk): The output tensor may include paddings.

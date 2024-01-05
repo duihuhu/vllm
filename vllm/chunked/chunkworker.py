@@ -11,6 +11,7 @@ from vllm.chunked.chunkcache import ChunkCacheBlocks
 #from vllm.engine.ray_utils import initialize_cluster
 from vllm.model_executor.parallel_utils.parallel_state import (
     initialize_model_parallel, initialize_all_reduce_launcher)
+from vllm.model_executor import InputMetadata
 
 class ChunkWorker:
     def __init__(self,
@@ -247,3 +248,16 @@ class ChunkWorker:
             chunkinputmetadata = chunkmetadata
         )
         return output
+    
+    @torch.inference_mode()
+    def execute_predict_model_2(self,
+                                input_ids: torch.Tensor,
+                                positions: torch.Tensor,
+                                input_metadata: InputMetadata) -> int:
+       kv_caches = [(None, None)] * self.num_layers
+       predict_label = self.predict_model(input_ids = input_ids,
+                                          positions = positions,
+                                          kv_caches = kv_caches,
+                                          input_metadata = input_metadata,
+                                          cache_events = None)
+       return predict_label

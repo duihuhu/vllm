@@ -8,6 +8,7 @@ from vllm.model_executor.models.mpt import MPTForCausalLM
 from vllm.model_executor.models.optchunked import OPTChunkedForCausalLM
 from vllm.model_executor.models.opt import OPTForCausalLM
 from vllm.model_executor.models.optpredict import OPTChunkedForSequenceClassification
+from vllm.model_executor.models.optclassification import OPTForClassification
 
 __all__ = [
     "BloomForCausalLM",
@@ -19,5 +20,6 @@ __all__ = [
     "MPTForCausalLM",
     "OPTForCausalLM",
     "OPTChunkedForCausalLM",
-    "OPTChunkedForSequenceClassification"
+    "OPTChunkedForSequenceClassification",
+    "OPTForClassification"
 ]

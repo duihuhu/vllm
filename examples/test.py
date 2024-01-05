@@ -1,14 +1,15 @@
 import torch
 import threading
 import json
-#from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import List, Tuple
 import time
 
 from vllm.transformers_utils.tokenizer import get_tokenizer
 from vllm.chunked.chunkrunner import ChunkRunner
 from vllm.chunked.chunk import ChunkInputMetadata, ChunkSamplingParams
-from vllm.worker.worker import _pad_to_max #,_pad_to_alignment
+from vllm.worker.worker import _pad_to_max, _pad_to_alignment
+from vllm.model_executor import InputMetadata
 
 '''def _pad_to_max_for_predict(x: List[int], max_len: int) -> List[int]:
     return x + [1] * (max_len - len(x))'''
@@ -46,7 +47,7 @@ def set_inputs(tokenizer, dataset_path: str, num_requests: int):
             break
     return filtered_dataset
 
-def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor], 
+'''def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor], 
                       input_positions_tensors: List[torch.Tensor], 
                       input_chunkinputmetadata: List[ChunkInputMetadata]) -> None:
     iter = 0
@@ -63,30 +64,47 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
             file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
         iter += 1
         #print(f"output_token_list: {output_token_list}")
-        #print(f"logprobs: {logprobs}")
+        #print(f"logprobs: {logprobs}")'''
 
-def execute_small_model(input_prompts: List[Tuple[str, int]]
+def execute_small_model(input_prompts: List[Tuple[str, List[int], int]]
                         #input_positions_tensor, 
                         #chunkinputmetadata,
                         ) -> None:
     iter = 0
-    for input_prompt, input_prompt_len in input_prompts:
+    for _, input_ids, _ in input_prompts:
+        positions = list(range(len(input_ids)))
+        input_ids = _pad_to_alignment(input_ids, 8)
+        positions = _pad_to_alignment(positions, 8)
+        input_ids_tesnor = torch.cuda.LongTensor(input_ids)
+        positions_tensor = torch.cuda.LongTensor(positions)
+        inputmetadata = InputMetadata(seq_groups = None,
+                                      seq_data = None,
+                                      prompt_lens = [len(input_ids)],
+                                      slot_mapping = None,
+                                      context_lens = None,
+                                      max_context_len = None,
+                                      block_tables = None)
+        
         st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(input_prompt, 512)
-        '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
+        '''_ = chunkrunner_125m.execute_predict_model(input_prompt, 512)
+        predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
                                     chunkmetadata = chunkinputmetadata)'''
+        predict_label = chunkrunner_125m._run_workers("execute_predict_model_2",
+                                                       input_ids = input_ids_tesnor,
+                                                       positions = positions_tensor,
+                                                       input_metadata = inputmetadata)
         ed = time.time()
         with open("/workspace/vllm/examples/logs/co_running_s_512_1.txt", 'a') as file:
-            file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
+            file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds, and predict label is {predict_label}\n")
         iter += 1
         #print(f"predict costs {ed - st} seconds")
         #print(f"predict_labels: {predict_labels}")
 
 if __name__ == "__main__":
 
-    tokenizer_13b = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
+    '''tokenizer_13b = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     #tokenizer_13b = get_tokenizer("/workspace/models/facebook/opt-125m")
     chunkrunner_13b = ChunkRunner(tokenizer = tokenizer_13b,
                               chunk_size = 512,
@@ -95,44 +113,54 @@ if __name__ == "__main__":
                             model = "/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/",
                                  predict_model = None,
                                  tensor_parallel_size = 2)
-    chunkrunner_13b.set_parallel_chunkworkers(num_gpus = 0.7)
+    chunkrunner_13b.set_parallel_chunkworkers(num_gpus = 0.7)'''
 
-    #tokenizer_125m = get_tokenizer("/workspace/opt-125m")
+    tokenizer_125m = get_tokenizer("/workspace/opt-125m")
     #tokenizer_125m = get_tokenizer("/workspace/models/facebook/opt-125m")
     chunkrunner_125m = ChunkRunner(#tokenizer = tokenizer_125m,
                               tokenizer = None,
                               chunk_size = 512,
                               chunk_num = 10)
-    chunkrunner_125m.set_predict_model_and_tokenizer(predict_tokenizer_path = "/workspace/opt-125m",
-                                                     predict_model_path = "/workspace/opt_125m_model_sharegpt")
-    '''chunkrunner_125m.set_self_configs(model = None,
+    #chunkrunner_125m.set_predict_model_and_tokenizer(predict_tokenizer_path = "/workspace/opt-125m",
+    #                                                 predict_model_path = "/workspace/opt_125m_model_sharegpt")
+    chunkrunner_125m.set_self_configs(model = None,
                                  predict_model = "/workspace/opt_125m_model_sharegpt",
                                  tensor_parallel_size = 2)
-    chunkrunner_125m.set_parallel_chunkworkers(num_gpus = 0.3)'''
+    chunkrunner_125m.set_parallel_chunkworkers(num_gpus = 1.0)
 
 
-    '''predict_tokenizer = AutoTokenizer.from_pretrained("/workspace/opt-125m")
+    predict_tokenizer = AutoTokenizer.from_pretrained("/workspace/opt-125m")
     #predict_tokenizer = AutoTokenizer.from_pretrained("/workspace/models/facebook/opt-125m")
     predict_model = AutoModelForSequenceClassification.from_pretrained("/workspace/opt_125m_model_sharegpt", num_labels = 10)
-    predict_model = predict_model.to('cuda:2')'''
+    predict_model = predict_model.to('cuda:2')
     
-    filtered_dataset = set_inputs(tokenizer = tokenizer_13b,
+    filtered_dataset = set_inputs(tokenizer = tokenizer_125m,
                                   dataset_path = "/workspace/ShareGPT_V3_unfiltered_cleaned_split.json",
                                   #dataset_path = "/workspace/datasets/ShareGPT_V3_unfiltered_cleaned_split.json",
                                   num_requests = 128)
     
-    input_prompts: List[Tuple[str, int]] = []
-    input_tokens_ids_tensors: List[torch.Tensor] = []
+    input_prompts: List[Tuple[str, List[int], int]] = []
+    '''input_tokens_ids_tensors: List[torch.Tensor] = []
     input_positions_tensors: List[torch.Tensor] = []
-    input_chunkinputmetadata: List[ChunkInputMetadata] = []
+    input_chunkinputmetadata: List[ChunkInputMetadata] = []'''
 
     for input_prompt, input_tokens_ids, output_len in filtered_dataset:
-        input_prompts.append((input_prompt, len(input_tokens_ids)))
+        input_prompts.append((input_prompt, input_tokens_ids, len(input_tokens_ids)))
+        test_encoded = predict_tokenizer(input_prompt,
+                                         padding = "max_length", 
+                                         truncation = True, 
+                                         return_tensors = "pt", 
+                                         max_length = 2048)
+        test_encoded = test_encoded.to("cuda:2")
+        prediction = predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
+        predicted_label = torch.argmax(prediction.logits, dim = 1).item()
+        print(f"prompt len is {len(input_tokens_ids)} predicted label is {predicted_label}")
         #print(f"output_len is {output_len}")
 
         #small_input_tokens_ids = input_tokens_ids
         #small_input_tokens_ids = _pad_to_max_for_predict(small_input_tokens_ids, max_len = 2048)
-        if len(input_tokens_ids) < 512:
+        '''if len(input_tokens_ids) < 512:
             input_tokens_ids = _pad_to_max(input_tokens_ids, max_len = 512)
         else:
             input_tokens_ids = input_tokens_ids[0: 512]
@@ -154,18 +182,18 @@ if __name__ == "__main__":
         
         input_tokens_ids_tensors.append(input_tokens_ids_tensor)
         input_positions_tensors.append(input_positions_tensor)
-        input_chunkinputmetadata.append(chunkinputmetadata)
+        input_chunkinputmetadata.append(chunkinputmetadata)'''
 
     thread_small = threading.Thread(target = execute_small_model, args = (input_prompts,))
-    thread_big = threading.Thread(target = execute_big_model, 
+    '''thread_big = threading.Thread(target = execute_big_model, 
                                     args = (input_tokens_ids_tensors, 
                                             input_positions_tensors, 
-                                            input_chunkinputmetadata))
+                                            input_chunkinputmetadata))'''
 
-    thread_big.start()
+    #thread_big.start()
     thread_small.start()
 
-    thread_big.join()
+    #thread_big.join()
     thread_small.join()
 
     '''small_input_positions = list(range(len(small_input_tokens_ids)))

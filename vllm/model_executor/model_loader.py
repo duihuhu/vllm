@@ -21,7 +21,8 @@ _MODEL_REGISTRY = {
     "MPTForCausalLM": MPTForCausalLM,
     "OPTForCausalLM": OPTForCausalLM,
     "OPTChunkedForCausalLM": OPTChunkedForCausalLM,
-    "OPTChunkedForSequenceClassification": OPTChunkedForSequenceClassification
+    "OPTChunkedForSequenceClassification": OPTChunkedForSequenceClassification,
+    "OPTForClassification": OPTForClassification
 }
 
 
@@ -39,7 +40,8 @@ def get_model(model_config: ModelConfig, Chunked: bool = False, Predicted: bool 
     if Chunked:
         model_class = _MODEL_REGISTRY["OPTChunkedForCausalLM"]
     elif Predicted:
-        model_class = _MODEL_REGISTRY["OPTChunkedForSequenceClassification"]
+        #model_class = _MODEL_REGISTRY["OPTChunkedForSequenceClassification"]
+        model_class = _MODEL_REGISTRY["OPTForClassification"]
     else:
         model_class = _get_model_architecture(model_config.hf_config)
     
