@@ -188,6 +188,20 @@ class LLM:
                     seq.output_tokens = seq.prefill_output_tokens
                     seq.output_logprobs = seq.prefill_output_logprobs
                     seq.output_text = seq.prefill_output_text
+                    
+            self.llm_engine.covert_finished_to_running()
+            while self.llm_engine.has_unfinished_requests():
+                # print("interation: ", interation)
+                step_outputs = self.llm_engine.step()
+                # interation = interation  + 1
+                for output in step_outputs:
+                    if output.finished:
+                        print("last last ")
+                        self.llm_engine.get_utilization()
+                        outputs.append(output)
+                        # print(output)
+                        if use_tqdm:
+                            pbar.update(1)
 
 
         if use_tqdm:
