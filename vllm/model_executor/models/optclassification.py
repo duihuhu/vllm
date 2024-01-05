@@ -286,10 +286,10 @@ class OPTForClassification(nn.Module):
         hidden_states = self.model(input_ids, positions, kv_caches,
                                    input_metadata, cache_events)
         
-        hidden_states = hidden_states[-1]
+        hidden_states = hidden_states[0]
         logits = self.score(hidden_states)
-        probabilities = F.softmax(logits, dim = -1)
-        predict_label = torch.argmax(probabilities, dim = -1).item()
+        #probabilities = F.softmax(logits, dim = -1)
+        predict_label = torch.argmax(logits, dim = -1).item()
         #print(logits)
         return predict_label
 
