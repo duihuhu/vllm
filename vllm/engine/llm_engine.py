@@ -259,6 +259,8 @@ class LLMEngine:
         )
         # Update the scheduler with the model outputs.
         seq_groups = self.scheduler.update(output)
+        
+        self.running_prefilled_info()
 
         # Decode the sequences.
         self._decode_sequences(seq_groups)
