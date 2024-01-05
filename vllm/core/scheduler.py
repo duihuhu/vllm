@@ -114,11 +114,10 @@ class Scheduler:
     def running_prefilled_info(self):
         for seq_group in self.running:
             for seq in seq_group.get_seqs():
+                seq.prefill_data = seq.data
                 seq.prefill_output_logprobs = seq.output_logprobs
                 seq.prefill_output_tokens = seq.output_tokens
                 seq.prefill_output_text = seq.output_text
-                seq.prefill_logical_token_blocks_len = len(seq.logical_token_blocks)
-                seq.prefill_cumulative_logprob = seq.data.cumulative_logprob
                 block_table = self.block_manager.block_tables[seq.seq_id]
                 for tb in block_table:
                     seq.prefill_block_table_number.append(tb.block_number)

@@ -121,12 +121,10 @@ class Sequence:
         self._append_tokens_to_blocks(prompt_token_ids)
         self.status = SequenceStatus.WAITING
 
+        self.prefill_data = SequenceData(prompt_token_ids)
         self.prefill_output_logprobs: List[Dict[int, float]] = []
         self.prefill_output_tokens: List[str] = []
         self.prefill_output_text = ""
-        self.prefill_data = SequenceData(prompt_token_ids)
-        self.prefill_logical_token_blocks_len = 0
-        self.prefill_cumulative_logprob = 0
         self.prefill_block_table_number = []
 
     def _append_logical_block(self) -> None:
