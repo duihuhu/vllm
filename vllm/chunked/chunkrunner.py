@@ -509,7 +509,7 @@ class ChunkRunner:
         while True:
             if request_id in request_label:
                 end_time = time.time()
-                print("request id found use time " , end_time-start_time)
+                #print("request id found use time " , end_time-start_time)
                 label = request_label[request_id]
                 break
             else:
@@ -520,7 +520,7 @@ class ChunkRunner:
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
         # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
         start_time = time.time()
-        print("request id first token time ", request_id, " ",  start_time)
+        #print("request id first token time ", request_id, " ",  start_time)
         mm.seek((prefill_nums-1)*35)
         mm.write(combined_info_bytes)
         # end = time.time()
@@ -586,6 +586,7 @@ class ChunkRunner:
                         # mm.seek((prefill_nums-1)*35)
                         # mm.write(combined_info_bytes)
                         sended_request_id.add(request_id)
+                        print(f"request id {request_id} has been sent")
                         # time.sleep(0.000005)
                 #self.processed_chunks.append(chunk)
             #self.all_job_chunks.clear()
@@ -593,7 +594,7 @@ class ChunkRunner:
                     total_num += output_num
                     self._reduce_outputs()
                     output_num = 0
-            print(f"now {total_num} reqs have been finished")
+            #print(f"now {total_num} reqs have been finished")
             print("mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
     
