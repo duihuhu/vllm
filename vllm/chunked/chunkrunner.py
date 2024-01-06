@@ -515,7 +515,7 @@ class ChunkRunner:
             else:
                 event = request_event[request_id]
                 #request_event[request_id] = event
-                event.wait()
+                #event.wait()
                 # print("request id not found ", request_id)
         combined_info_bytes = num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big') + prefill_nums.to_bytes(1, byteorder='big')
         # print("combined_info_bytes ", len(combined_info_bytes), combined_info_bytes, request_id, time.time())
