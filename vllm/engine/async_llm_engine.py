@@ -83,6 +83,47 @@ class AsyncLLMEngine:
             self.request_events[request_id].set()
 
 
+    def add_reuqests_to_mul_generate_hhy(
+        self,
+        output_lens: Optional[List[int]],
+        sampling_params: Optional[List[SamplingParams]],
+        prompts_tokens_ids: Optional[List[List[int]]]) -> None:
+
+        arrival_time = time.time()
+        for prompt_tokens_ids, sampling_param, output_len in zip(prompts_tokens_ids, sampling_params, output_lens):
+            request_id = random_uuid()
+            sampling_param.max_tokens = int(output_len)
+            if self.engine_use_ray:
+                self.engine.add_request.remote(
+                    request_id = request_id,
+                    sampling_params = sampling_param,
+                    prompt_token_ids = prompt_tokens_ids,
+                    arrival_time = arrival_time
+                )
+            else:
+                self.engine.add_request(
+                    request_id = request_id,
+                    sampling_params = sampling_param,
+                    prompt_token_ids = prompt_tokens_ids,
+                    arrival_time = arrival_time
+                )
+
+    def mul_generate_hhy(self) -> RequestOutput:
+        
+        start_time = time.time()
+        outputs: List[RequestOutput] = []
+        while self.engine.has_unfinished_requests():
+            step_outputs = self.engine.step()
+            for output in step_outputs:
+                if output.finished:
+                    outputs.append(output)
+        end_time = time.time()
+        total_num_tokens = sum(len(output.prompt_token_ids) + len(output.outputs[0].token_ids) for output in outputs)
+        total_num_reqs = len(outputs)
+        print(f"Processed {total_num_tokens} tokens in {total_num_reqs} reqs")
+        print(f"Throughput: {total_num_tokens / {end_time - start_time}:.2f}/tokens per second")
+        print(f"Throughput: {total_num_reqs / {end_time - start_time}:.2f}/reqs per second") 
+
     def mul_generate(
             self,
             prompts: Optional[List[str]],
@@ -138,12 +179,12 @@ class AsyncLLMEngine:
         # end_add_request_time = time.time()
         # print("start_add_request_time, end_add_request_time ", start_add_request_time, end_add_request_time)
         start = time.time()
-        prefill_execute_time = 0 
+        #prefill_execute_time = 0 
         outputs: List[RequestOutput] = []
         while self.engine.has_unfinished_requests():
             step_outputs = self.engine.step()
-            if prefill_execute_time == 0:
-                prefill_execute_time = time.time()
+            #if prefill_execute_time == 0:
+            #    prefill_execute_time = time.time()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
@@ -155,7 +196,7 @@ class AsyncLLMEngine:
             len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
             for output in outputs
         )
-        print("arrival_time, start time, prefill_execute_time, end time , total_num_tokens, outputs len ", arrival_time, start, prefill_execute_time, end, total_num_tokens, len(outputs))
+        print("arrival_time, start time, end time , total_num_tokens, outputs len ", arrival_time, start, end, total_num_tokens, len(outputs))
 
         print(f"Throughput: {len(outputs) / elapsed_time:.2f} requests/s, "
             f"{total_num_tokens / elapsed_time:.2f} tokens/s")
