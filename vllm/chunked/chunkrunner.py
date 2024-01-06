@@ -565,6 +565,7 @@ class ChunkRunner:
                 end_time = time.time()
                 # print(f"this chunk costs {end_time - start_time} seconds")
                 output_num += len(chunk.do_sampling)
+                output_chunk += 1
                 for i, id in enumerate(chunk.do_sampling):
                     self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                     self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
