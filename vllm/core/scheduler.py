@@ -121,7 +121,7 @@ class Scheduler:
     def running_prefilled_info(self):
         for seq_group in self.running:
             for seq in seq_group.get_seqs():
-                print("seq data ", seq.data.output_token_ids)
+                # print("seq data ", seq.data.output_token_ids)
                 seq.prefill_data = SequenceData(seq.data.prompt_token_ids)
                 seq.prefill_data.output_token_ids = copy.deepcopy(seq.data.output_token_ids)
                 seq.prefill_data.cumulative_logprob = seq.data.cumulative_logprob

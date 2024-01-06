@@ -9,6 +9,10 @@ from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
 from vllm.utils import Counter
 import copy
+from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
+from vllm.utils import random_uuid
+import time
+
 
 class LLM:
     """An LLM for generating texts from given prompts and sampling parameters.
@@ -161,7 +165,7 @@ class LLM:
             if split_two_phase == 1:
                 print("prefilled ")
                 self.llm_engine.running_prefilled_info()
-                self.llm_engine.get_utilization()
+                # self.llm_engine.get_utilization()
                 self.llm_engine.covert_running_to_prefilled()
                 
         if split_two_phase == 1:
@@ -173,35 +177,75 @@ class LLM:
                 # interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
-                        print("last last ")
-                        self.llm_engine.get_utilization()
+                        # print("last last ")
+                        # self.llm_engine.get_utilization()
                         outputs.append(output)
                         print("decode1", output.outputs[0].token_ids)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
-                            
+            
             for seq_group in self.llm_engine.scheduler.finished:
+                #copy
                 for seq in seq_group.get_seqs():
-                    print("finish output_token_ids ", seq.prefill_data.output_token_ids)
-                    # print(seq.prefill_data.cumulative_logprob)
-                    seq.data.output_token_ids = copy.deepcopy(seq.prefill_data.output_token_ids)
-                    seq.data.cumulative_logprob = seq.prefill_data.cumulative_logprob
-                    seq.output_logprobs = copy.deepcopy(seq.prefill_output_logprobs)
-                    seq.output_tokens = copy.deepcopy(seq.prefill_output_tokens)
-                    seq.logical_token_blocks.clear()
-                    seq.output_logprobs = seq.prefill_output_logprobs
-                    seq.output_text = seq.prefill_output_text
-                    seq.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
-            self.llm_engine.covert_finished_to_running()
+                    
+                    for i in range(10):
+                        request_id = random_uuid()
+                        arrival_time = time.time()
+                        sampling_params = SamplingParams(
+                            n=1,
+                            # temperature=0.0 if use_beam_search else 1.0,
+                            temperature=0.0,
+                            top_p=1.0,
+                            use_beam_search=False,
+                            ignore_eos=True,
+                        )
+                            # Create the sequences.
+                        block_size = self.llm_engine.cache_config.block_size
+                        seqs: List[Sequence] = []    
+                        for _ in range(sampling_params.best_of):
+                            seq_id = next(self.llm_engine.seq_counter)
+                            seq1 = Sequence(seq_id, seq.prompt, seq.data.prompt_token_ids, block_size)
+                            seq1.data.output_token_ids = copy.deepcopy(seq.prefill_data.output_token_ids)
+                            seq1.data.cumulative_logprob = seq.prefill_data.cumulative_logprob
+                            seq1.output_logprobs = copy.deepcopy(seq.prefill_output_logprobs)
+                            seq1.output_tokens = copy.deepcopy(seq.prefill_output_tokens)
+                            seq1.logical_token_blocks.clear()
+                            seq1.output_logprobs = seq.prefill_output_logprobs
+                            seq1.output_text = seq.prefill_output_text
+                            seq1.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
+                            seqs.append(seq1)
+                        # Create the sequence group.
+                        seq_group = SequenceGroup(request_id, seqs, sampling_params,
+                                                arrival_time)
+
+                        # Add the sequence group to the scheduler.
+                        self.llm_engine.scheduler.add_seq_group(seq_group)
+                        
+            # for seq_group in self.llm_engine.scheduler.finished:
+            #     for seq in seq_group.get_seqs():
+            #         print("finish output_token_ids ", seq.prefill_data.output_token_ids)
+            #         # print(seq.prefill_data.cumulative_logprob)
+            #         seq.data.output_token_ids = copy.deepcopy(seq.prefill_data.output_token_ids)
+            #         seq.data.cumulative_logprob = seq.prefill_data.cumulative_logprob
+            #         seq.output_logprobs = copy.deepcopy(seq.prefill_output_logprobs)
+            #         seq.output_tokens = copy.deepcopy(seq.prefill_output_tokens)
+            #         seq.logical_token_blocks.clear()
+            #         seq.output_logprobs = seq.prefill_output_logprobs
+            #         seq.output_text = seq.prefill_output_text
+            #         seq.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
+            # self.llm_engine.covert_finished_to_running()
+            if use_tqdm:
+                num_requests = self.llm_engine.get_num_unfinished_requests()
+                pbar = tqdm(total=num_requests, desc="Processed prompts")
             while self.llm_engine.has_unfinished_requests():
                 # print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
                 # interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
-                        print("last last ")
-                        self.llm_engine.get_utilization()
+                        # print("last last ")
+                        # self.llm_engine.get_utilization()
                         outputs.append(output)
                         print("decode2", output.outputs[0].token_ids)
                         # print(output)
