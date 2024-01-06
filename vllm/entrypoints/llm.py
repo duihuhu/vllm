@@ -151,6 +151,9 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         # interation = 0
+        print("first prefilling ")
+        self.llm_engine.get_utilization()
+        
         while self.llm_engine.has_unfinished_requests():
             # print("interation: ", interation)
             step_outputs = self.llm_engine.step()
@@ -165,7 +168,7 @@ class LLM:
             if split_two_phase == 1:
                 print("prefilled ")
                 self.llm_engine.running_prefilled_info()
-                # self.llm_engine.get_utilization()
+                self.llm_engine.get_utilization()
                 self.llm_engine.covert_running_to_prefilled()
                 
         if split_two_phase == 1:
@@ -180,11 +183,11 @@ class LLM:
                         # print("last last ")
                         # self.llm_engine.get_utilization()
                         outputs.append(output)
-                        print("decode1", output.outputs[0].token_ids)
+                        # print("decode1", output.outputs[0].token_ids)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
-            
+            print("decode complish and release ")
             for seq_group in self.llm_engine.scheduler.finished:
                 #copy
                 for seq in seq_group.get_seqs():
@@ -216,7 +219,7 @@ class LLM:
                             seq1.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
                             seqs.append(seq1)
                         # Create the sequence group.
-                        seq_group = SequenceGroup(request_id, seqs, sampling_params,
+                        seq_group = SequenceGroup(next(self.request_counter), seqs, sampling_params,
                                                 arrival_time)
 
                         # Add the sequence group to the scheduler.
@@ -235,19 +238,23 @@ class LLM:
             #         seq.output_text = seq.prefill_output_text
             #         seq.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
             # self.llm_engine.covert_finished_to_running()
+            print("mock more request ")
+            self.llm_engine.get_utilization()
             if use_tqdm:
                 num_requests = self.llm_engine.get_num_unfinished_requests()
                 pbar = tqdm(total=num_requests, desc="Processed prompts")
             while self.llm_engine.has_unfinished_requests():
                 # print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
+                print("runing more request ")
+                self.llm_engine.get_utilization()
                 # interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
                         # print("last last ")
                         # self.llm_engine.get_utilization()
                         outputs.append(output)
-                        print("decode2", output.outputs[0].token_ids)
+                        # print("decode2", output.outputs[0].token_ids)
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
