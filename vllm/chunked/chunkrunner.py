@@ -696,6 +696,8 @@ class ChunkRunner:
             if request_id in request_event:
                 event = request_event[request_id]
                 event.set()
+            else:
+                print(f"{request_id} is not in request_event")
             
     def warmup(self,request_label):
         self.warm_predict_model("AAAA",1,"aaa")
