@@ -58,40 +58,40 @@ def get_request_from_mmap(request_queue):
             print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
             already_num = already_num + 1
 
-def get_request_from_mmap_list(request_list):
-    hex_char = b'\x0F'
-    # 判断内存
-    prefill_nums = b'\x00'
-    request_num =  b'\x00'
-    already_num = 0 
-    # 读取内存映射区域的数据
-    while True:
-        if prefill_nums != mm[(already_num*35+34):(already_num*35+35)]:
-            request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
-            request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
-            label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
-            arrive_time = time.time()
-            request_list.append((request_id, label))
-            mmap_event.set()
-            add_time = time.time()
-            print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
-            already_num = already_num + 1
+# def get_request_from_mmap_list(request_list):
+#     hex_char = b'\x0F'
+#     # 判断内存
+#     prefill_nums = b'\x00'
+#     request_num =  b'\x00'
+#     already_num = 0 
+#     # 读取内存映射区域的数据
+#     while True:
+#         if prefill_nums != mm[(already_num*35+34):(already_num*35+35)]:
+#             request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
+#             request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
+#             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
+#             arrive_time = time.time()
+#             request_list.append((request_id, label))
+#             mmap_event.set()
+#             add_time = time.time()
+#             print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
+#             already_num = already_num + 1
             
-# @app.post("/notify_mdecode")
-def notify_mdecode_from_list():
-    global decode_event
-    global mdecode_status
-    # 读取内存映射区域的数据
+# # @app.post("/notify_mdecode")
+# def notify_mdecode_from_list():
+#     global decode_event
+#     global mdecode_status
+#     # 读取内存映射区域的数据
 
-    while True:
-        if len(request_list) == 0:
-            mmap_event.wait()
-        request_info = request_list.pop(0)
-        arrive_time = time.time()
-        print("decode get data " , request_info[0], arrive_time)
-        engine.convert_req_label_status(request_info[0], request_info[1])
-        mdecode_status = "decode"
-        decode_event.set()
+#     while True:
+#         if len(request_list) == 0:
+#             mmap_event.wait()
+#         request_info = request_list.pop(0)
+#         arrive_time = time.time()
+#         print("decode get data " , request_info[0], arrive_time)
+#         engine.convert_req_label_status(request_info[0], request_info[1])
+#         mdecode_status = "decode"
+#         decode_event.set()
         
 
 
@@ -231,13 +231,13 @@ if __name__ == "__main__":
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args)
     
-    # request_queue = multiprocessing.Queue()
-    # mmap_process = multiprocessing.Process(target=get_request_from_mmap, args=(request_queue,))
-    # mmap_process.start()
-    
-    request_list = multiprocessing.Manager().list()
-    mmap_process = multiprocessing.Process(target=get_request_from_mmap_list, args=(request_list,))
+    request_queue = multiprocessing.Queue()
+    mmap_process = multiprocessing.Process(target=get_request_from_mmap, args=(request_queue,))
     mmap_process.start()
+    
+    # request_list = multiprocessing.Manager().list()
+    # mmap_process = multiprocessing.Process(target=get_request_from_mmap_list, args=(request_list,))
+    # mmap_process.start()
     uvicorn.run(app,
                 host=args.host,
                 port=args.port,
