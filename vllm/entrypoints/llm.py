@@ -218,6 +218,7 @@ class LLM:
                             seq1.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
                             seq1.status = SequenceStatus.RUNNING
                             seqs.append(seq1)
+                            self.llm_engine.scheduler.block_manager.copy_block_tables(seq.seq_id, seq_id)
                         # Create the sequence group.
                         seq_group = SequenceGroup(next(self.request_counter), seqs, sampling_params,
                                                 arrival_time)

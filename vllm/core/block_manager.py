@@ -78,6 +78,10 @@ class BlockSpaceManager:
         # Mapping: seq_id -> BlockTable.
         self.block_tables: Dict[int, BlockTable] = {}
 
+    def copy_block_tables(self, org_seq_id, dest_seq_id):
+        if org_seq_id in self.block_tables:
+            self.block_tables[dest_seq_id] = self.block_tables[org_seq_id].copy()
+            
     def can_allocate(self, seq_group: SequenceGroup) -> bool:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
