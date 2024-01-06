@@ -209,7 +209,8 @@ def execute_125m_model():
         predict_event.wait() 
         execute_time = time.time()
         print("predict start execute time ", execute_time)
-        chunkrunner_125m.execute_predict(request_label, request_event, prefill_sched_batch)
+        # chunkrunner_125m.execute_predict(request_label, request_event, prefill_sched_batch)
+        chunkrunner_125m.execute_predict(request_label, request_event)
         predict_event.clear()
         predict_event.wait()     
 
