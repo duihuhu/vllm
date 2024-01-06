@@ -216,6 +216,7 @@ class LLM:
                             seq1.output_logprobs = seq.prefill_output_logprobs
                             seq1.output_text = seq.prefill_output_text
                             seq1.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
+                            seq1.prefill_block_table_number = copy.deepcopy(seq.prefill_block_table_number)
                             seq1.status = SequenceStatus.RUNNING
                             seqs.append(seq1)
                             self.llm_engine.scheduler.block_manager.copy_block_tables(seq.seq_id, seq_id)
