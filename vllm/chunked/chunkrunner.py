@@ -675,6 +675,10 @@ class ChunkRunner:
                     self.request125m_waiting.pop(0)
                     total = total + 1
         print("total  ", total)
+        if total == 16:
+            print(len(request_label))
+            print(request_label)
+            
         
     @torch.inference_mode()
     def execute_predict_model_batch(self, prompts, request_ids, request_label, request_event, max_len):
