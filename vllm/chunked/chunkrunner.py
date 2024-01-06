@@ -638,11 +638,14 @@ class ChunkRunner:
         prompts = []
         request_ids = []
         count = 0
+        print("count ", count)
         while self.request125m_waiting:
             seq125m = self.request125m_waiting[0]
             if seq125m.prompt_len >= max_len:
                 if seq125m.prompt_len * (count+1) > 1024:
                     self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
+                    prompts = []
+                    request_ids = []
                     max_len = 0
                 else:
                     max_len = seq125m.prompt_len
@@ -653,13 +656,16 @@ class ChunkRunner:
             else:
                 if max_len * (count+1) > 1024:
                     self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
+                    prompts = []
+                    request_ids = []
                     max_len = 0
                 else:
                     prompts.append(seq125m.prompt)
                     request_ids.append(seq125m.request_id)
                     count = count + 1
                     self.request125m_waiting.pop(0)
-        print("count ", count)       
+        print("count ", count)
+        
     @torch.inference_mode()
     def execute_predict_model_batch(self, prompts, request_ids, request_label, request_event, max_len):
         test_encoded = self.predict_tokenizer(prompts,
