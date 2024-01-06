@@ -39,8 +39,6 @@ fd = open(dp_md, "r+b")
 mm = mmap.mmap(fd.fileno(), 35 * 1024, access=mmap.ACCESS_WRITE, offset=0)
 
 def get_request_from_mmap(request_queue):
-    global decode_event
-    global mdecode_status
     hex_char = b'\x0F'
     # 判断内存
     prefill_nums = b'\x00'
@@ -57,6 +55,9 @@ def get_request_from_mmap(request_queue):
             add_time = time.time()
             print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
             already_num = already_num + 1
+            if already_num >= 128:
+                time.sleep(500)
+    
 
 
 # @app.post("/notify_mdecode")
@@ -72,9 +73,7 @@ def notify_mdecode_from_queue():
         engine.convert_req_label_status(request_info[0], request_info[1])
         mdecode_status = "decode"
         decode_event.set()
-
-
-
+        
 # @app.post("/notify_mdecode")
 def notify_mdecode():
     global decode_event
