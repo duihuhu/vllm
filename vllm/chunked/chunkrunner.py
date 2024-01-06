@@ -633,27 +633,44 @@ class ChunkRunner:
         elif prompt_len > 1792 and prompt_len <=2048:
             return 2048
         
-    def execute_predict(self, request_label, request_event, prefill_sched_batch):
+    def execute_predict(self, request_label, request_event):
+        max_len = []
         prompts = []
         request_ids = []
         count = 0
         while self.request125m_waiting:
-            seq125m = self.request125m_waiting.pop(0)
-            prompts.append(seq125m.prompt)
-            request_ids.append(seq125m.request_id)
-            count += 1
-            if count == prefill_sched_batch:
-                start_time = time.time()
-                self.execute_predict_model_in_section(prompts = prompts,
-                                                      request_ids = request_ids,
-                                                      request_label = request_label,
-                                                      request_event = request_event)
-                end_time = time.time()
-                print("execute_predict_model " , request_ids, start_time, end_time, end_time - start_time)
-                prompts.clear()
-                request_ids.clear()
-                count = 0
-    
+            seq125m = self.request125m_waiting[0]
+            if seq125m.prompt_len >= max_len:
+                if seq125m.prompt_len * (count+1) > 1024:
+                    self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
+                else:
+                    max_len = seq125m.prompt_len
+                    prompts.append(seq125m.prompt)
+                    request_ids.append(seq125m.request_id)
+                    count = count + 1
+                    self.request125m_waiting.pop(0)
+                    
+    @torch.inference_mode()
+    def execute_predict_model_batch(self, prompts, request_ids, request_label, request_event, max_len):
+        test_encoded = self.predict_tokenizer(prompts,
+                                        padding = "max_length", 
+                                        truncation = True, 
+                                        return_tensors = "pt", 
+                                        max_length = max_len)
+        # test_encoded = test_encoded.to("cuda:1")
+        test_encoded = {key: value.to("cuda:1") for key, value in test_encoded.items()}
+        
+        prediction = self.predict_model(input_ids = test_encoded['input_ids'], 
+                                         attention_mask = test_encoded['attention_mask'])
+        predicted_label = torch.argmax(prediction.logits, dim = 1).tolist()
+       
+        ## add to request labels for large model get
+        for request_id, label in zip(request_ids, predicted_label):
+            request_label[request_id] = label
+            if request_id in request_event:
+                event = request_event[request_id]
+                event.set()
+            
     def warmup(self,request_label):
         self.warm_predict_model("AAAA",1,"aaa")
         self.warm_predict_model("AAAA",1,"aaa")
