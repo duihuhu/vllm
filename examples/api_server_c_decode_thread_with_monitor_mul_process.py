@@ -102,7 +102,7 @@ def notify_mdecode_from_queue():
     # 读取内存映射区域的数据
 
     while True:
-        request_info = request_list.pop(0)
+        request_info = request_queue.get()
         arrive_time = time.time()
         print("decode get data " , request_info[0], arrive_time)
         engine.convert_req_label_status(request_info[0], request_info[1])
