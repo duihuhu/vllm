@@ -657,7 +657,7 @@ class ChunkRunner:
                     request_ids.append(seq125m.request_id)
                     count = count + 1
                     self.request125m_waiting.pop(0)
-                    
+        print("count ", count)       
                     
     @torch.inference_mode()
     def execute_predict_model_batch(self, prompts, request_ids, request_label, request_event, max_len):
