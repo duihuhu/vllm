@@ -562,7 +562,7 @@ class ChunkRunner:
                                             inputs_positions = input_positions_tensor,
                                             chunkmetadata = chunkinputmetadata)
                 end_time = time.time()
-                print(f"this chunk costs {end_time - start_time} seconds")
+                # print(f"this chunk costs {end_time - start_time} seconds")
                 output_num += len(chunk.do_sampling)
                 for i, id in enumerate(chunk.do_sampling):
                     self.all_job_sequences[id].add_first_token_id(output_token_list[i])
