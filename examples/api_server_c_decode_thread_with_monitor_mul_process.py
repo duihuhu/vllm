@@ -55,7 +55,7 @@ def get_request_from_mmap(request_queue):
             arrive_time = time.time()
             request_queue.put((request_id, label))
             add_time = time.time()
-            print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
+            print("process decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
             already_num = already_num + 1
 
 # def get_request_from_mmap_list(request_list):
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args)
-    
+   
     request_queue = multiprocessing.Queue()
     mmap_process = multiprocessing.Process(target=get_request_from_mmap, args=(request_queue,))
     mmap_process.start()

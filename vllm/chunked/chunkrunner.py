@@ -366,7 +366,7 @@ class ChunkRunner:
             #self.processed_chunks.append(chunk)
             #self.all_job_chunks.pop(0)
 
-        self._reduce_outputs()
+        self._reduce_outputs(num=-1)
         if self.all_job_chunks:
             self.all_job_chunks.clear()
         self.all_job_sequences.clear()
@@ -487,7 +487,7 @@ class ChunkRunner:
             chunk.set_sampling_params_for_sampler(sampling_params_for_sampler = sampling_params)
             chunk.set_do_sampling(do_sampling = do_sampling)
     
-    def _reduce_outputs(self) -> None:
+    def _reduce_outputs(self, num:int) -> None:
         #for _, sequence in self.job_sequences.items():
         #    for i in range(len(sequence.outputs)):
         #        if i != 0:
@@ -540,6 +540,7 @@ class ChunkRunner:
             # self.waiting_job_chunks.clear()
             
             output_num = 0
+            output_chunk = 0
             sended_request_id = set()
             # pass_time = 0
             num = 1
@@ -588,8 +589,10 @@ class ChunkRunner:
                 #self.processed_chunks.append(chunk)
             #self.all_job_chunks.clear()
                 if output_num == prefill_sched_batch:
-                    self._reduce_outputs()
+                    self._reduce_outputs(num=output_chunk)
                     output_num = 0
+                    output_chunk = 0
+                self._reduce_outputs(num=-1)
 
             print("mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
