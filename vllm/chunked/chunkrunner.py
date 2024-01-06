@@ -572,7 +572,8 @@ class ChunkRunner:
                 
                 for seq_id in chunk.do_sampling:
                     request_id = self.all_job_sequences[seq_id].request_id
-                    if request_id not in sended_request_id:
+                    print(f"seq id is {seq_id} and request_id is {request_id}")
+                    if request_id not in sended_request_id: 
                         # label = request_label.get(request_id)
                         # print(request_id, label)
                         self.find_decode_host(mdecode_info)
