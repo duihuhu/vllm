@@ -162,8 +162,8 @@ def init_mdecode_prefill():
 def startup_decode_event():
     threading.Thread(target=init_mdecode_prefill, daemon=True).start()
     # threading.Thread(target=notify_mdecode, daemon=True).start()
-    # threading.Thread(target=notify_mdecode_from_queue, daemon=True).start()
-    threading.Thread(target=notify_mdecode_from_list, daemon=True).start()
+    threading.Thread(target=notify_mdecode_from_queue, daemon=True).start()
+    # threading.Thread(target=notify_mdecode_from_list, daemon=True).start()
     threading.Thread(target=monitor_mdecode_info, args=(args.host, args.port) ,daemon=True).start()
 
 def post_monitor_request(monitor_url: str,
