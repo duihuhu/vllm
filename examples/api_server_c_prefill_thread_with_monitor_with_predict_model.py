@@ -103,6 +103,10 @@ async def mprefill_add_prefill(request_dict):
         chunkrunner.request_waiting[3].append(prompt)
         chunkrunner.request_waiting[4].append(len(prompt_token_ids))
 
+        event = threading.Event()
+        event.clear()
+        request_event[request_id] = event
+
     # for _ in range(len(prompts_token_ids_s)):
     #     sampling_params = ChunkSamplingParams(temperature = temperature, top_p = 1.0, top_k = -1)
     #     sampling_params_s.append(sampling_params)
