@@ -55,8 +55,6 @@ def get_request_from_mmap(request_queue):
             add_time = time.time()
             print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
             already_num = already_num + 1
-    
-
 
 # @app.post("/notify_mdecode")
 def notify_mdecode_from_queue():
