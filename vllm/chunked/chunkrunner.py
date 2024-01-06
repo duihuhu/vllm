@@ -634,7 +634,7 @@ class ChunkRunner:
             return 2048
         
     def execute_predict(self, request_label, request_event):
-        max_len = []
+        max_len = 0
         prompts = []
         request_ids = []
         count = 0
