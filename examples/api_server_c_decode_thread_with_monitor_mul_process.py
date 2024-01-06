@@ -55,8 +55,6 @@ def get_request_from_mmap(request_queue):
             add_time = time.time()
             print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
             already_num = already_num + 1
-            if already_num >= 128:
-                time.sleep(500)
     
 
 
