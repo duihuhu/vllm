@@ -161,7 +161,7 @@ class LLM:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                    print(output.outputs[0].token_ids)
+                    # print(output.outputs[0].token_ids)
                     # print(output)
                     if use_tqdm:
                         pbar.update(1)
@@ -193,7 +193,6 @@ class LLM:
                 for seq in seq_group.get_seqs():
                     
                     for i in range(10):
-                        request_id = random_uuid()
                         arrival_time = time.time()
                         sampling_params = SamplingParams(
                             n=1,
@@ -217,13 +216,14 @@ class LLM:
                             seq1.output_logprobs = seq.prefill_output_logprobs
                             seq1.output_text = seq.prefill_output_text
                             seq1.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
+                            seq1.status = SequenceStatus.RUNNING
                             seqs.append(seq1)
                         # Create the sequence group.
                         seq_group = SequenceGroup(next(self.request_counter), seqs, sampling_params,
                                                 arrival_time)
 
                         # Add the sequence group to the scheduler.
-                        self.llm_engine.scheduler.add_seq_group(seq_group)
+                        self.llm_engine.scheduler.add_running_seq_group(seq_group)
                         
             # for seq_group in self.llm_engine.scheduler.finished:
             #     for seq in seq_group.get_seqs():

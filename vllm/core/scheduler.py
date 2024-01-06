@@ -85,7 +85,10 @@ class Scheduler:
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
-
+        
+    def add_running_seq_group(self, seq_group: SequenceGroup) -> None:
+        self.running.append(seq_group)
+        
     def abort_seq_group(self, request_id: str) -> None:
         for state_queue in [self.waiting, self.running, self.swapped]:
             for seq_group in state_queue:
@@ -357,7 +360,6 @@ class Scheduler:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
-                print(block_tables[seq_id])
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
                 is_prompt=is_prompt,
