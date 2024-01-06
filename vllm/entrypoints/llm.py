@@ -201,6 +201,7 @@ class LLM:
                             top_p=1.0,
                             use_beam_search=False,
                             ignore_eos=True,
+                            max_tokens=seq_group.sampling_params.max_tokens
                         )
                             # Create the sequences.
                         block_size = self.llm_engine.cache_config.block_size
