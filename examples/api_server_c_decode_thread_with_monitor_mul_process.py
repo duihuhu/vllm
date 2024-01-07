@@ -53,7 +53,7 @@ def get_request_from_mmap(request_queue):
             request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
             arrive_time = time.time()
-            request_queue.put((request_id, label))
+            request_queue.put([request_id, label])
             add_time = time.time()
             print("process decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
             already_num = already_num + 1
