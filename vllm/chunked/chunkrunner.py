@@ -375,6 +375,7 @@ class ChunkRunner:
                 ALL_END = ALL_SIZE
             temp_sequences = Sequences[ALL_ST: ALL_END]
             if need_sort:
+                print(f"sort has been done while reverse if {is_reversed}")
                 temp_sequences = sorted(temp_sequences, key = lambda x: x.prompt_len, reverse = is_reversed)
             all_token_ids: List[int] = []
             all_token_seqs: List[str] = []
