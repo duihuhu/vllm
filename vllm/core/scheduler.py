@@ -82,6 +82,9 @@ class Scheduler:
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
         self.prefilled: List[SequenceGroup] = []
+        self.prefilled_resued: List[SequenceGroup] = []
+        
+        self.prefilled_dict: Dict[str, SequenceGroup] = {}
         
         self.last_logging_time: float = 0.0
         # List[timestamp, num_tokens]
@@ -94,6 +97,9 @@ class Scheduler:
     def add_mprefill_seq_group(self, seq_group: SequenceGroup) -> None:
         self.waiting_add.append(seq_group)
 
+    def add_to_waiting_prefilled(self, seq_group: SequenceGroup) -> None:
+        self.prefilled_resued.append(seq_group)
+        
     def abort_seq_group(self, request_id: str) -> None:
         for state_queue in [self.waiting, self.running, self.swapped]:
             for seq_group in state_queue:
@@ -218,11 +224,21 @@ class Scheduler:
             else:
                 prefilled.append(seq_group)
         self.prefilled = prefilled
-    
-    def convert_req_label_status(self, request_id, label):
+
+    def convert_req_label_status_dict(self, request_id, label, arrive_time):
+        if request_id in self.prefilled_dict:
+            seq_group = self.prefilled_dict.pop(request_id)
+            seq_group.arrival_time = arrive_time
+            seq_group.label = label
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.RUNNING  
+                self.running_waiting.append(seq_group)
+
+    def convert_req_label_status(self, request_id, label, arrive_time):
         prefilled: List[SequenceGroup] = []
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
+            seq_group.arrival_time = arrive_time
             if seq_group.request_id == request_id:
                 seq_group.label = label
                 for seq in seq_group.get_seqs():

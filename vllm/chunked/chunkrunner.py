@@ -647,6 +647,8 @@ class ChunkRunner:
         print("count ", count)
         while self.request125m_waiting:
             seq125m = self.request125m_waiting[0]
+            if max_len == 0:
+                max_len = seq125m.prompt_len
             if seq125m.prompt_len >= max_len:
                 if seq125m.prompt_len * (count+1) > 1024:
                     print(f"max situation {len(prompts)}")
@@ -676,6 +678,9 @@ class ChunkRunner:
                     count = count + 1
                     self.request125m_waiting.pop(0)
                     total = total + 1
+        if len(prompts) !=0:
+            self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
+            
         print("total  ", total)
         if total == 16:
             print(len(request_label))

@@ -330,8 +330,12 @@ class LLMEngine:
     def convert_reqs_status(self, request_ids):
         self.scheduler.convert_reqs_status(request_ids)
 
-    def convert_req_label_status(self, request_id, label):
-        self.scheduler.convert_req_label_status(request_id, label)
+    def convert_req_label_status(self, request_id, label, arrive_time):
+        self.scheduler.convert_req_label_status(request_id, label, arrive_time)
+
+    def convert_req_label_status_dict(self, request_id, label, arrive_time):
+        self.scheduler.convert_req_label_status_dict(request_id, label, arrive_time)
+
 
     def convert_reqs_status_by_num(self, request_num):
         self.scheduler.convert_reqs_status_by_num(request_num)

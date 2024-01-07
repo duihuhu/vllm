@@ -9,7 +9,8 @@ from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.logger import init_logger
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
-
+from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
+import copy
 logger = init_logger(__name__)
 
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds
@@ -60,6 +61,8 @@ class AsyncLLMEngine:
         self.is_engine_running = False
         self.kicking_request_id: Optional[str] = None
 
+        self.resued_request_ids = []
+        self.total_num_requests = 0
     async def engine_step(self, kicking_request_id: Optional[str] = None):
         """Kick the engine to process the waiting requests."""
         self.is_engine_running = True
@@ -84,21 +87,67 @@ class AsyncLLMEngine:
     def convert_reqs_status(self,request_ids: List[str]):
         self.engine.convert_reqs_status(request_ids)
         
-    def convert_req_label_status(self,request_id, label):
-        self.engine.convert_req_label_status(request_id, label)
+    def convert_req_label_status(self,request_id, label, arrive_time):
+        self.engine.convert_req_label_status(request_id, label, arrive_time)
 
+    def convert_req_label_status_dict(self,request_id, label, arrive_time):
+        self.engine.convert_req_label_status_dict(request_id, label, arrive_time)
+        
     def convert_reqs_status_by_num(self,request_num):
         self.engine.convert_reqs_status_by_num(request_num)
 
-    def generate_mdecode_prefill(self):
+    def copy_reused_seqs_info(self):
+        resued_time = len(self.resued_request_ids) / self.total_num_requests
+        for i in range(resued_time):
+            for seq_group in self.engine.scheduler.prefilled:
+                seqs: List[Sequence] = []    
+                for seq in seq_group.get_seqs():                
+                    arrival_time = time.time()
+                    sampling_params = SamplingParams(
+                        n=1,
+                        temperature=seq_group.sampling_params.temperature,
+                        top_p=1.0,
+                        use_beam_search=seq_group.sampling_params.use_beam_search,
+                        ignore_eos=True,
+                        max_tokens=seq_group.sampling_params.max_tokens
+                    )
+                    block_size = self.engine.cache_config.block_size
+                    for _ in range(sampling_params.best_of):
+                        seq_id = next(self.engine.seq_counter)
+                        seq1 = Sequence(seq_id, seq.prompt, seq.data.prompt_token_ids, block_size)
+                        seq1.data.output_token_ids = copy.deepcopy(seq.prefill_data.output_token_ids)
+                        seq1.data.cumulative_logprob = seq.prefill_data.cumulative_logprob
+                        seq1.output_logprobs = copy.deepcopy(seq.prefill_output_logprobs)
+                        seq1.output_tokens = copy.deepcopy(seq.prefill_output_tokens)
+                        seq1.logical_token_blocks.clear()
+                        seq1.output_logprobs = seq.prefill_output_logprobs
+                        seq1.output_text = seq.prefill_output_text
+                        seq1.logical_token_blocks = copy.deepcopy(seq.prefill_logical_token_blocks)
+                        seq1.prefill_block_table_number = copy.deepcopy(seq.prefill_block_table_number)
+                        seq1.status = SequenceStatus.PREFILLED
+                        seqs.append(seq1)
+                        self.engine.scheduler.block_manager.copy_block_tables(seq.seq_id, seq_id)
+                request_id = self.resued_request_ids.pop(0)
+                seq_group1 = SequenceGroup(request_id, seqs, sampling_params, arrival_time)
+                self.engine.scheduler.add_to_waiting_prefilled(seq_group1)
+        while self.engine.scheduler.prefilled_resued:
+            seq_group = self.engine.scheduler.prefilled_resued.pop(0)
+            self.engine.scheduler.prefilled.append(seq_group)
+            
+        for seq_group in self.engine.scheduler.prefilled:
+            self.engine.scheduler.prefilled_dict[seq_group.request_id] = seq_group
+            
+    def generate_mdecode_prefill(self, p_iteration_num):
         while self.engine.has_unfinished_requests():
             step_outputs = self.engine.step()
             # prefilled_num = self.engine.covert_running_to_prefilled()
             out_request_ids = [ output.request_id for output in step_outputs]
             self.engine.convert_outputs_reqs_status(out_request_ids)
             prefilled_num = len(out_request_ids)
+            if p_iteration_num + prefilled_num >= self.total_num_requests:
+                self.copy_reused_seqs_info()
             self.engine.send_mdecode_prefilled_controller(prefilled_num)
-            
+            return p_iteration_num + prefilled_num
             # print("mdecode!!: complish mdecode prefill request ", prefilled_num)
             
     def generate_decode(self):
@@ -138,6 +187,10 @@ class AsyncLLMEngine:
                                             sampling_param,
                                             prompt_token_ids=prompt_token_ids,
                                             arrival_time=arrival_time)        
+    def add_reused_request_ids(self, resued_request_ids: List[str]):
+        for request_id in resued_request_ids:
+            self.resued_request_ids.append(request_id)
+            
     def add_request(self,
         prompts: Optional[List[str]],
         output_lens: Optional[List[int]],

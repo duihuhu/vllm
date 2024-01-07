@@ -120,6 +120,13 @@ class Sequence:
         # Initialize the logical token blocks with the prompt token ids.
         self._append_tokens_to_blocks(prompt_token_ids)
         self.status = SequenceStatus.WAITING
+        
+        self.prefill_data = SequenceData(prompt_token_ids)
+        self.prefill_output_logprobs: List[Dict[int, float]] = []
+        self.prefill_output_tokens: List[str] = []
+        self.prefill_output_text = ""
+        self.prefill_block_table_number = []
+        self.prefill_logical_token_blocks = []
 
     def _append_logical_block(self) -> None:
         block = LogicalTokenBlock(
