@@ -268,6 +268,7 @@ class ChunkRunner:
         #print(f"Added in working pool at {now_time}")
         done = 0
         done_chunk = 0
+        st = 0
 
         start_time = time.time()
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
@@ -314,9 +315,11 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
                 #self.chunk_worker.job_sequences[id].set_end_time(end_time)
             if done == slot or done_chunk >= self.chunk_num:
-                self._reduce_outputs(slot = done_chunk)
+                ed = st + slot
+                self._reduce_outputs(st = st, ed = ed)
                 done_chunk = 0
                 done = 0
+                st = ed
   
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
@@ -442,13 +445,13 @@ class ChunkRunner:
 
             ALL_ST = ALL_END
     
-    def _reduce_outputs(self, slot: int) -> None:
+    def _reduce_outputs(self, st: int, ed: int) -> None:
         #for _, sequence in self.job_sequences.items():
         #    for i in range(len(sequence.outputs)):
         #        if i != 0:
         #            sequence.outputs[0] = torch.cat((sequence.outputs[0], sequence.outputs[i]), 0)
         # free all chunks' cache
-        for chunk in self.all_job_chunks[0: slot]:
+        for chunk in self.all_job_chunks[st: ed]:
             self.cacheblock.free_block(block = chunk.cache_block)
             chunk.chunk_status = ChunkStatus.PREFILLED
     
