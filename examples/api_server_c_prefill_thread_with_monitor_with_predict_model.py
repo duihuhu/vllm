@@ -123,7 +123,7 @@ async def mprefill_add_prefill(request_dict):
         for i in range(8):
             sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*16:(i+1)*16], chunkrunner.request_waiting[1][i*16:(i+1)*16],
                                     chunkrunner.request_waiting[2][i*16:(i+1)*16], chunkrunner.request_waiting[3][i*16:(i+1)*16],
-                                    chunkrunner.request_waiting[4][i*16:(i+1)*16]), key=lambda x: x[4])
+                                    chunkrunner.request_waiting[4][i*16:(i+1)*16]), key=lambda x: x[4], reverse=True)
             sort0 , sort1, sort2, sort3, sort4 = zip(*sorted_request_waiting)
             chunkrunner.request_waiting[0][i*16:(i+1)*16] = sort0
             chunkrunner.request_waiting[1][i*16:(i+1)*16] = sort1
@@ -221,7 +221,7 @@ def execute_125m_model():
         execute_time = time.time()
         print("predict start execute time ", execute_time)
         # chunkrunner_125m.execute_predict(request_label, request_event, prefill_sched_batch)
-        # chunkrunner_125m.execute_predict(request_label, request_event)
+        chunkrunner_125m.execute_predict(request_label, request_event)
         predict_event.clear()
         predict_event.wait()     
 
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     thread_13b = threading.Thread(target = execute_13b_model)
     thread_125m = threading.Thread(target = execute_125m_model)
     thread_13b.start()
-    thread_125m.start()
+    # thread_125m.start()
     
     
     # mmap_warm()
