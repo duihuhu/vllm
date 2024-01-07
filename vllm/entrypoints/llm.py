@@ -154,16 +154,16 @@ class LLM:
         # iteration_time = []
         while self.llm_engine.has_unfinished_requests():
             #print("interation: ", interation)
-            iteration_start = time.time()
+            # iteration_start = time.time()
             step_outputs = self.llm_engine.step()
             # step_outputs = self.llm_engine.mdecode_step()
-            iteartion_end = time.time()
-            print("iteration " , iteartion_end-iteration_start)
+            # iteartion_end = time.time()
+            # print("iteration " , iteartion_end-iteration_start)
             # iteration_time.append(iteartion_end-iteration_start)
             # interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
-                    print(f"req {output.request_id} is finished", time.time()-st, output.outputs[0].finish_reason)
+                    # print(f"req {output.request_id} is finished", time.time()-st, output.outputs[0].finish_reason)
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
