@@ -495,9 +495,10 @@ class ChunkRunner:
         # free all chunks' cache
         for chunk in self.all_job_chunks:
             #chunk = self.processed_chunks.pop(0)
-            self.cacheblock.free_block(block = chunk.cache_block)
-            chunk.chunk_status = ChunkStatus.PREFILLED
-        self.all_job_chunks.clear()
+            if chunk.chunk_status != ChunkStatus.PREFILLED:
+                self.cacheblock.free_block(block = chunk.cache_block)
+                chunk.chunk_status = ChunkStatus.PREFILLED
+        # self.all_job_chunks.clear()
 
     #todo
     def find_decode_host(self,mdecode_info):
