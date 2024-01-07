@@ -506,14 +506,14 @@ class ChunkRunner:
     def write_to_mdispatcher(self, prefill_nums, num, request_id, request_label, mm, request_event):
         label = 0
         start_time = time.time()
-        while True:
-            if request_id in request_label:
-                end_time = time.time()
-                print("request id found use time " , end_time-start_time)
-                label = request_label[request_id]
-                break
-            else:
-                event = request_event[request_id]
+        # while True:
+        #     if request_id in request_label:
+        #         end_time = time.time()
+        #         print("request id found use time " , end_time-start_time)
+        #         label = request_label[request_id]
+        #         break
+        #     else:
+        #         event = request_event[request_id]
                 #request_event[request_id] = event
                 #event.wait()
                 # print("request id not found ", request_id)
@@ -578,8 +578,8 @@ class ChunkRunner:
                         # print(request_id, label)
                         self.find_decode_host(mdecode_info)
                         prefill_nums += 1
-                        # threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
-                        #                                                         , request_label ,mm, request_event)).start()
+                        threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
+                                                                                , request_label ,mm, request_event)).start()
                         #put in thread
                         # combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
                         # print("combined_info_bytes ", len(combined_info_bytes))
