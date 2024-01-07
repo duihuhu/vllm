@@ -54,8 +54,9 @@ def get_request_from_mmap(request_queue):
             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
             arrive_time = time.time()
             request_queue.put([request_id, label])
+            time.sleep(0.000005)
             add_time = time.time()
-            print("process decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
+            print("process decode get data " , request_id, arrive_time, add_time, add_time-arrive_time, "\n")
             already_num = already_num + 1
 
 # def get_request_from_mmap_list(request_list):
@@ -104,7 +105,7 @@ def notify_mdecode_from_queue():
     while True:
         request_info = request_queue.get()
         arrive_time = time.time()
-        print("decode get data " , request_info[0], arrive_time)
+        print("queue decode get data " , request_info[0], arrive_time, "\n")
         engine.convert_req_label_status(request_info[0], request_info[1])
         mdecode_status = "decode"
         decode_event.set()
@@ -232,6 +233,8 @@ if __name__ == "__main__":
     engine = AsyncLLMEngine.from_engine_args(engine_args)
    
     request_queue = multiprocessing.Queue()
+    request_queue.put([0,0])
+    request_queue.get()
     mmap_process = multiprocessing.Process(target=get_request_from_mmap, args=(request_queue,))
     mmap_process.start()
     
