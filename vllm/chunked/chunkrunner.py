@@ -315,7 +315,7 @@ class ChunkRunner:
                 #self.chunk_worker.job_sequences[id].add_first_token_logprob(logprobs[i])
                 #self.chunk_worker.job_sequences[id].set_end_time(end_time)
             if done == slot or done_chunk >= self.chunk_num:
-                ed = st + slot
+                ed = st + done
                 self._reduce_outputs(st = st, ed = ed)
                 done_chunk = 0
                 done = 0
