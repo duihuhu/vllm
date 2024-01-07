@@ -867,6 +867,7 @@ class Scheduler:
         # over sequence groups with a single sequence.
         # TODO(woosuk): Support recomputation for sequence groups with multiple
         # sequences. This may require a more sophisticated CUDA kernel.
+        print("has preempt ")
         if preemption_mode is None:
             seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
             if len(seqs) == 1:
