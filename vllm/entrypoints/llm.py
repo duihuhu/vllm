@@ -163,7 +163,7 @@ class LLM:
             # interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
-                    # print(f"req {output.request_id} is finished", time.time()-st, output.outputs[0].finish_reason)
+                    print(f"req {output.request_id} is finished", time.time()-st, " first token time: ", output.first_token_time, " finished reason ", output.outputs[0].finish_reason)
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)

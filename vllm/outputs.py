@@ -69,6 +69,8 @@ class RequestOutput:
         self.prompt_token_ids = prompt_token_ids
         self.outputs = outputs
         self.finished = finished
+        
+        self.first_token_time = None
 
     @classmethod
     def from_seq_group(cls, seq_group: SequenceGroup) -> "RequestOutput":

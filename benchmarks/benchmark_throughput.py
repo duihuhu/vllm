@@ -116,9 +116,14 @@ def run_vllm(
         len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
         for output in outputs
     )
+    total_decode_num_tokens = sum(
+         len(output.outputs[0].token_ids)
+        for output in outputs
+    )
     print(f"End start is {start}, End end is {end}")
     print("total_num_reqs: ", len(outputs))
     print("total_num_tokens: ", total_num_tokens)
+    print("total_decode_num_tokens: ", total_decode_num_tokens)
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
          f"{total_num_tokens / elapsed_time:.2f} tokens/s")
 
