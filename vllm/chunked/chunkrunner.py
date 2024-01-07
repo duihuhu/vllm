@@ -372,6 +372,7 @@ class ChunkRunner:
         self.all_job_sequences.clear()
         self.all_total_sequences.clear()
         self.sequence_counter.reset()
+        self.counter.reset()
         #self.all_job_chunks.clear()
         #self.chunk_worker.reduce_outputs()
         #self.chunk_worker.generate_first_token_id()
@@ -422,7 +423,7 @@ class ChunkRunner:
                 break
     
     def _set_job_chunks(self) -> None:
-        self.counter.reset()
+        # self.counter.reset()
         all_token_ids: List[int] = []
         all_token_seqs: List[int] = []
         for sequence in self.all_job_sequences:
@@ -546,6 +547,8 @@ class ChunkRunner:
             # pass_time = 0
             num = 1
             for chunk in self.all_job_chunks:
+                if chunk.chunk_status == ChunkStatus.PREFILLED:
+                    continue
                 start_time = time.time()
                 chunk.chunk_status = ChunkStatus.RUNNING
                 if chunk.cache_block is None:
@@ -592,7 +595,7 @@ class ChunkRunner:
                 #self.processed_chunks.append(chunk)
             #self.all_job_chunks.clear()
                 if output_num == prefill_sched_batch:
-                    total_num += output_num
+                    # total_num += output_num
                     self._reduce_outputs()
                     output_num = 0
             #print(f"now {total_num} reqs have been finished")
