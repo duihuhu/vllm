@@ -578,8 +578,8 @@ class ChunkRunner:
                         # print(request_id, label)
                         self.find_decode_host(mdecode_info)
                         prefill_nums += 1
-                        threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
-                                                                                , request_label ,mm, request_event)).start()
+                        # threading.Thread(target=self.write_to_mdispatcher, args=(prefill_nums, num, request_id
+                        #                                                         , request_label ,mm, request_event)).start()
                         #put in thread
                         # combined_info_bytes = prefill_nums.to_bytes(1, byteorder='big') + num.to_bytes(1, byteorder='big') + request_id.encode("utf-8") + label.to_bytes(1, byteorder='big')
                         # print("combined_info_bytes ", len(combined_info_bytes))
