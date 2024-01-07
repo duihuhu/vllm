@@ -269,6 +269,7 @@ class ChunkRunner:
         done_chunk = 0
 
         start_time = time.time()
+        print(f"Has {len(self.all_job_chunks)} chunks in total")
         for i, chunk in enumerate(self.all_job_chunks): #for chunk in self.chunk_worker.job_chunks:
             #start_time = time.time()
             
