@@ -123,7 +123,7 @@ async def mprefill_add_prefill(request_dict):
         for i in range(4):
             sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*32:(i+1)*32], chunkrunner.request_waiting[1][i*32:(i+1)*32],
                                     chunkrunner.request_waiting[2][i*32:(i+1)*32], chunkrunner.request_waiting[3][i*32:(i+1)*32],
-                                    chunkrunner.request_waiting[4][i*32:(i+1)*32]), key=lambda x: x[4])
+                                    chunkrunner.request_waiting[4][i*32:(i+1)*32]), key=lambda x: x[4], reverse=True)
             sort0 , sort1, sort2, sort3, sort4 = zip(*sorted_request_waiting)
             chunkrunner.request_waiting[0][i*32:(i+1)*32] = sort0
             chunkrunner.request_waiting[1][i*32:(i+1)*32] = sort1
