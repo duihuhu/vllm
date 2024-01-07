@@ -497,8 +497,9 @@ class ChunkRunner:
         for chunk in self.all_job_chunks:
             #chunk = self.processed_chunks.pop(0)
             if chunk.chunk_status != ChunkStatus.PREFILLED:
-                self.cacheblock.free_block(block = chunk.cache_block)
-                chunk.chunk_status = ChunkStatus.PREFILLED
+                if chunk.cache_block is not None:
+                    self.cacheblock.free_block(block = chunk.cache_block)
+                    chunk.chunk_status = ChunkStatus.PREFILLED
         # self.all_job_chunks.clear()
 
     #todo
@@ -568,7 +569,8 @@ class ChunkRunner:
                                             chunkmetadata = chunkinputmetadata)
                 end_time = time.time()
                 # print(f"this chunk costs {end_time - start_time} seconds")
-                output_num += len(chunk.do_sampling)
+                # output_num += len(chunk.do_sampling)
+                output_num += 1
                 for i, id in enumerate(chunk.do_sampling):
                     self.all_job_sequences[id].add_first_token_id(output_token_list[i])
                     self.all_job_sequences[id].add_first_token_logprob(logprobs[i])
@@ -594,7 +596,7 @@ class ChunkRunner:
                         # time.sleep(0.000005)
                 #self.processed_chunks.append(chunk)
             #self.all_job_chunks.clear()
-                if output_num == prefill_sched_batch:
+                if output_num == self.chunk_num:
                     # total_num += output_num
                     self._reduce_outputs()
                     output_num = 0
