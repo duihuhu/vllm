@@ -651,7 +651,7 @@ class ChunkRunner:
                 max_len = seq125m.prompt_len 
             if seq125m.prompt_len >= max_len:
                 if seq125m.prompt_len * (count+1) > 1024:
-                    print(f"max situation {len(prompts)}")
+                    # print(f"max situation {len(prompts)}")
                     self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
                     prompts = []
                     request_ids = []
@@ -666,7 +666,7 @@ class ChunkRunner:
                     total = total + 1
             else:
                 if max_len * (count+1) > 1024:
-                    print(f"non max situation {len(prompts)}")
+                    # print(f"non max situation {len(prompts)}")
                     self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
                     prompts = []
                     request_ids = []
@@ -681,9 +681,9 @@ class ChunkRunner:
         if len(prompts) !=0:
             self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
         print("total  ", total)
-        if total == 16:
-            print(len(request_label))
-            print(request_label)
+        # if total == 16:
+            # print(len(request_label))
+            # print(request_label)
             
         
     @torch.inference_mode()
