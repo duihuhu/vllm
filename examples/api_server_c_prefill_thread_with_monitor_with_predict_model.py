@@ -26,7 +26,7 @@ request_label = {}
 request_event = {}
 
 mdecode_info = {}
-prefill_sched_batch = 16
+prefill_sched_batch = 32
 app = FastAPI()
 
 mp_dp = 'mprefill_to_mdispatcher.txt'
