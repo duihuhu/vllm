@@ -191,15 +191,15 @@ class Scheduler:
             # must can
             seq_group = self.running_stay.pop()
             running.append(seq_group)
-            total_resource -= seq_group.seqs[0].data.get_len
+            total_resource -= seq_group.seqs[0].data.get_len()
 
             length = len(self.running_stay)
             count = 0    
             while self.running_stay:
                 seq_group = self.running_stay[0]
-                if seq_group.seqs[0].data.get_len <= total_resource:
+                if seq_group.seqs[0].data.get_len() <= total_resource:
                     input_seq_group = self.running_stay.pop(0)
-                    total_resource -= input_seq_group.seqs[0].data.get_len
+                    total_resource -= input_seq_group.seqs[0].data.get_len()
                     running.append(input_seq_group)
                 count += 1
                 if count == length:
@@ -210,7 +210,7 @@ class Scheduler:
         elif len(self.running) != 0 and len(self.running_stay) != 0:
             extend_running: List[SequenceGroup] = []
 
-            num_batched_tokens = sum(seq_group.seqs[0].data.get_len for seq_group in self.running)
+            num_batched_tokens = sum(seq_group.seqs[0].data.get_len() for seq_group in self.running)
             available = self.scheduler_config.max_num_batched_tokens - num_batched_tokens
             
             max_need = []
@@ -218,7 +218,7 @@ class Scheduler:
                 max_need.append(seq_group.resoucre_need)
             allocate = []
             for seq_group in self.running:
-                allocate.append(seq_group.seqs[0].data.get_len)
+                allocate.append(seq_group.seqs[0].data.get_len())
             cur_max_tokens = -1
             for seq_group in self.running:
                 cur_max_tokens = max(cur_max_tokens, seq_group.resoucre_need)
