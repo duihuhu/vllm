@@ -120,7 +120,7 @@ def run_vllm(
          len(output.outputs[0].token_ids)
         for output in outputs
     )
-    print(f"End start is {start}, End end is {end}")
+    print(f"End start is {start}, End end is {end}", end-start)
     print("total_num_reqs: ", len(outputs))
     print("total_num_tokens: ", total_num_tokens)
     print("total_decode_num_tokens: ", total_decode_num_tokens)
