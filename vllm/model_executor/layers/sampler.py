@@ -95,7 +95,7 @@ class Sampler(nn.Module):
         #sl5 = ed5 - st5
 
         # Apply top-p and top-k truncation.
-        st6 = time.time()
+        #st6 = time.time()
         top_ps, top_ks = _get_top_p_top_k(input_metadata, self.vocab_size)
         assert len(top_ps) == len(top_ks) == probs.shape[0]
         do_top_p = any(p < 1.0 - _SAMPLING_EPS for p in top_ps)
@@ -103,7 +103,7 @@ class Sampler(nn.Module):
         if do_top_p or do_top_k:
             probs = _apply_top_p_top_k(probs, top_ps, top_ks)
         ed6 = time.time()
-        sl6 = ed6 - st6
+        #sl6 = ed6 - st6
 
         '''print(f"sl1 {sl1}")
         print(f"sl2 {sl2}")

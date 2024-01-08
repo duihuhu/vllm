@@ -207,7 +207,7 @@ class Scheduler:
             
             self.running = running
         
-        if len(self.running) != 0 and len(self.running_stay) != 0:
+        elif len(self.running) != 0 and len(self.running_stay) != 0:
             extend_running: List[SequenceGroup] = []
 
             num_batched_tokens = sum(seq_group.seqs[0].data.get_len for seq_group in self.running)
