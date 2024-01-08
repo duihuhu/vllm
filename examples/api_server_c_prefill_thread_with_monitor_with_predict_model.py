@@ -26,7 +26,7 @@ request_label = {}
 request_event = {}
 
 mdecode_info = {}
-prefill_sched_batch = 128
+prefill_sched_batch = 16
 app = FastAPI()
 
 mp_dp = 'mprefill_to_mdispatcher.txt'
@@ -121,15 +121,15 @@ async def mprefill_add_prefill(request_dict):
         execute_time = time.time()
         print("prefill start execute time ", execute_time)
         for i in range(1):
-            sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*128:(i+1)*128], chunkrunner.request_waiting[1][i*128:(i+1)*128],
-                                    chunkrunner.request_waiting[2][i*128:(i+1)*128], chunkrunner.request_waiting[3][i*128:(i+1)*128],
-                                    chunkrunner.request_waiting[4][i*128:(i+1)*128]), key=lambda x: x[4])
+            sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*16:(i+1)*16], chunkrunner.request_waiting[1][i*16:(i+1)*16],
+                                    chunkrunner.request_waiting[2][i*16:(i+1)*16], chunkrunner.request_waiting[3][i*16:(i+1)*16],
+                                    chunkrunner.request_waiting[4][i*16:(i+1)*16]), key=lambda x: x[4])
             sort0 , sort1, sort2, sort3, sort4 = zip(*sorted_request_waiting)
-            chunkrunner.request_waiting[0][i*128:(i+1)*128] = sort0
-            chunkrunner.request_waiting[1][i*128:(i+1)*128] = sort1
-            chunkrunner.request_waiting[2][i*128:(i+1)*128] = sort2
-            chunkrunner.request_waiting[3][i*128:(i+1)*128] = sort3
-            chunkrunner.request_waiting[4][i*128:(i+1)*128] = sort4
+            chunkrunner.request_waiting[0][i*16:(i+1)*16] = sort0
+            chunkrunner.request_waiting[1][i*16:(i+1)*16] = sort1
+            chunkrunner.request_waiting[2][i*16:(i+1)*16] = sort2
+            chunkrunner.request_waiting[3][i*16:(i+1)*16] = sort3
+            chunkrunner.request_waiting[4][i*16:(i+1)*16] = sort4
         
         # chunkrunner.request_waiting[0],  chunkrunner.request_waiting[1] ,  chunkrunner.request_waiting[2], chunkrunner.request_waiting[3] , chunkrunner.request_waiting[4] =zip(*sorted_request_waiting)
         execute_time_end = time.time()
