@@ -121,6 +121,8 @@ class Sequence:
         self._append_tokens_to_blocks(prompt_token_ids)
         self.status = SequenceStatus.WAITING
 
+        self.waiting_time = 0
+        
     def _append_logical_block(self) -> None:
         block = LogicalTokenBlock(
             block_number=len(self.logical_token_blocks),
@@ -210,7 +212,7 @@ class SequenceGroup:
         self.sampling_params = sampling_params
         self.arrival_time = arrival_time
         self.label = label
-
+        
     def get_seqs(
         self,
         status: Optional[SequenceStatus] = None,

@@ -219,12 +219,13 @@ class Scheduler:
                 prefilled.append(seq_group)
         self.prefilled = prefilled
     
-    def convert_req_label_status(self, request_id, label):
+    def convert_req_label_status(self, request_id, label, arrive_time):
         prefilled: List[SequenceGroup] = []
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
             if seq_group.request_id == request_id:
                 seq_group.label = label
+                seq_group.arrival_time = arrive_time
                 for seq in seq_group.get_seqs():
                     seq.status = SequenceStatus.RUNNING  
                 self.running_waiting.append(seq_group)
@@ -540,8 +541,11 @@ class Scheduler:
         # groups to preempt.
         if self.running_waiting:
             while self.running_waiting:
-                seq_group = self.running_waiting.pop(0)
-                self.running.append(seq_group)
+                seq_group = self.running_waiting[0]
+                cur_time = time.time()
+                if cur_time - seq_group.arrival_time >= seq_group.seqs[0].waiting_time: 
+                    seq_group = self.running_waiting.pop(0)
+                    self.running.append(seq_group)
                 # add_to_running = time.time()
                 # print("decode add_to_running ", seq_group.request_id, add_to_running)
                 

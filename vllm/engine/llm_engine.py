@@ -198,6 +198,7 @@ class LLMEngine:
         for _ in range(sampling_params.best_of):
             seq_id = next(self.seq_counter)
             seq = Sequence(seq_id, prompt, prompt_token_ids, block_size)
+            seq.waiting_time = ((len(prompt_token_ids) + 1) * 4 * 40 * 5120)/(1024*1024*1024*25)
             seqs.append(seq)
 
         # Create the sequence group.
@@ -330,8 +331,8 @@ class LLMEngine:
     def convert_reqs_status(self, request_ids):
         self.scheduler.convert_reqs_status(request_ids)
 
-    def convert_req_label_status(self, request_id, label):
-        self.scheduler.convert_req_label_status(request_id, label)
+    def convert_req_label_status(self, request_id, label, arrive_time):
+        self.scheduler.convert_req_label_status(request_id, label, arrive_time)
 
     def convert_reqs_status_by_num(self, request_num):
         self.scheduler.convert_reqs_status_by_num(request_num)
