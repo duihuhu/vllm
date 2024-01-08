@@ -268,7 +268,7 @@ if __name__ == "__main__":
     thread_13b = threading.Thread(target = execute_13b_model)
     thread_125m = threading.Thread(target = execute_125m_model)
     thread_13b.start()
-    # thread_125m.start()
+    thread_125m.start()
     
     
     # mmap_warm()
