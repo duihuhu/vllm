@@ -656,13 +656,14 @@ class ChunkRunner:
             if max_len == 0:
                 max_len = seq125m.prompt_len 
             if seq125m.prompt_len >= max_len:
-                if seq125m.prompt_len * (count+1) >= 1024:
+                if seq125m.prompt_len * (count+1) > 1024:
                     # print(f"max situation {len(prompts)}")
-                    if seq125m.prompt_len >= 1024 and count == 0:
+                    if seq125m.prompt_len > 1024 and count == 0:
                         prompts.append(seq125m.prompt)
                         count = count + 1
                         max_len = seq125m.prompt_len
                         request_ids.append(seq125m.request_id)
+                        self.request125m_waiting.pop(0)
                     # else:
                     #     print("execute_predict_model_batch ",  max_len, count, len(prompts))
                     self.execute_predict_model_batch(prompts, request_ids, request_label, request_event, max_len)
