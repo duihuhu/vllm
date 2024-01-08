@@ -163,6 +163,8 @@ class LLM:
             # interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
+                    end_time = time.time()
+                    output.end_time = end_time                    
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
@@ -208,5 +210,5 @@ class LLM:
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
         for output in outputs:
-            print(f"req {output.request_id} is finished", time.time()-st, " first token time: ", output.first_token_time-st, " finished reason ", output.outputs[0].finish_reason)
+            print(f"req {output.request_id} is finished", output.end_time-st, " first token time: ", output.first_token_time-st, " finished reason ", output.outputs[0].finish_reason)
         return outputs

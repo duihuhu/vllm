@@ -417,8 +417,9 @@ class LLMEngine:
             # print("iteration time ", end_time-start_time)
             for output in step_outputs:
                 if output.finished:
-                    outputs.append(output)
                     end_time = time.time()
+                    output.end_time = end_time
+                    outputs.append(output)
                     print("decode complish ", output.request_id, end_time, end_time-s_time, output.outputs[0].finish_reason)
                     
 

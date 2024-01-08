@@ -71,6 +71,7 @@ class RequestOutput:
         self.finished = finished
         
         self.first_token_time = None
+        self.end_time = None
 
     @classmethod
     def from_seq_group(cls, seq_group: SequenceGroup) -> "RequestOutput":
