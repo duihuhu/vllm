@@ -128,7 +128,7 @@ def notify_mdecode():
             request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
             request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
-            arrive_time = time.time()
+            # arrive_time = time.time()
             # print("decode get data " , request_id, start, end, end-start)
             # print("mdecode recv signal from mprefill ", time.time())
             # print("request info ", request_id, request_num, label, time.time())
@@ -136,7 +136,7 @@ def notify_mdecode():
             # engine.convert_reqs_status_by_num(request_num)
             # engine.convert_reqs_status(request_id)
             engine.convert_req_label_status(request_id, label)
-            add_time = time.time()
+            # add_time = time.time()
             # print("decode get data " , request_id, arrive_time, add_time, add_time-arrive_time)
 
             mdecode_status = "decode"
@@ -148,6 +148,8 @@ def notify_mdecode():
 
 def init_mdecode_prefill():
     global mdecode_status
+    total_time = 0
+    accomplish_request_num = 0
     while True:
         # print("init_mdecode_prefill ", mdecode_status)
         if mdecode_status == "init_mdecode_prefill":
@@ -155,7 +157,14 @@ def init_mdecode_prefill():
             results_generator = engine.generate_mdecode_prefill()
         elif mdecode_status == "decode":
             print("status is chanage, mdecode start exec decode", mdecode_status)
-            engine.generate_decode()
+            start_time = time.time()
+            acc_complish = engine.generate_decode()
+            end_time = time.time()
+            accomplish_request_num = accomplish_request_num + acc_complish 
+            # print("decode time ", start_time, end_time ,start_time-end_time)
+            total_time = total_time + end_time-start_time
+        if accomplish_request_num == 128:
+            print("machine decode accomplish time ", total_time)
         decode_event.clear()
         decode_event.wait()
         
