@@ -508,11 +508,11 @@ class ChunkRunner:
     
     def write_to_mdispatcher(self, prefill_nums, num, request_id, request_label, mm, request_event):
         label = 0
-        start_time = time.time()
+        # start_time = time.time()
         while True:
             if request_id in request_label:
-                end_time = time.time()
-                print("request id found use time " , end_time-start_time)
+                # end_time = time.time()
+                # print("request id found use time " , end_time-start_time)
                 label = request_label[request_id]
                 break
             else:
