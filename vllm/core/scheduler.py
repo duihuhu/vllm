@@ -228,7 +228,7 @@ class Scheduler:
             count = 0
             while self.running_stay:
                 seq_group = self.running_stay[0]
-                if seq_group.seqs[0].get_len >= cur_max_tokens:
+                if seq_group.seqs[0].get_len() >= cur_max_tokens:
                     continue
                 
                 max_need.append(seq_group.resoucre_need)
