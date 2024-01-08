@@ -163,7 +163,7 @@ def init_mdecode_prefill():
             accomplish_request_num = accomplish_request_num + acc_complish 
             # print("decode time ", start_time, end_time ,start_time-end_time)
             total_time = total_time + end_time-start_time
-        if accomplish_request_num == 32:
+        if accomplish_request_num == 128:
             print("machine decode accomplish time ", time.time(), total_time)
         decode_event.clear()
         decode_event.wait()
