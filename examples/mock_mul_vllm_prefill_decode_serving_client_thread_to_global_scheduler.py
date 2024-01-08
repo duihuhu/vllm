@@ -31,7 +31,7 @@ request_prompts_token_ids = {}
 request_prompts = {}
 
 mdecode_prefilled_num = 0
-total_requests = 32
+total_requests = 128
 # batch_size = 4
 
 # prefilled_event = asyncio.Event()
@@ -87,7 +87,7 @@ async def post_prefill_exec(prompts: List[str],
     prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
-    batch_size = 32
+    batch_size = 128
     alread_send = 0
     while alread_send <= num_prompts:
         # if alread_send == 0:
