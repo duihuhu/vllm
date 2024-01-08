@@ -95,7 +95,7 @@ def run_vllm(
             prompt = None,
             prompt_token_ids = prompt_token_ids,
             sampling_params=sampling_params,
-            resource_need = resource_need
+            resoucre_need =  resource_need
         )
 
 
