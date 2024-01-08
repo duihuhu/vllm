@@ -52,10 +52,10 @@ def get_request_from_mmap(request_queue):
             request_num = int.from_bytes(mm[(already_num*35):(already_num*35+1)], byteorder='big')
             request_id = mm[(already_num*35+1):(already_num*35+33)].decode("utf-8")
             label = int.from_bytes(mm[(already_num*35+33):(already_num*35+34)], byteorder='big')
-            arrive_time = time.time()
+            # arrive_time = time.time()
             request_queue.put([request_id, label])
             # time.sleep(0.000005)
-            add_time = time.time()
+            # add_time = time.time()
             # print("process decode get data " , request_id, arrive_time, add_time, add_time-arrive_time, "\n")
             already_num = already_num + 1
 
@@ -104,7 +104,7 @@ def notify_mdecode_from_queue():
 
     while True:
         request_info = request_queue.get()
-        arrive_time = time.time()
+        # arrive_time = time.time()
         # print("queue decode get data " , request_info[0], arrive_time, "\n")
         engine.convert_req_label_status(request_info[0], request_info[1])
         mdecode_status = "decode"
