@@ -72,7 +72,7 @@ class Scheduler:
         self.waiting: List[SequenceGroup] = []
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
-        # self.running_stay: List[SequenceGroup] = []
+        self.running_stay: List[SequenceGroup] = []
         
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
@@ -121,16 +121,49 @@ class Scheduler:
             self.prefilled.append(seq_group)
             # print(f"req {seq_group.request_id} is finished prefill ", time.time())
 
+    def covert_prefilled_to_running_stay(self):
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            for seq in seq_group.get_seqs():
+                seq.status = SequenceStatus.RUNNING
+            self.running_stay.append(seq_group)
 
-    def _schedule(
-            self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
+    def calculateNeed(need: List[int], 
+                      max_need: List[int], 
+                      allocate: List[int]) -> None:
+        for i in range(len(max_need)):
+            need[i] = max_need[i] - allocate[i]
 
-        # total_num_gpu_blocks = self.cache_config.num_gpu_blocks
-        # num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-        # num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
-        # gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
+    def is_safe(self, 
+                seqs: int, 
+                available: int, 
+                max_need: List[int], 
+                allocate: List[int]) -> bool:
+        need = [0] * seqs
+        self.calculateNeed(need, max_need, allocate)
 
-        # print(total_num_gpu_blocks, num_free_gpu_blocks, num_used_gpu_blocks, gpu_cache_usage)
+        finish = [0] * seqs
+        work = available
+
+        count = 0
+        while count < seqs:
+            found = False
+            for p in range(seqs):
+                if finish[p] == 0:
+                    can = True
+                    if need[p] > work:
+                        can = False
+                    if can:
+                        work += allocate[p]
+                        count += 1
+                        finish[p] = 1
+                        found = True
+            if found == False:
+                return False
+        
+        return True
+
+    def _schedule(self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
 
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
@@ -140,9 +173,6 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        # while self.running_stay:
-        #     seq_group = self.running_stay.pop(0)
-        #     self.running.append(seq_group)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -150,19 +180,78 @@ class Scheduler:
         # the sequence groups in the RUNNING state.
         # In this case, the policy is responsible for deciding which sequence
         # groups to preempt.
-        self.running = self.policy.sort_by_priority(now, self.running)
+        
+        self.running = self.policy.sort_by_priority(now, self.running)    
 
-        # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
+        if len(self.running) == 0 and len(self.running_stay) != 0:
+            running: List[SequenceGroup] = []
+            total_resource = self.scheduler_config.max_num_batched_tokens
+            self.running_stay.sort(key = lambda x: x.resoucre_need)
+            
+            # must can
+            seq_group = self.running_stay.pop()
+            running.append(seq_group)
+            total_resource -= seq_group.seqs[0].data.get_len
+
+            length = len(self.running_stay)
+            count = 0    
+            while self.running_stay:
+                seq_group = self.running_stay[0]
+                if seq_group.seqs[0].data.get_len <= total_resource:
+                    input_seq_group = self.running_stay.pop(0)
+                    total_resource -= input_seq_group.seqs[0].data.get_len
+                    running.append(input_seq_group)
+                count += 1
+                if count == length:
+                    break
+            
+            self.running = running
+        
+        if len(self.running) != 0 and len(self.running_stay) != 0:
+            extend_running: List[SequenceGroup] = []
+
+            num_batched_tokens = sum(seq_group.seqs[0].data.get_len for seq_group in self.running)
+            available = self.scheduler_config.max_num_batched_tokens - num_batched_tokens
+            
+            max_need = []
+            for seq_group in self.running:
+                max_need.append(seq_group.resoucre_need)
+            allocate = []
+            for seq_group in self.running:
+                allocate.append(seq_group.seqs[0].data.get_len)
+            cur_max_tokens = -1
+            for seq_group in self.running:
+                cur_max_tokens = max(cur_max_tokens, seq_group.resoucre_need)
+            
+            self.running_stay.sort(key = lambda x: x.resoucre_need)
+            length = len(self.running_stay)
+            count = 0
+            while self.running_stay:
+                seq_group = self.running_stay[0]
+                if seq_group.seqs[0].get_len >= cur_max_tokens:
+                    continue
+                
+                max_need.append(seq_group.resoucre_need)
+                allocate.append(0)
+                if self.is_safe(seqs = len(self.running) + 1, 
+                                available = available,
+                                max_need = max_need, 
+                                allocate = allocate):
+                    intput_seq_group = self.running_stay.pop(0)
+                    extend_running.append(intput_seq_group)
+                max_need.pop()
+                allocate.pop()
+                count += 1
+                if count == length:
+                    break
+            
+            self.running.extend(extend_running)
 
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
-        index = 0
         while self.running:
-            # if index %2 == 0:
             seq_group = self.running.pop(0)
-            # if index %2 == 1:
-            #     seq_group = self.running.pop(-1)
                 
             while not self.block_manager.can_append_slot(seq_group):
                 if self.running:
@@ -180,11 +269,7 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
-                # index = index + 1
-                # if len(running) >= self.scheduler_config.max_num_seqs:
-                #     while self.running:
-                #         seq_group = self.running.pop(0)
-                #         self.running_stay.append(seq_group)
+
         self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
@@ -279,12 +364,6 @@ class Scheduler:
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,
         )
-        
-        # total_num_gpu_blocks = self.cache_config.num_gpu_blocks
-        # num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-        # num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
-        # gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
-        # print(f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%")
         
         if not self.log_stats:
             return scheduler_outputs, prompt_group_ids, ignored_seq_groups

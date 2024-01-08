@@ -134,9 +134,10 @@ class LLM:
         prompt: Optional[str],
         sampling_params: SamplingParams,
         prompt_token_ids: Optional[List[int]],
+        resoucre_need: int
     ) -> None:
         request_id = str(next(self.request_counter))
-        self.llm_engine.add_request(request_id, prompt, sampling_params,
+        self.llm_engine.add_request(request_id, prompt, sampling_params, resoucre_need,
                                     prompt_token_ids)
 
     def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int] = 0) -> List[RequestOutput]:
@@ -146,75 +147,44 @@ class LLM:
             pbar = tqdm(total=num_requests, desc="Processed prompts")
         # Run the engine.
         outputs: List[RequestOutput] = []
-        interation = 0
-        #st = time.time()
-        #print(f"Start Prefill at {st}")
-        #if split_two_phase == 1:
-        #    total_num_token = 0
-        # iteration_time = []
+
         while self.llm_engine.has_unfinished_requests():
-            #print("interation: ", interation)
-            #iteration_start = time.time()
             step_outputs = self.llm_engine.step()
-            ted = time.time()
-            #iteartion_end = time.time()
-            #iteration_time.append(iteartion_end-iteration_start)
-            interation = interation  + 1
+            
             for output in step_outputs:
                 if output.finished:
-                    # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
-                    with open("/workspace/vllm/benchmarks/logs/logs_10_vllm_1.txt",'a') as file:
-                        file.write(f"req {output.request_id}, prompt len {len(output.prompt_token_ids)}, end at {ted}\n")
-                    # print(output)
+                
                     if use_tqdm:
                         pbar.update(1)
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
-                # total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
-        # with open("iteration_time.txt", "w") as fd:
-        #    for line in iteration_time:
-        #        fd.write(str(line)+'\n')
-        # print(f"iteration {interation}")
-        # if split_two_phase == 1:
-        #     ed = time.time()
-        #     print(f"End Prefill at {ed}", "total prefill time: ", ed-st)
-        #     print(f"Prefill process {total_num_token} tokens")
-        #     print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
 
         if split_two_phase == 1:
-            self.llm_engine.covert_prefilled_to_running()
-            #interation = 0
-            iteration = 0
-            while iteration < 3:
-                print(f"waiting Decode ", iteration)
-                iteration = iteration + 1
-                time.sleep(1)
+            self.llm_engine.covert_prefilled_to_running_stay()
                 
             st2 = time.time()
             print(f"Start Decode at {st2}")
             while self.llm_engine.has_unfinished_requests():
-                #print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
-                interation = interation  + 1
+    
                 for output in step_outputs:
                     if output.finished:
-                        # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
+                        with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
+                            file.write(f"req {output.request_id} end decode at {time.time()}\n")
+                        
                         outputs.append(output)
-                        # print(output)
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
-            # print(f"iteration {interation}")
-            print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
+            print(f"End Decode at {ed2}", "total decode time: ", ed2 - st2)
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
-            #print(f"Decode process {total_num_token2} tokens")
-            print(f"Decode Throughput {(total_num_token2 / (ed2-st2)):.2f} tokens/s")
+            print(f"Decode Throughput {(total_num_token2 / (ed2 - st2)):.2f} tokens/s")
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        # print(outputs)            
+
         return outputs

@@ -167,6 +167,7 @@ class LLMEngine:
         request_id: str,
         prompt: Optional[str],
         sampling_params: SamplingParams,
+        resoucre_need: int,
         prompt_token_ids: Optional[List[int]] = None,
         arrival_time: Optional[float] = None,
     ) -> None:
@@ -202,7 +203,7 @@ class LLMEngine:
 
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, seqs, sampling_params,
-                                  arrival_time)
+                                  arrival_time, resoucre_need)
 
         # Add the sequence group to the scheduler.
         self.scheduler.add_seq_group(seq_group)
@@ -232,6 +233,9 @@ class LLMEngine:
 
     def covert_prefilled_to_running(self):
         self.scheduler.covert_prefilled_to_running()
+    
+    def covert_prefilled_to_running_stay(self):
+        self.scheduler.covert_prefilled_to_running_stay()
 
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
