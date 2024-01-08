@@ -198,7 +198,6 @@ class LLMEngine:
         for _ in range(sampling_params.best_of):
             seq_id = next(self.seq_counter)
             seq = Sequence(seq_id, prompt, prompt_token_ids, block_size)
-            seq.waiting_time = ((len(prompt_token_ids) + 1) * 4 * 40 * 5120)/(1024*1024*1024*25)
             seqs.append(seq)
 
         # Create the sequence group.
@@ -245,6 +244,7 @@ class LLMEngine:
             seq_id = next(self.seq_counter)
             seq = Sequence(seq_id, prompt, prompt_token_ids, block_size)
             seqs.append(seq)
+            seq.waiting_time = ((len(prompt_token_ids) + 1) * 4 * 40 * 5120)/(1024*1024*1024*25)
 
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, seqs, sampling_params,

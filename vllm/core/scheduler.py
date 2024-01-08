@@ -543,6 +543,7 @@ class Scheduler:
             while self.running_waiting:
                 seq_group = self.running_waiting[0]
                 cur_time = time.time()
+                print("waitinfo ", cur_time, seq_group.arrival_time, seq_group.seqs[0].waiting_time)
                 if cur_time - seq_group.arrival_time >= seq_group.seqs[0].waiting_time: 
                     seq_group = self.running_waiting.pop(0)
                     self.running.append(seq_group)
