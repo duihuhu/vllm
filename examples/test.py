@@ -212,28 +212,28 @@ if __name__ == "__main__":
         input_positions_tensors.append(input_positions_tensor)
         input_chunkinputmetadata.append(chunkinputmetadata)
     
-    thread_big = threading.Thread(target = execute_big_model_warm, 
-                                    args = (input_tokens_ids_tensors, 
-                                            input_positions_tensors, 
-                                            input_chunkinputmetadata))
+    # thread_big = threading.Thread(target = execute_big_model_warm, 
+    #                                 args = (input_tokens_ids_tensors, 
+    #                                         input_positions_tensors, 
+    #                                         input_chunkinputmetadata))
 
-    thread_big.start()
+    # thread_big.start()
     thread_small = threading.Thread(target = execute_small_model_warm, args = (input_prompts,))
     thread_small.start()
     thread_small.join()
-    thread_big.join()
+    # thread_big.join()
 
     
     
-    thread_big = threading.Thread(target = execute_big_model, 
-                                    args = (input_tokens_ids_tensors, 
-                                            input_positions_tensors, 
-                                            input_chunkinputmetadata))
-    thread_big.start()
+    # thread_big = threading.Thread(target = execute_big_model, 
+    #                                 args = (input_tokens_ids_tensors, 
+    #                                         input_positions_tensors, 
+    #                                         input_chunkinputmetadata))
+    # thread_big.start()
     thread_small = threading.Thread(target = execute_small_model, args = (input_prompts,))
     thread_small.start()
 
-    thread_big.join()
+    # thread_big.join()
     thread_small.join()
 
     '''small_input_positions = list(range(len(small_input_tokens_ids)))
