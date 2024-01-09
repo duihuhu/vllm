@@ -102,7 +102,7 @@ def execute_small_model_warm(input_prompts: List[Tuple[str, int]]
     # for i in range(6):
     for input_prompt, input_prompt_len in input_prompts:
         st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(input_prompt, 1024)
+        _ = chunkrunner_125m.execute_predict_model(input_prompt, 2048)
         '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
@@ -124,7 +124,7 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
     # for i in range(6):
     for input_prompt, input_prompt_len in input_prompts:
         st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(input_prompt, 1024)
+        _ = chunkrunner_125m.execute_predict_model(input_prompt, 2048)
         '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
@@ -212,28 +212,28 @@ if __name__ == "__main__":
         input_positions_tensors.append(input_positions_tensor)
         input_chunkinputmetadata.append(chunkinputmetadata)
     
-    # thread_big = threading.Thread(target = execute_big_model_warm, 
-    #                                 args = (input_tokens_ids_tensors, 
-    #                                         input_positions_tensors, 
-    #                                         input_chunkinputmetadata))
+    thread_big = threading.Thread(target = execute_big_model_warm, 
+                                    args = (input_tokens_ids_tensors, 
+                                            input_positions_tensors, 
+                                            input_chunkinputmetadata))
 
-    # thread_big.start()
+    thread_big.start()
     thread_small = threading.Thread(target = execute_small_model_warm, args = (input_prompts,))
     thread_small.start()
     thread_small.join()
-    # thread_big.join()
+    thread_big.join()
 
     
     
-    # thread_big = threading.Thread(target = execute_big_model, 
-    #                                 args = (input_tokens_ids_tensors, 
-    #                                         input_positions_tensors, 
-    #                                         input_chunkinputmetadata))
-    # thread_big.start()
+    thread_big = threading.Thread(target = execute_big_model, 
+                                    args = (input_tokens_ids_tensors, 
+                                            input_positions_tensors, 
+                                            input_chunkinputmetadata))
+    thread_big.start()
     thread_small = threading.Thread(target = execute_small_model, args = (input_prompts,))
     thread_small.start()
 
-    # thread_big.join()
+    thread_big.join()
     thread_small.join()
 
     '''small_input_positions = list(range(len(small_input_tokens_ids)))
