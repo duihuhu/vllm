@@ -170,6 +170,7 @@ if __name__ == "__main__":
         input_positions_tensors.append(input_positions_tensor)
         input_chunkinputmetadata.append(chunkinputmetadata)
 
+    time.sleep(10)
     thread_small = threading.Thread(target = execute_small_model, args = (input_prompts,))
     thread_big = threading.Thread(target = execute_big_model, 
                                     args = (input_tokens_ids_tensors, 
