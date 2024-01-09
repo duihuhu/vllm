@@ -15,11 +15,11 @@ from vllm.utils import random_uuid, Counter
 import threading
 
 class RequestInfo:
-    def __init__(self, request_id, prompt_token_ids, sampling_params, prompt, input_len) -> None:
-        self.request_id = request_id
-        self.prompt_token_ids = prompt_token_ids
-        self.sampling_params = sampling_params
-        self.prompt = prompt
+    def __init__(self, input_len) -> None:
+        # self.request_id = request_id
+        # self.prompt_token_ids = prompt_token_ids
+        # self.sampling_params = sampling_params
+        # self.prompt = prompt
         self.input_len = input_len
 
 class ChunkRunner:
