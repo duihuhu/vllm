@@ -102,7 +102,7 @@ def execute_small_model_warm(input_prompts: List[Tuple[str, int]]
     # for i in range(6):
     for input_prompt, input_prompt_len in input_prompts:
         st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(input_prompt, 1024)
+        _ = chunkrunner_125m.execute_predict_model(input_prompt, 2048)
         '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
@@ -124,7 +124,7 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
     # for i in range(6):
     for input_prompt, input_prompt_len in input_prompts:
         st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(input_prompt, 1024)
+        _ = chunkrunner_125m.execute_predict_model(input_prompt, 2048)
         '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
                                     inputs = input_tokens_ids_tensor,
                                     inputs_positions = input_positions_tensor,
