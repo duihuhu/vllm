@@ -14,6 +14,14 @@ from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.utils import random_uuid, Counter
 import threading
 
+class RequestInfo:
+    def __init__(self, request_id, prompt_token_ids, sampling_params, prompt, input_len) -> None:
+        self.request_id = request_id
+        self.prompt_token_ids = prompt_token_ids
+        self.sampling_params = sampling_params
+        self.prompt = prompt
+        self.input_len = input_len
+
 class ChunkRunner:
     def __init__(self,
                  tokenizer: PreTrainedTokenizerBase,
@@ -38,6 +46,8 @@ class ChunkRunner:
         self.cacheblock = ChunkCacheBlocks(blocks_num = num)
 
         self.request_waiting  = [[],[], [], [], []]
+        
+        self.request_info_waiting  = [RequestInfo]
         
         self.request125m_waiting: List[Sequence125M] = []
         

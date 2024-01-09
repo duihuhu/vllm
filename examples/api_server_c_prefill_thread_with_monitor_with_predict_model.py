@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse, Response
 import uvicorn
 
 from vllm.transformers_utils.tokenizer import get_tokenizer
-from vllm.chunked.chunkrunner import ChunkRunner
+from vllm.chunked.chunkrunner import ChunkRunner, RequestInfo
 from vllm.chunked.chunk import ChunkSamplingParams
 
 from typing import List
@@ -102,7 +102,8 @@ async def mprefill_add_prefill(request_dict):
         chunkrunner.request_waiting[2].append(sampling_params)
         chunkrunner.request_waiting[3].append(prompt)
         chunkrunner.request_waiting[4].append(len(prompt_token_ids))
-
+        request_info = RequestInfo(request_id=request_id, prompt_token_ids=prompt_token_ids, sampling_params=sampling_params, prompt=prompt, input_len=len(prompt_token_ids))
+        chunkrunner.request_info_waiting.append(request_info)
         event = threading.Event()
         event.clear()
         request_event[request_id] = event
@@ -120,20 +121,25 @@ async def mprefill_add_prefill(request_dict):
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
         execute_time = time.time()
         print("prefill start execute time ", execute_time)
-        for i in range(1):
+        for i in range(2):
             start_sort_time  = time.time()
-            sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*128:(i+1)*128], chunkrunner.request_waiting[1][i*128:(i+1)*128],
-                                    chunkrunner.request_waiting[2][i*128:(i+1)*128], chunkrunner.request_waiting[3][i*128:(i+1)*128],
-                                    chunkrunner.request_waiting[4][i*128:(i+1)*128]), key=lambda x: x[4])
+            sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*64:(i+1)*64], chunkrunner.request_waiting[1][i*64:(i+1)*64],
+                                    chunkrunner.request_waiting[2][i*64:(i+1)*64], chunkrunner.request_waiting[3][i*64:(i+1)*64],
+                                    chunkrunner.request_waiting[4][i*64:(i+1)*64]), key=lambda x: x[4])
             sort0 , sort1, sort2, sort3, sort4 = zip(*sorted_request_waiting)
-            chunkrunner.request_waiting[0][i*128:(i+1)*128] = sort0
-            chunkrunner.request_waiting[1][i*128:(i+1)*128] = sort1
-            chunkrunner.request_waiting[2][i*128:(i+1)*128] = sort2
-            chunkrunner.request_waiting[3][i*128:(i+1)*128] = sort3
-            chunkrunner.request_waiting[4][i*128:(i+1)*128] = sort4
+            chunkrunner.request_waiting[0][i*64:(i+1)*64] = sort0
+            chunkrunner.request_waiting[1][i*64:(i+1)*64] = sort1
+            chunkrunner.request_waiting[2][i*64:(i+1)*64] = sort2
+            chunkrunner.request_waiting[3][i*64:(i+1)*64] = sort3
+            chunkrunner.request_waiting[4][i*64:(i+1)*64] = sort4
             end_sort_time  = time.time()
             print("sort execute time ", end_sort_time-start_sort_time)
-
+            
+            start_sort_time  = time.time()
+            chunkrunner.request_info_waiting.sort(key=lambda x: x.input_len)
+            end_sort_time  = time.time()
+            print("class sort execute time ", end_sort_time - start_sort_time)
+            
         # chunkrunner.request_waiting[0],  chunkrunner.request_waiting[1] ,  chunkrunner.request_waiting[2], chunkrunner.request_waiting[3] , chunkrunner.request_waiting[4] =zip(*sorted_request_waiting)
         execute_time_end = time.time()
         # print("sort time  ", execute_time_end - execute_time)
