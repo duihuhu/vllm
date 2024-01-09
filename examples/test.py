@@ -51,6 +51,7 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
                       input_chunkinputmetadata: List[ChunkInputMetadata]) -> None:
     iter = 0
     iter_time = []
+    start_time = time.time()
     for input_tokens_ids_tensor, input_positions_tensor, chunkinputmetadata in zip(input_tokens_ids_tensors, 
                                                                                    input_positions_tensors, 
                                                                                    input_chunkinputmetadata):
@@ -66,14 +67,15 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
         iter += 1
         #print(f"output_token_list: {output_token_list}")
         #print(f"logprobs: {logprobs}")
-    print("big model ")
-    print(iter_time)   
+    end_time = time().time()
+    print("big model " , start_time, end_time, start_time-end_time)
 def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #input_positions_tensor, 
                         #chunkinputmetadata,
                         ) -> None:
     iter = 0
     iter_time = []
+    start_time = time.time()
     for i in range(3):
         for input_prompt, input_prompt_len in input_prompts:
             st = time.time()
@@ -89,7 +91,9 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
             iter += 1
             #print(f"predict costs {ed - st} seconds")
             #print(f"predict_labels: {predict_labels}")  
-    
+    end_time = time.time()
+    print("small model " , start_time, end_time, start_time-end_time)
+
 if __name__ == "__main__":
 
     tokenizer_13b = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
