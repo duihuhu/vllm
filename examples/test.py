@@ -69,7 +69,8 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
         #print(f"logprobs: {logprobs}")
     end_time = time.time()
     print("big model total time " , start_time, end_time, end_time-start_time)
-    print(iter_time)
+    for i_time in iter_time:
+        print(i_time)
     
 def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #input_positions_tensor, 
@@ -95,7 +96,8 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
         #print(f"predict_labels: {predict_labels}")  
     end_time = time.time()
     print("small model total time " , start_time, end_time, end_time-start_time)
-    print(iter_time)
+    for i_time in iter_time:
+        print(i_time)
 if __name__ == "__main__":
 
     tokenizer_13b = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
