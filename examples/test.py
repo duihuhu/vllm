@@ -46,6 +46,27 @@ def set_inputs(tokenizer, dataset_path: str, num_requests: int):
             break
     return filtered_dataset
 
+def execute_big_model_warm(input_tokens_ids_tensors: List[torch.Tensor], 
+                      input_positions_tensors: List[torch.Tensor], 
+                      input_chunkinputmetadata: List[ChunkInputMetadata]) -> None:
+    iter = 0
+    iter_time = []
+    for input_tokens_ids_tensor, input_positions_tensor, chunkinputmetadata in zip(input_tokens_ids_tensors, 
+                                                                                   input_positions_tensors, 
+                                                                                   input_chunkinputmetadata):
+        st = time.time()
+        _, _ = chunkrunner_13b._run_workers("execute_model",
+                                                inputs = input_tokens_ids_tensor,
+                                                inputs_positions = input_positions_tensor,
+                                                chunkmetadata = chunkinputmetadata)
+        ed = time.time()
+        iter_time.append(ed-st)
+        # with open("/workspace/vllm/examples/logs/co_running_l_512_1.txt", 'a') as file:
+        #     file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
+        iter += 1
+        #print(f"output_token_list: {output_token_list}")
+        #print(f"logprobs: {logprobs}")
+
 def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor], 
                       input_positions_tensors: List[torch.Tensor], 
                       input_chunkinputmetadata: List[ChunkInputMetadata]) -> None:
@@ -71,6 +92,27 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
     print("big model total time " , start_time, end_time, end_time-start_time)
     for i_time in iter_time:
         print(i_time)
+
+def execute_small_model_warm(input_prompts: List[Tuple[str, int]]
+                        #input_positions_tensor, 
+                        #chunkinputmetadata,
+                        ) -> None:
+    iter = 0
+    iter_time = []
+    # for i in range(6):
+    for input_prompt, input_prompt_len in input_prompts:
+        st = time.time()
+        _ = chunkrunner_125m.execute_predict_model(input_prompt, 512)
+        '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
+                                    inputs = input_tokens_ids_tensor,
+                                    inputs_positions = input_positions_tensor,
+                                    chunkmetadata = chunkinputmetadata)'''
+        ed = time.time()
+        iter_time.append(ed-st)
+        # with open("/workspace/vllm/examples/logs/co_running_s_512_1.txt", 'a') as file:
+        #     file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
+        iter += 1
+
     
 def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #input_positions_tensor, 
@@ -169,25 +211,30 @@ if __name__ == "__main__":
         input_tokens_ids_tensors.append(input_tokens_ids_tensor)
         input_positions_tensors.append(input_positions_tensor)
         input_chunkinputmetadata.append(chunkinputmetadata)
-
-    thread_big = threading.Thread(target = execute_big_model, 
-                                    args = (input_tokens_ids_tensors, 
-                                            input_positions_tensors, 
-                                            input_chunkinputmetadata))
-    thread_big.start()
-    thread_big.join()
     
-    thread_small = threading.Thread(target = execute_small_model, args = (input_prompts,))
-    thread_big = threading.Thread(target = execute_big_model, 
+    thread_big = threading.Thread(target = execute_big_model_warm, 
                                     args = (input_tokens_ids_tensors, 
                                             input_positions_tensors, 
                                             input_chunkinputmetadata))
 
     thread_big.start()
-    thread_small.start()
+    # thread_small = threading.Thread(target = execute_small_model_warm, args = (input_prompts,))
+    # thread_small.start()
+    # thread_small.join()
+    thread_big.join()
+
+    
+    
+    thread_big = threading.Thread(target = execute_big_model, 
+                                    args = (input_tokens_ids_tensors, 
+                                            input_positions_tensors, 
+                                            input_chunkinputmetadata))
+    thread_big.start()
+    # thread_small = threading.Thread(target = execute_small_model, args = (input_prompts,))
+    # thread_small.start()
 
     thread_big.join()
-    thread_small.join()
+    # thread_small.join()
 
     '''small_input_positions = list(range(len(small_input_tokens_ids)))
         small_input_tokens_ids_tensor = torch.cuda.LongTensor(small_input_tokens_ids)
