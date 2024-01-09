@@ -68,7 +68,9 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
         #print(f"output_token_list: {output_token_list}")
         #print(f"logprobs: {logprobs}")
     end_time = time.time()
-    print("big model " , start_time, end_time, end_time-start_time)
+    print("big model total time " , start_time, end_time, end_time-start_time)
+    print(iter_time)
+    
 def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #input_positions_tensor, 
                         #chunkinputmetadata,
@@ -76,24 +78,24 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
     iter = 0
     iter_time = []
     start_time = time.time()
-    for i in range(6):
-        for input_prompt, input_prompt_len in input_prompts:
-            st = time.time()
-            _ = chunkrunner_125m.execute_predict_model(input_prompt, 1024)
-            '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
-                                        inputs = input_tokens_ids_tensor,
-                                        inputs_positions = input_positions_tensor,
-                                        chunkmetadata = chunkinputmetadata)'''
-            ed = time.time()
-            iter_time.append(ed-st)
-            # with open("/workspace/vllm/examples/logs/co_running_s_512_1.txt", 'a') as file:
-            #     file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
-            iter += 1
-            #print(f"predict costs {ed - st} seconds")
-            #print(f"predict_labels: {predict_labels}")  
+    # for i in range(6):
+    for input_prompt, input_prompt_len in input_prompts:
+        st = time.time()
+        _ = chunkrunner_125m.execute_predict_model(input_prompt, 512)
+        '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
+                                    inputs = input_tokens_ids_tensor,
+                                    inputs_positions = input_positions_tensor,
+                                    chunkmetadata = chunkinputmetadata)'''
+        ed = time.time()
+        iter_time.append(ed-st)
+        # with open("/workspace/vllm/examples/logs/co_running_s_512_1.txt", 'a') as file:
+        #     file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
+        iter += 1
+        #print(f"predict costs {ed - st} seconds")
+        #print(f"predict_labels: {predict_labels}")  
     end_time = time.time()
-    print("small model " , start_time, end_time, end_time-start_time)
-
+    print("small model total time " , start_time, end_time, end_time-start_time)
+    print(iter_time)
 if __name__ == "__main__":
 
     tokenizer_13b = get_tokenizer("/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
