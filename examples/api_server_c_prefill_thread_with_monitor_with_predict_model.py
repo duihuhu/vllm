@@ -121,6 +121,7 @@ async def mprefill_add_prefill(request_dict):
         execute_time = time.time()
         print("prefill start execute time ", execute_time)
         for i in range(8):
+            start_sort_time  = time.time()
             sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*16:(i+1)*16], chunkrunner.request_waiting[1][i*16:(i+1)*16],
                                     chunkrunner.request_waiting[2][i*16:(i+1)*16], chunkrunner.request_waiting[3][i*16:(i+1)*16],
                                     chunkrunner.request_waiting[4][i*16:(i+1)*16]), key=lambda x: x[4])
@@ -130,7 +131,9 @@ async def mprefill_add_prefill(request_dict):
             chunkrunner.request_waiting[2][i*16:(i+1)*16] = sort2
             chunkrunner.request_waiting[3][i*16:(i+1)*16] = sort3
             chunkrunner.request_waiting[4][i*16:(i+1)*16] = sort4
-        
+            end_sort_time  = time.time()
+            print("sort execute time ", end_sort_time-start_sort_time)
+
         # chunkrunner.request_waiting[0],  chunkrunner.request_waiting[1] ,  chunkrunner.request_waiting[2], chunkrunner.request_waiting[3] , chunkrunner.request_waiting[4] =zip(*sorted_request_waiting)
         execute_time_end = time.time()
         # print("sort time  ", execute_time_end - execute_time)
