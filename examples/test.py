@@ -68,7 +68,7 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
         #print(f"output_token_list: {output_token_list}")
         #print(f"logprobs: {logprobs}")
     end_time = time.time()
-    print("big model " , start_time, end_time, start_time-end_time)
+    print("big model " , start_time, end_time, end_time-start_time)
 def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #input_positions_tensor, 
                         #chunkinputmetadata,
@@ -76,7 +76,7 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
     iter = 0
     iter_time = []
     start_time = time.time()
-    for i in range(3):
+    for i in range(6):
         for input_prompt, input_prompt_len in input_prompts:
             st = time.time()
             _ = chunkrunner_125m.execute_predict_model(input_prompt, 1024)
@@ -92,7 +92,7 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
             #print(f"predict costs {ed - st} seconds")
             #print(f"predict_labels: {predict_labels}")  
     end_time = time.time()
-    print("small model " , start_time, end_time, start_time-end_time)
+    print("small model " , start_time, end_time, end_time-start_time)
 
 if __name__ == "__main__":
 
