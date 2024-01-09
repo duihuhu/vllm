@@ -103,6 +103,7 @@ async def mprefill_add_prefill(request_dict):
         chunkrunner.request_waiting[3].append(prompt)
         chunkrunner.request_waiting[4].append(len(prompt_token_ids))
         request_info = RequestInfo(request_id=request_id, prompt_token_ids=prompt_token_ids, sampling_params=sampling_params, prompt=prompt, input_len=len(prompt_token_ids))
+        print("input_len ", request_info.input_len)
         chunkrunner.request_info_waiting.append(request_info)
         event = threading.Event()
         event.clear()
