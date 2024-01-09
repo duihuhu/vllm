@@ -67,7 +67,7 @@ def execute_big_model(input_tokens_ids_tensors: List[torch.Tensor],
         iter += 1
         #print(f"output_token_list: {output_token_list}")
         #print(f"logprobs: {logprobs}")
-    end_time = time().time()
+    end_time = time.time()
     print("big model " , start_time, end_time, start_time-end_time)
 def execute_small_model(input_prompts: List[Tuple[str, int]]
                         #input_positions_tensor, 
