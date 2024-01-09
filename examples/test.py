@@ -74,22 +74,21 @@ def execute_small_model(input_prompts: List[Tuple[str, int]]
                         ) -> None:
     iter = 0
     iter_time = []
-    for input_prompt, input_prompt_len in input_prompts:
-        st = time.time()
-        _ = chunkrunner_125m.execute_predict_model(input_prompt, 512)
-        '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
-                                    inputs = input_tokens_ids_tensor,
-                                    inputs_positions = input_positions_tensor,
-                                    chunkmetadata = chunkinputmetadata)'''
-        ed = time.time()
-        iter_time.append(ed-st)
-        # with open("/workspace/vllm/examples/logs/co_running_s_512_1.txt", 'a') as file:
-        #     file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
-        iter += 1
-        #print(f"predict costs {ed - st} seconds")
-        #print(f"predict_labels: {predict_labels}")
-    print("small model ")
-    print(iter_time)   
+    for i in range(3):
+        for input_prompt, input_prompt_len in input_prompts:
+            st = time.time()
+            _ = chunkrunner_125m.execute_predict_model(input_prompt, 512)
+            '''predict_labels = chunkrunner_125m._run_workers("execute_predict_model",
+                                        inputs = input_tokens_ids_tensor,
+                                        inputs_positions = input_positions_tensor,
+                                        chunkmetadata = chunkinputmetadata)'''
+            ed = time.time()
+            iter_time.append(ed-st)
+            # with open("/workspace/vllm/examples/logs/co_running_s_512_1.txt", 'a') as file:
+            #     file.write(f"iter {iter}, start at {st}, end at {ed}, costs {ed - st} seconds\n")
+            iter += 1
+            #print(f"predict costs {ed - st} seconds")
+            #print(f"predict_labels: {predict_labels}")  
     
 if __name__ == "__main__":
 
