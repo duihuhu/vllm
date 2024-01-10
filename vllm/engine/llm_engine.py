@@ -257,6 +257,9 @@ class LLMEngine:
         with open("/workspace/vllm/benchmarks/scheduler.txt", 'a') as file:
             file.write(f"Total {len(req_ids)} reqs, they are {req_ids}\n")
         
+        with open("/workspace/vllm/benckmarks/swapped.txt", 'a') as file:
+            file.write(f"The swapped out blocks are {scheduler_outputs.blocks_to_swap_out}\n")
+        
         # Execute the model.
         output = self._run_workers(
             "execute_model",
