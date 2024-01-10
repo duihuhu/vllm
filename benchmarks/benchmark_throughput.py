@@ -136,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json")
     parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
-    parser.add_argument("--num-prompts", type=int, default=96,
+    parser.add_argument("--num-prompts", type=int, default=256,
                         help="Number of prompts to process.")
     parser.add_argument("--seed", type=int, default=0)
 
