@@ -57,7 +57,7 @@ def sample_requests(
     # Sample the requests.
     # sampled_requests = filtered_dataset[:num_requests]
     #sampled_requests = random.sample(filtered_dataset, num_requests)
-    return filtered_dataset[80: -3] #sampled_requests
+    return filtered_dataset #sampled_requests
 
 def run_vllm(
     requests: List[Tuple[List[int], int, int]],
@@ -67,7 +67,7 @@ def run_vllm(
     seed: int = 0,
     n: int = 1,
     use_beam_search: bool = False,
-    max_num_seqs = 128,
+    max_num_seqs = 256,
     max_num_batched_tokens = 4096,
     split_two_phase = 1
 ) -> float:
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json")
     parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
-    parser.add_argument("--num-prompts", type=int, default=96,
+    parser.add_argument("--num-prompts", type=int, default=128,
                         help="Number of prompts to process.")
     parser.add_argument("--seed", type=int, default=0)
 
