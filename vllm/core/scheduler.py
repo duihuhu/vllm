@@ -395,6 +395,7 @@ class Scheduler:
                 seq_group = self.waiting[0]
                 # If the sequence group has been preempted in this step, stop.
                 if seq_group in preempted:
+                    print(f"this waiting queue has been preempted")
                     break
 
                 num_prompt_tokens = seq_group.get_seqs()[0].get_len()
@@ -412,13 +413,13 @@ class Scheduler:
 
                 # If the sequence group cannot be allocated, stop.
                 if not self.block_manager.can_allocate(seq_group):
-                    # print("no space 2")
+                    print(f"there is no enough blocks")
                     break
 
                 # If the number of batched tokens exceeds the limit, stop.
                 if (num_batched_tokens + num_prompt_tokens >
                         self.scheduler_config.max_num_batched_tokens):
-                    # print("exceed max_num_batched_tokens")
+                    print(f"more than max_num_batched_tokens")
                     break
 
                 # The total number of sequences in the RUNNING state should not
@@ -430,8 +431,8 @@ class Scheduler:
                     for seq_group in self.running)
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
+                    print(f"more than batch size")
                     break
-                # print(seq_group.request_id)
                 seq_group = self.waiting.pop(0)
                 self._allocate(seq_group)
                 self.running.append(seq_group)
