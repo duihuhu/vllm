@@ -78,7 +78,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single batch of '
                     'requests till completion.')
-    parser.add_argument('--model', type=str, default='/workspace/opt-13b/models--facebook--opt-13b/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5')
+    parser.add_argument('--model', type=str, default='/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/')
     parser.add_argument('--tokenizer', type=str, default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=512)
