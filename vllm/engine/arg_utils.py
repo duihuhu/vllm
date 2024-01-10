@@ -24,7 +24,7 @@ class EngineArgs:
     tensor_parallel_size: int = 2
     block_size: int = 16
     swap_space: int = 4  # GiB
-    gpu_memory_utilization: float = 0.5 #0.45
+    gpu_memory_utilization: float = 0.9 
     max_num_batched_tokens: int = 4096
     max_num_seqs: int = 256
     disable_log_stats: bool = False
