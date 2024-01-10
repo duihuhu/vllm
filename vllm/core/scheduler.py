@@ -327,9 +327,12 @@ class Scheduler:
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
+        ite = 0
         while self.running:
+            t1 = self.block_manager.get_num_free_gpu_blocks()
+            
             seq_group = self.running.pop(0)
-                
+            
             while not self.block_manager.can_append_slot(seq_group):
                 if self.running:
                     # Preempt the lowest-priority sequence groups.
@@ -349,6 +352,9 @@ class Scheduler:
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
                 self.max_running_seq_len = max(self.max_running_seq_len, seq_group.resoucre_need)
+            
+            t2 = self.block_manager.get_num_free_gpu_blocks()
+            print(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks")
 
         self.running = running
 
