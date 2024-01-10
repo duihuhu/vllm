@@ -82,6 +82,8 @@ class Scheduler:
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
 
+        self.max_running_seq_len = 0
+
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
@@ -128,7 +130,8 @@ class Scheduler:
                 seq.status = SequenceStatus.RUNNING
             self.running_stay.append(seq_group)
 
-    def calculateNeed(need: List[int], 
+    '''def calculateNeed(self,
+                      need: List[int], 
                       max_need: List[int], 
                       allocate: List[int]) -> None:
         for i in range(len(max_need)):
@@ -161,7 +164,7 @@ class Scheduler:
             if found == False:
                 return False
         
-        return True
+        return True'''
 
     def _schedule(self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
 
@@ -181,11 +184,9 @@ class Scheduler:
         # In this case, the policy is responsible for deciding which sequence
         # groups to preempt.
         
-        self.running = self.policy.sort_by_priority(now, self.running)    
-
-        if len(self.running) == 0 and len(self.running_stay) != 0:
+        '''if len(self.running) == 0 and len(self.running_stay) != 0:
             running: List[SequenceGroup] = []
-            total_resource = self.scheduler_config.max_num_batched_tokens
+            total_resource = self.block_manager.free_tokens()
             self.running_stay.sort(key = lambda x: x.resoucre_need)
             
             # must can
@@ -245,7 +246,83 @@ class Scheduler:
                 if count == length:
                     break
             
-            self.running.extend(extend_running)
+        
+            self.running.extend(extend_running)'''
+    
+        length_runnging_stay = len(self.running_stay)
+        length_running = len(self.running)
+        temp_running = self.running.copy()
+        cur_max = -1
+        if length_running != 0:
+            temp_running.sort(key = lambda x: x.resoucre_need)
+            cur_max = max(cur_max, temp_running[-1].resoucre_need)
+        if cur_max != -1:
+            if cur_max != self.max_running_seq_len:
+                add_long = True
+            else:
+                add_long = False
+        else:
+            add_long = True
+        
+        if length_runnging_stay != 0:
+            count = 0
+            total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+            while self.running_stay:
+                total_used_gpu_blocks = 0
+                for temp_run in temp_running:
+                    for temp_run_seq in temp_run.seqs:
+                        if temp_run_seq.status == SequenceStatus.RUNNING:
+                            total_used_gpu_blocks += len(temp_run_seq.logical_token_blocks)
+                resource_need = []
+                for temp_run in temp_running:
+                    for temp_run_seq in temp_run.seqs:
+                        if temp_run_seq.status == SequenceStatus.RUNNING:
+                            resource_need.append(temp_run.resoucre_need - len(temp_run_seq.logical_token_blocks))
+                
+                if add_long:
+                    seq_group = self.running_stay[-1]
+                    cur_resoucre_need = 0
+                    for cur_req_seq in seq_group.seqs:
+                        if cur_req_seq.status == SequenceStatus.RUNNING:
+                            cur_resoucre_need += len(cur_req_seq.logical_token_blocks)
+                    for cur_req_seq in seq_group.seqs:
+                        if cur_req_seq.status == SequenceStatus.RUNNING:
+                            resource_need.append(seq_group.resoucre_need - len(cur_req_seq.logical_token_blocks))
+                    min_resource_need = min(resource_need)
+                    future_min_resource_need = min_resource_need * len(resource_need)
+                    if total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need <= total_free_gpu_blocks:
+                        input = self.running_stay.pop()
+                        temp_running.append(input)
+                        total_free_gpu_blocks -= total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need
+                    else:
+                        resource_need.pop()
+                    add_long = False
+                    count += 1
+                
+                seq_group = self.running_stay[0]
+                cur_resoucre_need = 0
+                for cur_req_seq in seq_group.seqs:
+                    if cur_req_seq.status == SequenceStatus.RUNNING:
+                        cur_resoucre_need += len(cur_req_seq.logical_token_blocks)
+                for cur_req_seq in seq_group.seqs:
+                    if cur_req_seq.status == SequenceStatus.RUNNING:
+                        resource_need.append(seq_group.resoucre_need - len(cur_req_seq.logical_token_blocks))
+                min_resource_need = min(resource_need)
+                future_min_resource_need = min_resource_need * len(resource_need)
+                if total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need <= total_free_gpu_blocks:
+                    input = self.running_stay.pop(0)
+                    temp_running.append(input)
+                    total_free_gpu_blocks -= total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need
+                else:
+                    resource_need.pop()
+                count += 1
+                
+                if count == length_runnging_stay:
+                    break
+        
+        self.running = temp_running.copy()
+                        
+        self.running = self.policy.sort_by_priority(now, self.running)    
 
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
@@ -269,6 +346,7 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
+                self.max_running_seq_len = (self.max_running_seq_len, seq_group.resoucre_need)
 
         self.running = running
 
@@ -297,6 +375,7 @@ class Scheduler:
             self._swap_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
+            self.max_running_seq_len = (self.max_running_seq_len, seq_group.resoucre_need)
 
         num_batched_tokens = sum(
             seq_group.num_seqs(status=SequenceStatus.RUNNING)
@@ -356,6 +435,7 @@ class Scheduler:
                 seq_group = self.waiting.pop(0)
                 self._allocate(seq_group)
                 self.running.append(seq_group)
+                self.max_running_seq_len = (self.max_running_seq_len, seq_group.resoucre_need)
                 num_batched_tokens += num_prompt_tokens
                 prompt_group_ids.append(seq_group.request_id)
 

@@ -4,6 +4,7 @@ import json
 import random
 import time
 from typing import List, Tuple
+import math
 
 from transformers import PreTrainedTokenizerBase
 
@@ -90,7 +91,8 @@ def run_vllm(
             max_tokens = output_len,
         )
         # FIXME(woosuk): Do not use internal method.
-        resource_need = prompt_len + output_len
+        
+        resource_need = math.ceil((prompt_len + math.ceil(output_len / 200)) / 16)
         llm._add_request(
             prompt = None,
             prompt_token_ids = prompt_token_ids,
