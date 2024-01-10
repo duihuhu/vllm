@@ -82,7 +82,7 @@ class Scheduler:
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
 
-        self.max_running_seq_len = 0
+        self.max_running_seq_len: int = 0
 
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
@@ -347,7 +347,7 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
-                self.max_running_seq_len = (self.max_running_seq_len, seq_group.resoucre_need)
+                self.max_running_seq_len = max(self.max_running_seq_len, seq_group.resoucre_need)
 
         self.running = running
 
@@ -379,7 +379,7 @@ class Scheduler:
             self._swap_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
-            self.max_running_seq_len = (self.max_running_seq_len, seq_group.resoucre_need)
+            self.max_running_seq_len = max(self.max_running_seq_len, seq_group.resoucre_need)
 
         num_batched_tokens = sum(
             seq_group.num_seqs(status=SequenceStatus.RUNNING)
@@ -440,7 +440,7 @@ class Scheduler:
                 seq_group = self.waiting.pop(0)
                 self._allocate(seq_group)
                 self.running.append(seq_group)
-                self.max_running_seq_len = (self.max_running_seq_len, seq_group.resoucre_need)
+                self.max_running_seq_len = max(self.max_running_seq_len, seq_group.resoucre_need)
                 num_batched_tokens += num_prompt_tokens
                 prompt_group_ids.append(seq_group.request_id)
 
