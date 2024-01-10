@@ -335,11 +335,13 @@ class Scheduler:
                     victim_seq_group = self.running.pop(-1)
                     self._preempt(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
+                    print(f"this req has been expelled from running queue")
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
                     self._preempt(seq_group, blocks_to_swap_out)
                     preempted.append(seq_group)
+                    print(f"this req has been expelled from running queue")
                     break
             else:
                 # Append new slots to the sequence group.
@@ -355,9 +357,11 @@ class Scheduler:
             seq_group = self.swapped[0]
             # If the sequence group has been preempted in this step, stop.
             if seq_group in preempted:
+                print(f"this swapped req has been preempted")
                 break
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
+                print(f"can't swap in no enough blocks")
                 break
 
             # The total number of sequences in the RUNNING state should not
@@ -368,6 +372,7 @@ class Scheduler:
                 for seq_group in self.running)
             if (num_curr_seqs + num_new_seqs >
                     self.scheduler_config.max_num_seqs):
+                print(f"add too more swapped req into running queue")
                 break
 
             seq_group = self.swapped.pop(0)
