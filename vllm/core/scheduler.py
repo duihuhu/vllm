@@ -266,7 +266,7 @@ class Scheduler:
             
             if length_runnging_stay != 0:
                 count = 0
-                total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+                total_free_gpu_blocks = self.block_manager.num_total_gpu_blocks
                 while self.running_stay:
                     total_used_gpu_blocks = 0
                     for temp_run in temp_running:
