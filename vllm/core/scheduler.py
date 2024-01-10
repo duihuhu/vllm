@@ -355,6 +355,7 @@ class Scheduler:
             
             t2 = self.block_manager.get_num_free_gpu_blocks()
             print(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks")
+            ite += 1
 
         self.running = running
 
