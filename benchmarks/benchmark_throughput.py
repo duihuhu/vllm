@@ -57,7 +57,7 @@ def sample_requests(
     # Sample the requests.
     # sampled_requests = filtered_dataset[:num_requests]
     #sampled_requests = random.sample(filtered_dataset, num_requests)
-    return filtered_dataset[80: -1] #sampled_requests
+    return filtered_dataset[80: -3] #sampled_requests
 
 def run_vllm(
     requests: List[Tuple[List[int], int, int]],
