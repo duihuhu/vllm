@@ -354,7 +354,8 @@ class Scheduler:
                 self.max_running_seq_len = max(self.max_running_seq_len, seq_group.resoucre_need)
             
             t2 = self.block_manager.get_num_free_gpu_blocks()
-            print(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks")
+            with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
+                file.write(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks\n")
             ite += 1
 
         self.running = running
