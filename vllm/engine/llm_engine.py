@@ -237,7 +237,7 @@ class LLMEngine:
     def covert_prefilled_to_running_stay(self):
         self.scheduler.covert_prefilled_to_running_stay()
 
-    def step(self) -> List[RequestOutput]:
+    def step(self, banker: Optional[bool] = False) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
@@ -247,7 +247,7 @@ class LLMEngine:
         the sequences and returns the newly generated results.
         """
         (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups) = self.scheduler.schedule()
+         ignored_seq_groups) = self.scheduler.schedule(banker = banker)
         if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
                 and (not ignored_seq_groups)):
             # Nothing to do.

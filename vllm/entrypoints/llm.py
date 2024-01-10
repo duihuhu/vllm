@@ -140,7 +140,8 @@ class LLM:
         self.llm_engine.add_request(request_id, prompt, sampling_params, resoucre_need,
                                     prompt_token_ids)
 
-    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int] = 0) -> List[RequestOutput]:
+    def _run_engine(self, use_tqdm: bool, 
+                    split_two_phase: Optional[int] = 0) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -151,7 +152,7 @@ class LLM:
         st1 = time.time()
         print(f"Start Prefill at {st1}")
         while self.llm_engine.has_unfinished_requests():
-            step_outputs = self.llm_engine.step()
+            step_outputs = self.llm_engine.step(banker = False)
             
             for output in step_outputs:
                 if output.finished:
@@ -171,7 +172,7 @@ class LLM:
             st2 = time.time()
             print(f"Start Decode at {st2}")
             while self.llm_engine.has_unfinished_requests():
-                step_outputs = self.llm_engine.step()
+                step_outputs = self.llm_engine.step(banker = False)
     
                 for output in step_outputs:
                     if output.finished:

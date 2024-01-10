@@ -165,7 +165,7 @@ class Scheduler:
         
         return True'''
 
-    def _schedule(self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
+    def _schedule(self, banker: Optional[bool] = False) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
 
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
@@ -247,39 +247,59 @@ class Scheduler:
             
         
             self.running.extend(extend_running)'''
-    
-        length_runnging_stay = len(self.running_stay)
-        length_running = len(self.running)
-        temp_running = self.running.copy()
-        cur_max = -1
-        if length_running != 0:
-            temp_running.sort(key = lambda x: x.resoucre_need)
-            cur_max = max(cur_max, temp_running[-1].resoucre_need)
-        if cur_max != -1:
-            if cur_max != self.max_running_seq_len:
-                add_long = True
+
+        if banker:
+            length_runnging_stay = len(self.running_stay)
+            length_running = len(self.running)
+            temp_running = self.running.copy()
+            cur_max = -1
+            if length_running != 0:
+                temp_running.sort(key = lambda x: x.resoucre_need)
+                cur_max = max(cur_max, temp_running[-1].resoucre_need)
+            if cur_max != -1:
+                if cur_max != self.max_running_seq_len:
+                    add_long = True
+                else:
+                    add_long = False
             else:
-                add_long = False
-        else:
-            add_long = True
-        
-        if length_runnging_stay != 0:
-            count = 0
-            total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-            while self.running_stay:
-                total_used_gpu_blocks = 0
-                for temp_run in temp_running:
-                    for temp_run_seq in temp_run.seqs:
-                        if temp_run_seq.status == SequenceStatus.RUNNING:
-                            total_used_gpu_blocks += len(temp_run_seq.logical_token_blocks)
-                resource_need = []
-                for temp_run in temp_running:
-                    for temp_run_seq in temp_run.seqs:
-                        if temp_run_seq.status == SequenceStatus.RUNNING:
-                            resource_need.append(temp_run.resoucre_need - len(temp_run_seq.logical_token_blocks))
-                
-                if add_long:
-                    seq_group = self.running_stay[-1]
+                add_long = True
+            
+            if length_runnging_stay != 0:
+                count = 0
+                total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+                while self.running_stay:
+                    total_used_gpu_blocks = 0
+                    for temp_run in temp_running:
+                        for temp_run_seq in temp_run.seqs:
+                            if temp_run_seq.status == SequenceStatus.RUNNING:
+                                total_used_gpu_blocks += len(temp_run_seq.logical_token_blocks)
+                    resource_need = []
+                    for temp_run in temp_running:
+                        for temp_run_seq in temp_run.seqs:
+                            if temp_run_seq.status == SequenceStatus.RUNNING:
+                                resource_need.append(temp_run.resoucre_need - len(temp_run_seq.logical_token_blocks))
+                    
+                    if add_long:
+                        seq_group = self.running_stay[-1]
+                        cur_resoucre_need = 0
+                        for cur_req_seq in seq_group.seqs:
+                            if cur_req_seq.status == SequenceStatus.RUNNING:
+                                cur_resoucre_need += len(cur_req_seq.logical_token_blocks)
+                        for cur_req_seq in seq_group.seqs:
+                            if cur_req_seq.status == SequenceStatus.RUNNING:
+                                resource_need.append(seq_group.resoucre_need - len(cur_req_seq.logical_token_blocks))
+                        min_resource_need = min(resource_need)
+                        future_min_resource_need = min_resource_need * len(resource_need)
+                        if total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need <= total_free_gpu_blocks:
+                            input = self.running_stay.pop()
+                            temp_running.append(input)
+                            total_free_gpu_blocks -= total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need
+                        else:
+                            resource_need.pop()
+                        add_long = False
+                        count += 1
+                    
+                    seq_group = self.running_stay[0]
                     cur_resoucre_need = 0
                     for cur_req_seq in seq_group.seqs:
                         if cur_req_seq.status == SequenceStatus.RUNNING:
@@ -290,36 +310,17 @@ class Scheduler:
                     min_resource_need = min(resource_need)
                     future_min_resource_need = min_resource_need * len(resource_need)
                     if total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need <= total_free_gpu_blocks:
-                        input = self.running_stay.pop()
+                        input = self.running_stay.pop(0)
                         temp_running.append(input)
                         total_free_gpu_blocks -= total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need
                     else:
                         resource_need.pop()
-                    add_long = False
                     count += 1
-                
-                seq_group = self.running_stay[0]
-                cur_resoucre_need = 0
-                for cur_req_seq in seq_group.seqs:
-                    if cur_req_seq.status == SequenceStatus.RUNNING:
-                        cur_resoucre_need += len(cur_req_seq.logical_token_blocks)
-                for cur_req_seq in seq_group.seqs:
-                    if cur_req_seq.status == SequenceStatus.RUNNING:
-                        resource_need.append(seq_group.resoucre_need - len(cur_req_seq.logical_token_blocks))
-                min_resource_need = min(resource_need)
-                future_min_resource_need = min_resource_need * len(resource_need)
-                if total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need <= total_free_gpu_blocks:
-                    input = self.running_stay.pop(0)
-                    temp_running.append(input)
-                    total_free_gpu_blocks -= total_used_gpu_blocks +   cur_resoucre_need + future_min_resource_need
-                else:
-                    resource_need.pop()
-                count += 1
-                
-                if count == length_runnging_stay:
-                    break
-        
-        self.running = temp_running.copy()
+                    
+                    if count == length_runnging_stay:
+                        break
+            
+            self.running = temp_running.copy()
                         
         self.running = self.policy.sort_by_priority(now, self.running)    
 
@@ -504,14 +505,15 @@ class Scheduler:
     #             print(" waiting seq after interation",seq.seq_id) 
                 
     def schedule(
-        self
+        self,
+        banker: Optional[bool] = False
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
                List[SequenceGroup]]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
         (scheduler_outputs, prompt_group_ids,
-         ignored_seq_groups) = self._schedule()
+         ignored_seq_groups) = self._schedule(banker = banker)
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
