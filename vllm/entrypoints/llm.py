@@ -148,6 +148,8 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
 
+        st1 = time.time()
+        print(f"Start Prefill at {st1}")
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step()
             
@@ -159,6 +161,8 @@ class LLM:
                         pbar.update(1)
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
+        ed1 = time.time()
+        print(f"End Prefill at {ed1}")
 
         if split_two_phase == 1:
             #self.llm_engine.covert_prefilled_to_running_stay()
