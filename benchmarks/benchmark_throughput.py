@@ -130,7 +130,7 @@ def main(args: argparse.Namespace):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
     parser.add_argument("--dataset", type=str, default="/workspace/datasets/ShareGPT_V3_unfiltered_cleaned_split.json")
-    parser.add_argument("--model", type=str, default="/workspace/models/facebook/opt-125m")
+    parser.add_argument("--model", type=str, default="/workspace/opt-13b/models--facebook--opt-13b/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--num-prompts", type=int, default=16,
                         help="Number of prompts to process.")
