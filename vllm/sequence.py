@@ -212,6 +212,7 @@ class SequenceGroup:
         self.arrival_time = arrival_time
         self.resoucre_need = resoucre_need
         self.predicted_len = predicted_len
+        self.used: int = 0
 
     def get_seqs(
         self,
