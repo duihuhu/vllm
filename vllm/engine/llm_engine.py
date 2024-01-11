@@ -238,7 +238,7 @@ class LLMEngine:
     def covert_prefilled_to_running_stay(self):
         self.scheduler.covert_prefilled_to_running_stay()
 
-    def step(self, banker: Optional[bool] = False) -> List[RequestOutput]:
+    def step(self, banker: Optional[bool] = False, steps: Optional[int] = -1) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
@@ -255,8 +255,8 @@ class LLMEngine:
             return []
         
         req_ids = [seq_group_metadata.request_id for seq_group_metadata in seq_group_metadata_list]
-        with open("/workspace/vllm/benchmarks/scheduler3.txt", 'a') as file:
-            file.write(f"Total {len(req_ids)} reqs, they are {req_ids}\n")
+        with open("/workspace/vllm/benchmarks/scheduler1.txt", 'a') as file:
+            file.write(f"In step {steps}, total {len(req_ids)} reqs, they are {req_ids}\n")
         
         #with open("/workspace/vllm/benchmarks/swapped.txt", 'a') as file:
         #    file.write(f"The swapped out blocks are {scheduler_outputs.blocks_to_swap_out}\n")

@@ -154,10 +154,12 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
 
+        steps: int = 0
         st1 = time.time()
         print(f"Start Prefill at {st1}")
         while self.llm_engine.has_unfinished_requests():
-            step_outputs = self.llm_engine.step(banker = False)
+            step_outputs = self.llm_engine.step(banker = False, steps = steps)
+            steps += 1
             
             for output in step_outputs:
                 if output.finished:
@@ -178,12 +180,14 @@ class LLM:
             print(f"Start Decode at {st2}")
             while self.llm_engine.has_unfinished_requests():
                 #step_outputs = self.llm_engine.step(banker = False)
-                step_outputs = self.llm_engine.step(banker = True)
+                step_outputs = self.llm_engine.step(banker = True, steps = steps)
+                steps += 1
     
                 for output in step_outputs:
                     if output.finished:
-                        #with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
-                        #    file.write(f"req {output.request_id} end decode at {time.time()}\n")
+                        end = time.time()
+                        with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
+                            file.write(f"req {output.request_id} end decode at {end} costs {end - st1} seconds\n")
                         
                         outputs.append(output)
                         if use_tqdm:
