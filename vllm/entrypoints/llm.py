@@ -182,8 +182,8 @@ class LLM:
     
                 for output in step_outputs:
                     if output.finished:
-                        with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
-                            file.write(f"req {output.request_id} end decode at {time.time()}\n")
+                        #with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
+                        #    file.write(f"req {output.request_id} end decode at {time.time()}\n")
                         
                         outputs.append(output)
                         if use_tqdm:
