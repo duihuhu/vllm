@@ -171,14 +171,14 @@ class LLM:
         print(f"End Prefill at {ed1}")
 
         if split_two_phase == 1:
-            self.llm_engine.covert_prefilled_to_running_stay()
-            #self.llm_engine.covert_prefilled_to_running()
+            #self.llm_engine.covert_prefilled_to_running_stay()
+            self.llm_engine.covert_prefilled_to_running()
                 
             st2 = time.time()
             print(f"Start Decode at {st2}")
             while self.llm_engine.has_unfinished_requests():
-                #step_outputs = self.llm_engine.step(banker = False)
-                step_outputs = self.llm_engine.step(banker = True)
+                step_outputs = self.llm_engine.step(banker = False)
+                #step_outputs = self.llm_engine.step(banker = True)
     
                 for output in step_outputs:
                     if output.finished:

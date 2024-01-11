@@ -467,7 +467,7 @@ class Scheduler:
                 seq_group = self.waiting[0]
                 # If the sequence group has been preempted in this step, stop.
                 if seq_group in preempted:
-                    print(f"In waiting: this waiting queue has been preempted")
+                    #print(f"In waiting: this waiting queue has been preempted")
                     break
 
                 num_prompt_tokens = seq_group.get_seqs()[0].get_len()
