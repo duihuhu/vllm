@@ -265,7 +265,7 @@ class Scheduler:
             else:
                 add_long = True
             
-            if length_runnging_stay != 0:
+            '''if length_runnging_stay != 0:
                 total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
                 count = 0
                 min_resource_need = []
@@ -298,9 +298,9 @@ class Scheduler:
                         break    
                 temp_running.sort(key = lambda x: x.predicted_len)
                 self.max_running_seq_len = temp_running[-1].predicted_len
-                self.running = temp_running.copy()
+                self.running = temp_running.copy()'''
                 
-            '''if length_runnging_stay != 0:
+            if length_runnging_stay != 0:
                 count = 0
                 #total_free_gpu_blocks = self.block_manager.num_total_gpu_blocks
                 total_free_tokens = self.block_manager.num_total_gpu_blocks * self.cache_config.block_size
@@ -362,7 +362,9 @@ class Scheduler:
                     if count == length_runnging_stay:
                         break
             
-            self.running = temp_running.copy()'''
+            temp_running.sort(key = lambda x: x.predicted_len)
+            self.max_running_seq_len = temp_running[-1].predicted_len
+            self.running = temp_running.copy()
                         
         self.running = self.policy.sort_by_priority(now, self.running)    
 
