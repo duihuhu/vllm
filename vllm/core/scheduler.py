@@ -83,6 +83,10 @@ class Scheduler:
         self.num_input_tokens: List[Tuple[float, int]] = []
 
         self.max_running_seq_len: int = 0
+        self.re_compute: int = 0
+        self.re_swap: int = 0
+        self.ite: int = 0
+        self.expelled: int = 0
 
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
@@ -128,7 +132,7 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.RUNNING
             self.running_stay.append(seq_group)
-        self.running_stay.sort(key = lambda x: x.resoucre_need)
+        #self.running_stay.sort(key = lambda x: x.resoucre_need)
 
     '''def calculateNeed(self,
                       need: List[int], 
@@ -167,6 +171,7 @@ class Scheduler:
         return True'''
 
     def _schedule(self, banker: Optional[bool] = False) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
+        self.ite += 1
 
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
@@ -266,6 +271,7 @@ class Scheduler:
                 add_long = True
             
             '''if length_runnging_stay != 0:
+                self.running_stay.sort(key = lambda x: x.resoucre_need)
                 total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
                 count = 0
                 min_resource_need = []
@@ -301,6 +307,7 @@ class Scheduler:
                 self.running = temp_running.copy()'''
                 
             if length_runnging_stay != 0:
+                self.running_stay.sort(key = lambda x: x.predicted_len)
                 count = 0
                 #total_free_gpu_blocks = self.block_manager.num_total_gpu_blocks
                 total_free_tokens = self.block_manager.num_total_gpu_blocks * self.cache_config.block_size
@@ -383,13 +390,15 @@ class Scheduler:
                     victim_seq_group = self.running.pop(-1)
                     self._preempt(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
-                    print(f"this req has been expelled from running queue")
+                    self.expelled += 1
+                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
                     self._preempt(seq_group, blocks_to_swap_out)
-                    preempted.append(seq_group)
-                    print(f"this req has been expelled from running queue")
+                    preempted.append(seq_group) 
+                    self.expelled += 1
+                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                     break
             else:
                 # Append new slots to the sequence group.
@@ -413,11 +422,11 @@ class Scheduler:
             seq_group = self.swapped[0]
             # If the sequence group has been preempted in this step, stop.
             if seq_group in preempted:
-                print(f"this swapped req has been preempted")
+                print(f"In swap: this swapped req has been preempted")
                 break
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
-                print(f"can't swap in no enough blocks")
+                print(f"In swap: can't swap in no enough blocks")
                 break
 
             # The total number of sequences in the RUNNING state should not
@@ -458,7 +467,7 @@ class Scheduler:
                 seq_group = self.waiting[0]
                 # If the sequence group has been preempted in this step, stop.
                 if seq_group in preempted:
-                    print(f"this waiting queue has been preempted")
+                    print(f"In waiting: this waiting queue has been preempted")
                     break
 
                 num_prompt_tokens = seq_group.get_seqs()[0].get_len()
@@ -476,13 +485,13 @@ class Scheduler:
 
                 # If the sequence group cannot be allocated, stop.
                 if not self.block_manager.can_allocate(seq_group):
-                    print(f"there is no enough blocks")
+                    #print(f"In waiting: there is no enough blocks")
                     break
 
                 # If the number of batched tokens exceeds the limit, stop.
                 if (num_batched_tokens + num_prompt_tokens >
                         self.scheduler_config.max_num_batched_tokens):
-                    print(f"more than max_num_batched_tokens")
+                    #print(f"In waiting: more than max_num_batched_tokens")
                     break
 
                 # The total number of sequences in the RUNNING state should not
@@ -494,7 +503,7 @@ class Scheduler:
                     for seq_group in self.running)
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
-                    print(f"more than batch size")
+                    #print(f"In waiting: more than batch size")
                     break
                 seq_group = self.waiting.pop(0)
                 self._allocate(seq_group)
@@ -700,6 +709,8 @@ class Scheduler:
         # NOTE: For FCFS, we insert the preempted sequence group to the front
         # of the waiting queue.
         self.waiting.insert(0, seq_group)
+        self.re_compute += 1
+        print(f"Has been recomputed {self.re_compute} times")
 
     def _preempt_by_swap(
         self,
@@ -711,6 +722,8 @@ class Scheduler:
             seq.status = SequenceStatus.SWAPPED
         self._swap_out(seq_group, blocks_to_swap_out)
         self.swapped.append(seq_group)
+        self.re_swap += 1
+        print(f"Has been swapped {self.re_swap} times")
 
     def _swap_in(
         self,
