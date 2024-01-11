@@ -374,8 +374,9 @@ class Scheduler:
             temp_running.sort(key = lambda x: x.predicted_len)
             self.max_running_seq_len = temp_running[-1].predicted_len
             self.running = temp_running.copy()'''
-                        
-        #self.running = self.policy.sort_by_priority(now, self.running)    
+
+        if banker is False:               
+            self.running = self.policy.sort_by_priority(now, self.running)    
 
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
