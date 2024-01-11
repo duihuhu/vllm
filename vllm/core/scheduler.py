@@ -384,9 +384,9 @@ class Scheduler:
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
         #ite = 0
+        t_expelled = 0
         while self.running:
             #t1 = self.block_manager.get_num_free_gpu_blocks()
-            t_expelled = 0
 
             seq_group = self.running.pop(0)
             
@@ -416,9 +416,9 @@ class Scheduler:
                 #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                 #    label += len(seq.get_token_ids())
                 #self.max_running_seq_len = max(self.max_running_seq_len, label)
-            if t_expelled != 0:
-                with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
-                    file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
+        if t_expelled != 0:
+            with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
+                file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
 
             #t2 = self.block_manager.get_num_free_gpu_blocks()
             #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
