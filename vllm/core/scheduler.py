@@ -1,6 +1,7 @@
 import enum
 import time
 from typing import Dict, List, Optional, Tuple
+import math
 
 from vllm.config import CacheConfig, SchedulerConfig
 from vllm.core.block_manager import BlockSpaceManager
@@ -274,12 +275,13 @@ class Scheduler:
             
             if length_runnging_stay != 0:
                 #self.running_stay.sort(key = lambda x: x.resoucre_need)
-                total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
+                #total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
+                total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
                 count = 0
                 min_resource_need = []
                 for seq_group in temp_running:
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                        min_resource_need.append(seq_group.resoucre_need - temp_run_seq.get_output_len())
+                        min_resource_need.append(seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 8))
                 while self.running_stay:
                     '''if add_long:
                         seq_group = self.running_stay[-1]
@@ -295,7 +297,7 @@ class Scheduler:
                     
                     seq_group = self.running_stay[0]
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                        min_resource_need.append(seq_group.resoucre_need - temp_run_seq.get_output_len())
+                        min_resource_need.append(seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 8))
                     if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
                         input = self.running_stay.pop(0)
                         temp_running.append(input)
@@ -376,7 +378,7 @@ class Scheduler:
             self.running = temp_running.copy()'''
 
         #if banker is False:               
-        self.running = self.policy.sort_by_priority(now, self.running)    
+        #self.running = self.policy.sort_by_priority(now, self.running)    
 
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
