@@ -255,8 +255,8 @@ class Scheduler:
             temp_running = self.running.copy()
             cur_max = -1
             if length_running != 0:
-                temp_running.sort(key = lambda x: x.resoucre_need)
-                cur_max = max(cur_max, temp_running[-1].resoucre_need)
+                temp_running.sort(key = lambda x: x.predicted_len)
+                cur_max = max(cur_max, temp_running[-1].predicted_len)
             if cur_max != -1:
                 if cur_max != self.max_running_seq_len:
                     add_long = True
@@ -296,9 +296,10 @@ class Scheduler:
                     count += 1
                     if count == length_runnging_stay:
                         break    
-
+                temp_running.sort(key = lambda x: x.predicted_len)
+                self.max_running_seq_len = temp_running[-1].predicted_len
                 self.running = temp_running.copy()
-
+                
             '''if length_runnging_stay != 0:
                 count = 0
                 #total_free_gpu_blocks = self.block_manager.num_total_gpu_blocks
@@ -392,10 +393,10 @@ class Scheduler:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
-                label = seq_group.resoucre_need
-                for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                    label += len(seq.get_token_ids())
-                self.max_running_seq_len = max(self.max_running_seq_len, label)
+                #label = seq_group.resoucre_need
+                #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                #    label += len(seq.get_token_ids())
+                #self.max_running_seq_len = max(self.max_running_seq_len, label)
             
             #t2 = self.block_manager.get_num_free_gpu_blocks()
             #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
@@ -432,10 +433,10 @@ class Scheduler:
             self._swap_in(seq_group, blocks_to_swap_in)
             self._append_slot(seq_group, blocks_to_copy)
             self.running.append(seq_group)
-            label = seq_group.resoucre_need
-            for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                label += len(seq.get_token_ids())
-            self.max_running_seq_len = max(self.max_running_seq_len, label)
+            #label = seq_group.resoucre_need
+            #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+            #    label += len(seq.get_token_ids())
+            #self.max_running_seq_len = max(self.max_running_seq_len, label)
 
         num_batched_tokens = sum(
             seq_group.num_seqs(status=SequenceStatus.RUNNING)
@@ -496,10 +497,10 @@ class Scheduler:
                 seq_group = self.waiting.pop(0)
                 self._allocate(seq_group)
                 self.running.append(seq_group)
-                label = seq_group.resoucre_need
-                for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                    label += len(seq.get_token_ids())
-                self.max_running_seq_len = max(self.max_running_seq_len, label)
+                #label = seq_group.resoucre_need
+                #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                #    label += len(seq.get_token_ids())
+                #self.max_running_seq_len = max(self.max_running_seq_len, label)
                 num_batched_tokens += num_prompt_tokens
                 prompt_group_ids.append(seq_group.request_id)
 

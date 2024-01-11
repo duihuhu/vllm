@@ -93,7 +93,9 @@ def run_vllm(
         # FIXME(woosuk): Do not use internal method.
         
         #resource_need = math.ceil((prompt_len + math.ceil(output_len / 200)) / 16)
-        resource_need = prompt_len + math.ceil(prompt_len / 200) * 200
+        #resource_need = prompt_len + math.ceil(output_len / 200) * 200
+        resource_need = math.ceil(output_len / 200) * 200
+        predicted_len = prompt_len + math.ceil(output_len / 200) * 200
         if prompt_len >= 80:
             input_token_ids = prompt_token_ids[0: 80]
         else:
@@ -102,7 +104,8 @@ def run_vllm(
             prompt = None,
             prompt_token_ids = input_token_ids,
             sampling_params=sampling_params,
-            resoucre_need =  resource_need
+            resoucre_need =  resource_need,
+            predicted_len = predicted_len
         )
 
 

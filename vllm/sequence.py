@@ -203,13 +203,15 @@ class SequenceGroup:
         seqs: List[Sequence],
         sampling_params: SamplingParams,
         arrival_time: float,
-        resoucre_need: int
+        resoucre_need: int,
+        predicted_len: int
     ) -> None:
         self.request_id = request_id
         self.seqs = seqs
         self.sampling_params = sampling_params
         self.arrival_time = arrival_time
         self.resoucre_need = resoucre_need
+        self.predicted_len = predicted_len
 
     def get_seqs(
         self,

@@ -134,11 +134,16 @@ class LLM:
         prompt: Optional[str],
         sampling_params: SamplingParams,
         prompt_token_ids: Optional[List[int]],
-        resoucre_need: Optional[int] = 0
+        resoucre_need: Optional[int] = 0,
+        predicted_len: Optional[int] = 0
     ) -> None:
         request_id = str(next(self.request_counter))
-        self.llm_engine.add_request(request_id, prompt, sampling_params, resoucre_need,
-                                    prompt_token_ids)
+        self.llm_engine.add_request(request_id = request_id, 
+                                    prompt = prompt, 
+                                    sampling_params = sampling_params, 
+                                    resoucre_need = resoucre_need,
+                                    prompt_token_ids = prompt_token_ids,
+                                    predicted_len = predicted_len)
 
     def _run_engine(self, use_tqdm: bool, 
                     split_two_phase: Optional[int] = 0) -> List[RequestOutput]:

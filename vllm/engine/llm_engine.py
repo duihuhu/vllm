@@ -168,6 +168,7 @@ class LLMEngine:
         prompt: Optional[str],
         sampling_params: SamplingParams,
         resoucre_need: int,
+        predicted_len: int,
         prompt_token_ids: Optional[List[int]] = None,
         arrival_time: Optional[float] = None,
     ) -> None:
@@ -203,7 +204,7 @@ class LLMEngine:
 
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, seqs, sampling_params,
-                                  arrival_time, resoucre_need)
+                                  arrival_time, resoucre_need, predicted_len)
 
         # Add the sequence group to the scheduler.
         self.scheduler.add_seq_group(seq_group)
