@@ -260,7 +260,6 @@ class Scheduler:
             #length_running = len(self.running)
             #temp_running = self.running.copy()
             #temp_running_stay = self.running_stay.copy()
-            backup: List[SequenceGroup] = []
             '''cur_max = -1
             if length_running != 0:
                 #temp_running.sort(key = lambda x: x.predicted_len)
@@ -276,14 +275,16 @@ class Scheduler:
                 add_long = True'''
             
             if length_runnging_stay != 0:
-
+                backup: List[SequenceGroup] = []
                 #self.running_stay.sort(key = lambda x: x.resoucre_need)
                 #total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
                 total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
                 min_resource_need = []
                 for seq_group in self.running:
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                        min_resource_need.append(seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16))
+                        t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
+                        if t > 0:
+                            min_resource_need.append(t)
                 while self.running_stay:
                     '''if add_long:
                         seq_group = self.running_stay[-1]
@@ -298,12 +299,19 @@ class Scheduler:
                         count += 1'''
                     
                     seq_group = self.running_stay.pop(0)
+                    add = False
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                        min_resource_need.append(seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16))
-                    if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
-                        self.running.append(seq_group)
+                        t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
+                        if t > 0:
+                            min_resource_need.append(t)
+                            add = True
+                    if add:
+                        if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
+                            self.running.append(seq_group)
+                        else:
+                            min_resource_need.pop(-1)
+                            backup.append(seq_group)
                     else:
-                        min_resource_need.pop()
                         backup.append(seq_group)
 
                 #temp_running.sort(key = lambda x: x.resoucre_need, reverse = True)
