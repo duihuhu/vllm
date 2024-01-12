@@ -185,7 +185,7 @@ class LLM:
                 for output in step_outputs:
                     if output.finished:
                         end = time.time()
-                        print("request end time ", end)
+                        print("request end time ", end, output.outputs[0].finish_reason)
                         with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
                             file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
                         
