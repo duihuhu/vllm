@@ -182,12 +182,12 @@ class LLM:
                 step_outputs = self.llm_engine.step(banker = False, steps = steps)
                 #step_outputs = self.llm_engine.step(banker = True, steps = steps)
                 steps += 1
-    
                 for output in step_outputs:
                     if output.finished:
                         end = time.time()
+                        print("request end time ", end)
                         with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
-                            file.write(f"req {output.request_id} end decode at {end} costs {end - st1} seconds\n")
+                            file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
                         
                         outputs.append(output)
                         if use_tqdm:
