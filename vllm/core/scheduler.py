@@ -280,7 +280,10 @@ class Scheduler:
             if self.running_stay:
                 self.running_stay.sort(key = lambda x: x.used)
 
-            cur_min = self.running[0].used
+            if self.running:
+                cur_min = self.running[0].used
+            else:
+                cur_min = 1 << 30
             while self.running_stay:
                 seq_group = self.running_stay.pop(0)
                 temp = cur_min
