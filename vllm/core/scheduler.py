@@ -285,6 +285,8 @@ class Scheduler:
                         t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
                         if t > 0:
                             min_resource_need.append(t)
+                        else:
+                            print(f"In running: add is not over 0!")
                 while self.running_stay:
                     '''if add_long:
                         seq_group = self.running_stay[-1]
@@ -313,6 +315,7 @@ class Scheduler:
                             backup.append(seq_group)
                     else:
                         backup.append(seq_group)
+                        print(f"In running_stay: add is not over 0!")
 
                 #temp_running.sort(key = lambda x: x.resoucre_need, reverse = True)
                 #self.max_running_seq_len = temp_running[0].resoucre_need
@@ -394,47 +397,72 @@ class Scheduler:
         preempted: List[SequenceGroup] = []
         #ite = 0
         t_expelled = 0
-        while self.running:
-            #t1 = self.block_manager.get_num_free_gpu_blocks()
+        used_blocks = 0
+        for seq_group in self.running:
+            for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                used_blocks += len(seq.logical_token_blocks)
+        free_blocks = self.block_manager.get_num_free_gpu_blocks()
 
-            seq_group = self.running.pop(0)
-            
-            while not self.block_manager.can_append_slot(seq_group):
-                if self.running:
-                    # Preempt the lowest-priority sequence groups.
-                    victim_seq_group = self.running.pop(-1)
-                    self._preempt(victim_seq_group, blocks_to_swap_out)
-                    preempted.append(victim_seq_group)
-                    self.expelled += 1
-                    t_expelled += 1
-                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
+        if banker == False:
+            while self.running:
+                #t1 = self.block_manager.get_num_free_gpu_blocks()
+
+                seq_group = self.running.pop(0)
+                
+                while not self.block_manager.can_append_slot(seq_group):
+                    if self.running:
+                        # Preempt the lowest-priority sequence groups.
+                        victim_seq_group = self.running.pop(-1)
+                        self._preempt(victim_seq_group, blocks_to_swap_out)
+                        preempted.append(victim_seq_group)
+                        self.expelled += 1
+                        t_expelled += 1
+                        print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
+                    else:
+                        # No other sequence groups can be preempted.
+                        # Preempt the current sequence group.
+                        self._preempt(seq_group, blocks_to_swap_out)
+                        preempted.append(seq_group) 
+                        self.expelled += 1
+                        t_expelled += 1
+                        print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
+                        break
                 else:
-                    # No other sequence groups can be preempted.
-                    # Preempt the current sequence group.
+                    # Append new slots to the sequence group.
+                    self._append_slot(seq_group, blocks_to_copy)
+                    running.append(seq_group)
+                    #label = seq_group.resoucre_need
+                    #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                    #    label += len(seq.get_token_ids())
+                    #self.max_running_seq_len = max(self.max_running_seq_len, label)
+            if t_expelled != 0:
+                with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
+                    file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
+                    file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")
+
+                #t2 = self.block_manager.get_num_free_gpu_blocks()
+                #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
+                #    file.write(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks\n")
+                #ite += 1
+
+            self.running = running
+        
+        else:
+            while self.running:
+                seq_group = self.running.pop(0)
+
+                resource_need = 0
+                for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                    resource_need += seq_group.resoucre_need - math.ceil(seq.get_output_len() / 16)
+                
+                if resource_need <= self.block_manager.get_num_free_gpu_blocks():
+                    self._append_slot(seq_group, blocks_to_copy)
+                    running.append(seq_group)
+                else:
                     self._preempt(seq_group, blocks_to_swap_out)
                     preempted.append(seq_group) 
-                    self.expelled += 1
-                    t_expelled += 1
-                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
-                    break
-            else:
-                # Append new slots to the sequence group.
-                self._append_slot(seq_group, blocks_to_copy)
-                running.append(seq_group)
-                #label = seq_group.resoucre_need
-                #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                #    label += len(seq.get_token_ids())
-                #self.max_running_seq_len = max(self.max_running_seq_len, label)
-        if t_expelled != 0:
-            with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
-                file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
-
-            #t2 = self.block_manager.get_num_free_gpu_blocks()
-            #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
-            #    file.write(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks\n")
-            #ite += 1
-
-        self.running = running
+            
+            self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)

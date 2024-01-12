@@ -203,8 +203,12 @@ class LLMEngine:
             seqs.append(seq)
 
         # Create the sequence group.
-        seq_group = SequenceGroup(request_id, seqs, sampling_params,
-                                  arrival_time, resoucre_need, predicted_len)
+        seq_group = SequenceGroup(request_id = request_id, 
+                                  seqs = seqs, 
+                                  sampling_params = sampling_params,
+                                  arrival_time = arrival_time, 
+                                  resoucre_need = resoucre_need, 
+                                  predicted_len = predicted_len)
 
         # Add the sequence group to the scheduler.
         self.scheduler.add_seq_group(seq_group)
