@@ -274,10 +274,9 @@ class Scheduler:
                 add_long = True'''
            
             #total_blocks = self.cache_config.num_gpu_blocks
-           
+            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            min_resource_need = []
             if length_runnging_stay != 0:
-                total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
-                min_resource_need = []
                 backup: List[SequenceGroup] = []
                 #self.running_stay.sort(key = lambda x: x.resoucre_need)
                 #total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
