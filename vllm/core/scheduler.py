@@ -317,7 +317,8 @@ class Scheduler:
                     if add:
                         if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
                             self.running.append(seq_group)
-                            print(f"min is {min(min_resource_need)}, length is {len(min_resource_need)}, total blocks is {total_free_tokens}")
+                            print("add resource need ", min(min_resource_need) * len(min_resource_need), total_free_tokens)
+                            # print(f"min is {min(min_resource_need)}, length is {len(min_resource_need)}", "total blocks is {total_free_tokens}")
                         else:
                             min_resource_need.pop(-1)
                             backup.append(seq_group)
