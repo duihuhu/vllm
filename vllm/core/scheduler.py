@@ -272,10 +272,12 @@ class Scheduler:
                     add_long = False
             else:
                 add_long = True'''
-            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+           
             #total_blocks = self.cache_config.num_gpu_blocks
-            min_resource_need = []
+           
             if length_runnging_stay != 0:
+                total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+                min_resource_need = []
                 backup: List[SequenceGroup] = []
                 #self.running_stay.sort(key = lambda x: x.resoucre_need)
                 #total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
@@ -397,7 +399,9 @@ class Scheduler:
             self.running = temp_running.copy()'''
             if min_resource_need:
                 if min(min_resource_need) * len(min_resource_need) > total_free_tokens:
-                    print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
+                    with open("/workspace/vllm/benchmarks/over.txt", 'a') as file:
+                        file.write(f"In ite {self.ite}, {min(min_resource_need) * len(min_resource_need)}, {total_free_tokens}\n")
+                        #print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
         if banker is False:               
             self.running = self.policy.sort_by_priority(now, self.running)    
