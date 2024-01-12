@@ -174,20 +174,20 @@ class LLM:
 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running_stay()
-            # self.llm_engine.covert_prefilled_to_running()
+            #self.llm_engine.covert_prefilled_to_running()
                 
             st2 = time.time()
             print(f"Start Decode at {st2}")
             while self.llm_engine.has_unfinished_requests():
-                # step_outputs = self.llm_engine.step(banker = False, steps = steps)
+                #step_outputs = self.llm_engine.step(banker = False, steps = steps)
                 step_outputs = self.llm_engine.step(banker = True, steps = steps)
                 steps += 1
                 for output in step_outputs:
                     if output.finished:
                         end = time.time()
-                        # with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
-                            # file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
-                        print(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
+                        with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
+                            file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
+                        
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)

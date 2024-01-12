@@ -83,11 +83,11 @@ class Scheduler:
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
 
-        self.max_running_seq_len: int = 0
-        self.re_compute: int = 0
-        self.re_swap: int = 0
-        self.ite: int = 0
-        self.expelled: int = 0
+        #self.max_running_seq_len: int = 0
+        #self.re_compute: int = 0
+        #self.re_swap: int = 0
+        #self.ite: int = 0
+        #self.expelled: int = 0
 
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
@@ -172,7 +172,7 @@ class Scheduler:
         return True'''
 
     def _schedule(self, banker: Optional[bool] = False) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
-        self.ite += 1
+        #self.ite += 1
 
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
@@ -255,7 +255,46 @@ class Scheduler:
         
             self.running.extend(extend_running)'''
         if banker:
-            length_runnging_stay = len(self.running_stay)
+            total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+            future_running: List[SequenceGroup] = []
+
+            for seq_group in self.running:
+                for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                    seq_group.used = seq_group.resoucre_need - math.ceil(seq.get_output_len() / self.cache_config.block_size)
+            if self.running:
+                self.running.sort(key = lambda x: x.used)
+           
+            while True:
+                if not self.running:
+                    break
+                if len(self.running) * self.running[0].used <= total_free_gpu_blocks:
+                    break
+                else:
+                    seq_group = self.running.pop(-1)
+                    future_running.append(seq_group)
+            
+            future_running_stay: List[SequenceGroup] = []
+            for seq_group in self.running_stay:
+                for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                    seq_group.used = seq_group.resoucre_need - math.ceil(seq.get_output_len() / self.cache_config.block_size)
+            if self.running_stay:
+                self.running_stay.sort(key = lambda x: x.used)
+
+            cur_min = self.running[0].used
+            while self.running_stay:
+                seq_group = self.running_stay.pop(0)
+                temp = cur_min
+                cur_min = min(cur_min, seq_group.used)
+                if cur_min * (len(self.running) + 1) <= total_free_gpu_blocks:
+                    self.running.append(seq_group)
+                else:
+                    future_running_stay.append(seq_group)
+                    cur_min = temp
+
+            self.running_stay.extend(future_running_stay)
+            self.running_stay.extend(future_running)    
+                
+            #length_runnging_stay = len(self.running_stay)
             #length_running = len(self.running)
             #temp_running = self.running.copy()
             #temp_running_stay = self.running_stay.copy()
@@ -274,7 +313,7 @@ class Scheduler:
                 add_long = True'''
            
             #total_blocks = self.cache_config.num_gpu_blocks
-            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            '''total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
             min_resource_need = []
             if length_runnging_stay != 0:
                 backup: List[SequenceGroup] = []
@@ -293,17 +332,17 @@ class Scheduler:
                         else:
                             print(f"In running: add is not over 0!")
                 while self.running_stay:
-                    '''if add_long:
-                        seq_group = self.running_stay[-1]
-                        for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                            min_resource_need.append(seq_group.resoucre_need - temp_run_seq.get_len())
-                        if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
-                            input = self.running_stay.pop()
-                            temp_running.append(input)
-                        else:
-                            min_resource_need.pop()
-                        add_long = False
-                        count += 1'''
+                    #if add_long:
+                    #    seq_group = self.running_stay[-1]
+                    #    for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                    #        min_resource_need.append(seq_group.resoucre_need - temp_run_seq.get_len())
+                    #    if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
+                    #        input = self.running_stay.pop()
+                    #        temp_running.append(input)
+                    #    else:
+                    #        min_resource_need.pop()
+                    #    add_long = False
+                    #    count += 1
                     
                     seq_group = self.running_stay.pop(0)
                     add = False
@@ -330,9 +369,8 @@ class Scheduler:
                 #temp_running.sort(key = lambda x: x.resoucre_need, reverse = True)
                 #self.max_running_seq_len = temp_running[0].resoucre_need
                 #self.running = temp_running.copy()
-                self.running_stay = backup
-            # print("add resource need info ", self.ite, len(self.running), len(self.running_stay), min(min_resource_need) * len(min_resource_need), total_free_tokens)
-
+                self.running_stay = backup'''
+                
             '''if length_runnging_stay != 0:
                 self.running_stay.sort(key = lambda x: x.predicted_len)
                 count = 0
@@ -399,11 +437,11 @@ class Scheduler:
             temp_running.sort(key = lambda x: x.predicted_len)
             self.max_running_seq_len = temp_running[-1].predicted_len
             self.running = temp_running.copy()'''
-            # if min_resource_need:
-            #     if min(min_resource_need) * len(min_resource_need) > total_free_tokens:
-            #         with open("/workspace/vllm/benchmarks/over.txt", 'a') as file:
-            #             file.write(f"In ite {self.ite}, {min(min_resource_need) * len(min_resource_need)}, {total_free_tokens}\n")
-            #             #print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
+            #if min_resource_need:
+            #    if min(min_resource_need) * len(min_resource_need) > total_free_tokens:
+            #        with open("/workspace/vllm/benchmarks/over.txt", 'a') as file:
+            #            file.write(f"In ite {self.ite}, {min(min_resource_need) * len(min_resource_need)}, {total_free_tokens}\n")
+                        #print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
         if banker is False:               
             # self.running = self.policy.sort_by_priority(now, self.running)    
@@ -414,76 +452,74 @@ class Scheduler:
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
         #ite = 0
-        t_expelled = 0
+        '''t_expelled = 0
         used_blocks = 0
         for seq_group in self.running:
             for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                 used_blocks += len(seq.logical_token_blocks)
-        free_blocks = self.block_manager.get_num_free_gpu_blocks()
+        free_blocks = self.block_manager.get_num_free_gpu_blocks()'''
         
         #if banker is False:
-        if True:
-            while self.running:
+        #if True:
+        while self.running:
                 #t1 = self.block_manager.get_num_free_gpu_blocks()
 
-                seq_group = self.running.pop(0)
+            seq_group = self.running.pop(0)
                 
-                while not self.block_manager.can_append_slot(self.ite, seq_group):
-                    if self.running:
-                        # Preempt the lowest-priority sequence groups.
-                        victim_seq_group = self.running.pop(-1)
-                        self._preempt(victim_seq_group, blocks_to_swap_out)
-                        preempted.append(victim_seq_group)
-                        self.expelled += 1
-                        t_expelled += 1
-                    
-                        # print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
-                    else:
-                        # No other sequence groups can be preempted.
-                        # Preempt the current sequence group.
-                        self._preempt(seq_group, blocks_to_swap_out)
-                        preempted.append(seq_group) 
-                        self.expelled += 1
-                        t_expelled += 1
-                        # print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
-                        break
+            while not self.block_manager.can_append_slot(seq_group):
+                if self.running:
+                    # Preempt the lowest-priority sequence groups.
+                    victim_seq_group = self.running.pop(-1)
+                    self._preempt(victim_seq_group, blocks_to_swap_out)
+                    preempted.append(victim_seq_group)
+                    #self.expelled += 1
+                    #t_expelled += 1
+                    #print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                 else:
-                    # Append new slots to the sequence group.
-                    self._append_slot(seq_group, blocks_to_copy)
-                    running.append(seq_group)
-                    #label = seq_group.resoucre_need
-                    #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                    #    label += len(seq.get_token_ids())
-                    #self.max_running_seq_len = max(self.max_running_seq_len, label)
-            # if t_expelled != 0:
-            #     with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
-            #         file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
-            #         file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")
-            print(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
-
-                #t2 = self.block_manager.get_num_free_gpu_blocks()
-                #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
-                #    file.write(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks\n")
-                #ite += 1
-
-            self.running = running
-        
-        '''else:
-            while self.running:
-                seq_group = self.running.pop(0)
-
-                resource_need = 0
-                for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                    resource_need += seq_group.resoucre_need - math.ceil(seq.get_output_len() / 16)
-                
-                if resource_need <= self.block_manager.get_num_free_gpu_blocks():
-                    self._append_slot(seq_group, blocks_to_copy)
-                    running.append(seq_group)
-                else:
+                    # No other sequence groups can be preempted.
+                    # Preempt the current sequence group.
                     self._preempt(seq_group, blocks_to_swap_out)
                     preempted.append(seq_group) 
+                    #self.expelled += 1
+                    #t_expelled += 1
+                    #print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
+                    break
+            else:
+                # Append new slots to the sequence group.
+                self._append_slot(seq_group, blocks_to_copy)
+                running.append(seq_group)
+                #label = seq_group.resoucre_need
+                #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                #    label += len(seq.get_token_ids())
+                #self.max_running_seq_len = max(self.max_running_seq_len, label)
+        '''if t_expelled != 0:
+            with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
+                file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
+                file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")'''
+
+            #t2 = self.block_manager.get_num_free_gpu_blocks()
+            #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
+            #    file.write(f"befor ite {ite} has {t1} blocks, after it has {t2} blocks\n")
+            #ite += 1
+
+        self.running = running
+        
+        #else:
+        #    while self.running:
+        #        seq_group = self.running.pop(0)
+
+        #        resource_need = 0
+        #        for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+        #            resource_need += seq_group.resoucre_need - math.ceil(seq.get_output_len() / 16)
+                
+        #        if resource_need <= self.block_manager.get_num_free_gpu_blocks():
+        #            self._append_slot(seq_group, blocks_to_copy)
+        #            running.append(seq_group)
+        #        else:
+        #            self._preempt(seq_group, blocks_to_swap_out)
+        #            preempted.append(seq_group) 
             
-            self.running = running'''
+        #    self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
@@ -491,11 +527,11 @@ class Scheduler:
             seq_group = self.swapped[0]
             # If the sequence group has been preempted in this step, stop.
             if seq_group in preempted:
-                print(f"In swap: this swapped req has been preempted")
+                #print(f"In swap: this swapped req has been preempted")
                 break
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
-                print(f"In swap: can't swap in no enough blocks")
+                #print(f"In swap: can't swap in no enough blocks")
                 break
 
             # The total number of sequences in the RUNNING state should not
@@ -506,7 +542,7 @@ class Scheduler:
                 for seq_group in self.running)
             if (num_curr_seqs + num_new_seqs >
                     self.scheduler_config.max_num_seqs):
-                print(f"add too more swapped req into running queue")
+                #print(f"add too more swapped req into running queue")
                 break
 
             seq_group = self.swapped.pop(0)
@@ -778,7 +814,7 @@ class Scheduler:
         # NOTE: For FCFS, we insert the preempted sequence group to the front
         # of the waiting queue.
         self.waiting.insert(0, seq_group)
-        self.re_compute += 1
+        #self.re_compute += 1
         #print(f"In ite{self.ite} a seq has been recomputed total {self.re_compute} times")
 
     def _preempt_by_swap(
@@ -791,7 +827,7 @@ class Scheduler:
             seq.status = SequenceStatus.SWAPPED
         self._swap_out(seq_group, blocks_to_swap_out)
         self.swapped.append(seq_group)
-        self.re_swap += 1
+        #self.re_swap += 1
         #print(f"In ite{self.ite} a seq has been swapped total {self.re_swap} times")
 
     def _swap_in(
