@@ -97,10 +97,10 @@ def run_vllm(
         resource_need = math.ceil(output_len / 200) * 200
         resource_need = math.ceil(resource_need / 16)
         predicted_len = prompt_len + math.ceil(output_len / 200) * 200
-        if prompt_len >= 80:
-            input_token_ids = prompt_token_ids[0: 80]
+        if prompt_len >= 96:
+            input_token_ids = prompt_token_ids[0: 96]
         else:
-            input_token_ids = prompt_token_ids + [0] * (80 - prompt_len)
+            input_token_ids = prompt_token_ids + [0] * (96 - prompt_len)
         llm._add_request(
             prompt = None,
             prompt_token_ids = input_token_ids,
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json")
     parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
-    parser.add_argument("--num-prompts", type=int, default=256,
+    parser.add_argument("--num-prompts", type=int, default=250,
                         help="Number of prompts to process.")
     parser.add_argument("--seed", type=int, default=0)
 
