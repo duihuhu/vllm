@@ -315,9 +315,9 @@ class Scheduler:
                             min_resource_need.append(t)
                             add = True
                     if add:
-                        if min(min_resource_need) * len(min_resource_need) < total_free_tokens:
+                        if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
                             self.running.append(seq_group)
-                            print("add resource need ", min(min_resource_need) * len(min_resource_need), total_free_tokens)
+                            # print("add resource need ", min(min_resource_need) * len(min_resource_need), total_free_tokens)
                             # print(f"min is {min(min_resource_need)}, length is {len(min_resource_need)}", "total blocks is {total_free_tokens}")
                         else:
                             min_resource_need.pop(-1)
@@ -330,7 +330,8 @@ class Scheduler:
                 #self.max_running_seq_len = temp_running[0].resoucre_need
                 #self.running = temp_running.copy()
                 self.running_stay = backup
-                
+            print("add resource need info ", len(self.running), len(self.running_stay), min(min_resource_need) * len(min_resource_need), total_free_tokens)
+
             '''if length_runnging_stay != 0:
                 self.running_stay.sort(key = lambda x: x.predicted_len)
                 count = 0
