@@ -84,7 +84,7 @@ def run_vllm(
     for prompt_token_ids, prompt_len, output_len in requests:
         sampling_params = SamplingParams(
             n = n,
-            temperature = 0.0 if use_beam_search else 1.0,
+            temperature = 0.0 ,
             top_p = 1.0,
             use_beam_search = use_beam_search,
             ignore_eos = True,
