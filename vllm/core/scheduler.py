@@ -254,7 +254,6 @@ class Scheduler:
             
         
             self.running.extend(extend_running)'''
-
         if banker:
             length_runnging_stay = len(self.running_stay)
             #length_running = len(self.running)
@@ -273,13 +272,15 @@ class Scheduler:
                     add_long = False
             else:
                 add_long = True'''
-            
+            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            min_resource_need = []
             if length_runnging_stay != 0:
                 backup: List[SequenceGroup] = []
                 #self.running_stay.sort(key = lambda x: x.resoucre_need)
                 #total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
-                total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
-                min_resource_need = []
+                # total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+                # min_resource_need = []
+                
                 for seq_group in self.running:
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                         t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
@@ -388,6 +389,8 @@ class Scheduler:
             temp_running.sort(key = lambda x: x.predicted_len)
             self.max_running_seq_len = temp_running[-1].predicted_len
             self.running = temp_running.copy()'''
+            
+            print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
         if banker is False:               
             self.running = self.policy.sort_by_priority(now, self.running)    
@@ -758,7 +761,7 @@ class Scheduler:
         # of the waiting queue.
         self.waiting.insert(0, seq_group)
         self.re_compute += 1
-        print(f"Has been recomputed {self.re_compute} times")
+        print(self.ite, " Has been recomputed {self.re_compute} times")
 
     def _preempt_by_swap(
         self,
