@@ -110,9 +110,6 @@ class BlockSpaceManager:
         # for each sequence, we can append.
         num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
         num_seqs = seq_group.num_seqs(status=SequenceStatus.RUNNING)
-        if num_seqs > num_free_gpu_blocks:
-            print("can append slot ", iter, num_free_gpu_blocks, num_seqs)
-            print("seq info ", seq_group.resoucre_need, seq_group.sampling_params.max_tokens, seq_group.seqs[0].data.get_output_len())
         return num_seqs <= num_free_gpu_blocks
     
     def free_tokens(self) -> int:

@@ -331,7 +331,7 @@ class Scheduler:
                 #self.max_running_seq_len = temp_running[0].resoucre_need
                 #self.running = temp_running.copy()
                 self.running_stay = backup
-            print("add resource need info ", self.ite, len(self.running), len(self.running_stay), min(min_resource_need) * len(min_resource_need), total_free_tokens)
+            # print("add resource need info ", self.ite, len(self.running), len(self.running_stay), min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
             '''if length_runnging_stay != 0:
                 self.running_stay.sort(key = lambda x: x.predicted_len)
@@ -399,11 +399,11 @@ class Scheduler:
             temp_running.sort(key = lambda x: x.predicted_len)
             self.max_running_seq_len = temp_running[-1].predicted_len
             self.running = temp_running.copy()'''
-            if min_resource_need:
-                if min(min_resource_need) * len(min_resource_need) > total_free_tokens:
-                    with open("/workspace/vllm/benchmarks/over.txt", 'a') as file:
-                        file.write(f"In ite {self.ite}, {min(min_resource_need) * len(min_resource_need)}, {total_free_tokens}\n")
-                        #print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
+            # if min_resource_need:
+            #     if min(min_resource_need) * len(min_resource_need) > total_free_tokens:
+            #         with open("/workspace/vllm/benchmarks/over.txt", 'a') as file:
+            #             file.write(f"In ite {self.ite}, {min(min_resource_need) * len(min_resource_need)}, {total_free_tokens}\n")
+            #             #print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
         if banker is False:               
             self.running = self.policy.sort_by_priority(now, self.running)    
@@ -455,10 +455,10 @@ class Scheduler:
                     #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                     #    label += len(seq.get_token_ids())
                     #self.max_running_seq_len = max(self.max_running_seq_len, label)
-            if t_expelled != 0:
-                with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
-                    file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
-                    file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")
+            # if t_expelled != 0:
+            #     with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
+            #         file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
+            #         file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")
 
                 #t2 = self.block_manager.get_num_free_gpu_blocks()
                 #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:

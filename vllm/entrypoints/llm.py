@@ -185,9 +185,9 @@ class LLM:
                 for output in step_outputs:
                     if output.finished:
                         end = time.time()
-                        with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
-                            file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
-                        
+                        # with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
+                            # file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
+                        print(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
