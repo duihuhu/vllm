@@ -179,8 +179,8 @@ class LLM:
             st2 = time.time()
             print(f"Start Decode at {st2}")
             while self.llm_engine.has_unfinished_requests():
-                step_outputs = self.llm_engine.step(banker = False, steps = steps)
-                # step_outputs = self.llm_engine.step(banker = True, steps = steps)
+                # step_outputs = self.llm_engine.step(banker = False, steps = steps)
+                step_outputs = self.llm_engine.step(banker = True, steps = steps)
                 steps += 1
                 for output in step_outputs:
                     if output.finished:

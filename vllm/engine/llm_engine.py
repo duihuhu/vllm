@@ -255,6 +255,7 @@ class LLMEngine:
             return []
         
         req_ids = [seq_group_metadata.request_id for seq_group_metadata in seq_group_metadata_list]
+        
         with open("/workspace/vllm/benchmarks/scheduler.txt", 'a') as file:
             file.write(f"In step {steps}, total {len(req_ids)} reqs, they are {req_ids}\n")
         
