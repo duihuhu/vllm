@@ -88,10 +88,10 @@ def exec_mprefill_mdecode():
 @app.post("/covert_mprefill_mdecode_exec")
 async def covert_mprefill_mdecode_exec(request: Request) -> Response:
     global machine_type
-    print(time.time())
+    print("covert_mprefill_mdecode_exec in ", time.time())
     machine_type = "mdecode"
     decode_event.set()
-    print(time.time())
+    print("after decode_event " ,time.time())
     ret = {"text": 'covert complish'}
     return JSONResponse(ret)
 
