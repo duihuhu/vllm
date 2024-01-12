@@ -40,6 +40,8 @@ prefill_event = threading.Event()
 
 decode_event = threading.Event()
 
+machine_type="mprefill"
+
 def mprefill_exec_prefill():
     with open(mp_dp, "r+b") as fd:
         mm = mmap.mmap(fd.fileno(), 8, access=mmap.ACCESS_WRITE, offset=0)
@@ -85,7 +87,11 @@ def exec_mprefill_mdecode():
 
 @app.post("/covert_mprefill_mdecode_exec")
 async def covert_mprefill_mdecode_exec(request: Request) -> Response:
+    global machine_type
+    print(time.time())
+    machine_type = "mdecode"
     decode_event.set()
+    print(time.time())
     ret = {"text": 'covert complish'}
     return JSONResponse(ret)
 
@@ -121,15 +127,44 @@ def post_monitor_request(monitor_url: str,
 def post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens):
     monitor_url = "http://127.0.0.1:9000/mprefill_monitor_report"
     response = post_monitor_request(monitor_url, host, service_port, machine_type, unfinished_req, unfinished_tokens)
+
+def post_decode_monitor_request(monitor_url: str,
+                      host: str,
+                      service_port: int,
+                      machine_type: str, 
+                      num_labels: int ,
+                      ) -> requests.Response:
+    headers = {"User-Agent": "mdecode "}
+    timestamp = time.time()
+    pload = {
+        "host": host,
+        "service_port": service_port,
+        "machine_type": machine_type,
+        "num_labels": num_labels,
+        "timestamp":timestamp,
+    }
+    response = requests.post(monitor_url, headers=headers, json=pload)
     
+    return response
+
+def post_mdecode_info(host, service_port, machine_type, num_labels):
+    monitor_url = "http://127.0.0.1:9000/mdecode_monitor_report"
+    response = post_decode_monitor_request(monitor_url, host, service_port, machine_type, num_labels)
+
+ 
 def monitor_mprefill_info(host, service_port):
     global engine
-    machine_type = "prefill"
+    global machine_type
     while True:
-        unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
-        # print("unfinished_req, unfinished_tokens", unfinished_req, unfinished_tokens)
-        post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens)
-        time.sleep(0.2)
+        if machine_type == "mprefill":
+            unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
+            # print("unfinished_req, unfinished_tokens", unfinished_req, unfinished_tokens)
+            post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens)
+            time.sleep(0.2)
+        elif machine_type == "mdecode":
+            num_labels = engine.monitor_mdecode_info()
+            post_mdecode_info(host, service_port, machine_type, num_labels)
+            time.sleep(0.2)
     return
     
 if __name__ == "__main__":
