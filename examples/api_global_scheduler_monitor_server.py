@@ -62,19 +62,20 @@ async def mdecode_monitor_report(request: Request) -> Response:
     service_port = request_dict.pop("service_port")
     machine_type = request_dict.pop("machine_type")
     # req_num = request_dict.pop("req_num") 
-    req_labels = request_dict.pop("req_labels") 
+    num_labels = request_dict.pop("num_labels") 
     timestamp = request_dict.pop("timestamp")    
     key = host + "_" + str(service_port) + "_" + machine_type
     # print(key, unfinished_req, unfinished_tokens)
     if monitor_mdecode_info.get(key):
         decode_info = monitor_mdecode_info[key]
         # prefill_info.req_num = req_num
-        decode_info.req_labels = req_labels
+        decode_info.num_labels = num_labels
         decode_info.timestamp = timestamp
     else:
-      decode_info = DecodeInfo(host, service_port, req_labels, timestamp)
+      decode_info = DecodeInfo(host, service_port, num_labels, timestamp)
       monitor_mdecode_info[key] = decode_info
     ret = {"text": 'test'}
+    print(mdecode_monitor_report)
     return JSONResponse(ret)
 
 def compose_mprefill_url():
