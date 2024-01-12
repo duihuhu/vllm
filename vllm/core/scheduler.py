@@ -447,7 +447,10 @@ class Scheduler:
                         #print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
         if banker is False:               
-            self.running = self.policy.sort_by_priority(now, self.running)    
+            # self.running = self.policy.sort_by_priority(now, self.running)    
+            # self.running = self.policy.sort_by_priority(now, self.running)    
+            # self.running.sort(key=lambda x:int(len(x.seqs[0].data.output_token_ids)),reverse=True)
+            self.running.sort(key=lambda x:int(len(x.seqs[0].data.prompt_token_ids)))
 
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
