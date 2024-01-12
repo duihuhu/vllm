@@ -77,7 +77,7 @@ def run_vllm(
         tensor_parallel_size = tensor_parallel_size,
         seed = seed,
         max_num_seqs = max_num_seqs,
-        max_num_batched_tokens = max_num_batched_tokens
+        # max_num_batched_tokens = max_num_batched_tokens
     )
     start = time.time()
 
