@@ -434,10 +434,8 @@ class Scheduler:
                         preempted.append(victim_seq_group)
                         self.expelled += 1
                         t_expelled += 1
-                        
-                        num_free_gpu_blocks = self.block_manager.gpu_allocator.get_num_free_blocks()
-                        num_seqs = seq_group.num_seqs(status=SequenceStatus.RUNNING) 
-                        # print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}", num_free_gpu_blocks, num_seqs)
+                    
+                        # print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                     else:
                         # No other sequence groups can be preempted.
                         # Preempt the current sequence group.
@@ -459,6 +457,7 @@ class Scheduler:
             #     with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
             #         file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
             #         file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")
+            print(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
 
                 #t2 = self.block_manager.get_num_free_gpu_blocks()
                 #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
