@@ -283,7 +283,8 @@ class Scheduler:
                 
                 for seq_group in self.running:
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                        t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
+                        #t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
+                        t = seq_group.resoucre_need - len(temp_run_seq.logical_token_blocks)
                         if t > 0:
                             min_resource_need.append(t)
                         else:
@@ -304,7 +305,8 @@ class Scheduler:
                     seq_group = self.running_stay.pop(0)
                     add = False
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                        t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
+                        #t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
+                        t = seq_group.resoucre_need - len(temp_run_seq.logical_token_blocks)
                         if t > 0:
                             min_resource_need.append(t)
                             add = True
@@ -389,8 +391,8 @@ class Scheduler:
             temp_running.sort(key = lambda x: x.predicted_len)
             self.max_running_seq_len = temp_running[-1].predicted_len
             self.running = temp_running.copy()'''
-            
-            print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
+            if min_resource_need:
+                print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
         if banker is False:               
             self.running = self.policy.sort_by_priority(now, self.running)    
@@ -405,8 +407,9 @@ class Scheduler:
             for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                 used_blocks += len(seq.logical_token_blocks)
         free_blocks = self.block_manager.get_num_free_gpu_blocks()
-
-        if banker == False:
+        
+        #if banker is False:
+        if True:
             while self.running:
                 #t1 = self.block_manager.get_num_free_gpu_blocks()
 
@@ -450,7 +453,7 @@ class Scheduler:
 
             self.running = running
         
-        else:
+        '''else:
             while self.running:
                 seq_group = self.running.pop(0)
 
@@ -465,7 +468,7 @@ class Scheduler:
                     self._preempt(seq_group, blocks_to_swap_out)
                     preempted.append(seq_group) 
             
-            self.running = running
+            self.running = running'''
 
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
@@ -761,7 +764,7 @@ class Scheduler:
         # of the waiting queue.
         self.waiting.insert(0, seq_group)
         self.re_compute += 1
-        print(self.ite, " Has been recomputed {self.re_compute} times")
+        #print(f"In ite{self.ite} a seq has been recomputed total {self.re_compute} times")
 
     def _preempt_by_swap(
         self,
@@ -774,7 +777,7 @@ class Scheduler:
         self._swap_out(seq_group, blocks_to_swap_out)
         self.swapped.append(seq_group)
         self.re_swap += 1
-        print(f"Has been swapped {self.re_swap} times")
+        #print(f"In ite{self.ite} a seq has been swapped total {self.re_swap} times")
 
     def _swap_in(
         self,
