@@ -272,7 +272,8 @@ class Scheduler:
                     add_long = False
             else:
                 add_long = True'''
-            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            #total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            total_blocks = self.cache_config.num_gpu_blocks
             min_resource_need = []
             if length_runnging_stay != 0:
                 backup: List[SequenceGroup] = []
@@ -284,7 +285,8 @@ class Scheduler:
                 for seq_group in self.running:
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                         #t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
-                        t = seq_group.resoucre_need - len(temp_run_seq.logical_token_blocks)
+                        #t = seq_group.resoucre_need - len(temp_run_seq.logical_token_blocks)
+                        t = seq_group.resoucre_need
                         if t > 0:
                             min_resource_need.append(t)
                         else:
@@ -306,12 +308,13 @@ class Scheduler:
                     add = False
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                         #t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
-                        t = seq_group.resoucre_need - len(temp_run_seq.logical_token_blocks)
+                        #t = seq_group.resoucre_need - len(temp_run_seq.logical_token_blocks)
+                        t = seq_group.resoucre_need
                         if t > 0:
                             min_resource_need.append(t)
                             add = True
                     if add:
-                        if min(min_resource_need) * len(min_resource_need) <= total_free_tokens:
+                        if min(min_resource_need) * len(min_resource_need) <= total_blocks: #total_free_tokens:
                             self.running.append(seq_group)
                         else:
                             min_resource_need.pop(-1)
@@ -392,7 +395,8 @@ class Scheduler:
             self.max_running_seq_len = temp_running[-1].predicted_len
             self.running = temp_running.copy()'''
             if min_resource_need:
-                print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
+                if min(min_resource_need) * len(min_resource_need) > total_blocks:
+                    print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_blocks)
 
         if banker is False:               
             self.running = self.policy.sort_by_priority(now, self.running)    
