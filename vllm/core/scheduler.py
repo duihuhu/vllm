@@ -475,10 +475,10 @@ class Scheduler:
                     # Preempt the lowest-priority sequence groups.
                     
                     # victim_seq_group = self.running.pop(-1)
-                    # if self.running_stay:
-                    #     victim_seq_group = self.running_stay.pop(-1)
-                    # else:
-                    victim_seq_group = self.running.pop(-1)
+                    if self.running_stay:
+                        victim_seq_group = self.running_stay.pop(-1)
+                    else:
+                        victim_seq_group = self.running.pop(-1)
                     self._preempt(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
                     #self.expelled += 1
@@ -578,12 +578,16 @@ class Scheduler:
             # sequence groups are added to the front and the new sequence groups
             # are added to the back.
             while self.waiting:
+                running_need_block = sum(seq_group.resoucre_need
+                                         for seq_group in self.running)
                 seq_group = self.waiting[0]
                 # If the sequence group has been preempted in this step, stop.
                 if seq_group in preempted:
                     #print(f"In waiting: this waiting queue has been preempted")
                     break
-
+                if running_need_block + seq_group.resoucre_need > self.block_manager.num_total_gpu_blocks:
+                    break
+                
                 num_prompt_tokens = seq_group.get_seqs()[0].get_len()
                 if num_prompt_tokens >= self.scheduler_config.max_seq_len:
                     # print("no space 1")
