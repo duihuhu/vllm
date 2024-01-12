@@ -254,9 +254,9 @@ class Scheduler:
             
         
             self.running.extend(extend_running)'''
-
         if banker:
             length_runnging_stay = len(self.running_stay)
+            print("length_runnging_stay ")
             #length_running = len(self.running)
             #temp_running = self.running.copy()
             #temp_running_stay = self.running_stay.copy()
@@ -732,7 +732,7 @@ class Scheduler:
         # of the waiting queue.
         self.waiting.insert(0, seq_group)
         self.re_compute += 1
-        print(f"Has been recomputed {self.re_compute} times")
+        print(self.ite, " Has been recomputed {self.re_compute} times")
 
     def _preempt_by_swap(
         self,
