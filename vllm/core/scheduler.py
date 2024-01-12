@@ -410,7 +410,7 @@ class Scheduler:
                     preempted.append(victim_seq_group)
                     self.expelled += 1
                     t_expelled += 1
-                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}", min(min_resource_need) * len(min_resource_need), total_free_tokens)
+                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
@@ -418,7 +418,7 @@ class Scheduler:
                     preempted.append(seq_group) 
                     self.expelled += 1
                     t_expelled += 1
-                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}", min(min_resource_need) * len(min_resource_need), total_free_tokens)
+                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                     break
             else:
                 # Append new slots to the sequence group.
