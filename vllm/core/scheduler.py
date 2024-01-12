@@ -255,7 +255,7 @@ class Scheduler:
         
             self.running.extend(extend_running)'''
         if banker:
-            total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+            '''total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
             future_running: List[SequenceGroup] = []
 
             for seq_group in self.running:
@@ -295,9 +295,9 @@ class Scheduler:
                     cur_min = temp
 
             self.running_stay.extend(future_running_stay)
-            self.running_stay.extend(future_running)    
+            self.running_stay.extend(future_running)'''
                 
-            #length_runnging_stay = len(self.running_stay)
+            length_runnging_stay = len(self.running_stay)
             #length_running = len(self.running)
             #temp_running = self.running.copy()
             #temp_running_stay = self.running_stay.copy()
@@ -316,7 +316,7 @@ class Scheduler:
                 add_long = True'''
            
             #total_blocks = self.cache_config.num_gpu_blocks
-            '''total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
             min_resource_need = []
             if length_runnging_stay != 0:
                 backup: List[SequenceGroup] = []
@@ -372,7 +372,7 @@ class Scheduler:
                 #temp_running.sort(key = lambda x: x.resoucre_need, reverse = True)
                 #self.max_running_seq_len = temp_running[0].resoucre_need
                 #self.running = temp_running.copy()
-                self.running_stay = backup'''
+                self.running_stay = backup
                 
             '''if length_runnging_stay != 0:
                 self.running_stay.sort(key = lambda x: x.predicted_len)

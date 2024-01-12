@@ -67,8 +67,8 @@ def run_vllm(
     seed: int = 0,
     n: int = 1,
     use_beam_search: bool = False,
-    max_num_seqs = 256,
-    max_num_batched_tokens = 4096,
+    max_num_seqs = 16,
+    max_num_batched_tokens = 128,
     split_two_phase = 1
 ) -> float:
     llm = LLM(
@@ -88,7 +88,7 @@ def run_vllm(
             top_p = 1.0,
             use_beam_search = use_beam_search,
             ignore_eos = True,
-            max_tokens = output_len,
+            max_tokens = 512,
         )
         # FIXME(woosuk): Do not use internal method.
         
@@ -97,10 +97,10 @@ def run_vllm(
         resource_need = math.ceil(output_len / 200) * 200
         resource_need = math.ceil(resource_need / 16)
         predicted_len = prompt_len + math.ceil(output_len / 200) * 200
-        if prompt_len >= 96:
-            input_token_ids = prompt_token_ids[0: 96]
+        if prompt_len >= 16:
+            input_token_ids = prompt_token_ids[0: 16]
         else:
-            input_token_ids = prompt_token_ids + [0] * (96 - prompt_len)
+            input_token_ids = prompt_token_ids + [0] * (16 - prompt_len)
         llm._add_request(
             prompt = None,
             prompt_token_ids = input_token_ids,
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json")
     parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
-    parser.add_argument("--num-prompts", type=int, default=250,
+    parser.add_argument("--num-prompts", type=int, default=90,
                         help="Number of prompts to process.")
     parser.add_argument("--seed", type=int, default=0)
 
