@@ -37,7 +37,7 @@ def sample_requests(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for i in range(len(prompt_token_ids)):
-        tokenized_dataset.append((prompt_token_ids[i], len(prompt_token_ids[i]), len(completion_token_ids[i])))
+        tokenized_dataset.append((prompt_token_ids[1074], len(prompt_token_ids[1074]), len(completion_token_ids[1074])))
     
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[List[int], int, int]] = []
@@ -94,7 +94,7 @@ def run_vllm(
         
         #resource_need = math.ceil((prompt_len + math.ceil(output_len / 200)) / 16)
         #resource_need = prompt_len + math.ceil(output_len / 200) * 200
-        resource_need = math.ceil(output_len / 200) * 200
+        resource_need = math.ceil(512 / 200) * 200
         resource_need = math.ceil(resource_need / 16)
         predicted_len = prompt_len + math.ceil(output_len / 200) * 200
         if prompt_len >= 16:
