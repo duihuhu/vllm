@@ -256,7 +256,6 @@ class Scheduler:
             self.running.extend(extend_running)'''
         if banker:
             length_runnging_stay = len(self.running_stay)
-            print("length_runnging_stay ")
             #length_running = len(self.running)
             #temp_running = self.running.copy()
             #temp_running_stay = self.running_stay.copy()
@@ -387,6 +386,8 @@ class Scheduler:
             temp_running.sort(key = lambda x: x.predicted_len)
             self.max_running_seq_len = temp_running[-1].predicted_len
             self.running = temp_running.copy()'''
+            
+            print("resource info " ,self.ite , min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
         if banker is False:               
             self.running = self.policy.sort_by_priority(now, self.running)    
