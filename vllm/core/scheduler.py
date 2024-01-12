@@ -273,13 +273,15 @@ class Scheduler:
                     add_long = False
             else:
                 add_long = True'''
-            
+            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            min_resource_need = []
             if length_runnging_stay != 0:
                 backup: List[SequenceGroup] = []
                 #self.running_stay.sort(key = lambda x: x.resoucre_need)
                 #total_free_tokens = self.block_manager.get_num_free_gpu_blocks() * self.cache_config.block_size
-                total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
-                min_resource_need = []
+                # total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+                # min_resource_need = []
+                
                 for seq_group in self.running:
                     for temp_run_seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                         t = seq_group.resoucre_need - math.ceil(temp_run_seq.get_output_len() / 16)
@@ -407,7 +409,7 @@ class Scheduler:
                     preempted.append(victim_seq_group)
                     self.expelled += 1
                     t_expelled += 1
-                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
+                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}", min(min_resource_need) * len(min_resource_need), total_free_tokens)
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
