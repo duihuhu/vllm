@@ -578,8 +578,11 @@ class Scheduler:
             # sequence groups are added to the front and the new sequence groups
             # are added to the back.
             while self.waiting:
-                running_need_block = sum(seq_group.resoucre_need
-                                         for seq_group in self.running)
+                running_need_block = 0
+                for seq_group in self.running:
+                    if seq_group.seqs[0].status == SequenceStatus.RUNNING:
+                        running_need_block = running_need_block + seq_group.resoucre_need   
+                                                                
                 seq_group = self.waiting[0]
                 # If the sequence group has been preempted in this step, stop.
                 if seq_group in preempted:
