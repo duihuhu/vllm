@@ -68,7 +68,7 @@ def run_vllm(
     n: int = 1,
     use_beam_search: bool = False,
     max_num_seqs = 16,
-    max_num_batched_tokens = 128,
+    max_num_batched_tokens = 512,
     split_two_phase = 1
 ) -> float:
     llm = LLM(
@@ -77,7 +77,7 @@ def run_vllm(
         tensor_parallel_size = tensor_parallel_size,
         seed = seed,
         max_num_seqs = max_num_seqs,
-        # max_num_batched_tokens = max_num_batched_tokens
+        max_num_batched_tokens = max_num_batched_tokens
     )
     start = time.time()
 
