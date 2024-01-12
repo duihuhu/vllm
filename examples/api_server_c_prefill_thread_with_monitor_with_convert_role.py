@@ -160,11 +160,11 @@ def monitor_mprefill_info(host, service_port):
             unfinished_req, unfinished_tokens = engine.monitor_mprefill_info()
             # print("unfinished_req, unfinished_tokens", unfinished_req, unfinished_tokens)
             post_mprefill_info(host, service_port, machine_type, unfinished_req, unfinished_tokens)
-            time.sleep(0.2)
+            time.sleep(0.005)
         elif machine_type == "mdecode":
             num_labels = engine.monitor_mdecode_info()
             post_mdecode_info(host, service_port, machine_type, num_labels)
-            time.sleep(0.2)
+            time.sleep(0.05)
     return
     
 if __name__ == "__main__":
