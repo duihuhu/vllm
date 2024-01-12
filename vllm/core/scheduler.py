@@ -330,7 +330,7 @@ class Scheduler:
                 #self.max_running_seq_len = temp_running[0].resoucre_need
                 #self.running = temp_running.copy()
                 self.running_stay = backup
-            print("add resource need info ", len(self.running), len(self.running_stay), min(min_resource_need) * len(min_resource_need), total_free_tokens)
+            print("add resource need info ", self.ite, len(self.running), len(self.running_stay), min(min_resource_need) * len(min_resource_need), total_free_tokens)
 
             '''if length_runnging_stay != 0:
                 self.running_stay.sort(key = lambda x: x.predicted_len)
