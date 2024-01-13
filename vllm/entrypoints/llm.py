@@ -176,8 +176,8 @@ class LLM:
 
         if split_two_phase == 1:
             print("block size ", self.llm_engine.cache_config.block_size)
-            self.llm_engine.covert_prefilled_to_running_stay()
-            # self.llm_engine.covert_prefilled_to_running()
+            # self.llm_engine.covert_prefilled_to_running_stay()
+            self.llm_engine.covert_prefilled_to_running()
                 
             st2 = time.time()
             print(f"Start Decode at {st2}")
