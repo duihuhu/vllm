@@ -37,7 +37,7 @@ def sample_requests(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for i in range(len(prompt_token_ids)):
-        tokenized_dataset.append((prompt_token_ids[1074], len(prompt_token_ids[1074]), len(completion_token_ids[1074])))
+        tokenized_dataset.append((prompt_token_ids[1307], len(prompt_token_ids[1307]), len(completion_token_ids[1307])))
     
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[List[int], int, int]] = []
@@ -84,7 +84,7 @@ def run_vllm(
     for prompt_token_ids, prompt_len, output_len in requests:
         sampling_params = SamplingParams(
             n = n,
-            temperature = 0.0 if use_beam_search else 1.0,
+            temperature = 0.0 ,
             top_p = 1.0,
             use_beam_search = use_beam_search,
             ignore_eos = True,
