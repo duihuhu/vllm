@@ -343,7 +343,7 @@ class LLMEngine:
                     if seq.get_last_token_id() == self.tokenizer.eos_token_id:
                         self.scheduler.free_seq(
                             seq, SequenceStatus.FINISHED_STOPPED)
-                        print(f"FINISHED_STOPPED")
+                        print(f"FINISHED_STOPPED eos token")
                         continue
 
     def _run_workers(
