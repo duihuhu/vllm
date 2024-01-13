@@ -86,8 +86,8 @@ class Scheduler:
         #self.max_running_seq_len: int = 0
         #self.re_compute: int = 0
         #self.re_swap: int = 0
-        #self.ite: int = 0
-        #self.expelled: int = 0
+        self.ite: int = 0
+        self.expelled: int = 0
 
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
@@ -172,7 +172,7 @@ class Scheduler:
         return True'''
 
     def _schedule(self, banker: Optional[bool] = False) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
-        #self.ite += 1
+        self.ite += 1
 
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
@@ -481,6 +481,7 @@ class Scheduler:
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
+        t_expelled = 0
         #ite = 0
         '''t_expelled = 0
         used_blocks = 0
@@ -508,18 +509,18 @@ class Scheduler:
                     self._preempt(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
                     print("In running: recompute the last")
-                    #self.expelled += 1
-                    #t_expelled += 1
-                    #print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
+                    self.expelled += 1
+                    t_expelled += 1
+                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
                     self._preempt(seq_group, blocks_to_swap_out)
                     preempted.append(seq_group)
                     print("In running: recompute oneself") 
-                    #self.expelled += 1
-                    #t_expelled += 1
-                    #print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
+                    self.expelled += 1
+                    t_expelled += 1
+                    print(f"In ite {self.ite} this req has been expelled from running queue total {self.expelled}")
                     break
             else:
                 # Append new slots to the sequence group.
@@ -529,10 +530,10 @@ class Scheduler:
                 #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
                 #    label += len(seq.get_token_ids())
                 #self.max_running_seq_len = max(self.max_running_seq_len, label)
-        '''if t_expelled != 0:
+        if t_expelled != 0:
             with open("/workspace/vllm/benchmarks/expelled.txt", 'a') as file:
                 file.write(f"In ite {self.ite}, {t_expelled} seqs has been expelled\n")
-                file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")'''
+                #file.write(f"{used_blocks} blocks have been allocated while {free_blocks} blocks are free\n")
 
             #t2 = self.block_manager.get_num_free_gpu_blocks()
             #with open("/workspace/vllm/benchmarks/blocks.txt", 'a') as file:
