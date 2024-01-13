@@ -8,7 +8,7 @@ from vllm.engine.llm_engine import LLMEngine
 from vllm.outputs import RequestOutput
 from vllm.sampling_params import SamplingParams
 from vllm.utils import Counter
-
+import time
 
 class LLM:
     """An LLM for generating texts from given prompts and sampling parameters.
@@ -162,7 +162,7 @@ class LLM:
                 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
-            
+            start_time = time.time()
             while self.llm_engine.has_unfinished_requests():
                 # print("interation: ", interation)
                 step_outputs = self.llm_engine.step()
@@ -173,6 +173,8 @@ class LLM:
                         # print(output)
                         if use_tqdm:
                             pbar.update(1)
+            end_time = time.time()
+            print(end_time-start_time)
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
