@@ -164,7 +164,8 @@ class LLM:
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
-                
+                    print(steps , f" req {output.request_id} end decode at {end} costs {end - st2} seconds\n", output.outputs[0].finish_reason, len(output.outputs[0].token_ids))
+
                     if use_tqdm:
                         pbar.update(1)
             if split_two_phase == 1:
