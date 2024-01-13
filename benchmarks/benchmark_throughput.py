@@ -104,6 +104,72 @@ def run_vllm(
     outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase)
     end = time.time()
     
+        # Add the requests to the engine.
+    for prompt, _, output_len in requests:
+        sampling_params = SamplingParams(
+            n=n,
+            temperature=0.0 if use_beam_search else 1.0,
+            top_p=1.0,
+            use_beam_search=use_beam_search,
+            ignore_eos=True,
+            max_tokens=output_len,
+        )
+        # FIXME(woosuk): Do not use internal method.
+        llm._add_request(
+            prompt=prompt,
+            prompt_token_ids=None,
+            sampling_params=sampling_params,
+        )
+
+    start = time.time()
+    # FIXME(woosuk): Do use internal method.
+    outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase)
+    end = time.time()
+    
+    
+        # Add the requests to the engine.
+    for prompt, _, output_len in requests:
+        sampling_params = SamplingParams(
+            n=n,
+            temperature=0.0 if use_beam_search else 1.0,
+            top_p=1.0,
+            use_beam_search=use_beam_search,
+            ignore_eos=True,
+            max_tokens=output_len,
+        )
+        # FIXME(woosuk): Do not use internal method.
+        llm._add_request(
+            prompt=prompt,
+            prompt_token_ids=None,
+            sampling_params=sampling_params,
+        )
+
+    start = time.time()
+    # FIXME(woosuk): Do use internal method.
+    outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase)
+    end = time.time()
+    
+        # Add the requests to the engine.
+    for prompt, _, output_len in requests:
+        sampling_params = SamplingParams(
+            n=n,
+            temperature=0.0 if use_beam_search else 1.0,
+            top_p=1.0,
+            use_beam_search=use_beam_search,
+            ignore_eos=True,
+            max_tokens=output_len,
+        )
+        # FIXME(woosuk): Do not use internal method.
+        llm._add_request(
+            prompt=prompt,
+            prompt_token_ids=None,
+            sampling_params=sampling_params,
+        )
+
+    start = time.time()
+    # FIXME(woosuk): Do use internal method.
+    outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase)
+    end = time.time()
     
     elapsed_time = end-start 
     total_num_tokens = sum(
