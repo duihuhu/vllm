@@ -67,7 +67,7 @@ def run_vllm(
     seed: int = 0,
     n: int = 1,
     use_beam_search: bool = False,
-    max_num_seqs = 2,
+    max_num_seqs = 16,
     max_num_batched_tokens = 512,
     split_two_phase = 0
 ) -> float:
