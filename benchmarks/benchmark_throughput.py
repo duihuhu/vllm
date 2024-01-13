@@ -40,7 +40,7 @@ def sample_requests(
     tokenized_dataset = []
     index = 0
     for i in range(len(dataset)):
-        if (index+1) % 3 == 0:
+        if (index+1) % 4 == 0:
             output_len = len(completion_token_ids[53])
             tokenized_dataset.append((prompts[53], prompt_token_ids[53], output_len))
         else:
