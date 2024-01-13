@@ -165,7 +165,7 @@ class LLM:
                 if output.finished:
                     outputs.append(output)
                     end = time.time()
-                    print(steps , f" req {output.request_id} end decode at {end} costs {end - st1} seconds\n", output.outputs[0].finish_reason, len(output.outputs[0].token_ids))
+                    #print(steps , f" req {output.request_id} end decode at {end} costs {end - st1} seconds\n", output.outputs[0].finish_reason, len(output.outputs[0].token_ids))
 
                     if use_tqdm:
                         pbar.update(1)
@@ -175,7 +175,7 @@ class LLM:
         print(f"End Prefill at {ed1}")
 
         if split_two_phase == 1:
-            print("block size ", self.llm_engine.cache_config.block_size)
+            #print("block size ", self.llm_engine.cache_config.block_size)
             # self.llm_engine.covert_prefilled_to_running_stay()
             self.llm_engine.covert_prefilled_to_running()
                 
@@ -188,9 +188,9 @@ class LLM:
                 for output in step_outputs:
                     if output.finished:
                         end = time.time()
-                        # with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
-                            # file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n", output.outputs[0].finish_reason)
-                        print(steps , f" req {output.request_id} end decode at {end} costs {end - st2} seconds\n", output.outputs[0].finish_reason, len(output.outputs[0].token_ids))
+                        with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
+                            file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n", output.outputs[0].finish_reason)
+                        #print(steps , f" req {output.request_id} end decode at {end} costs {end - st2} seconds\n", output.outputs[0].finish_reason, len(output.outputs[0].token_ids))
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
