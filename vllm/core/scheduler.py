@@ -255,11 +255,17 @@ class Scheduler:
         
             self.running.extend(extend_running)'''
         if banker:
-            '''if self.running_stay:
+            min_resource_need: List[int] = []
+            total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+            if self.running_stay:
                 self.running_stay.sort(key = lambda x: x.resoucre_need)
             if self.running:
                 self.running.sort(key = lambda x: x.resoucre_need)
                 cur_max = self.running[-1].resoucre_need
+                for seq_group in self.running:
+                    t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
+                    if t > 0 :
+                        min_resource_need.append(t)
             else:
                 cur_max = -1
             backup: List[SequenceGroup] = []
@@ -268,19 +274,29 @@ class Scheduler:
                 stay_max = self.running_stay[-1].resoucre_need
                 if stay_max > cur_max and done is False:
                     seq_group = self.running_stay.pop(-1)
-                    if self.block_manager.can_append_slot(seq_group):
-                        self._append_slot(seq_group, blocks_to_copy)
+                    t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
+                    if t > 0 :
+                        min_resource_need.append(t)
+                    #if self.block_manager.can_append_slot(seq_group):
+                    if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
+                        #self._append_slot(seq_group, blocks_to_copy)
                         self.running.insert(0, seq_group)
                     else:
                         backup.append(seq_group)
+                        min_resource_need.pop(-1)
                     done = True
                 seq_group = self.running_stay.pop(0)
-                if self.block_manager.can_append_slot(seq_group):
-                    self._append_slot(seq_group, blocks_to_copy)
+                t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
+                if t > 0 :
+                    min_resource_need.append(t)
+                #if self.block_manager.can_append_slot(seq_group):
+                if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
+                    #self._append_slot(seq_group, blocks_to_copy)
                     self.running.append(seq_group)
                 else:
                     backup.append(seq_group)
-            self.running_stay = backup'''
+                    min_resource_need.pop(-1)
+            self.running_stay = backup
             '''total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
             future_running: List[SequenceGroup] = []
 
@@ -323,7 +339,7 @@ class Scheduler:
             self.running_stay.extend(future_running_stay)
             self.running_stay.extend(future_running)'''
                 
-            length_runnging_stay = len(self.running_stay)
+            #length_runnging_stay = len(self.running_stay)
             #length_running = len(self.running)
             #temp_running = self.running.copy()
             #temp_running_stay = self.running_stay.copy()
@@ -342,7 +358,7 @@ class Scheduler:
                 add_long = True'''
            
             #total_blocks = self.cache_config.num_gpu_blocks
-            total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
+            '''total_free_tokens = self.block_manager.get_num_free_gpu_blocks()
             min_resource_need = []
             if length_runnging_stay != 0:
                 backup: List[SequenceGroup] = []
@@ -398,7 +414,7 @@ class Scheduler:
                 #temp_running.sort(key = lambda x: x.resoucre_need, reverse = True)
                 #self.max_running_seq_len = temp_running[0].resoucre_need
                 #self.running = temp_running.copy()
-                self.running_stay = backup
+                self.running_stay = backup'''
                 
             '''if length_runnging_stay != 0:
                 self.running_stay.sort(key = lambda x: x.predicted_len)
