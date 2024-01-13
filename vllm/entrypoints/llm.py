@@ -174,7 +174,7 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             end_time = time.time()
-            print(end_time-start_time)
+            print("decode time ", end_time-start_time)
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
