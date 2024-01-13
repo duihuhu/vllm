@@ -189,7 +189,7 @@ class LLM:
                     if output.finished:
                         end = time.time()
                         with open("/workspace/vllm/benchmarks/end_time.txt", 'a') as file:
-                            file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n", output.outputs[0].finish_reason)
+                            file.write(f"req {output.request_id} end decode at {end} costs {end - st2} seconds\n")
                         #print(steps , f" req {output.request_id} end decode at {end} costs {end - st2} seconds\n", output.outputs[0].finish_reason, len(output.outputs[0].token_ids))
                         outputs.append(output)
                         if use_tqdm:
