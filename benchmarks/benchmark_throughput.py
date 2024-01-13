@@ -95,7 +95,7 @@ def run_vllm(
         #resource_need = math.ceil((prompt_len + math.ceil(output_len / 200)) / 16)
         #resource_need = prompt_len + math.ceil(output_len / 200) * 200
         resource_need = math.ceil(output_len / 200) * 200
-        #resource_need = math.ceil(resource_need / 16)
+        resource_need = math.ceil(resource_need / 16)
         predicted_len = prompt_len + math.ceil(output_len / 200) * 200
         if prompt_len >= 80:
             input_token_ids = prompt_token_ids[0: 80]
