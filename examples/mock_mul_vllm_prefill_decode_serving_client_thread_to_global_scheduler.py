@@ -31,7 +31,7 @@ request_prompts_token_ids = {}
 request_prompts = {}
 
 mdecode_prefilled_num = 0
-total_requests = 32
+total_requests = 16
 # batch_size = 4
 
 # prefilled_event = asyncio.Event()
@@ -87,7 +87,7 @@ async def post_prefill_exec(prompts: List[str],
     prefilled_event.wait()
     print("after prefilled_event wait ")
     num_prompts = len(prompts)
-    batch_size = 32
+    batch_size = 16
     alread_send = 0
     while alread_send <= num_prompts:
         # if alread_send == 0:
@@ -196,8 +196,8 @@ def sample_requests(
         request_id = random_uuid()
         prompt_len = len(prompt_token_ids)
         # if prompt_len > 256 or output_len > 128:
-        # if prompt_len < 4 or output_len < 4:
-        if prompt_len < 512 or output_len < 256:
+        if prompt_len < 4 or output_len < 4:
+        # if prompt_len < 512 or output_len < 256:
         # if prompt_len > 512 or output_len < 128:
             # Prune too short sequences.
             continue
