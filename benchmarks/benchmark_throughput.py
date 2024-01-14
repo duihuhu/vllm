@@ -111,11 +111,17 @@ def run_vllm(
 
 
     # FIXME(woosuk): Do use internal method.
-    llm._run_engine(use_tqdm = False, split_two_phase = split_two_phase)
+    outputs = llm._run_engine(use_tqdm = False, split_two_phase = split_two_phase)
     end = time.time()
-        
+
+    t = 0
+    for i, output in enumerate(outputs):
+        end_length = len(output.outputs[0].token_ids)
+        if end_length < requests[i][2]:
+            t += 1
     
-    elapsed_time = end - start 
+    elapsed_time = end - start
+    print(f"{t} seqs have returned before output length")
     return elapsed_time
 
 def main(args: argparse.Namespace):

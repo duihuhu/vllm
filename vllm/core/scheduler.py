@@ -257,10 +257,10 @@ class Scheduler:
         if banker:
             min_resource_need: List[int] = []
             total_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-            if self.running_stay:
-                self.running_stay.sort(key = lambda x: x.resoucre_need)
+            #if self.running_stay:
+            #    self.running_stay.sort(key = lambda x: x.resoucre_need)
             if self.running:
-                self.running.sort(key = lambda x: x.resoucre_need)
+                #self.running.sort(key = lambda x: x.resoucre_need)
                 cur_max = self.running[-1].resoucre_need
                 for seq_group in self.running:
                     t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
@@ -271,7 +271,7 @@ class Scheduler:
             backup: List[SequenceGroup] = []
             done: bool = False
             while self.running_stay:
-                stay_max = self.running_stay[-1].resoucre_need
+                '''stay_max = self.running_stay[-1].resoucre_need
                 if stay_max > cur_max and done is False:
                     seq_group = self.running_stay.pop(-1)
                     t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
@@ -285,7 +285,7 @@ class Scheduler:
                     else:
                         backup.append(seq_group)
                         min_resource_need.pop(-1)
-                    done = True
+                    done = True'''
                 seq_group = self.running_stay.pop(0)
                 t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
                 #if t > 0 :
