@@ -5,11 +5,57 @@ import random
 import time
 from typing import List, Tuple
 import math
+import numpy as np
 
 from transformers import PreTrainedTokenizerBase
 
 from vllm import LLM, SamplingParams
 from vllm.transformers_utils.tokenizer import get_tokenizer
+
+def error() -> int:
+    acc_value = ["0", "1"]
+    acc_probs = [0.719, 0.281]
+
+    gap_value = ["1lt", "1gt", "2lt", "2gt", "3lt", "3gt", "4lt", "4gt", "5lt", "5gt", "6lt", "7lt", "8lt", "9lt"]
+    gap_probs = [0.73295 * (1-0.43798), 0.73295 * 0.43798, 0.16080 * (1-0.35689), 0.16080 * 0.35689, 0.06136 * (1-0.23148), 
+                 0.06136 * 0.23148, 0.02500 * (1-0.18182), 0.02500 * 0.18182, 0.01136 * (1-0.05000), 0.01136 * 0.05000,
+                 0.00625, 0.00114, 0.00057, 0.00057]
+    
+    random_acc = np.random.choice(acc_value, acc_probs)
+    if random_acc == "1":
+        random_gap = np.random.choice(gap_value, gap_probs)
+        if random_gap == "1lt":
+            return -1
+        elif random_gap == "1gt":
+            return 1   
+        elif random_gap == "2lt":
+            return -2
+        elif random_gap == "2gt":
+            return 2
+        elif random_gap == "3lt":
+            return -3     
+        elif random_gap == "3gt":
+            return 3
+        elif random_gap == "4lt":
+            return -4
+        elif random_gap == "4gt":
+            return 4
+        elif random_gap == "5lt":
+            return -5
+        elif random_gap == "5gt":
+            return 5
+        elif random_gap == "6lt":
+            return -6
+        elif random_gap == "7lt":
+            return -7
+        elif random_gap == "8lt":
+            return -8
+        elif random_gap == "9lt":
+            return -9
+        else:
+            return 10
+    else:
+        return 10
 
 def sample_requests(
     dataset_path: str,
@@ -94,7 +140,14 @@ def run_vllm(
         
         #resource_need = math.ceil((prompt_len + math.ceil(output_len / 200)) / 16)
         #resource_need = prompt_len + math.ceil(output_len / 200) * 200
+        e = error()
         resource_need = math.floor(output_len / 200) * 200
+        if e != 10:
+            resource_need += e * 200
+            if resource_need > 2000:
+                resource_need = 2000
+            if resource_need < 200:
+                resource_need = 200
         resource_need = math.ceil(resource_need / 16)
         predicted_len = prompt_len + math.ceil(output_len / 200) * 200
         if prompt_len >= 80:

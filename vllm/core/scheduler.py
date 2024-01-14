@@ -264,8 +264,8 @@ class Scheduler:
                 cur_max = self.running[-1].resoucre_need
                 for seq_group in self.running:
                     t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
-                    #if t > 0 :
-                    min_resource_need.append(t)
+                    if t > 0 :
+                        min_resource_need.append(t)
             else:
                 cur_max = -1
             backup: List[SequenceGroup] = []
@@ -288,11 +288,11 @@ class Scheduler:
                     done = True'''
                 seq_group = self.running_stay.pop(0)
                 t = seq_group.resoucre_need - math.ceil(seq_group.seqs[0].get_output_len() / 16)
-                #if t > 0 :
-                min_resource_need.append(t)
+                if t > 0 :
+                    min_resource_need.append(t)
                 #if self.block_manager.can_append_slot(seq_group):
-                if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
-                #if sum(min_resource_need) <= total_free_gpu_blocks:
+                #if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
+                if sum(min_resource_need) <= total_free_gpu_blocks:
                     #self._append_slot(seq_group, blocks_to_copy)
                     self.running.append(seq_group)
                 else:
