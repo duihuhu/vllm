@@ -291,8 +291,8 @@ class Scheduler:
                 #if t > 0 :
                 min_resource_need.append(t)
                 #if self.block_manager.can_append_slot(seq_group):
-                #if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
-                if sum(min_resource_need) <= total_free_gpu_blocks:
+                if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
+                #if sum(min_resource_need) <= total_free_gpu_blocks:
                     #self._append_slot(seq_group, blocks_to_copy)
                     self.running.append(seq_group)
                 else:
