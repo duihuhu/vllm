@@ -543,12 +543,12 @@ class Scheduler:
         if self.running_waiting:
             while self.running_waiting:
                 seq_group = self.running_waiting.pop(0)
-                cur_time = time.time()
+                # cur_time = time.time()
                 # print("waitinfo ", cur_time, seq_group.arrival_time, len(seq_group.seqs[0].data.prompt_token_ids), seq_group.seqs[0].waiting_time)
-                if cur_time - seq_group.arrival_time >= seq_group.seqs[0].waiting_time: 
-                    self.running.append(seq_group)
-                else:
-                    running_waiting.append(seq_group)
+                # if cur_time - seq_group.arrival_time >= seq_group.seqs[0].waiting_time: 
+                #     self.running.append(seq_group)
+                # else:
+                running_waiting.append(seq_group)
         self.running_waiting = running_waiting
                 # add_to_running = time.time()
                 # print("decode add_to_running ", seq_group.request_id, add_to_running)
