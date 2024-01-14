@@ -21,9 +21,9 @@ def error() -> int:
                  0.06136 * 0.23148, 0.02500 * (1-0.18182), 0.02500 * 0.18182, 0.01136 * (1-0.05000), 0.01136 * 0.05000,
                  0.00625, 0.00114, 0.00057, 0.00057]
     
-    random_acc = np.random.choice(acc_value, acc_probs)
+    random_acc = np.random.choice(acc_value, p = acc_probs)
     if random_acc == "1":
-        random_gap = np.random.choice(gap_value, gap_probs)
+        random_gap = np.random.choice(gap_value, p = gap_probs)
         if random_gap == "1lt":
             return -1
         elif random_gap == "1gt":
