@@ -650,7 +650,7 @@ class Scheduler:
                         waiting.append(seq_group)
                         self.waiting.pop(0)
                         continue
-                    print(min(min_resource_need) * len(min_resource_need), total_free_gpu_blocks )
+                    print(min(min_resource_need) * len(min_resource_need), seq_group.predicted_len, total_free_gpu_blocks)
                     seq_group = self.waiting.pop(0)
                     self._allocate(seq_group)
                     self.running.append(seq_group)
