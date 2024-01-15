@@ -626,6 +626,7 @@ class Scheduler:
                 # sequence groups are added to the front and the new sequence groups
                 # are added to the back.
                 waiting = []
+                total_free_gpu_blocks =  self.block_manager.get_num_free_gpu_blocks()
                 while self.waiting:
                                     
                     seq_group = self.waiting[0]
