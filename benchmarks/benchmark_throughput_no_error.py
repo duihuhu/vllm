@@ -140,14 +140,14 @@ def run_vllm(
         
         #resource_need = math.ceil((prompt_len + math.ceil(output_len / 200)) / 16)
         #resource_need = prompt_len + math.ceil(output_len / 200) * 200
-        e = error()
-        resource_need = math.floor(output_len / 200) * 200
-        if e != 10:
-            resource_need += e * 200
-            if resource_need > 2000:
-                resource_need = 2000
-            if resource_need < 200:
-                resource_need = 200
+        # e = error()
+        resource_need = (math.floor(output_len / 200) + 1) * 200
+        # if e != 10:
+        #     resource_need += e * 200
+        #     if resource_need > 2000:
+        #         resource_need = 2000
+        #     if resource_need < 200:
+        #         resource_need = 200
         resource_need = math.ceil(resource_need / 16)
         # predicted_len = prompt_len + math.ceil(output_len / 200) * 200
 
