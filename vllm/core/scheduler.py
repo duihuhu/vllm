@@ -291,8 +291,8 @@ class Scheduler:
                 if t > 0 :
                     min_resource_need.append(t)
                 #if self.block_manager.can_append_slot(seq_group):
-                # if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
-                if sum(min_resource_need) <= total_free_gpu_blocks:
+                if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
+                # if sum(min_resource_need) <= total_free_gpu_blocks:
                     #self._append_slot(seq_group, blocks_to_copy)
                     self.running.append(seq_group)
                 else:
@@ -638,8 +638,8 @@ class Scheduler:
                         continue
                     
                     min_resource_need.append(seq_group.predicted_len)
-                    if sum(min_resource_need) >= total_free_gpu_blocks:
-                    # if min(min_resource_need) * len(min_resource_need) >= total_free_gpu_blocks:
+                    # if sum(min_resource_need) >= total_free_gpu_blocks:
+                    if min(min_resource_need) * len(min_resource_need) >= total_free_gpu_blocks:
                         min_resource_need.pop(-1)
                         waiting.append(seq_group)
                         self.waiting.pop(0)
@@ -652,7 +652,12 @@ class Scheduler:
                         waiting.append(seq_group)
                         self.waiting.pop(0)
                         continue
-                    print(min(min_resource_need) * len(min_resource_need), seq_group.predicted_len, total_free_gpu_blocks)
+                    # If the sequence group cannot be allocated, stop.
+                    if not self.block_manager.can_allocate(seq_group):
+                        waiting.append(seq_group)
+                        self.waiting.pop(0)   
+                        continue
+                    # print(min(min_resource_need) * len(min_resource_need), seq_group.predicted_len, total_free_gpu_blocks)
                     seq_group = self.waiting.pop(0)
                     self._allocate(seq_group)
                     self.running.append(seq_group)
