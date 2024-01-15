@@ -658,6 +658,12 @@ class Scheduler:
                     #self.max_running_seq_len = max(self.max_running_seq_len, label)
                     num_batched_tokens += num_prompt_tokens
                     prompt_group_ids.append(seq_group.request_id)
+                scheduler_outputs = SchedulerOutputs(
+                    blocks_to_swap_in=blocks_to_swap_in,
+                    blocks_to_swap_out=blocks_to_swap_out,
+                    blocks_to_copy=blocks_to_copy,
+                )
+                
                 self.waiting = waiting
         else:  
             if not self.swapped:
