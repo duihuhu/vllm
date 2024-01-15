@@ -291,8 +291,8 @@ class Scheduler:
                 if t > 0 :
                     min_resource_need.append(t)
                 #if self.block_manager.can_append_slot(seq_group):
-                #if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
-                if sum(min_resource_need) <= total_free_gpu_blocks:
+                if min(min_resource_need) * len(min_resource_need) <= total_free_gpu_blocks:
+                # if sum(min_resource_need) <= total_free_gpu_blocks:
                     #self._append_slot(seq_group, blocks_to_copy)
                     self.running.append(seq_group)
                 else:
@@ -620,115 +620,151 @@ class Scheduler:
         # prioritized over the sequence groups in the WAITING state.
         # This is because we want to bound the amount of CPU memory taken by
         # the swapped sequence groups.
-        if not self.swapped:
-            # Optimization: We do not sort the waiting queue since the preempted
-            # sequence groups are added to the front and the new sequence groups
-            # are added to the back.
-            while self.waiting:
-                # running_need_block = 0
-                # for seq_group in self.running:
-                #     if seq_group.seqs[0].status == SequenceStatus.RUNNING:
-                #         running_need_block = running_need_block + seq_group.resoucre_need   
-                                                                
-                seq_group = self.waiting[0]
-                # If the sequence group has been preempted in this step, stop.
-                if seq_group in preempted:
-                    print(f"In waiting: this waiting queue has been preempted")
-                    break
-                # if running_need_block + seq_group.resoucre_need > self.block_manager.num_total_gpu_blocks:
-                #     break
-                
-                num_prompt_tokens = seq_group.get_seqs()[0].get_len()
-                if num_prompt_tokens >= self.scheduler_config.max_seq_len:
-                    print("In waiting: more than max length")
-                    logger.warning(
-                        f"Input prompt ({num_prompt_tokens} tokens) is too long"
-                        " and exceeds limit of "
-                        f"{self.scheduler_config.max_seq_len}")
-                    for seq in seq_group.get_seqs():
-                        seq.status = SequenceStatus.FINISHED_IGNORED
-                    ignored_seq_groups.append(seq_group)
-                    self.waiting.pop(0)
-                    break
+        if banker:
+            if not self.swapped:
+                # Optimization: We do not sort the waiting queue since the preempted
+                # sequence groups are added to the front and the new sequence groups
+                # are added to the back.
+                waiting = []
+                while self.waiting:
+                                    
+                    seq_group = self.waiting[0]
+                    # If the sequence group has been preempted in this step, stop.
+                    if seq_group in preempted:
+                        print(f"In waiting: this waiting queue has been preempted")
+                        waiting.append(seq_group)
+                        self.waiting.pop(0)
+                        continue
+                    
+                    if banker is True:
+                        min_resource_need.append(seq_group.predicted_len)
+                        if min(min_resource_need) * len(min_resource_need) >= total_free_gpu_blocks:
+                            waiting.append(min_resource_need.pop(-1))
+                    
+                    num_prompt_tokens = seq_group.get_seqs()[0].get_len()
+                    # If the number of batched tokens exceeds the limit, stop.
+                    if (num_batched_tokens + num_prompt_tokens >
+                            self.scheduler_config.max_num_batched_tokens):
+                        waiting.append(seq_group)
+                        self.waiting.pop(0)
+                        continue
 
-                # If the sequence group cannot be allocated, stop.
-                if not self.block_manager.can_allocate(seq_group):
-                    print(f"In waiting: there is no enough blocks")
-                    break
+                    seq_group = self.waiting.pop(0)
+                    self._allocate(seq_group)
+                    self.running.append(seq_group)
+                    #label = seq_group.resoucre_need
+                    #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                    #    label += len(seq.get_token_ids())
+                    #self.max_running_seq_len = max(self.max_running_seq_len, label)
+                    num_batched_tokens += num_prompt_tokens
+                    prompt_group_ids.append(seq_group.request_id)
+                self.waiting = waiting
+        else:  
+            if not self.swapped:
+                # Optimization: We do not sort the waiting queue since the preempted
+                # sequence groups are added to the front and the new sequence groups
+                # are added to the back.
+                waiting = []
+                while self.waiting:
+                                    
+                    seq_group = self.waiting[0]
+                    # If the sequence group has been preempted in this step, stop.
+                    if seq_group in preempted:
+                        print(f"In waiting: this waiting queue has been preempted")
+                        break
+                    
+                    
+                    num_prompt_tokens = seq_group.get_seqs()[0].get_len()
+                    if num_prompt_tokens >= self.scheduler_config.max_seq_len:
+                        print("In waiting: more than max length")
+                        logger.warning(
+                            f"Input prompt ({num_prompt_tokens} tokens) is too long"
+                            " and exceeds limit of "
+                            f"{self.scheduler_config.max_seq_len}")
+                        for seq in seq_group.get_seqs():
+                            seq.status = SequenceStatus.FINISHED_IGNORED
+                        ignored_seq_groups.append(seq_group)
+                        self.waiting.pop(0)
+                        break
+                                                                    
+                    # If the sequence group cannot be allocated, stop.
+                    if not self.block_manager.can_allocate(seq_group):
+                        print(f"In waiting: there is no enough blocks")
+                        break
 
-                # If the number of batched tokens exceeds the limit, stop.
-                if (num_batched_tokens + num_prompt_tokens >
-                        self.scheduler_config.max_num_batched_tokens):
-                    print(f"In waiting: more than max_num_batched_tokens")
-                    break
+                    # If the number of batched tokens exceeds the limit, stop.
+                    if (num_batched_tokens + num_prompt_tokens >
+                            self.scheduler_config.max_num_batched_tokens):
+                        print(f"In waiting: more than max_num_batched_tokens")
+                        break
 
-                # The total number of sequences in the RUNNING state should not
-                # exceed the maximum number of sequences.
-                num_new_seqs = seq_group.num_seqs(
-                    status=SequenceStatus.WAITING)
-                num_curr_seqs = sum(
-                    seq_group.num_seqs(status=SequenceStatus.RUNNING)
-                    for seq_group in self.running)
-                if (num_curr_seqs + num_new_seqs >
-                        self.scheduler_config.max_num_seqs):
-                    print(f"In waiting: more than batch size")
-                    break
-                seq_group = self.waiting.pop(0)
-                self._allocate(seq_group)
-                self.running.append(seq_group)
-                #label = seq_group.resoucre_need
-                #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
-                #    label += len(seq.get_token_ids())
-                #self.max_running_seq_len = max(self.max_running_seq_len, label)
-                num_batched_tokens += num_prompt_tokens
-                prompt_group_ids.append(seq_group.request_id)
+                    # The total number of sequences in the RUNNING state should not
+                    # exceed the maximum number of sequences.
+                    num_new_seqs = seq_group.num_seqs(
+                        status=SequenceStatus.WAITING)
+                    num_curr_seqs = sum(
+                        seq_group.num_seqs(status=SequenceStatus.RUNNING)
+                        for seq_group in self.running)
+                    if (num_curr_seqs + num_new_seqs >
+                            self.scheduler_config.max_num_seqs):
+                        print(f"In waiting: more than batch size")
+                        break
+                    seq_group = self.waiting.pop(0)
+                    self._allocate(seq_group)
+                    self.running.append(seq_group)
+                    #label = seq_group.resoucre_need
+                    #for seq in seq_group.get_seqs(status = SequenceStatus.RUNNING):
+                    #    label += len(seq.get_token_ids())
+                    #self.max_running_seq_len = max(self.max_running_seq_len, label)
+                    num_batched_tokens += num_prompt_tokens
+                    prompt_group_ids.append(seq_group.request_id)
 
-        scheduler_outputs = SchedulerOutputs(
-            blocks_to_swap_in=blocks_to_swap_in,
-            blocks_to_swap_out=blocks_to_swap_out,
-            blocks_to_copy=blocks_to_copy,
-        )
-        
-        if not self.log_stats:
-            return scheduler_outputs, prompt_group_ids, ignored_seq_groups
+            scheduler_outputs = SchedulerOutputs(
+                blocks_to_swap_in=blocks_to_swap_in,
+                blocks_to_swap_out=blocks_to_swap_out,
+                blocks_to_copy=blocks_to_copy,
+            )
+            
+            if not self.log_stats:
+                return scheduler_outputs, prompt_group_ids, ignored_seq_groups
 
-        # TODO(woosuk): Move the below code to the engine.
-        now = time.time()
-        if num_batched_tokens > 0:
-            self.num_input_tokens.append((now, num_batched_tokens))
-        elapsed_time = now - self.last_logging_time
-        if elapsed_time > _LOGGING_INTERVAL_SEC:
-            self.last_logging_time = now
-            self.num_input_tokens = [(t, n) for t, n in self.num_input_tokens
-                                     if now - t < _LOGGING_INTERVAL_SEC]
-            if len(self.num_input_tokens) > 1:
-                total_num_tokens = sum(n
-                                       for _, n in self.num_input_tokens[:-1])
-                window = now - self.num_input_tokens[0][0]
-                avg_throughput = total_num_tokens / window
-            else:
-                avg_throughput = 0.0
+            # TODO(woosuk): Move the below code to the engine.
+            now = time.time()
+            if num_batched_tokens > 0:
+                self.num_input_tokens.append((now, num_batched_tokens))
+            elapsed_time = now - self.last_logging_time
+            if elapsed_time > _LOGGING_INTERVAL_SEC:
+                self.last_logging_time = now
+                self.num_input_tokens = [(t, n) for t, n in self.num_input_tokens
+                                        if now - t < _LOGGING_INTERVAL_SEC]
+                if len(self.num_input_tokens) > 1:
+                    total_num_tokens = sum(n
+                                        for _, n in self.num_input_tokens[:-1])
+                    window = now - self.num_input_tokens[0][0]
+                    avg_throughput = total_num_tokens / window
+                else:
+                    avg_throughput = 0.0
 
-            total_num_gpu_blocks = self.cache_config.num_gpu_blocks
-            num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
-            num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
-            gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
+                total_num_gpu_blocks = self.cache_config.num_gpu_blocks
+                num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
+                num_used_gpu_blocks = total_num_gpu_blocks - num_free_gpu_blocks
+                gpu_cache_usage = num_used_gpu_blocks / total_num_gpu_blocks
 
-            total_num_cpu_blocks = self.cache_config.num_cpu_blocks
-            if total_num_cpu_blocks > 0:
-                num_free_cpu_blocks = (
-                    self.block_manager.get_num_free_cpu_blocks())
-                num_used_cpu_blocks = total_num_cpu_blocks - num_free_cpu_blocks
-                cpu_cache_usage = num_used_cpu_blocks / total_num_cpu_blocks
-            else:
-                cpu_cache_usage = 0.0
+                total_num_cpu_blocks = self.cache_config.num_cpu_blocks
+                if total_num_cpu_blocks > 0:
+                    num_free_cpu_blocks = (
+                        self.block_manager.get_num_free_cpu_blocks())
+                    num_used_cpu_blocks = total_num_cpu_blocks - num_free_cpu_blocks
+                    cpu_cache_usage = num_used_cpu_blocks / total_num_cpu_blocks
+                else:
+                    cpu_cache_usage = 0.0
 
-            logger.info(f"Throughput: {avg_throughput:.1f} tokens/s, "
-                        f"Running: {len(self.running)} reqs, "
-                        f"Swapped: {len(self.swapped)} reqs, "
-                        f"Pending: {len(self.waiting)} reqs, "
-                        f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%, "
-                        f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
+                logger.info(f"Throughput: {avg_throughput:.1f} tokens/s, "
+                            f"Running: {len(self.running)} reqs, "
+                            f"Swapped: {len(self.swapped)} reqs, "
+                            f"Pending: {len(self.waiting)} reqs, "
+                            f"GPU KV cache usage: {gpu_cache_usage * 100:.1f}%, "
+                            f"CPU KV cache usage: {cpu_cache_usage * 100:.1f}%")
         return scheduler_outputs, prompt_group_ids, ignored_seq_groups
 
     # def store_prompt_kv_cache(self):
