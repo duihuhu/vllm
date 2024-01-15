@@ -638,7 +638,9 @@ class Scheduler:
                     
                     min_resource_need.append(seq_group.predicted_len)
                     if min(min_resource_need) * len(min_resource_need) >= total_free_gpu_blocks:
-                        waiting.append(min_resource_need.pop(-1))
+                        min_resource_need.pop(-1)
+                        waiting.append(seq_group)
+                        self.waiting.pop(0)
                         continue
                     
                     num_prompt_tokens = seq_group.get_seqs()[0].get_len()
