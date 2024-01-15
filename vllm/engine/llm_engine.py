@@ -320,7 +320,7 @@ class LLMEngine:
                         self.scheduler.free_seq(
                             seq, SequenceStatus.FINISHED_STOPPED)
                         stopped = True
-                        print(f"FINISHED_STOPPED")
+                        # print(f"FINISHED_STOPPED")
                         break
                 if stopped:
                     continue
@@ -330,20 +330,20 @@ class LLMEngine:
                         self.scheduler.scheduler_config.max_seq_len):
                     self.scheduler.free_seq(
                         seq, SequenceStatus.FINISHED_LENGTH_CAPPED)
-                    print(f"FINISHED_LENGTH_CAPPED config")
+                    # print(f"FINISHED_LENGTH_CAPPED config")
                     continue
                 # Check if the sequence has reached max_tokens.
                 if seq.get_output_len() == sampling_params.max_tokens:
                     self.scheduler.free_seq(
                         seq, SequenceStatus.FINISHED_LENGTH_CAPPED)
-                    print(f"FINISHED_LENGTH_CAPPED sampling")
+                    # print(f"FINISHED_LENGTH_CAPPED sampling")
                     continue
                 # Check if the sequence has generated the EOS token.
                 if not sampling_params.ignore_eos:
                     if seq.get_last_token_id() == self.tokenizer.eos_token_id:
                         self.scheduler.free_seq(
                             seq, SequenceStatus.FINISHED_STOPPED)
-                        print(f"FINISHED_STOPPED eos token")
+                        # print(f"FINISHED_STOPPED eos token")
                         continue
 
     def _run_workers(
