@@ -253,17 +253,24 @@ def kv_server():
     client_socket, client_address = server_socket.accept()
     print(f"连接来自: {client_address}")
     # 接收地址和长度
-    data_start_address_bytes = client_socket.recv(8)
-    data_length_bytes = client_socket.recv(4)
+    while True:
+        data_start_address_bytes = client_socket.recv(8)
+        data_length_bytes = client_socket.recv(4)
 
-    data_start_address = int.from_bytes(data_start_address_bytes, byteorder='big')
-    data_length = int.from_bytes(data_length_bytes, byteorder='big')
+        data_start_address = int.from_bytes(data_start_address_bytes, byteorder='big')
+        data_length = int.from_bytes(data_length_bytes, byteorder='big')
 
-    # 接收实际数据
-    data = client_socket.recv(data_length)
-    print(f"Received data from address {hex(data_start_address)}: {data.decode()}")
+        # 接收实际数据
+        data = client_socket.recv(data_length)
+        print(f"Received data from address {hex(data_start_address)}: {data.decode()}")
         
 if __name__ == "__main__":
+    
+    kv_data = {}
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ('127.0.0.1', 12345)
+    server_socket.bind(server_address)
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=8000)
@@ -271,11 +278,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
-    engine = AsyncLLMEngine.from_engine_args(engine_args)
-    kv_data = {}
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('127.0.0.1', 12345)
-    server_socket.bind(server_address)
+    engine = AsyncLLMEngine.from_engine_args(engine_args, "decode")
     
     t_server = threading.Thread(kv_server)
     t_server.start()
