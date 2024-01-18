@@ -270,6 +270,8 @@ if __name__ == "__main__":
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ('127.0.0.1', 12345)
     server_socket.bind(server_address)
+    t_server = threading.Thread(kv_server)
+    t_server.start()
     
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
@@ -280,8 +282,7 @@ if __name__ == "__main__":
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args, "decode")
     
-    t_server = threading.Thread(kv_server)
-    t_server.start()
+
     uvicorn.run(app,
                 host=args.host,
                 port=args.port,
