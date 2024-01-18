@@ -12,14 +12,18 @@ class NetStatus(enum.Enum):
     S_MEM = enum.auto()
     ROCE = enum.auto()
     SOCKET = enum.auto()
-    
+
+class MachineType(enum.Enum):
+    mprefill = "mprefill"
+    mdecode = "mdecode"
+
 class KvTransfer:
-  def __init__(self) -> None:
-    self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # 连接到服务器
-    self.server_address = ('127.0.0.1', 12345)
-    self.client_socket.connect(self.server_address)
-    
+  def __init__(self, machine_type) -> None:
+    if machine_type ==MachineType.mprefill:
+      self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      # 连接到服务器
+      self.server_address = ('127.0.0.1', 12345)
+      self.client_socket.connect(self.server_address)
     # self.rdma
     pass
   

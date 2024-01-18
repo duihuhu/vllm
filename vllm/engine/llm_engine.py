@@ -55,6 +55,7 @@ class LLMEngine:
         distributed_init_method: str,
         stage_devices: List[List[DeviceID]],
         log_stats: bool,
+        machine_type: str,
     ) -> None:
         logger.info(
             "Initializing an LLM engine with config: "
@@ -108,7 +109,7 @@ class LLMEngine:
 
         # Create the scheduler.
         self.scheduler = Scheduler(scheduler_config, cache_config, log_stats,\
-                            model_config, parallel_config)
+                            model_config, parallel_config, machine_type)
         
     def _verify_args(self) -> None:
         self.model_config.verify_with_parallel_config(self.parallel_config)
