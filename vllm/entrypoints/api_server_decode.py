@@ -277,7 +277,8 @@ if __name__ == "__main__":
     server_address = ('127.0.0.1', 12345)
     server_socket.bind(server_address)
     
-    threading.Thread(kv_server)
+    t_server = threading.Thread(kv_server)
+    t_server.start()
     uvicorn.run(app,
                 host=args.host,
                 port=args.port,
