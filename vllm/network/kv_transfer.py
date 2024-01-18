@@ -3,7 +3,6 @@ from typing import List, Dict
 from vllm.outputs import CompletionOutput, RequestOutput
 import requests
 from vllm.engine.plasma_client import plasma_client
-from vllm.network.kv_socket import send_data_using_memoryview
 import socket
 from ctypes import create_string_buffer
 
