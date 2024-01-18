@@ -4,7 +4,8 @@ from vllm.worker.object_manager.object_info import ObjectInfo
 class ObjectClient:
     def __init__(self) -> None:
       self.socket_client_ = zerorpc.Client()
-      self.socket_client_.connect("tcp://127.0.0.1:4242")    
+      self.socket_client_.connect("tcp://127.0.0.1:4242")
+      print("BBB")  
 
 
 if __name__ == "__main__":
