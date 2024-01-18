@@ -23,7 +23,6 @@ class KvTransfer:
       self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       # 连接到服务器
       self.server_address = ('127.0.0.1', 12345)
-      self.client_socket.connect(self.server_address)
     # self.rdma
     pass
   
@@ -56,8 +55,9 @@ class KvTransfer:
   
   def send_in_socket(self, prefill_blocks_to_object_swap_out):
     key_address, value_address, kv_bytes = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
+    self.client_socket.connect(self.server_address)
     self.send_to_mdecode(key_address, value_address, kv_bytes)
-
+    self.client_socket.close()
     return
   
   def send_to_mdecode(self, key_object_address, value_object_address, kv_bytes):
