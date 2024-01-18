@@ -19,7 +19,7 @@ class MachineType(enum.Enum):
 
 class KvTransfer:
   def __init__(self, machine_type) -> None:
-    if machine_type ==MachineType.mprefill:
+    if machine_type == "mprefill":
       self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       # 连接到服务器
       self.server_address = ('127.0.0.1', 12345)
