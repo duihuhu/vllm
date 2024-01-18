@@ -13,6 +13,7 @@ import pyarrow._plasma as plasma_object
 from vllm.worker.object_manager.object_info import ObjectInfo
 import requests
 from vllm.outputs import RequestOutput
+from vllm.network.kv_transfer import KvTransfer
 
 logger = init_logger(__name__)
 
@@ -109,6 +110,7 @@ class Scheduler:
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
 
+        self.kv_transfer = KvTransfer()
     def restruct_block_table(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.block_manager.restruct_block_table(seq_group)
@@ -478,6 +480,9 @@ class Scheduler:
             seq_group = self.prefilled.pop(0)
             blocks = self.block_manager._get_physical_blocks(seq_group)
             print("request_id: ", seq_group.request_id, blocks)
+
+    def post_prefilled_seqs(self, prefill_blocks_to_object_swap_out) -> None:
+        self.prefilled = self.kv_transfer.send(self.prefilled, prefill_blocks_to_object_swap_out)
 
     def post_prefilled_to_controller(self) -> None:
         

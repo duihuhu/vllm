@@ -10,6 +10,7 @@ class ObjectInfo:
     self.device_id = device_id
     self.ip_address = ip_address
     self.object_ids = []
+    self.rank = -1
   
   def allocate_objects_id(self, num_layers) -> List[List[plasma_object.ObjectID]]:
     object_ids = []

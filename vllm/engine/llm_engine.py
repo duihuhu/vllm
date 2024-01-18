@@ -14,6 +14,7 @@ from vllm.transformers_utils.tokenizer import (detokenize_incrementally,
                                                get_tokenizer)
 from vllm.utils import Counter
 from vllm.worker.worker import Worker
+from vllm.network.kv_transfer import KvTransfer
 logger = init_logger(__name__)
 
 class LLMEngine:
@@ -108,7 +109,7 @@ class LLMEngine:
         # Create the scheduler.
         self.scheduler = Scheduler(scheduler_config, cache_config, log_stats,\
                             model_config, parallel_config)
-
+        
     def _verify_args(self) -> None:
         self.model_config.verify_with_parallel_config(self.parallel_config)
         self.cache_config.verify_with_parallel_config(self.parallel_config)
@@ -473,8 +474,12 @@ class LLMEngine:
         # swap_time = time.time()
         # print("swap out time in prefill ", swap_time)
 
-        self.scheduler.post_prefilled_to_controller()
+        # self.scheduler.post_prefilled_to_controller()
         
+        self.scheduler.post_prefilled_seqs(prefill_blocks_to_object_swap_out)
+        
+        # self.scheduler.kv_transfer.send(prefill_blocks_to_object_swap_out)
+
         # send_time = time.time()
         # print("send to controller time in prefill ", send_time)
 
