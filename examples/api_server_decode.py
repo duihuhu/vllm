@@ -41,6 +41,7 @@ def background_execute():
             step_outputs = engine.engine.step_decoder()
             for output in step_outputs:
                 if output.finished:
+                    print(output)
                     outputs.append(output)
         end_time = time.time()
         if len(outputs) !=0:
