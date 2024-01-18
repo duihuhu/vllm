@@ -352,7 +352,7 @@ class AsyncLLMEngine:
 
     @classmethod
     def from_engine_args(cls,
-                         engine_args: AsyncEngineArgs, machine_type="prefill") -> "AsyncLLMEngine":
+                         engine_args: AsyncEngineArgs, machine_type="mprefill") -> "AsyncLLMEngine":
         """Creates an async LLM engine from the engine arguments."""
         # Create the engine configs.
         engine_configs = engine_args.create_engine_configs()
@@ -368,5 +368,5 @@ class AsyncLLMEngine:
                      devices,
                      log_requests=not engine_args.disable_log_requests,
                      log_stats=not engine_args.disable_log_stats,
-                     machine_type)
+                     machine_type=machine_type)
         return engine

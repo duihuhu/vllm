@@ -266,13 +266,6 @@ def kv_server():
         
 if __name__ == "__main__":
     
-    kv_data = {}
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('127.0.0.1', 12345)
-    server_socket.bind(server_address)
-    t_server = threading.Thread(target=kv_server)
-    t_server.start()
-    
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=8000)
@@ -280,8 +273,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     engine_args = AsyncEngineArgs.from_cli_args(args)
-    engine = AsyncLLMEngine.from_engine_args(engine_args)
+    engine = AsyncLLMEngine.from_engine_args(engine_args, "mdecode")
     
+    kv_data = {}
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ('127.0.0.1', 12345)
+    server_socket.bind(server_address)
+    t_server = threading.Thread(target=kv_server)
+    t_server.start()
 
     uvicorn.run(app,
                 host=args.host,
