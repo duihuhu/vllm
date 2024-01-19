@@ -68,7 +68,7 @@ class KvTransfer:
     self.client_socket.connect(self.server_address)
     #todo get from c
     kv_bytes = self._get_kv_size()
-    key_address, value_address, kv_bytes = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
+    key_address, value_address = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     print("key value addr ", key_address, value_address, kv_bytes)
     # self.send_to_mdecode(key_address, value_address, kv_bytes)
     self.client_socket.close()
@@ -100,10 +100,15 @@ class KvTransfer:
     key_object_address = []
     value_object_address = []
     object_ids = []
+    object_address = []
     for key, obj_info in prefill_blocks_to_object_swap_out.items():
         for kobj, vobj in obj_info.items():
           for obj in vobj:
             print("object ids " , obj.object_ids)
+            object_ids.extend(obj.object_ids)
+            
+    object_address = plasma_client.get_buffers(object_ids)
+    print("object_address ", object_address)
         # print(key, "obj_info ", obj_info)
         # key_obj_info = (obj_info[rank].object_ids)[0]
         # kv_bytes = key_obj_info.kv_size
