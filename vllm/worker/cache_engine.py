@@ -197,7 +197,9 @@ class CacheEngine:
             
             for key, obj_info in src_to_dst.items():
                 key_object_info = (obj_info[rank].object_ids)[0]
+                key_object_info.kv_size = key_block_size_in_bytes
                 value_object_info = (obj_info[rank].object_ids)[1]
+                value_object_info.kv_size = key_block_size_in_bytes
                 key_obj = plasma_client.create(key_object_info[i], key_block_size_in_bytes)
                 key_objects_address.append(key_obj.address)
                 value_obj = plasma_client.create(value_object_info[i], value_block_size_in_bytes)
@@ -326,7 +328,6 @@ class CacheEngine:
         value_cache_block = key_cache_block
         total = num_layers * (key_cache_block + value_cache_block)
         dtype_size = _get_dtype_size(model_config.dtype)
-        print("_get_dtype_size: ", dtype_size, head_size, num_heads, num_layers, dtype_size*head_size*num_heads*num_layers)
         return dtype_size * total
 
 
