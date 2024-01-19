@@ -99,20 +99,24 @@ class KvTransfer:
     # print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
     key_object_address = []
     value_object_address = []
+    object_ids = []
     for key, obj_info in prefill_blocks_to_object_swap_out.items():
-        print(key, "obj_info ", obj_info)
-        key_obj_info = (obj_info[rank].object_ids)[0]
-        kv_bytes = key_obj_info.kv_size
-        value_obj_info = (obj_info[rank].object_ids)[1]
-        key_obj_buf = plasma_client.get_buffers(key_obj_info)
-        value_obj_buf = plasma_client.get_buffers(value_obj_info)
-        key_obj_addr = []
-        value_obj_addr = []
-        for k_addr, v_addr in zip(key_obj_buf, value_obj_buf):
-            key_obj_addr.append(k_addr.address)
-            value_obj_addr.append(v_addr.address)
-        key_object_address.append(key_obj_addr)
-        value_object_address.append(value_obj_addr)
+        for kobj, vobj in obj_info.items():
+          for obj in vobj:
+            print("object ids " , obj.object_ids)
+        # print(key, "obj_info ", obj_info)
+        # key_obj_info = (obj_info[rank].object_ids)[0]
+        # kv_bytes = key_obj_info.kv_size
+        # value_obj_info = (obj_info[rank].object_ids)[1]
+        # key_obj_buf = plasma_client.get_buffers(key_obj_info)
+        # value_obj_buf = plasma_client.get_buffers(value_obj_info)
+        # key_obj_addr = []
+        # value_obj_addr = []
+        # for k_addr, v_addr in zip(key_obj_buf, value_obj_buf):
+        #     key_obj_addr.append(k_addr.address)
+        #     value_obj_addr.append(v_addr.address)
+        # key_object_address.append(key_obj_addr)
+        # value_object_address.append(value_obj_addr)
         
     return key_object_address, value_object_address
   
