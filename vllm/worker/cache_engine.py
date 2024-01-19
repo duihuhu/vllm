@@ -174,7 +174,7 @@ class CacheEngine:
         key_block_size_in_bytes = src[0][0].element_size() * src[0][0][0].numel()
         value_block_size_in_bytes = src[0][1].element_size() * src[0][1][0].numel()
         
-        
+        print("value_block_size_in_bytes ", key_block_size_in_bytes, value_block_size_in_bytes)
         # start_create_prefilled_object = time.time()
         #by gpu block num compose
         # key_layer_object_address = []
