@@ -84,6 +84,7 @@ class KvTransfer:
   
   def get_kv_object_address(self, prefill_blocks_to_object_swap_out):
     rank = 0
+    print("prefill_blocks_to_object_swap_out ", prefill_blocks_to_object_swap_out)
     block_size_in_bytes = prefill_blocks_to_object_swap_out[0][1].element_size() * prefill_blocks_to_object_swap_out[0][1][0].numel()
         # print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
     src_to_dst_copy = {}
