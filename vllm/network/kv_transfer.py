@@ -22,12 +22,14 @@ class MachineType(enum.Enum):
     mdecode = "mdecode"
 
 class KvTransfer:
-  def __init__(self, machine_type) -> None:
+  def __init__(self, machine_type, model_config) -> None:
     if machine_type == "mprefill":
       self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       # 连接到服务器
       self.server_address = ('127.0.0.1', 12345)
+    
     # self.rdma
+    self.model_config = model_config
     pass
   
   def decode_machine_info(self):
@@ -60,7 +62,7 @@ class KvTransfer:
   
   def send_in_socket(self, prefilled, prefill_blocks_to_object_swap_out: Dict[int, List[ObjectInfo]]):
     self.client_socket.connect(self.server_address)
-    kv_bytes = kv_element_size()
+    kv_bytes = self._get_dtype_size(self.model_config.dtype)
     print("kv_bytes ", kv_bytes)
     key_address, value_address,  = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     print("key value addr ", key_address, value_address, kv_bytes)
@@ -169,6 +171,6 @@ class KvTransfer:
   def recv_in_roce(self, prefill_blocks_to_object_swap_out):
     return
   
-def kv_element_size():
-    element_size = torch.tensor([], dtype=ModelConfig.dtype).element_size()
-    return element_size
+  def _get_dtype_size(self, dtype: torch.dtype):
+      element_size = torch.tensor([], dtype=dtype).element_size()
+      return element_size
