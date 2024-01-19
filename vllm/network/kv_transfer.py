@@ -68,8 +68,8 @@ class KvTransfer:
     self.client_socket.connect(self.server_address)
     #todo get from c
     kv_bytes = self._get_kv_size()
-    key_address, value_address = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
-    print("key value addr ", key_address, value_address, kv_bytes)
+    obj_ids, obj_addr = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
+    print("key value addr ", obj_ids, obj_addr, kv_bytes)
     # self.send_to_mdecode(key_address, value_address, kv_bytes)
     self.client_socket.close()
     return prefilled
@@ -97,17 +97,19 @@ class KvTransfer:
   def get_kv_object_address(self, prefill_blocks_to_object_swap_out):
     rank = 0
     # print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
-    key_object_address = []
-    value_object_address = []
+    # key_object_address = []
+    # value_object_address = []
     object_ids = []
     object_address = []
     for key, obj_info in prefill_blocks_to_object_swap_out.items():
         for kobj, vobj in obj_info.items():
           for obj in vobj:
-            print("object ids " , obj.object_ids)
-            object_ids.extend(obj.object_ids)
-            
+            for ids in obj.object_ids:
+            # print("object ids " , obj.object_ids)
+              object_ids.extend(ids)
+    
     object_address = plasma_client.get_buffers(object_ids)
+    print("object_ids ", object_ids)
     print("object_address ", object_address)
         # print(key, "obj_info ", obj_info)
         # key_obj_info = (obj_info[rank].object_ids)[0]
@@ -123,7 +125,7 @@ class KvTransfer:
         # key_object_address.append(key_obj_addr)
         # value_object_address.append(value_obj_addr)
         
-    return key_object_address, value_object_address
+    return object_ids, object_address
   
   def recv_in_sockect():
     return
