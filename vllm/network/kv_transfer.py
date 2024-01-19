@@ -75,6 +75,9 @@ class KvTransfer:
     return prefilled
   
   def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes):
+    obj_count = len(obj_ids)
+    self.client_socket.sendall(obj_count.to_bytes(8, byteorder='big'))
+    
     for obj, k_addr in zip(obj_ids, obj_addr):
       obj_str = obj.binary().hex()
       print("obj str ", obj_str)
@@ -82,13 +85,14 @@ class KvTransfer:
       self.client_socket.sendall(len(obj_bytes).to_bytes(8, byteorder='big'))
       self.client_socket.sendall(obj_bytes)
       
+      #send buffer size
       self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
       
-      # buffer = create_string_buffer(kv_bytes)
-      # mv = memoryview(buffer)
-      # mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
+      buffer = create_string_buffer(kv_bytes)
+      mv = memoryview(buffer)
+      mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
       # # 发送实际数据
-      # self.client_socket.sendall(mv)
+      self.client_socket.sendall(mv)
     
     return
   
