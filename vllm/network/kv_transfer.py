@@ -100,7 +100,7 @@ class KvTransfer:
     key_object_address = []
     value_object_address = []
     for key, obj_info in prefill_blocks_to_object_swap_out.items():
-        print("obj_info ", obj_info)
+        print(key, "obj_info ", obj_info)
         key_obj_info = (obj_info[rank].object_ids)[0]
         kv_bytes = key_obj_info.kv_size
         value_obj_info = (obj_info[rank].object_ids)[1]
