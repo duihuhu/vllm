@@ -111,7 +111,7 @@ class Scheduler:
         # List[timestamp, num_tokens]
         self.num_input_tokens: List[Tuple[float, int]] = []
 
-        self.kv_transfer = KvTransfer(machine_type, model_config)
+        self.kv_transfer = KvTransfer(machine_type=machine_type, model_config=model_config, cache_config=cache_config, parallel_config=parallel_config)
     def restruct_block_table(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.block_manager.restruct_block_table(seq_group)

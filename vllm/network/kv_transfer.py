@@ -7,7 +7,9 @@ import socket
 from ctypes import create_string_buffer
 from vllm.worker.object_manager.object_info import ObjectInfo
 from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, SequenceGroup
-from vllm.config import ModelConfig
+from vllm.config import ModelConfig, CacheConfig
+from vllm.worker.cache_engine import CacheEngine
+
 import torch
 
 mine_ip = "127.0.0.1"
@@ -22,7 +24,7 @@ class MachineType(enum.Enum):
     mdecode = "mdecode"
 
 class KvTransfer:
-  def __init__(self, machine_type, model_config) -> None:
+  def __init__(self, machine_type, model_config, cache_config, parallel_config) -> None:
     if machine_type == "mprefill":
       self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
       # 连接到服务器
@@ -30,6 +32,8 @@ class KvTransfer:
     
     # self.rdma
     self.model_config = model_config
+    self.cache_config = cache_config
+    self.parallel_config = parallel_config
     pass
   
   def decode_machine_info(self):
@@ -62,11 +66,11 @@ class KvTransfer:
   
   def send_in_socket(self, prefilled, prefill_blocks_to_object_swap_out: Dict[int, List[ObjectInfo]]):
     self.client_socket.connect(self.server_address)
-    kv_bytes = self._get_dtype_size(self.model_config.dtype)
+    kv_bytes = self._get_cache_block_size()
     print("kv_bytes ", kv_bytes)
     key_address, value_address,  = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     print("key value addr ", key_address, value_address, kv_bytes)
-    self.send_to_mdecode(key_address, value_address, kv_bytes)
+    # self.send_to_mdecode(key_address, value_address, kv_bytes)
     self.client_socket.close()
     return prefilled
   
@@ -98,6 +102,7 @@ class KvTransfer:
     key_object_address = []
     value_object_address = []
     for key, obj_info in prefill_blocks_to_object_swap_out.items():
+        print(obj_info)
         src_to_dst_copy[key] = 0
         key_obj_info = (obj_info[rank].object_ids)[0]
         value_obj_info = (obj_info[rank].object_ids)[1]
@@ -171,6 +176,6 @@ class KvTransfer:
   def recv_in_roce(self, prefill_blocks_to_object_swap_out):
     return
   
-  def _get_dtype_size(self, dtype: torch.dtype):
-      element_size = torch.tensor([], dtype=dtype).element_size()
-      return element_size
+  def _get_cache_block_size(self,):
+      cache_block_size = CacheEngine.get_cache_block_size(self.cache_config.block_size, self.model_config, self.parallel_config)
+      return cache_block_size
