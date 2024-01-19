@@ -84,7 +84,7 @@ class KvTransfer:
   def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes):
     obj_count = len(obj_ids)
     self.client_socket.sendall(obj_count.to_bytes(8, byteorder='big'))
-    
+    print(obj_count)
     for obj, k_addr in zip(obj_ids, obj_addr):
       obj_str = obj.binary().hex()
       print("obj str ", obj_str)
