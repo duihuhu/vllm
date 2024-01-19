@@ -4,14 +4,11 @@ from vllm.outputs import CompletionOutput, RequestOutput
 import requests
 from vllm.engine.plasma_client import plasma_client
 import socket
-from ctypes import create_string_buffer
+import ctypes
 from vllm.worker.object_manager.object_info import ObjectInfo
 from vllm.sequence import SequenceData, SequenceGroupMetadata, SequenceOutputs, SequenceGroup
 from vllm.config import ModelConfig, CacheConfig
 from vllm.worker.cache_engine import CacheEngine
-
-import torch
-
 mine_ip = "127.0.0.1"
 decode_info = {}
 class NetStatus(enum.Enum):
@@ -88,10 +85,20 @@ class KvTransfer:
       #send buffer size
       self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
       
-      buffer = create_string_buffer(kv_bytes)
-      mv = memoryview(buffer)
-      print("k_addr ", k_addr, type(k_addr))
-      mv[:] = k_addr
+      # integer_value = 140391508213824
+
+      # 创建一个ctypes指针对象
+      pointer = ctypes.c_void_p(k_addr)
+      # 通过memoryview创建对象，指向指针
+      mv = memoryview(ctypes.create_string_buffer(pointer.value, kv_bytes))
+      # 打印memoryview对象的内容（以16进制表示）
+      # print(mv.hex())
+        
+      # k_addr = 140391508213824
+      # buffer = create_string_buffer(kv_bytes)
+      # mv = memoryview(buffer)
+      # print("k_addr ", k_addr, type(k_addr), k_addr.to_bytes(byteorder='big'))
+      # mv[:] = k_addr.to_bytes(byteorder='big')
       # mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
       # # 发送实际数据
       self.client_socket.sendall(mv)
