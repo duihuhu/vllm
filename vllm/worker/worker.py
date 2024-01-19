@@ -327,6 +327,7 @@ class Worker:
         if blocks_to_object_swap_out:
             # start_swap_out_prefilled_cache = time.time()
             for key, value in blocks_to_object_swap_out.items():
+                print("swap_out_prefilled_cache ", blocks_to_object_swap_out)
                 self.cache_engine.swap_out_prefilled_to_plasma(value, self.rank)
             # end_swap_out_prefilled_cache = time.time()
             # print("start_swap_out_prefilled_cache, end_swap_out_prefilled_cache time ", start_swap_out_prefilled_cache, end_swap_out_prefilled_cache, self.rank)
