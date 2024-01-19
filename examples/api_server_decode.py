@@ -253,7 +253,9 @@ def kv_server():
     print("等待客户端连接...")
     while True:
         client_socket, client_address = server_socket.accept()
-        print(f"连接来自: {client_address}")
+        recv_buffer_size = client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
+
+        print(f"连接来自: {client_address}", recv_buffer_size)
         obj_count_bytes = client_socket.recv(8)
         obj_count = int.from_bytes(obj_count_bytes, byteorder='big')
         # 接收地址和长度
