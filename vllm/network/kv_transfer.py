@@ -66,6 +66,8 @@ class KvTransfer:
   
   def send_in_socket(self, prefilled, prefill_blocks_to_object_swap_out: Dict[int, List[ObjectInfo]]):
     self.client_socket.connect(self.server_address)
+    #todo get from c
+    kv_bytes = self._get_kv_size()
     key_address, value_address, kv_bytes = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     print("key value addr ", key_address, value_address, kv_bytes)
     # self.send_to_mdecode(key_address, value_address, kv_bytes)
@@ -97,7 +99,6 @@ class KvTransfer:
     # print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
     key_object_address = []
     value_object_address = []
-    k_bytes = -1
     for key, obj_info in prefill_blocks_to_object_swap_out.items():
         print("obj_info ", obj_info)
         key_obj_info = (obj_info[rank].object_ids)[0]
@@ -113,7 +114,7 @@ class KvTransfer:
         key_object_address.append(key_obj_addr)
         value_object_address.append(value_obj_addr)
         
-    return key_object_address, value_object_address, kv_bytes
+    return key_object_address, value_object_address
   
   def recv_in_sockect():
     return
@@ -173,6 +174,7 @@ class KvTransfer:
   def recv_in_roce(self, prefill_blocks_to_object_swap_out):
     return
   
-  def _get_cache_block_size(self,):
-      cache_block_size = CacheEngine.get_cache_block_size(self.cache_config.block_size, self.model_config, self.parallel_config)
-      return cache_block_size
+  def _get_kv_size(self,):
+      return 12288
+      # cache_block_size = CacheEngine.get_cache_block_size(self.cache_config.block_size, self.model_config, self.parallel_config)
+      # return cache_block_size

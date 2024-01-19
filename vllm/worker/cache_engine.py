@@ -197,9 +197,7 @@ class CacheEngine:
             
             for key, obj_info in src_to_dst.items():
                 key_object_info = (obj_info[rank].object_ids)[0]
-                key_object_info[i].kv_size = key_block_size_in_bytes
                 value_object_info = (obj_info[rank].object_ids)[1]
-                value_object_info[i].kv_size = key_block_size_in_bytes
                 key_obj = plasma_client.create(key_object_info[i], key_block_size_in_bytes)
                 key_objects_address.append(key_obj.address)
                 value_obj = plasma_client.create(value_object_info[i], value_block_size_in_bytes)
