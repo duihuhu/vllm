@@ -43,7 +43,7 @@ class KvTransfer:
     # net_type = self.judge_network_type()
     net_type = NetStatus.SOCKET
     if net_type == NetStatus.SOCKET:
-        self.send_in_socket(prefilled, prefill_blocks_to_object_swap_out)
+        prefilled = self.send_in_socket(prefilled, prefill_blocks_to_object_swap_out)
     elif net_type == NetStatus.ROCE:
         # Handle ROCE case
         self.send_in_roce(prefill_blocks_to_object_swap_out)
@@ -54,13 +54,13 @@ class KvTransfer:
         return prefilled
     return 
   
-  def send_in_socket(self, prefill_blocks_to_object_swap_out):
+  def send_in_socket(self, prefilled, prefill_blocks_to_object_swap_out):
     key_address, value_address, kv_bytes = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     print("key value addr ", key_address, value_address, kv_bytes)
     self.client_socket.connect(self.server_address)
     self.send_to_mdecode(key_address, value_address, kv_bytes)
     self.client_socket.close()
-    return
+    return prefilled
   
   def send_to_mdecode(self, key_object_address, value_object_address, kv_bytes):
     for k_addr in key_object_address:
