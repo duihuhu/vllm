@@ -272,8 +272,8 @@ def kv_server():
             
             data_bytes = client_socket.recv(kv_bytes)
             recv_buffer_size = client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
-            print("decode obj ", obj, kv_bytes, "\n", recv_buffer_size)
-            # print("decode obj ", obj, kv_bytes, "\n")
+            print("decode obj ", obj, kv_bytes, "\n")
+            print("decode obj data ", recv_buffer_size, len(data_bytes), "\n")
             obj_count = obj_count - 1
             
 if __name__ == "__main__":

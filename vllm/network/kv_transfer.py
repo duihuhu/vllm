@@ -100,8 +100,9 @@ class KvTransfer:
       # # mv[:] = k_addr.to_bytes(byteorder='big')
       # mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
       # # 发送实际数据
-      print("data len ", len(data))
       self.client_socket.sendall(data)
+      recv_buffer_size = self.client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
+      print("decode obj ", obj_str, recv_buffer_size, len(data))
     return
   
   def get_kv_object_address(self, prefill_blocks_to_object_swap_out):
