@@ -75,7 +75,8 @@ class KvTransfer:
       # 创建一个缓冲区，这里假设你要读取的是 bytes 数据
       buffer = ctypes.create_string_buffer(length)
       # 将指定地址的数据复制到缓冲区
-      ctypes.memmove(buffer, start_address, length)
+      # ctypes.memmove(buffer, start_address, length)
+      ctypes.memmove(buffer, ctypes.c_void_p(start_address), length)
       # 获取缓冲区中的数据
       data = bytes(buffer)
       return data
