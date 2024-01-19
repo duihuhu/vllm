@@ -253,7 +253,11 @@ def kv_server():
     print("等待客户端连接...")
     while True:
         client_socket, client_address = server_socket.accept()
+        # 设置发送缓冲区大小为 8192 字节
+        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8192000)
 
+        # 设置接收缓冲区大小为 8192 字节
+        client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192000)
         print(f"连接来自: {client_address}", )
         obj_count_bytes = client_socket.recv(8)
         obj_count = int.from_bytes(obj_count_bytes, byteorder='big')

@@ -63,6 +63,10 @@ class KvTransfer:
   
   def send_in_socket(self, prefilled, prefill_blocks_to_object_swap_out: Dict[int, List[ObjectInfo]]):
     self.client_socket.connect(self.server_address)
+    self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8192000)
+
+    # 设置接收缓冲区大小为 8192 字节
+    self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192000)
     #todo get from c
     kv_bytes = self._get_kv_size()
     obj_ids, obj_addr = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
@@ -103,7 +107,6 @@ class KvTransfer:
       self.client_socket.sendall(data)
       recv_buffer_size = self.client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
       print("decode obj ", obj_str, recv_buffer_size, len(data))
-      print(data)
     return
   
   def get_kv_object_address(self, prefill_blocks_to_object_swap_out):
