@@ -108,7 +108,9 @@ class KvTransfer:
             # print("object ids " , obj.object_ids)
               object_ids.extend(ids)
     
-    object_address = plasma_client.get_buffers(object_ids)
+    obj_plasma = plasma_client.get_buffers(object_ids)
+    for obj in obj_plasma:
+      object_address.append(obj.append(obj.address))
     print("object_ids ", object_ids)
     print("object_address ", object_address)
         # print(key, "obj_info ", obj_info)
