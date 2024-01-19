@@ -87,13 +87,13 @@ class KvTransfer:
     print(obj_count)
     for obj, k_addr in zip(obj_ids, obj_addr):
       obj_str = obj.binary().hex()
-      print("obj str ", obj_str)
       obj_bytes = obj_str.encode('utf-8')
       self.client_socket.sendall(len(obj_bytes).to_bytes(8, byteorder='big'))
       self.client_socket.sendall(obj_bytes)
       #send buffer size
       self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
-      
+
+      print("obj str ", obj_str, k_addr, kv_bytes)
       data = self.get_data_at_address(k_addr, kv_bytes)
       # print("k_addr ", k_addr, type(k_addr), k_addr.to_bytes(byteorder='big'))
       # buffer = ctypes.create_string_buffer(kv_bytes)

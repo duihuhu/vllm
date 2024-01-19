@@ -261,6 +261,7 @@ def kv_server():
             obj_len_bytes = client_socket.recv(8)
             obj_length = int.from_bytes(obj_len_bytes, byteorder='big')
             # Receive obj_bytes
+            print("obj_length ", obj_length)
             obj_id_bytes = client_socket.recv(obj_length)
             print("obj_bytes ", type(obj_id_bytes), obj_id_bytes)
             obj = obj_id_bytes.decode('utf-8')
