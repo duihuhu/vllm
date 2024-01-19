@@ -94,7 +94,7 @@ class KvTransfer:
       #send buffer size
       self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
       
-      data = self.get_data_at_address(obj_addr, kv_bytes)
+      data = self.get_data_at_address(k_addr, kv_bytes)
       # print("k_addr ", k_addr, type(k_addr), k_addr.to_bytes(byteorder='big'))
       # buffer = ctypes.create_string_buffer(kv_bytes)
       # mv = memoryview(buffer)
