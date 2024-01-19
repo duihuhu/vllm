@@ -70,19 +70,23 @@ class KvTransfer:
     kv_bytes = self._get_kv_size()
     obj_ids, obj_addr = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     # print("key value addr ", obj_ids, obj_addr, kv_bytes)
-    # self.send_to_mdecode(obj_ids, obj_addr, kv_bytes)
+    self.send_to_mdecode(obj_ids, obj_addr, kv_bytes)
     self.client_socket.close()
     return prefilled
   
   def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes):
     for obj, k_addr in zip(obj_ids, obj_addr):
-      self.client_socket.sendall(obj.to_bytes(8, byteorder='big'))
+      obj_bytes = obj.encode('utf-8')
+      self.client_socket.sendall(len(obj_bytes).to_bytes(8, byteorder='big'))
+      self.client_socket.sendall(obj_bytes)
+      
       self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
-      buffer = create_string_buffer(kv_bytes)
-      mv = memoryview(buffer)
-      mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
-      # 发送实际数据
-      self.client_socket.sendall(mv)
+      
+      # buffer = create_string_buffer(kv_bytes)
+      # mv = memoryview(buffer)
+      # mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
+      # # 发送实际数据
+      # self.client_socket.sendall(mv)
     return
   
   def get_kv_object_address(self, prefill_blocks_to_object_swap_out):

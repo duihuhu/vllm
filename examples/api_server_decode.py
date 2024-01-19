@@ -250,10 +250,10 @@ async def generate(request: Request) -> Response:
 
 def kv_server():
     server_socket.listen(1)
+    print("等待客户端连接...")
+    client_socket, client_address = server_socket.accept()
+    print(f"连接来自: {client_address}")
     while True:
-        print("等待客户端连接...")
-        client_socket, client_address = server_socket.accept()
-        print(f"连接来自: {client_address}")
         # 接收地址和长度
         data_start_address_bytes = client_socket.recv(8)
         data_length_bytes = client_socket.recv(4)

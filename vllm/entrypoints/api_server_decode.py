@@ -250,19 +250,24 @@ async def generate(request: Request) -> Response:
 def kv_server():
     server_socket.listen(1)
     print("等待客户端连接...")
-    client_socket, client_address = server_socket.accept()
-    print(f"连接来自: {client_address}")
-    # 接收地址和长度
     while True:
-        data_start_address_bytes = client_socket.recv(8)
-        data_length_bytes = client_socket.recv(4)
-
-        data_start_address = int.from_bytes(data_start_address_bytes, byteorder='big')
-        data_length = int.from_bytes(data_length_bytes, byteorder='big')
-
-        # 接收实际数据
-        data = client_socket.recv(data_length)
-        print(f"Received data from address {hex(data_start_address)}: {data.decode()}")
+        client_socket, client_address = server_socket.accept()
+        print(f"连接来自: {client_address}")
+        # 接收地址和长度
+        while True:
+            obj_bytes = client_socket.recv(8)
+            obj_length = int.from_bytes(obj_bytes, byteorder='big')
+            # Receive obj_bytes
+            obj_bytes = client_socket.recv(obj_length)
+            obj = obj_bytes.decode('utf-8')
+            print("decode obj ", obj)
+            
+            # Receive kv_bytes
+            kv_bytes_bytes = client_socket.recv(4)
+            kv_bytes = int.from_bytes(kv_bytes_bytes, byteorder='big')
+            # real_data_to_receive = client_socket.recv(kv_bytes)
+        #     if 
+        # client_socket.close()
         
 if __name__ == "__main__":
     
