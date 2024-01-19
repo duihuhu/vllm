@@ -103,6 +103,7 @@ class KvTransfer:
       self.client_socket.sendall(data)
       recv_buffer_size = self.client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
       print("decode obj ", obj_str, recv_buffer_size, len(data))
+      print(data)
     return
   
   def get_kv_object_address(self, prefill_blocks_to_object_swap_out):
