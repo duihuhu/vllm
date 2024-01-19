@@ -76,7 +76,7 @@ class KvTransfer:
   
   def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes):
     for obj, k_addr in zip(obj_ids, obj_addr):
-      obj_str = obj.binary().hex().decode('utf-8')
+      obj_str = obj.binary().hex()
       obj_bytes = obj_str.encode('utf-8')
       self.client_socket.sendall(len(obj_bytes).to_bytes(8, byteorder='big'))
       self.client_socket.sendall(obj_bytes)
