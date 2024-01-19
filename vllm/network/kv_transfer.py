@@ -71,6 +71,15 @@ class KvTransfer:
     self.client_socket.close()
     return prefilled
   
+  def get_data_at_address(self, start_address, length):
+      # 创建一个缓冲区，这里假设你要读取的是 bytes 数据
+      buffer = ctypes.create_string_buffer(length)
+      # 将指定地址的数据复制到缓冲区
+      ctypes.memmove(buffer, start_address, length)
+      # 获取缓冲区中的数据
+      data = bytes(buffer)
+      return data
+    
   def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes):
     obj_count = len(obj_ids)
     self.client_socket.sendall(obj_count.to_bytes(8, byteorder='big'))
@@ -81,27 +90,17 @@ class KvTransfer:
       obj_bytes = obj_str.encode('utf-8')
       self.client_socket.sendall(len(obj_bytes).to_bytes(8, byteorder='big'))
       self.client_socket.sendall(obj_bytes)
-      
       #send buffer size
       self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
       
-      # integer_value = 140391508213824
-
-      # 创建一个ctypes指针对象
-      pointer = ctypes.c_void_p(k_addr)
-      # 通过memoryview创建对象，指向指针
-      mv = memoryview(ctypes.create_string_buffer(pointer.value, kv_bytes))
-      # 打印memoryview对象的内容（以16进制表示）
-      # print(mv.hex())
-        
-      # k_addr = 140391508213824
-      # buffer = create_string_buffer(kv_bytes)
-      # mv = memoryview(buffer)
+      data = self.get_data_at_address(obj_addr, kv_bytes)
       # print("k_addr ", k_addr, type(k_addr), k_addr.to_bytes(byteorder='big'))
-      # mv[:] = k_addr.to_bytes(byteorder='big')
+      # buffer = ctypes.create_string_buffer(kv_bytes)
+      # mv = memoryview(buffer)
+      # # mv[:] = k_addr.to_bytes(byteorder='big')
       # mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
       # # 发送实际数据
-      self.client_socket.sendall(mv)
+      self.client_socket.sendall(data)
     return
   
   def get_kv_object_address(self, prefill_blocks_to_object_swap_out):
