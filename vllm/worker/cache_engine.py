@@ -326,6 +326,7 @@ class CacheEngine:
         value_cache_block = key_cache_block
         total = num_layers * (key_cache_block + value_cache_block)
         dtype_size = _get_dtype_size(model_config.dtype)
+        print("_get_dtype_size: ", dtype_size, head_size, num_heads, num_layers, dtype_size*head_size*num_heads*num_layers)
         return dtype_size * total
 
 
