@@ -56,12 +56,11 @@ class KvTransfer:
         return prefilled
     return 
   
-  def send_in_socket(self, prefilled, prefill_blocks_to_object_swap_out: Dict[SequenceGroup, Dict[int, List[ObjectInfo]]]):
+  def send_in_socket(self, prefilled, prefill_blocks_to_object_swap_out: Dict[int, List[ObjectInfo]]):
     self.client_socket.connect(self.server_address)
-    for key, value in prefill_blocks_to_object_swap_out.items():
-      key_address, value_address, kv_bytes = self.get_kv_object_address(value)
-      print("key value addr ", key_address, value_address, kv_bytes)
-      self.send_to_mdecode(key_address, value_address, kv_bytes)
+    key_address, value_address, kv_bytes = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
+    print("key value addr ", key_address, value_address, kv_bytes)
+    self.send_to_mdecode(key_address, value_address, kv_bytes)
     self.client_socket.close()
     return prefilled
   
@@ -85,15 +84,16 @@ class KvTransfer:
       self.client_socket.sendall(mv)
     return
   
-  def get_kv_object_address(self, prefilled_blocks_to_object):
+  def get_kv_object_address(self, prefill_blocks_to_object_swap_out):
+    print("prefill_blocks_to_object_swap_out " ,prefill_blocks_to_object_swap_out)
     rank = 0
-    block_size_in_bytes = prefilled_blocks_to_object[0][1].element_size() * prefilled_blocks_to_object[0][1][0].numel()
+    block_size_in_bytes = prefill_blocks_to_object_swap_out[0][1].element_size() * prefill_blocks_to_object_swap_out[0][1][0].numel()
     print("prefill_blocks_to_object_swap_out ",block_size_in_bytes)
         # print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
     src_to_dst_copy = {}
     key_object_address = []
     value_object_address = []
-    for key, obj_info in prefilled_blocks_to_object.items():
+    for key, obj_info in prefill_blocks_to_object_swap_out.items():
         src_to_dst_copy[key] = 0
         key_obj_info = (obj_info[rank].object_ids)[0]
         value_obj_info = (obj_info[rank].object_ids)[1]
