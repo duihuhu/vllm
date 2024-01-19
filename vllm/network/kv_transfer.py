@@ -69,27 +69,18 @@ class KvTransfer:
     #todo get from c
     kv_bytes = self._get_kv_size()
     obj_ids, obj_addr = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
-    print("key value addr ", obj_ids, obj_addr, kv_bytes)
-    # self.send_to_mdecode(key_address, value_address, kv_bytes)
+    # print("key value addr ", obj_ids, obj_addr, kv_bytes)
+    self.send_to_mdecode(obj_ids, obj_addr, kv_bytes)
     self.client_socket.close()
     return prefilled
   
-  def send_to_mdecode(self, key_object_address, value_object_address, kv_bytes):
-    for k_addr in key_object_address:
-      self.client_socket.sendall(k_addr.to_bytes(8, byteorder='big'))
+  def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes):
+    for obj, k_addr in zip(obj_ids, obj_addr):
+      self.client_socket.sendall(obj.to_bytes(8, byteorder='big'))
       self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
       buffer = create_string_buffer(kv_bytes)
       mv = memoryview(buffer)
       mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
-      # 发送实际数据
-      self.client_socket.sendall(mv)
-      
-    for v_addr in value_object_address:
-      self.client_socket.sendall(v_addr.to_bytes(8, byteorder='big'))
-      self.client_socket.sendall(kv_bytes.to_bytes(4, byteorder='big'))
-      buffer = create_string_buffer(kv_bytes)
-      mv = memoryview(buffer)
-      mv[:] = v_addr.to_bytes(kv_bytes, byteorder='big')
       # 发送实际数据
       self.client_socket.sendall(mv)
     return
@@ -110,7 +101,7 @@ class KvTransfer:
     
     obj_plasma = plasma_client.get_buffers(object_ids)
     for obj in obj_plasma:
-      object_address.append(obj.append(obj.address))
+      object_address.append(obj.address)
     print("object_ids ", object_ids)
     print("object_address ", object_address)
         # print(key, "obj_info ", obj_info)
