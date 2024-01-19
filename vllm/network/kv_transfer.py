@@ -90,7 +90,7 @@ class KvTransfer:
       
       buffer = create_string_buffer(kv_bytes)
       mv = memoryview(buffer)
-      mv = k_addr
+      mv[:] = k_addr
       # mv[:] = k_addr.to_bytes(kv_bytes, byteorder='big')
       # # 发送实际数据
       self.client_socket.sendall(mv)
