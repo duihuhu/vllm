@@ -270,6 +270,7 @@ def kv_server():
             
             print("decode obj ", obj, kv_bytes, "\n")
             data_bytes = client_socket.recv(kv_bytes)
+            print(data_bytes)
             # print("decode obj ", obj, kv_bytes, "\n")
             obj_count = obj_count - 1
             

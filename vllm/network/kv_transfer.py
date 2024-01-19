@@ -121,8 +121,8 @@ class KvTransfer:
     obj_plasma = plasma_client.get_buffers(object_ids)
     for obj in obj_plasma:
       object_address.append(obj.address)
-    print("object_ids ", object_ids)
-    print("object_address ", object_address)
+    # print("object_ids ", object_ids)
+    # print("object_address ", object_address)
         # print(key, "obj_info ", obj_info)
         # key_obj_info = (obj_info[rank].object_ids)[0]
         # kv_bytes = key_obj_info.kv_size
