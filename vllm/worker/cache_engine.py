@@ -296,11 +296,12 @@ class CacheEngine:
             value_obj_addr = []
             key_socket_obj_addr = []
             value_socket_obj_addr = []
-            key_socket_content = []
-            value_socket_content = []
+            # key_socket_content = []
+            # value_socket_content = []
             for k_addr, v_addr, key_obj, value_obj in zip(key_obj_buf, value_obj_buf, key_obj_info, value_obj_info):
-                key_obj_addr.append(k_addr.address)
-                value_obj_addr.append(v_addr.address)
+                # key_obj_addr.append(k_addr.address)
+                # value_obj_addr.append(v_addr.address)
+                
                 # key_value = kv_data[key_obj.binary().hex()]
                 # v_value = kv_data[value_obj.binary().hex()]
                 # key_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[key_obj.binary().hex()]))
@@ -310,34 +311,39 @@ class CacheEngine:
                 # key_value_buffer = (ctypes.c_char * len(kv_data[key_obj.binary().hex()])).from_buffer_copy(kv_data[key_obj.binary().hex()])
                 key_value_buffer = ctypes.create_string_buffer(kv_data[key_obj.binary().hex()])
                 key_value = ctypes.addressof(key_value_buffer)
-                print(key_value)
                 # data_at_address = ctypes.string_at(address, len(kv_data[key_obj.binary().hex()]))
                 # print("11 ", data_at_address[:10])
-                v_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[value_obj.binary().hex()]))
+                v_value_buffer = ctypes.create_string_buffer(kv_data[value_obj.binary().hex()])
+                v_value = ctypes.addressof(v_value_buffer)
+                # v_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[value_obj.binary().hex()]))
                 key_socket_obj_addr.append(key_value)
                 value_socket_obj_addr.append(v_value)
+                
+                key_obj_addr.append(k_addr.key_value)
+                value_obj_addr.append(v_addr.v_value)
                 ##
-                key_socket_content.append(kv_data[key_obj.binary().hex()])
-                value_socket_content.append(kv_data[value_obj.binary().hex()])
+                # key_socket_content.append(kv_data[key_obj.binary().hex()])
+                # value_socket_content.append(kv_data[value_obj.binary().hex()])
                 key_buffer_list.append(key_value_buffer)
                 
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
             key_socket_object_address.append(key_socket_obj_addr)
             value_socket_object_address.append(value_socket_obj_addr)
-            key_socket_object_content.append(key_socket_content)
-            value_socket_object_content.append(value_socket_content)
+            # key_socket_object_content.append(key_socket_content)
+            # value_socket_object_content.append(value_socket_content)
             
-        for k_obj, ks_obj, k_content in zip(key_object_address, key_socket_object_address, key_socket_object_content):
-            for k_oj, ks_oj, k_con in zip(k_obj, ks_obj, k_content):
-                k_obj_ptr = ctypes.c_void_p(k_oj)
-                k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
+        # for k_obj, ks_obj, k_content in zip(key_object_address, key_socket_object_address, key_socket_object_content):
+        #     for k_oj, ks_oj, k_con in zip(k_obj, ks_obj, k_content):
+        #         k_obj_ptr = ctypes.c_void_p(k_oj)
+        #         k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
                 
-                # ks_obj_ptr = ctypes.c_void_p(ks_oj)
-                ks_obj_raw_data = ctypes.string_at(ks_oj, 10)
-                print("00: ", k_obj_raw_data)
-                print("11: ", ks_obj_raw_data)
-                print("22: ", k_con[:10])
+        #         # ks_obj_ptr = ctypes.c_void_p(ks_oj)
+        #         ks_obj_raw_data = ctypes.string_at(ks_oj, 10)
+        #         print("00: ", k_obj_raw_data)
+        #         print("11: ", ks_obj_raw_data)
+        #         print("22: ", k_con[:10])
+        
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
         #     key_obj_info = (obj_info[rank].object_ids)[0]
