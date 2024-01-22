@@ -38,7 +38,7 @@ def background_execute():
         outputs: List[RequestOutput] = []
         start_time = time.time()
         while engine.engine.has_unfinished_requests():
-            print("background_execute kv data " ,len(kv_data))
+            print("background_execute kv data " ,len(kv_data), engine.engine.get_num_unfinished_requests())
             if start_time_record == 0:
                 start_time_record = start_time
             step_outputs = engine.engine.step_decoder(kv_data)
@@ -72,6 +72,7 @@ def background_execute():
 
 @app.post("/continuous_batching")
 async def continous_batching(request: Request) -> Response:
+    print("continuous_batching ")
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
     status = request_dict.pop("status")
@@ -270,9 +271,9 @@ def kv_server():
             obj_len_bytes = client_socket.recv(8)
             obj_length = int.from_bytes(obj_len_bytes, byteorder='big')
             # Receive obj_bytes
-            print("obj_length ", obj_length)
+            # print("obj_length ", obj_length)
             obj_id_bytes = client_socket.recv(obj_length)
-            print("obj_bytes ", type(obj_id_bytes), obj_id_bytes)
+            # print("obj_bytes ", type(obj_id_bytes), obj_id_bytes)
             obj = obj_id_bytes.decode('utf-8')
             # Receive kv_bytes
             kv_bytes_bytes = client_socket.recv(4)
@@ -281,10 +282,10 @@ def kv_server():
             data_bytes = client_socket.recv(kv_bytes)
             kv_data[obj] = data_bytes
             recv_buffer_size = client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
-            print("decode obj ", obj, kv_bytes, "\n")
-            print("decode obj data ", recv_buffer_size, len(data_bytes), "\n")
+            # print("decode obj ", obj, kv_bytes, "\n")
+            # print("decode obj data ", recv_buffer_size, len(data_bytes), "\n")
             obj_count = obj_count - 1
-
+        print("kv_server ", len(kv_data))
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
