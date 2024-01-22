@@ -258,7 +258,7 @@ class CacheEngine:
     def swap_out_prefilled_to_plasma(self, src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
         self._swap_out_prefilled_to_plasma(self.gpu_cache, src_to_dst, rank)
     
-    def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank) -> None:
+    def _swap_in_prefilled_from_plasma(self, src: List[KVCache], src_to_dst: Dict[int, List[ObjectInfo]], rank, kv_data) -> None:
         rank = rank % self.parallel_config.tensor_parallel_size
         # print("_swap_in_prefilled_to_plasma rank ", rank, rank % self.parallel_config.tensor_parallel_size)
         src_to_dst_copy = {}
@@ -268,6 +268,9 @@ class CacheEngine:
             src_to_dst_copy[key] = 0
             key_obj_info = (obj_info[rank].object_ids)[0]
             value_obj_info = (obj_info[rank].object_ids)[1]
+            for obj_id in key_obj_info:
+                if kv_data.get(obj_id):
+                    print("exists ")
             key_obj_buf = plasma_client.get_buffers(key_obj_info)
             value_obj_buf = plasma_client.get_buffers(value_obj_info)
             key_obj_addr = []
@@ -303,8 +306,8 @@ class CacheEngine:
                 # print("swap in layer i, value ", i, value_layer_objects_address[i])
         return 
     
-    def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank) -> None:
-        self._swap_in_prefilled_from_plasma(self.gpu_cache, src_to_dst, rank)
+    def swap_in_prefilled_from_plasma(self, src_to_dst:  Dict[int, List[ObjectInfo]], rank, kv_data) -> None:
+        self._swap_in_prefilled_from_plasma(self.gpu_cache, src_to_dst, rank, kv_data)
     
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         key_caches = [key_cache for key_cache, _ in self.gpu_cache]

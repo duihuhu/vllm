@@ -348,12 +348,13 @@ class Worker:
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
+        kv_data,
     ) -> Dict[int, SequenceOutputs]:
         # Issue cache operations.
         issued_cache_op = False
         if blocks_to_swap_in:
             for key, value in blocks_to_swap_in.items():
-                self.cache_engine.swap_in_prefilled_from_plasma(value, self.rank)
+                self.cache_engine.swap_in_prefilled_from_plasma(value, self.rank, kv_data)
             issued_cache_op = True
         if blocks_to_swap_out:
             self.cache_engine.swap_out_prefilled_to_plasma(blocks_to_swap_out, self.rank)

@@ -343,7 +343,7 @@ class LLMEngine:
     def convert_prefilled_to_swapped(self) -> None:
         self.scheduler.convert_prefilled_to_swapped_seqs()
         
-    def step_decoder(self) -> List[RequestOutput]:
+    def step_decoder(self, kv_data) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
@@ -379,6 +379,7 @@ class LLMEngine:
             blocks_to_swap_in=blocks_to_object_swap_in,
             blocks_to_swap_out=scheduler_outputs.blocks_to_swap_out,
             blocks_to_copy=scheduler_outputs.blocks_to_copy,
+            kv_data = kv_data
         )
         
         # Update the scheduler with the model outputs.
