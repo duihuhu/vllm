@@ -285,7 +285,7 @@ class CacheEngine:
         #     key_object_address.append(key_obj_addr)
         #     value_object_address.append(value_obj_addr)
         key_buffer_list = []
-
+        value_buffer_list = []
         for key, obj_info in src_to_dst.items():
             src_to_dst_copy[key] = 0
             key_obj_info = (obj_info[rank].object_ids)[0]
@@ -299,8 +299,8 @@ class CacheEngine:
             # key_socket_content = []
             # value_socket_content = []
             for k_addr, v_addr, key_obj, value_obj in zip(key_obj_buf, value_obj_buf, key_obj_info, value_obj_info):
-                key_obj_addr.append(k_addr.address)
-                value_obj_addr.append(v_addr.address)
+                # key_obj_addr.append(k_addr.address)
+                # value_obj_addr.append(v_addr.address)
                 
                 # key_value = kv_data[key_obj.binary().hex()]
                 # v_value = kv_data[value_obj.binary().hex()]
@@ -316,8 +316,8 @@ class CacheEngine:
                 v_value_buffer = ctypes.create_string_buffer(kv_data[value_obj.binary().hex()])
                 v_value = ctypes.addressof(v_value_buffer)
                 # v_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[value_obj.binary().hex()]))
-                # key_socket_obj_addr.append(key_value)
-                # value_socket_obj_addr.append(v_value)
+                key_socket_obj_addr.append(key_value)
+                value_socket_obj_addr.append(v_value)
                 
                 key_obj_addr.append(key_value)
                 value_obj_addr.append(v_value)
@@ -325,6 +325,7 @@ class CacheEngine:
                 # key_socket_content.append(kv_data[key_obj.binary().hex()])
                 # value_socket_content.append(kv_data[value_obj.binary().hex()])
                 key_buffer_list.append(key_value_buffer)
+                value_buffer_list.append(v_value_buffer)
                 
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
