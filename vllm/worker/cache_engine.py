@@ -284,6 +284,7 @@ class CacheEngine:
         #         value_obj_addr.append(v_addr.address)
         #     key_object_address.append(key_obj_addr)
         #     value_object_address.append(value_obj_addr)
+        key_buffer_list = []
 
         for key, obj_info in src_to_dst.items():
             src_to_dst_copy[key] = 0
@@ -318,6 +319,7 @@ class CacheEngine:
                 ##
                 key_socket_content.append(kv_data[key_obj.binary().hex()])
                 value_socket_content.append(kv_data[value_obj.binary().hex()])
+                key_buffer_list.append(key_value_buffer)
                 
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
