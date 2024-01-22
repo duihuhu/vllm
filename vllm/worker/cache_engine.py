@@ -304,8 +304,8 @@ class CacheEngine:
                 v_value = kv_data[value_obj.binary().hex()]
                 key_socket_obj_addr.append(id(key_value))
                 value_socket_obj_addr.append(id(v_value))
-                key_socket_content.append(kv_data[key_obj.binary().hex()])
-                value_socket_content.append(kv_data[key_obj.binary().hex()])
+                key_socket_content.append(key_value)
+                value_socket_content.append(v_value)
                 
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
