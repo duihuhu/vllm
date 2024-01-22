@@ -30,6 +30,7 @@ async def front_execute(background_tasks: BackgroundTasks) -> Response:
 def background_execute():
     print("start background execute ")
     global kv_data
+    global request_kv
     start_time_record = 0
     end_time_record = 0
     total_num_tokens = 0

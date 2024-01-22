@@ -348,7 +348,7 @@ class LLMEngine:
     def convert_prefilled_to_swapped(self) -> None:
         self.scheduler.convert_prefilled_to_swapped_seqs()
         
-    def step_decoder(self, kv_data, request_kv) -> List[RequestOutput]:
+    def step_decoder(self, kv_data, request_kv=None) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
