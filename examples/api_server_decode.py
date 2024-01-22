@@ -38,11 +38,13 @@ def background_execute():
     while True:
         outputs: List[RequestOutput] = []
         start_time = time.time()
-        while engine.engine.has_unfinished_requests():
+        # while engine.engine.has_unfinished_requests():
+        while engine.engine.has_unfinished_prefilled_seqs():
             print("background_execute kv data " ,len(kv_data), engine.engine.get_num_unfinished_requests())
+            
             if start_time_record == 0:
                 start_time_record = start_time
-            step_outputs = engine.engine.step_decoder(kv_data)
+            step_outputs = engine.engine.step_decoder(kv_data, request_kv)
             for output in step_outputs:
                 if output.finished:
                     print(output)
@@ -270,7 +272,6 @@ def kv_server():
         req_id_length = int.from_bytes(req_len_bytes, byteorder='big')
         req_id_bytes = client_socket.recv(req_id_length)
         req_id = req_id_bytes.decode('utf-8')
-        print("req_id ", req_id)
         
         obj_count_bytes = client_socket.recv(8)
         obj_count = int.from_bytes(obj_count_bytes, byteorder='big')
@@ -292,9 +293,9 @@ def kv_server():
             # print("decode obj ", obj, kv_bytes, "\n")
             # print("decode obj data ", recv_buffer_size, len(data_bytes), "\n")
             obj_count = obj_count - 1
-        print("kv_server ", time.time(), len(kv_data))
         if req_id not in request_kv:
             request_kv[req_id] = 1
+            print("kv_server ", time.time(), len(kv_data))
             
 if __name__ == "__main__":
     

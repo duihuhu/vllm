@@ -121,9 +121,12 @@ class Scheduler:
         self.waiting.append(seq_group)
 
     def add_prefilled_seq_group(self, seq_group: SequenceGroup) -> None:
+        # for seq in seq_group.get_seqs():
+        #     seq.status = SequenceStatus.SWAPPED
+        # self.swapped.append(seq_group)
         for seq in seq_group.get_seqs():
-            seq.status = SequenceStatus.SWAPPED
-        self.swapped.append(seq_group)
+            seq.status = SequenceStatus.PREFILLED
+        self.prefilled.append(seq_group)
 
     def abort_seq_group(self, request_id: str) -> None:
         for state_queue in [self.waiting, self.running, self.swapped]:
@@ -157,11 +160,14 @@ class Scheduler:
     def has_unfinished_seqs(self) -> bool:
         return self.waiting or self.running or self.swapped
 
+    def has_unfinished_prefilled_seqs(self) -> bool:
+        return self.waiting or self.running or self.swapped or self.prefilled
+    
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
     def _obj_schedule(
-            self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
+            self, request_kv) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, List[ObjectInfo]] = {}
         blocks_to_swap_out: Dict[int, int] = {}
@@ -172,7 +178,18 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-
+        prefilled = []
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            if seq_group.request_id in request_kv:
+                for seq in seq_group.get_seqs():
+                    seq.status = SequenceStatus.SWAPPED
+                self.swapped.append(seq_group)
+            else:
+                prefilled.append(seq_group)
+                
+        self.prefilled = prefilled
+        
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
         # Preemption happens only when there is no available slot to keep all
@@ -727,7 +744,7 @@ class Scheduler:
         return seq_group_metadata_list, scheduler_outputs, ignored_seq_groups, blocks_to_object_swap_in
 
     def obj_decode_schedule(
-        self
+        self, request_kv
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
                List[SequenceGroup]]:
         
@@ -735,7 +752,7 @@ class Scheduler:
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
         (scheduler_outputs, prompt_group_ids,
-         ignored_seq_groups, blocks_to_object_swap_in) = self._obj_schedule()
+         ignored_seq_groups, blocks_to_object_swap_in) = self._obj_schedule(request_kv)
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []

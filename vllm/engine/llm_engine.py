@@ -307,6 +307,11 @@ class LLMEngine:
     def has_prefilled_requests(self) -> bool:
         return self.scheduler.has_prefilled_seqs()
     
+    
+    def has_unfinished_prefilled_seqs(self) -> bool:
+        """Returns True if there are unfinished requests."""
+        return self.scheduler.has_unfinished_prefilled_seqs()
+
     def has_unfinished_requests(self) -> bool:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
@@ -343,7 +348,7 @@ class LLMEngine:
     def convert_prefilled_to_swapped(self) -> None:
         self.scheduler.convert_prefilled_to_swapped_seqs()
         
-    def step_decoder(self, kv_data) -> List[RequestOutput]:
+    def step_decoder(self, kv_data, request_kv) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
@@ -356,7 +361,7 @@ class LLMEngine:
         #  ignored_seq_groups) = self.scheduler.obj_schedule()
         
         (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups, blocks_to_object_swap_in) = self.scheduler.obj_decode_schedule()
+         ignored_seq_groups, blocks_to_object_swap_in) = self.scheduler.obj_decode_schedule(request_kv)
 
         if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
                 and (not ignored_seq_groups)):
