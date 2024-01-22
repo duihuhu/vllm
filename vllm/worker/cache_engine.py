@@ -286,9 +286,11 @@ class CacheEngine:
             value_obj_addr = []
             for key_obj, value_obj in zip(key_obj_info, value_obj_info):
                 if kv_data.get(key_obj.binary().hex()):
+                    print("key " , id(kv_data[key_obj.binary().hex()]))
                     key_obj_addr.append(id(kv_data[key_obj.binary().hex()]))
                 if kv_data.get(value_obj.binary().hex()):
-                    value_obj_addr.append(id(kv_data[key_obj.binary().hex()]))
+                    print("value " , id(kv_data[value_obj.binary().hex()]))
+                    value_obj_addr.append(id(kv_data[value_obj.binary().hex()]))
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
         
