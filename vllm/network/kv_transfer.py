@@ -72,6 +72,8 @@ class KvTransfer:
     obj_ids, obj_addr = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     # print("key value addr ", obj_ids, obj_addr, kv_bytes)
     self.send_to_mdecode(obj_ids, obj_addr, kv_bytes)
+    import time
+    time.sleep(1)
     self.client_socket.close()
     self.send_in_smem(prefilled,)
     return prefilled
