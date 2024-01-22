@@ -76,8 +76,9 @@ class KvTransfer:
     # time.sleep(1)
     self.client_socket.close()
     import time
-    print(time.time(),"send_in_smem ")
+    print(time.time(),"before send_in_smem ")
     prefilled = self.send_in_smem(prefilled,)
+    print(time.time(),"after send_in_smem ")
     return prefilled
   
   def get_data_at_address(self, start_address, length):
