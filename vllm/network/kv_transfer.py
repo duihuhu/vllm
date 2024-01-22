@@ -110,6 +110,11 @@ class KvTransfer:
 
       # print("obj str ", obj_str, len(obj_bytes), k_addr, kv_bytes)
       data = self.get_data_at_address(k_addr, kv_bytes)
+      
+      ks_obj_ptr = ctypes.c_void_p(k_addr)
+      ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
+      print(obj, "send : ", ks_obj_raw_data, "\n")
+      
       # print("k_addr ", k_addr, type(k_addr), k_addr.to_bytes(byteorder='big'))
       # buffer = ctypes.create_string_buffer(kv_bytes)
       # mv = memoryview(buffer)
