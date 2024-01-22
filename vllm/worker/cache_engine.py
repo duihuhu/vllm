@@ -310,13 +310,12 @@ class CacheEngine:
                 key_value = ctypes.addressof(key_value_buffer)
                 # data_at_address = ctypes.string_at(address, len(kv_data[key_obj.binary().hex()]))
                 # print("11 ", data_at_address[:10])
-                
                 v_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[value_obj.binary().hex()]))
-
                 key_socket_obj_addr.append(key_value)
                 value_socket_obj_addr.append(v_value)
-                # key_socket_content.append(key_value)
-                # value_socket_content.append(v_value)
+                ##
+                key_socket_content.append(kv_data[key_obj.binary().hex()])
+                value_socket_content.append(kv_data[value_obj.binary().hex()])
                 
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
@@ -325,8 +324,8 @@ class CacheEngine:
             key_socket_object_content.append(key_socket_content)
             value_socket_object_content.append(value_socket_content)
             
-        for k_obj, ks_obj in zip(key_object_address, key_socket_object_address):
-            for k_oj, ks_oj in zip(k_obj, ks_obj):
+        for k_obj, ks_obj, k_content in zip(key_object_address, key_socket_object_address, key_socket_object_content):
+            for k_oj, ks_oj, k_con in zip(k_obj, ks_obj, k_content):
                 k_obj_ptr = ctypes.c_void_p(k_oj)
                 k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
                 
@@ -334,6 +333,7 @@ class CacheEngine:
                 ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
                 print("00: ", k_obj_raw_data)
                 print("11: ", ks_obj_raw_data)
+                print("22: ", k_con[:10])
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
         #     key_obj_info = (obj_info[rank].object_ids)[0]
