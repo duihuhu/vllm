@@ -302,13 +302,15 @@ class CacheEngine:
                 value_obj_addr.append(v_addr.address)
                 # key_value = kv_data[key_obj.binary().hex()]
                 # v_value = kv_data[value_obj.binary().hex()]
-                key_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[key_obj.binary().hex()]))
-                print("key value ", key_value)
-                data_at_address = ctypes.string_at(key_value, 10)
-                print("11 ", data_at_address)
-
-                    
-                    
+                # key_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[key_obj.binary().hex()]))
+                # print("key value ", key_value)
+                # data_at_address = ctypes.string_at(key_value, 10)
+                
+                key_value = (ctypes.c_char * len(kv_data[key_obj.binary().hex()])).from_buffer_copy(kv_data[key_obj.binary().hex()])
+                address = ctypes.addressof(key_value)
+                data_at_address = ctypes.string_at(address, len(kv_data[key_obj.binary().hex()]))
+                print("11 ", data_at_address[:10])
+                
                 v_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[value_obj.binary().hex()]))
 
                 key_socket_obj_addr.append(key_value)
