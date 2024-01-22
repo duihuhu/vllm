@@ -167,7 +167,7 @@ class Scheduler:
         return len(self.waiting) + len(self.running) + len(self.swapped)
 
     def _obj_schedule(
-            self, request_kv) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
+            self, request_kv=None) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
         # Blocks that need to be swaped or copied before model execution.
         blocks_to_swap_in: Dict[int, List[ObjectInfo]] = {}
         blocks_to_swap_out: Dict[int, int] = {}
