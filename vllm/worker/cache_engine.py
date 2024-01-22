@@ -271,7 +271,6 @@ class CacheEngine:
             # for obj_id in key_obj_info:
             #     if kv_data.get(obj_id):
             #         print("exists ")
-            print("kv_data len ", len(kv_data))
             key_obj_buf = plasma_client.get_buffers(key_obj_info)
             value_obj_buf = plasma_client.get_buffers(value_obj_info)
             key_obj_addr = []

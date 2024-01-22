@@ -352,6 +352,7 @@ class Worker:
     ) -> Dict[int, SequenceOutputs]:
         # Issue cache operations.
         issued_cache_op = False
+        print("execute_model_decode ", len(kv_data))
         if blocks_to_swap_in:
             for key, value in blocks_to_swap_in.items():
                 self.cache_engine.swap_in_prefilled_from_plasma(value, self.rank, kv_data)
