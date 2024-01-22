@@ -314,7 +314,7 @@ class CacheEngine:
             key_socket_object_content.append(key_socket_content)
             value_socket_object_content.append(value_socket_content)
             
-        for k_obj, ks_obj, ks_content in zip(key_obj_addr, key_socket_obj_addr, key_socket_object_content):
+        for k_obj, ks_obj, ks_content in zip(key_obj_addr, key_socket_obj_addr, key_socket_content):
             k_obj_ptr = ctypes.c_void_p(k_obj)
             k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
             
@@ -322,6 +322,7 @@ class CacheEngine:
             ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
             print("00: ", k_obj_raw_data)
             print("11: ", ks_obj_raw_data)
+            print("22: ", ks_content[:10])
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
         #     key_obj_info = (obj_info[rank].object_ids)[0]
