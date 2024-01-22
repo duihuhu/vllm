@@ -13,7 +13,7 @@ from vllm import mem_ops
 import numpy as np
 from vllm.engine.plasma_client import plasma_client
 from vllm.worker.object_manager.object_info import ObjectInfo
-# import ctypes
+import ctypes
 import time
 logger = init_logger(__name__)
 
@@ -301,6 +301,12 @@ class CacheEngine:
             value_object_address.append(value_obj_addr)
             key_socket_object_address.append(key_socket_obj_addr)
             value_socket_object_address.append(value_socket_obj_addr)
+            
+        for k_obj, ks_obj in zip(key_obj_addr, key_socket_obj_addr):
+            k_obj_raw_data = ctypes.string_at(k_obj, 10)
+            ks_obj_raw_data = ctypes.string_at(ks_obj, 10)
+            print("00: ", k_obj_raw_data )
+            print("11: ", ks_obj_raw_data )
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
         #     key_obj_info = (obj_info[rank].object_ids)[0]
