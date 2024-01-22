@@ -309,6 +309,7 @@ class CacheEngine:
                 # key_value_buffer = (ctypes.c_char * len(kv_data[key_obj.binary().hex()])).from_buffer_copy(kv_data[key_obj.binary().hex()])
                 key_value_buffer = ctypes.create_string_buffer(kv_data[key_obj.binary().hex()])
                 key_value = ctypes.addressof(key_value_buffer)
+                print(key_value)
                 # data_at_address = ctypes.string_at(address, len(kv_data[key_obj.binary().hex()]))
                 # print("11 ", data_at_address[:10])
                 v_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[value_obj.binary().hex()]))
