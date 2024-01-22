@@ -284,7 +284,7 @@ class CacheEngine:
             value_obj_info = (obj_info[rank].object_ids)[1]
             key_obj_addr = []
             value_obj_addr = []
-            for key_obj, value_obj in key_obj_info, value_obj_info:
+            for key_obj, value_obj in zip(key_obj_info, value_obj_info):
                 if kv_data.get(key_obj.binary().hex()):
                     key_obj_addr.append(id(kv_data[key_obj.binary().hex()]))
                 if kv_data.get(value_obj.binary().hex()):
