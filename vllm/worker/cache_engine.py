@@ -320,8 +320,7 @@ class CacheEngine:
             ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
             print("00: ", k_obj_raw_data)
             print("11: ", ks_obj_raw_data)
-            content = ks_content[:10]
-            print("22: ", content)
+            print("22: ", type(ks_content[:10]))
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
         #     key_obj_info = (obj_info[rank].object_ids)[0]
