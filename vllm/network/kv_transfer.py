@@ -65,13 +65,15 @@ class KvTransfer:
     self.client_socket.connect(self.server_address)
     self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 8192000)
 
+    pd_req_ids = [seq.request_id for seq in prefilled]
     # 设置接收缓冲区大小为 8192 字节
     self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192000)
     #todo get from c
     kv_bytes = self._get_kv_size()
     obj_ids, obj_addr = self.get_kv_object_address(prefill_blocks_to_object_swap_out)
     # print("key value addr ", obj_ids, obj_addr, kv_bytes)
-    self.send_to_mdecode(obj_ids, obj_addr, kv_bytes)
+    for req_id in pd_req_ids:
+      self.send_to_mdecode(obj_ids, obj_addr, kv_bytes, req_id)
     # import time
     # time.sleep(1)
     self.client_socket.close()
@@ -91,7 +93,11 @@ class KvTransfer:
       data = bytes(buffer)
       return data
     
-  def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes):
+  def send_to_mdecode(self, obj_ids, obj_addr, kv_bytes, req_id):
+    req_id_bytes = req_id.encode('utf-8')
+    self.client_socket.sendall(len(req_id_bytes).to_bytes(8, byteorder='big'))
+    self.client_socket.sendall(req_id_bytes)
+    
     obj_count = len(obj_ids)
     self.client_socket.sendall(obj_count.to_bytes(8, byteorder='big'))
     for obj, k_addr in zip(obj_ids, obj_addr):

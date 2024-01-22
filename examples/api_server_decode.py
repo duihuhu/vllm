@@ -15,6 +15,7 @@ from vllm.outputs import RequestOutput
 import threading
 import socket
 kv_data = {}
+request_kv = {}
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
@@ -264,6 +265,13 @@ def kv_server():
         # 设置接收缓冲区大小为 8192 字节
         client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 8192000)
         print(f"连接来自: {client_address}", )
+        
+        req_len_bytes = client_socket.recv(8)
+        req_id_length = int.from_bytes(req_len_bytes, byteorder='big')
+        req_id_bytes = client_socket.recv(req_id_length)
+        req_id = req_id_bytes.decode('utf-8')
+        print("req_id ", req_id)
+        
         obj_count_bytes = client_socket.recv(8)
         obj_count = int.from_bytes(obj_count_bytes, byteorder='big')
         # 接收地址和长度
@@ -278,17 +286,16 @@ def kv_server():
             # Receive kv_bytes
             kv_bytes_bytes = client_socket.recv(4)
             kv_bytes = int.from_bytes(kv_bytes_bytes, byteorder='big')
-            
             data_bytes = client_socket.recv(kv_bytes)
-            if(obj_count==1):
-                print("kv_server ", time.time(), len(kv_data))
             kv_data[obj] = data_bytes
             recv_buffer_size = client_socket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
             # print("decode obj ", obj, kv_bytes, "\n")
             # print("decode obj data ", recv_buffer_size, len(data_bytes), "\n")
             obj_count = obj_count - 1
-    
         print("kv_server ", time.time(), len(kv_data))
+        if req_id not in request_kv:
+            request_kv[req_id] = 1
+            
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
