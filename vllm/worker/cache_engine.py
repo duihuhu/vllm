@@ -300,12 +300,15 @@ class CacheEngine:
             for k_addr, v_addr, key_obj, value_obj in zip(key_obj_buf, value_obj_buf, key_obj_info, value_obj_info):
                 key_obj_addr.append(k_addr.address)
                 value_obj_addr.append(v_addr.address)
-                key_value = kv_data[key_obj.binary().hex()]
-                v_value = kv_data[value_obj.binary().hex()]
-                key_socket_obj_addr.append(id(key_value))
-                value_socket_obj_addr.append(id(v_value))
-                key_socket_content.append(key_value)
-                value_socket_content.append(v_value)
+                # key_value = kv_data[key_obj.binary().hex()]
+                # v_value = kv_data[value_obj.binary().hex()]
+                key_value = ctypes.addressof(ctypes.c_char.from_buffer(kv_data[key_obj.binary().hex()]))
+                v_value = ctypes.addressof(ctypes.c_char.from_buffer(kv_data[value_obj.binary().hex()]))
+
+                key_socket_obj_addr.append(key_value)
+                value_socket_obj_addr.append(v_value)
+                # key_socket_content.append(key_value)
+                # value_socket_content.append(v_value)
                 
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
@@ -314,7 +317,7 @@ class CacheEngine:
             key_socket_object_content.append(key_socket_content)
             value_socket_object_content.append(value_socket_content)
             
-        for k_obj, ks_obj, ks_content in zip(key_obj_addr, key_socket_obj_addr, key_socket_content):
+        for k_obj, ks_obj in zip(key_obj_addr, key_socket_obj_addr):
             k_obj_ptr = ctypes.c_void_p(k_obj)
             k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
             
@@ -322,7 +325,6 @@ class CacheEngine:
             ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
             print("00: ", k_obj_raw_data)
             print("11: ", ks_obj_raw_data)
-            print("22: ", ks_content[:10])
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
         #     key_obj_info = (obj_info[rank].object_ids)[0]
