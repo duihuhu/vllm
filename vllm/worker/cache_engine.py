@@ -329,8 +329,8 @@ class CacheEngine:
                 k_obj_ptr = ctypes.c_void_p(k_oj)
                 k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
                 
-                ks_obj_ptr = ctypes.c_void_p(ks_oj)
-                ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
+                # ks_obj_ptr = ctypes.c_void_p(ks_oj)
+                ks_obj_raw_data = ctypes.string_at(ks_obj, 10)
                 print("00: ", k_obj_raw_data)
                 print("11: ", ks_obj_raw_data)
                 print("22: ", k_con[:10])
