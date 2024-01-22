@@ -72,7 +72,7 @@ def background_execute():
 
 @app.post("/continuous_batching")
 async def continous_batching(request: Request) -> Response:
-    print("continuous_batching ")
+    print(time.time(), "continuous_batching ")
     request_dict = await request.json()
     request_ids = request_dict.pop("request_ids")
     status = request_dict.pop("status")
@@ -285,7 +285,8 @@ def kv_server():
             # print("decode obj ", obj, kv_bytes, "\n")
             # print("decode obj data ", recv_buffer_size, len(data_bytes), "\n")
             obj_count = obj_count - 1
-        print("kv_server ", len(kv_data))
+    
+        print("kv_server ", time.time(), len(kv_data))
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
