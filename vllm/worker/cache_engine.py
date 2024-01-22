@@ -264,20 +264,31 @@ class CacheEngine:
         src_to_dst_copy = {}
         key_object_address = []
         value_object_address = []
+        # for key, obj_info in src_to_dst.items():
+        #     src_to_dst_copy[key] = 0
+        #     key_obj_info = (obj_info[rank].object_ids)[0]
+        #     value_obj_info = (obj_info[rank].object_ids)[1]
+        #     key_obj_buf = plasma_client.get_buffers(key_obj_info)
+        #     value_obj_buf = plasma_client.get_buffers(value_obj_info)
+        #     key_obj_addr = []
+        #     value_obj_addr = []
+        #     for k_addr, v_addr in zip(key_obj_buf, value_obj_buf):
+        #         key_obj_addr.append(k_addr.address)
+        #         value_obj_addr.append(v_addr.address)
+        #     key_object_address.append(key_obj_addr)
+        #     value_object_address.append(value_obj_addr)
+        
         for key, obj_info in src_to_dst.items():
             src_to_dst_copy[key] = 0
             key_obj_info = (obj_info[rank].object_ids)[0]
             value_obj_info = (obj_info[rank].object_ids)[1]
-            for obj_id in key_obj_info:
-                if kv_data.get(obj_id.binary().hex()):
-                    print("exists ")
-            key_obj_buf = plasma_client.get_buffers(key_obj_info)
-            value_obj_buf = plasma_client.get_buffers(value_obj_info)
             key_obj_addr = []
             value_obj_addr = []
-            for k_addr, v_addr in zip(key_obj_buf, value_obj_buf):
-                key_obj_addr.append(k_addr.address)
-                value_obj_addr.append(v_addr.address)
+            for key_obj, value_obj in key_obj_info, value_obj_info:
+                if kv_data.get(key_obj.binary().hex()):
+                    key_obj_addr.append(id(kv_data[key_obj.binary().hex()]))
+                if kv_data.get(value_obj.binary().hex()):
+                    value_obj_addr.append(id(kv_data[key_obj.binary().hex()]))
             key_object_address.append(key_obj_addr)
             value_object_address.append(value_obj_addr)
         
