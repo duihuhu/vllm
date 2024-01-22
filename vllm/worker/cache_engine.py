@@ -303,6 +303,11 @@ class CacheEngine:
                 # key_value = kv_data[key_obj.binary().hex()]
                 # v_value = kv_data[value_obj.binary().hex()]
                 key_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[key_obj.binary().hex()]))
+                ks_obj_ptr = ctypes.c_void_p(key_value)
+                ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
+                print("11: ", ks_obj_raw_data)
+                    
+                    
                 v_value = ctypes.addressof(ctypes.c_char.from_buffer_copy(kv_data[value_obj.binary().hex()]))
 
                 key_socket_obj_addr.append(key_value)
@@ -321,10 +326,10 @@ class CacheEngine:
             k_obj_ptr = ctypes.c_void_p(k_obj)
             k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
             
-            ks_obj_ptr = ctypes.c_void_p(ks_obj)
-            ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
+            # ks_obj_ptr = ctypes.c_void_p(ks_obj)
+            # ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
             print("00: ", k_obj_raw_data)
-            print("11: ", ks_obj_raw_data)
+            # print("11: ", ks_obj_raw_data)
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
         #     key_obj_info = (obj_info[rank].object_ids)[0]
