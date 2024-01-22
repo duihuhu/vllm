@@ -337,19 +337,17 @@ class CacheEngine:
         for k_obj, ks_obj,v_obj, vs_obj in zip(key_object_address, key_socket_object_address, value_object_address, value_socket_object_address):
             for k_oj, ks_oj, v_oj, vs_oj in zip(k_obj, ks_obj, v_obj, vs_obj):
                 # k_obj_ptr = ctypes.c_void_p(k_oj)
-                k_obj_raw_data = ctypes.string_at(k_oj, 10)
+                k_obj_raw_data = ctypes.string_at(k_oj, 12288)
                 
                 # ks_obj_ptr = ctypes.c_void_p(ks_oj)
-                ks_obj_raw_data = ctypes.string_at(ks_oj, 10)
+                ks_obj_raw_data = ctypes.string_at(ks_oj, 12288)
                 
-                v_obj_raw_data = ctypes.string_at(v_oj, 10)
+                v_obj_raw_data = ctypes.string_at(v_oj, 12288)
                 
                 # ks_obj_ptr = ctypes.c_void_p(ks_oj)
-                vs_obj_raw_data = ctypes.string_at(vs_oj, 10)
-                print("00: ", k_obj_raw_data)
-                print("11: ", ks_obj_raw_data)
-                print("22: ", v_obj_raw_data)
-                print("33: ", vs_obj_raw_data)
+                vs_obj_raw_data = ctypes.string_at(vs_oj, 12288)
+                if k_obj_raw_data != ks_obj_raw_data or v_obj_raw_data != vs_obj_raw_data:
+                    print("false ")
                 # print("22: ", k_con[:10])
         
         # for key, obj_info in src_to_dst.items():
