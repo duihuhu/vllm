@@ -268,9 +268,9 @@ class CacheEngine:
             src_to_dst_copy[key] = 0
             key_obj_info = (obj_info[rank].object_ids)[0]
             value_obj_info = (obj_info[rank].object_ids)[1]
-            # for obj_id in key_obj_info:
-            #     if kv_data.get(obj_id):
-            #         print("exists ")
+            for obj_id in key_obj_info:
+                if kv_data.get(obj_id.binary().hex()):
+                    print("exists ")
             key_obj_buf = plasma_client.get_buffers(key_obj_info)
             value_obj_buf = plasma_client.get_buffers(value_obj_info)
             key_obj_addr = []

@@ -41,8 +41,7 @@ def background_execute():
         start_time = time.time()
         # while engine.engine.has_unfinished_requests():
         while engine.engine.has_unfinished_prefilled_seqs():
-            print("background_execute kv data " ,len(kv_data), engine.engine.get_num_unfinished_requests())
-            
+            # print("background_execute kv data " ,len(kv_data), engine.engine.get_num_unfinished_requests())
             if start_time_record == 0:
                 start_time_record = start_time
             step_outputs = engine.engine.step_decoder(kv_data, request_kv)
