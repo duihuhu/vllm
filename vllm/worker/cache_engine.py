@@ -334,16 +334,23 @@ class CacheEngine:
             # key_socket_object_content.append(key_socket_content)
             # value_socket_object_content.append(value_socket_content)
             
-        # for k_obj, ks_obj, k_content in zip(key_object_address, key_socket_object_address, key_socket_object_content):
-        #     for k_oj, ks_oj, k_con in zip(k_obj, ks_obj, k_content):
-        #         k_obj_ptr = ctypes.c_void_p(k_oj)
-        #         k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
+        for k_obj, ks_obj,v_obj, vs_obj in zip(key_object_address, key_socket_object_address, value_object_address, value_socket_object_address):
+            for k_oj, ks_oj, v_oj, vs_oj in zip(k_obj, ks_obj, v_obj, vs_obj):
+                # k_obj_ptr = ctypes.c_void_p(k_oj)
+                k_obj_raw_data = ctypes.string_at(k_oj, 10)
                 
-        #         # ks_obj_ptr = ctypes.c_void_p(ks_oj)
-        #         ks_obj_raw_data = ctypes.string_at(ks_oj, 10)
-        #         print("00: ", k_obj_raw_data)
-        #         print("11: ", ks_obj_raw_data)
-        #         print("22: ", k_con[:10])
+                # ks_obj_ptr = ctypes.c_void_p(ks_oj)
+                ks_obj_raw_data = ctypes.string_at(ks_oj, 10)
+                
+                v_obj_raw_data = ctypes.string_at(v_oj, 10)
+                
+                # ks_obj_ptr = ctypes.c_void_p(ks_oj)
+                vs_obj_raw_data = ctypes.string_at(vs_oj, 10)
+                print("00: ", k_obj_raw_data)
+                print("11: ", ks_obj_raw_data)
+                print("22: ", v_obj_raw_data)
+                print("33: ", vs_obj_raw_data)
+                # print("22: ", k_con[:10])
         
         # for key, obj_info in src_to_dst.items():
         #     src_to_dst_copy[key] = 0
