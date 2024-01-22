@@ -328,8 +328,8 @@ class CacheEngine:
             k_obj_ptr = ctypes.c_void_p(k_obj)
             k_obj_raw_data = ctypes.string_at(k_obj_ptr, 10)
             
-            # ks_obj_ptr = ctypes.c_void_p(ks_obj)
-            # ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
+            ks_obj_ptr = ctypes.c_void_p(ks_obj)
+            ks_obj_raw_data = ctypes.string_at(ks_obj_ptr, 10)
             print("00: ", k_obj_raw_data)
             print("11: ", ks_obj_raw_data)
         # for key, obj_info in src_to_dst.items():
