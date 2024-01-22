@@ -14,6 +14,7 @@ from vllm.utils import random_uuid
 from vllm.outputs import RequestOutput
 import threading
 import socket
+kv_data = {}
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
@@ -37,6 +38,7 @@ def background_execute():
         outputs: List[RequestOutput] = []
         start_time = time.time()
         while engine.engine.has_unfinished_requests():
+            print("background_execute kv data " ,len(kv_data))
             if start_time_record == 0:
                 start_time_record = start_time
             step_outputs = engine.engine.step_decoder(kv_data)
@@ -249,7 +251,8 @@ async def generate(request: Request) -> Response:
     ret = {"text": text_outputs}
     return JSONResponse(ret)
 
-def kv_server(kv_data):
+def kv_server():
+    global kv_data
     server_socket.listen(1)
     print("等待客户端连接...")
     while True:
@@ -281,7 +284,7 @@ def kv_server(kv_data):
             print("decode obj data ", recv_buffer_size, len(data_bytes), "\n")
             kv_data[obj] = data_bytes
             obj_count = obj_count - 1
-        print(len(kv_data))
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
@@ -293,11 +296,10 @@ if __name__ == "__main__":
     engine_args = AsyncEngineArgs.from_cli_args(args)
     engine = AsyncLLMEngine.from_engine_args(engine_args, "mdecode")
     
-    kv_data = {}
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ('127.0.0.1', 12345)
     server_socket.bind(server_address)
-    t_server = threading.Thread(target=kv_server, args=(kv_data,))
+    t_server = threading.Thread(target=kv_server)
     t_server.start()
 
     uvicorn.run(app,
