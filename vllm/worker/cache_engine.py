@@ -319,8 +319,8 @@ class CacheEngine:
                 key_socket_obj_addr.append(key_value)
                 value_socket_obj_addr.append(v_value)
                 
-                # key_obj_addr.append(key_value)
-                # value_obj_addr.append(v_value)
+                key_obj_addr.append(key_value)
+                value_obj_addr.append(v_value)
                 ##
                 # key_socket_content.append(kv_data[key_obj.binary().hex()])
                 # value_socket_content.append(kv_data[value_obj.binary().hex()])
