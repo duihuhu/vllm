@@ -219,7 +219,10 @@ class KvTransfer:
   def recv_in_roce(self, prefill_blocks_to_object_swap_out):
     return
   
+  #todo get kv object size
   def _get_kv_size(self,):
+      cache_block_size = CacheEngine.get_cache_block_size(self.cache_config.block_size, self.model_config, self.parallel_config)
+      print("cache_block_size ", cache_block_size)
       return 12288
       # return 24576
       # cache_block_size = CacheEngine.get_cache_block_size(self.cache_config.block_size, self.model_config, self.parallel_config)
