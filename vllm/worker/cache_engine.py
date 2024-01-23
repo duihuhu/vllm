@@ -299,8 +299,8 @@ class CacheEngine:
             # key_socket_content = []
             # value_socket_content = []
             for k_addr, v_addr, key_obj, value_obj in zip(key_obj_buf, value_obj_buf, key_obj_info, value_obj_info):
-                key_obj_addr.append(k_addr.address)
-                value_obj_addr.append(v_addr.address)
+                # key_obj_addr.append(k_addr.address)
+                # value_obj_addr.append(v_addr.address)
                 
                 # key_value = kv_data[key_obj.binary().hex()]
                 # v_value = kv_data[value_obj.binary().hex()]
@@ -319,8 +319,8 @@ class CacheEngine:
                 key_socket_obj_addr.append(key_value)
                 value_socket_obj_addr.append(v_value)
                 
-                # key_obj_addr.append(key_value)
-                # value_obj_addr.append(v_value)
+                key_obj_addr.append(key_value)
+                value_obj_addr.append(v_value)
                 ##
                 # key_socket_content.append(kv_data[key_obj.binary().hex()])
                 # value_socket_content.append(kv_data[value_obj.binary().hex()])
