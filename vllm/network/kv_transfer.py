@@ -220,6 +220,7 @@ class KvTransfer:
     return
   
   def _get_kv_size(self,):
-      return 12288
+      # return 12288
+      return 24576
       # cache_block_size = CacheEngine.get_cache_block_size(self.cache_config.block_size, self.model_config, self.parallel_config)
       # return cache_block_size
