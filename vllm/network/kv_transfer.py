@@ -223,7 +223,6 @@ class KvTransfer:
   #todo get kv object size
   def _get_kv_size(self,):
       # cache_block_size = CacheEngine.get_cache_block_size(self.cache_config.block_size, self.model_config, self.parallel_config)
-      
       head_size = self.model_config.get_head_size()
       num_heads =  self.model_config.get_num_heads(self.parallel_config)
       dtype_size = self._get_dtype_size(self.model_config.dtype)
@@ -231,5 +230,5 @@ class KvTransfer:
       
       return num_heads * head_size * self.cache_config.block_size * dtype_size
       # return 24576
-  def _get_dtype_size(dtype: torch.dtype) -> int:
+  def _get_dtype_size(self, dtype: torch.dtype) -> int:
     return torch.tensor([], dtype=dtype).element_size()
