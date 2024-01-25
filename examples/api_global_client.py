@@ -27,7 +27,6 @@ def random_uuid() -> str:
 
 def post_inited_request(session_id: str, 
                         prompts: List[str],
-                        request_id: str,
                         api_url: str,
                         n: int = 1) -> requests.Response:
     for prompt in prompts:
