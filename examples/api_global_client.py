@@ -139,9 +139,8 @@ if __name__ == "__main__":
     if args.tokenizer is None:
         args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
-    session_num = args.session_num
     session_ids = []
-    for i in range(session_num):
+    for i in range(cfg.session_num):
         session_id = random_uuid()
         session_ids.append(session_id)
         event = threading.Event()
@@ -157,7 +156,7 @@ if __name__ == "__main__":
       td.start()   
        
     uvicorn.run(app,
-            host=cfg.host,
+            host=cfg.host_ip,
             port=cfg.client_port,
             log_level="info",
             timeout_keep_alive=TIMEOUT_KEEP_ALIVE)

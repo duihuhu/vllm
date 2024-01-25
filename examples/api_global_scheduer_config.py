@@ -10,3 +10,5 @@ forward_res_url = "http://{host_ip}::{client_port}/response"
 
 forward_mpd_url = "http://%s:%s/mpd_add"
 
+
+session_num = 1

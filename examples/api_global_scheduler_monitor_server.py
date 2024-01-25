@@ -263,7 +263,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     uvicorn.run(app,
-                host=args.host,
-                port=args.port,
+                host=cfg.host_ip,
+                port=cfg.global_scheduler_port,
                 log_level="debug",
                 timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
