@@ -163,7 +163,6 @@ def choose_mprefill():
                 service_port = value.service_port
     # mprefill_url =  "http://" + host + ":" + str(service_port) + "/" + mprefill_local_add_request
     url = cfg.forward_mprefill_url % (host, service_port)
-    print("forward url", url)
     return url, host, service_port
 
 async def forward_request_to_mprefill_server(request: Request, cache_info) -> Response:
@@ -242,14 +241,14 @@ async def add_reqs(request: Request) -> Response:
         cache_info.text_size = len(prompt)
         cache_info.kv_size = 0
         #first prompt from one session, choose mprefill and send
-        response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
+        # response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
         session_table[session_id] = cache_info
-        return response
+        # return response
     else:
         cache_info = session_table[session_id]
         cache_info.add_prompt(prompt) 
         cache_info.text_size = cache_info.text_size + len(prompt)
-        response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
+        # response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
         session_table[session_id] = cache_info
         ##after prompt, compose prompt and compute what to send
     ret = {"text": 'succ'}
