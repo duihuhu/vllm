@@ -44,6 +44,7 @@ def post_inited_request(session_id: str,
             # "max_tokens": 16,
             'ignore_eos': True,
         }
+        print("api_url " , api_url)
         response = requests.post(api_url, headers=headers, json=pload, stream=True)
         event = session_event[session_id]
         event.clear()
