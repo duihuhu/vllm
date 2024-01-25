@@ -149,7 +149,7 @@ if __name__ == "__main__":
     
     task_td = []
     for session_id in session_ids:
-        task_td.append(threading.Thread(target=post_inited_request, args=(session_id, prompts, cfg.add_reqs_url,  args.n)))
+        task_td.append(threading.Thread(target=post_inited_request, args=(session_id, prompts, cfg.add_reqs_url % (cfg.host_ip, cfg.global_scheduler_port),  args.n)))
    
     for td in task_td:
       td.start()   

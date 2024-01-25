@@ -197,7 +197,7 @@ async def forward_result_to_client(request: Request) -> Response:
     original_method = request.method
     original_headers = request.headers
     original_content = await request.body()
-    forward_url = cfg.forward_res_url
+    forward_url = cfg.forward_res_url % (cfg.host_ip, cfg.client_port)
     # 构建转发请求
     # forward_url = "http://example.com/destination_endpoint"
     async with httpx.AsyncClient() as client:
