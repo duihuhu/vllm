@@ -235,6 +235,7 @@ async def add_reqs(request: Request) -> Response:
     request_dict = await request.json()
     session_id = request_dict.get("session_id")
     prompt = request_dict.get("prompt")
+    print(prompt)
     if session_id not in session_table:
         cache_info = CacheInfo(session_id=session_id)
         cache_info.add_prompt(prompt)
