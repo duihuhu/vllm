@@ -163,6 +163,7 @@ def choose_mprefill():
                 service_port = value.service_port
     # mprefill_url =  "http://" + host + ":" + str(service_port) + "/" + mprefill_local_add_request
     url = cfg.forward_mprefill_url % (host, service_port)
+    print("forward url", url)
     return url, host, service_port
 
 async def forward_request_to_mprefill_server(request: Request, cache_info) -> Response:
