@@ -14,27 +14,41 @@ import requests
 import random
 from vllm.utils import random_uuid
 
+import fastapi
+from fastapi import Request
+from fastapi.responses import JSONResponse, Response, StreamingResponse
+import uvicorn
+app = fastapi.FastAPI()
+TIMEOUT_KEEP_ALIVE = 5  # seconds
+
 import api_global_scheduer_config as cfg
+import threading
+session_event = {}
 
 def post_inited_request(session_id: str, 
-                        prompt: str,
+                        prompts: List[str],
                         request_id: str,
                         api_url: str,
                         n: int = 1) -> requests.Response:
-    headers = {"User-Agent": "Test Client"}
-    pload = {
-        # "user_id": user_id,
-        "session_id": session_id,
-        "prompt": prompt,
-        "request_id": request_id,
-        "n": n,
-        "use_beam_search": False,
-        "temperature": 0.0,
-        # "max_tokens": 16,
-        'ignore_eos': True,
-    }
-    
-    response = requests.post(api_url, headers=headers, json=pload, stream=True)
+    for prompt in prompts:
+        request_id = random_uuid()
+        headers = {"User-Agent": "Test Client"}
+        pload = {
+            # "user_id": user_id,
+            "session_id": session_id,
+            "prompt": prompt,
+            "request_id": request_id,
+            "n": n,
+            "use_beam_search": False,
+            "temperature": 0.0,
+            # "max_tokens": 16,
+            'ignore_eos': True,
+        }
+        response = requests.post(api_url, headers=headers, json=pload, stream=True)
+        event = session_event[session_id]
+        event.clear()
+        event.wait()
+    print("this thread mul consevration end ")
     return response
 
 def sample_requests(
@@ -94,6 +108,15 @@ def sample_requests(
     sampled_prompts = random.sample(filtered_dataset, num_requests)
     return sampled_prompts
 
+@app.post("/response")
+async def add_reqs(request: Request) -> Response:
+    request_dict = await request.json()
+    session_id = request.get("session_id")
+    event = session_event[session_id]
+    event.set()
+    print(session_id, " recv response ")
+    return 
+
 
 if __name__ == "__main__":
     
@@ -109,22 +132,35 @@ if __name__ == "__main__":
                         help="Number of prompts to process.")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="facebook/opt-125m")
-      
+    parser.add_argument("--session-num", type=int, default=1)
+
     args = parser.parse_args()
     
     if args.tokenizer is None:
         args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
-    
-    n = args.n
-    stream = args.stream
-    # user_id = random_uuid()
-    session_id = random_uuid()
-    # sampled_prompts = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    session_num = args.session_num
+    session_ids = []
+    for i in range(session_num):
+        session_id = random_uuid()
+        session_ids.append(session_id)
+        event = threading.Event()
+        session_event[session_id] = event
+        
     prompts = ["What is the easiest idea to earn money", "What is the easiest idea to earn money"]
-    for prompt in prompts:
-        request_id = random_uuid()
-        post_inited_request(session_id, prompt, request_id, cfg.add_reqs_url, n)
-
-  
-      
+    
+    task_td = []
+    for session_id in session_ids:
+        task_td.append(threading.Thread(target=post_inited_request, args=(session_id, prompts, cfg.add_reqs_url,  args.n)))
+   
+    for td in task_td:
+      td.start()   
+       
+    uvicorn.run(app,
+            host=cfg.host,
+            port=cfg.client_port,
+            log_level="info",
+            timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
+    
+    for td in task_td:
+      td.join()  

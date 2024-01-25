@@ -1,12 +1,12 @@
 import argparse
 import json
-from typing import AsyncGenerator
 
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
 import httpx
 import api_global_scheduer_config as cfg
+import random
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
@@ -15,17 +15,12 @@ app = FastAPI()
 #key: host_(service_port)_(machine_type)
 #value: PrefillInfo object
 monitor_mprefill_info = {}
-
 monitor_mdecode_info = {}
+monitor_mpd_info = {}
 
 session_table = {}
 
-session_forward = {}
-
-#to record session request url and other 
-class SessFd:
-    def __init__(self) -> None:
-        pass
+rand_mpd = 1
 
 #record session id , prompt, output, total text len, kv size, prefill machine, decode machine
 class CacheInfo:
@@ -40,6 +35,7 @@ class CacheInfo:
         self.mprefill_port = None
         self.mdecode_host = None
         self.mdecode_port = None
+        self.pd_type = None
         pass
 
     def add_prompt(self, prompt) -> None:
@@ -50,7 +46,14 @@ class CacheInfo:
         self.outputs.append(output)
         return
 
-    
+class PDInfo:
+    def __init__(self, host, service_port, unfinished_req, unfinished_tokens, timestamp) -> None:
+        self.host = host
+        self.service_port = service_port
+        self.unfinished_req = unfinished_req
+        self.unfinished_tokens = unfinished_tokens
+        self.timestamp = timestamp
+        
 class PrefillInfo:
     def __init__(self, host, service_port, unfinished_req, unfinished_tokens, timestamp) -> None:
         self.host = host
@@ -60,17 +63,38 @@ class PrefillInfo:
         self.timestamp = timestamp
 
 class DecodeInfo:
-    def __init__(self, host, service_port, machine_type, num_labels, timestamp) -> None:
+    def __init__(self, host, service_port, machine_type, num_requests, timestamp) -> None:
         self.host = host
         self.service_port = service_port
         self.machine_type = machine_type
-        self.num_labels = num_labels
+        self.num_requests = num_requests
         self.timestamp = timestamp
         
     def __json__(self):
         return {"host": self.host, "service_port": self.service_port, "machine_type": self.machine_type,
                 "num_labels": self.num_labels, "timestamp": self.timestamp,}
-    
+
+@app.post("/mpd_monitor_report")
+async def mpd_monitor_report(request: Request) -> Response:
+    request_dict = await request.json()
+    host = request_dict.pop("host")
+    service_port = request_dict.pop("service_port")
+    machine_type = request_dict.pop("machine_type")
+    unfinished_req = request_dict.pop("unfinished_req")
+    unfinished_tokens = request_dict.pop("unfinished_tokens")  
+    timestamp = request_dict.pop("timestamp") 
+    key = host + "_" + str(service_port) + "_" + machine_type
+    ##todo
+    if monitor_mpd_info.get(key):
+        mpd_info = monitor_mpd_info[key]
+        mpd_info.unfinished_req = unfinished_req
+        mpd_info.unfinished_tokens = unfinished_tokens
+        mpd_info.timestamp = timestamp
+    else:
+      mpd_info = PDInfo(host, service_port, unfinished_req, unfinished_tokens, timestamp)
+      monitor_mpd_info[key] = mpd_info
+    return JSONResponse(monitor_mpd_info)
+
 @app.post("/mprefill_monitor_report")
 async def mprefill_monitor_report(request: Request) -> Response:
     request_dict = await request.json()
@@ -97,21 +121,31 @@ async def mdecode_monitor_report(request: Request) -> Response:
     host = request_dict.pop("host")
     service_port = request_dict.pop("service_port")
     machine_type = request_dict.pop("machine_type")
-    num_labels = request_dict.pop("num_labels") 
+    num_requests = request_dict.pop("num_requests") 
     timestamp = request_dict.pop("timestamp")    
     key = host + "_" + str(service_port) + "_" + machine_type
     # print(key, unfinished_req, unfinished_tokens)
     if monitor_mdecode_info.get(key):
         mdecode_info = monitor_mdecode_info[key]
         mdecode_info['machine_type'] = machine_type
-        mdecode_info['num_labels'] = num_labels
+        mdecode_info['num_requests'] = num_requests
         mdecode_info['timestamp'] = timestamp
     else:
-      mdecode_info = DecodeInfo(host, service_port, machine_type, num_labels, timestamp)
+      mdecode_info = DecodeInfo(host, service_port, machine_type, num_requests, timestamp)
       monitor_mdecode_info[key] = mdecode_info.__dict__
     ret = {"text": 'test'}
     return JSONResponse(ret)
 
+def random_choose_mpd():
+    host = ""
+    service_port = ""
+    mpd = random.sample(monitor_mpd_info.keys(), rand_mpd)
+    pdinfo = monitor_mpd_info[mpd]
+    host = pdinfo.host
+    service_port = pdinfo.service_port
+    url = cfg.forward_mpd_url % (host, service_port)
+    return url, host, service_port
+    
 def choose_mprefill():
     host = ""
     service_port = ""
@@ -131,7 +165,7 @@ def choose_mprefill():
     url = cfg.forward_mprefill_url % (host, service_port)
     return url, host, service_port
 
-async def forward_request_to_another_server(request: Request, cache_info) -> Response:
+async def forward_request_to_mprefill_server(request: Request, cache_info) -> Response:
     # 获取原始请求的信息
     original_method = request.method
     original_headers = request.headers
@@ -158,12 +192,12 @@ async def forward_request_to_another_server(request: Request, cache_info) -> Res
     )
     return response, cache_info
 
-async def forward_result_to_another_client(request: Request) -> Response:
+async def forward_result_to_client(request: Request) -> Response:
     # 获取原始请求的信息
     original_method = request.method
     original_headers = request.headers
     original_content = await request.body()
-    forward_url = choose_mprefill()
+    forward_url = cfg.forward_res_url
     # 构建转发请求
     # forward_url = "http://example.com/destination_endpoint"
     async with httpx.AsyncClient() as client:
@@ -182,12 +216,6 @@ async def forward_result_to_another_client(request: Request) -> Response:
     )
     return response
 
-# @app.post("/global_prefill_req_pool")
-# async def global_prefill_req_pool(request: Request) -> Response:
-#     # 转发请求到另一个服务器
-#     response = await forward_request_to_another_server(request)
-#     return response
-
 @app.post('/recv_decode_result')
 async def recv_decode_result(request: Request) -> Response:
     request_dict = await request.json()
@@ -199,7 +227,7 @@ async def recv_decode_result(request: Request) -> Response:
     cache_info.kv_size = kv_size
     cache_info.text_size = cache_info.text_size + len(output)
     #forward result to client
-    response = await forward_result_to_another_client(request)
+    response = await forward_result_to_client(request)
     return 
 
 @app.post("/add_reqs")
@@ -213,22 +241,20 @@ async def add_reqs(request: Request) -> Response:
         cache_info.text_size = len(prompt)
         cache_info.kv_size = 0
         #first prompt from one session, choose mprefill and send
-        response, cache_info = await forward_request_to_another_server(request, cache_info)
+        response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
         session_table[session_id] = cache_info
-        method = request.method
-        headers = request.headers
-        url = request.url
-               
         return response
     else:
         cache_info = session_table[session_id]
         cache_info.add_prompt(prompt) 
         cache_info.text_size = cache_info.text_size + len(prompt)
-        response, cache_info = await forward_request_to_another_server(request, cache_info)
+        response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
         session_table[session_id] = cache_info
         ##after prompt, compose prompt and compute what to send
     ret = {"text": 'succ'}
     return ret
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
