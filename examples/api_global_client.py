@@ -9,7 +9,7 @@ from typing import Iterable, List, Tuple, Optional
 
 from transformers import PreTrainedTokenizerBase
 
-from vllm.transformers_utils.tokenizer import get_tokenizer
+# from vllm.transformers_utils.tokenizer import get_tokenizer
 import requests
 import random
 from vllm.utils import random_uuid
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     
     if args.tokenizer is None:
         args.tokenizer = args.model
-    tokenizer = get_tokenizer(args.tokenizer)
+    # tokenizer = get_tokenizer(args.tokenizer)
     session_ids = []
     for i in range(cfg.session_num):
         session_id = random_uuid()
