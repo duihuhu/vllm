@@ -8,12 +8,8 @@ import json
 from typing import Iterable, List, Tuple, Optional
 
 from transformers import PreTrainedTokenizerBase
-
-# from vllm.transformers_utils.tokenizer import get_tokenizer
 import requests
 import random
-from vllm.utils import random_uuid
-
 import fastapi
 from fastapi import Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
@@ -23,7 +19,11 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds
 
 import api_global_scheduer_config as cfg
 import threading
+import uuid
 session_event = {}
+
+def random_uuid() -> str:
+    return str(uuid.uuid4().hex)
 
 def post_inited_request(session_id: str, 
                         prompts: List[str],
