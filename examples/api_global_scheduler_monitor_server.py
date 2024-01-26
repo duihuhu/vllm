@@ -145,7 +145,30 @@ def random_choose_mpd():
     service_port = pdinfo.service_port
     url = cfg.forward_mpd_url % (host, service_port)
     return url, host, service_port
-    
+  
+def cache_aware_mpd(session_id):
+    cache_info = session_table.get(session_id)
+    url = cfg.forward_mpd_url % (cache_info.mprefill_host, cache_info.mprefill_port)
+    return url, cache_info.mprefill_host, cache_info.mprefill_port
+
+def random_choose_mp():
+    host = ""
+    service_port = ""
+    mpd = random.sample(monitor_mpd_info.keys(), rand_mpd)
+    mpinfo = monitor_mprefill_info[mpd]
+    host = mpinfo.host
+    service_port = mpinfo.service_port
+    url = cfg.forward_mprefill_url % (host, service_port)
+    return url, host, service_port
+
+#todo 
+def cache_aware_mp(session_id):
+    return
+
+#todo 
+def load_balacne_mp(session_id):
+    return
+
 def choose_mprefill():
     host = ""
     service_port = ""
@@ -242,14 +265,14 @@ async def add_reqs(request: Request) -> Response:
         cache_info.text_size = len(prompt)
         cache_info.kv_size = 0
         #first prompt from one session, choose mprefill and send
-        # response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
+        response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
         session_table[session_id] = cache_info
         # return response
     else:
         cache_info = session_table[session_id]
         cache_info.add_prompt(prompt) 
         cache_info.text_size = cache_info.text_size + len(prompt)
-        # response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
+        response, cache_info = await forward_request_to_mprefill_server(request, cache_info)
         session_table[session_id] = cache_info
         ##after prompt, compose prompt and compute what to send
     ret = {"text": 'succ'}
