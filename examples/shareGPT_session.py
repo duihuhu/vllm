@@ -196,10 +196,10 @@ def sample_requests_session(
         if len(data["conversations"]) >= 2
     ]
     # Only keep the first two turns of each conversation.
-    dataset = [
-        (data["conversations"][0]["value"], data["conversations"][1]["value"])
-        for data in dataset
-    ]
+    # dataset = [
+    #     (data["conversations"][0]["value"], data["conversations"][1]["value"])
+    #     for data in dataset
+    # ]
     session_iteration = {}
     for data in dataset:
         key = len(data["conversations"])/2
