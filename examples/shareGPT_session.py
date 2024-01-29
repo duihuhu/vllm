@@ -205,7 +205,7 @@ def sample_requests_session(
         if len(data["conversations"]) %2 !=0:
             continue 
         token_sum = 0
-        for conv in data:
+        for conv in data["conversations"]:
             token_sum = token_sum + len(tokenizer(conv["value"]).input_ids)
         if token_sum > 2048:
             continue
