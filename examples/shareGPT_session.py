@@ -249,8 +249,7 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int, default=1)
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
-    parser.add_argument("--dataset", type=str, required=True,
-                        help="Path to the dataset.", default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json")
+    parser.add_argument("--dataset", type=str, default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json")
     parser.add_argument("--num-prompts", type=int, default=1000,
                         help="Number of prompts to process.")
     parser.add_argument("--tokenizer", type=str, default=None)
