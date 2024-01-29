@@ -202,7 +202,7 @@ def sample_requests_session(
     # ]
     session_iteration = {}
     for data in dataset:
-        if data["conversations"] %2 !=0:
+        if len(data["conversations"]) %2 !=0:
             print(data["id"])
         key = len(data["conversations"])/2
         if key in session_iteration:
