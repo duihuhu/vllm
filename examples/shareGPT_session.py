@@ -225,7 +225,7 @@ def sample_requests_session(
             session_iteration[key] = 1
         if key ==1 :
             total_single = total_single + 1
-        token_sum = token_sum + 1
+        total_mul = total_mul + 1
     print(session_iteration)
     print(no_filter_total_mul, no_filter_total_single, total_single, token_sum)
     # prompts = [prompt for prompt, _ in dataset]
