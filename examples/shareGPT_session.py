@@ -227,7 +227,7 @@ def sample_requests_session(
             total_single = total_single + 1
         total_mul = total_mul + 1
     print(session_iteration)
-    print(no_filter_total_mul, no_filter_total_single, total_single, token_sum)
+    print(no_filter_total_mul, no_filter_total_single, total_single, total_mul)
     # prompts = [prompt for prompt, _ in dataset]
     # prompt_token_ids = tokenizer(prompts).input_ids
     # completions = [completion for _, completion in dataset]
