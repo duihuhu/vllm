@@ -193,7 +193,7 @@ def sample_requests_session(
     # Filter out the conversations with less than 2 turns.
     dataset = [
         data for data in dataset
-        if len(data["conversations"]) >= 2
+        if len(data["conversations"]) >= 2 and data["conversations"][0]["from"]=="human"
     ]
     # Only keep the first two turns of each conversation.
     # dataset = [
@@ -238,7 +238,7 @@ def sample_requests_session(
     # # sampled_requests = random.sample(filtered_dataset, num_requests)
 
     # sampled_prompts = random.sample(filtered_dataset, num_requests)
-    return sampled_prompts
+    # return sampled_prompts
 
 
 if __name__ == "__main__":
