@@ -203,7 +203,13 @@ def sample_requests_session(
     session_iteration = {}
     for data in dataset:
         if len(data["conversations"]) %2 !=0:
-            continue    
+            continue 
+        token_sum = 0
+        for conv in data:
+            token_sum = token_sum + len(tokenizer(conv["value"]).input_ids)
+        if token_sum > 2048:
+            continue
+        
         key = len(data["conversations"])/2
         if key in session_iteration:
             session_iteration[key] = session_iteration[key] + 1
