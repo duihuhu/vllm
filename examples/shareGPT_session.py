@@ -201,7 +201,15 @@ def sample_requests_session(
     #     for data in dataset
     # ]
     session_iteration = {}
+    total_single = 0
+    total_mul = 0
+    no_filter_total_single = 0
+    no_filter_total_mul = 0
     for data in dataset:
+        if len(data["conversations"]) / 2 == 1:
+            no_filter_total_single = no_filter_total_single + 1
+        no_filter_total_mul = no_filter_total_mul + 1
+        
         if len(data["conversations"]) %2 !=0:
             continue 
         token_sum = 0
@@ -215,7 +223,11 @@ def sample_requests_session(
             session_iteration[key] = session_iteration[key] + 1
         else:
             session_iteration[key] = 1
+        if key ==1 :
+            total_single = total_single + 1
+        token_sum = token_sum + 1
     print(session_iteration)
+    print(no_filter_total_mul, no_filter_total_single, total_single, token_sum)
     # prompts = [prompt for prompt, _ in dataset]
     # prompt_token_ids = tokenizer(prompts).input_ids
     # completions = [completion for _, completion in dataset]
