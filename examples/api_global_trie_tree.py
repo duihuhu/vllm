@@ -1,10 +1,3 @@
-reqs_relation_table = {}
-
-class PrioReqInfo:
-  def __init__(self, request_id, type):
-      self.request_id = request_id
-      self.type = type
-
 class TrieNode:
   def __init__(self):
       self.children = {}
@@ -35,27 +28,7 @@ class Trie:
           #no other request has this path
           del node.children[token]
           break
-  
-  def udpate(self, tokens, request_id):
-    if reqs_relation_table.get(request_id):
-      prio_req = reqs_relation_table[request_id]
-      if prio_req.type == "part":
-        self.insert(tokens=tokens, request_id=request_id)
-      else:
-        prio_request_id = prio_req.request_id
-        node = self.root
-        for token in tokens:
-          if token not in node.children:
-            node.children[token] = TrieNode()
-            node.children[token].request_ids.add(request_id)
-          else:
-            node.children[token].request_ids.add(request_id)
-            node.children[token].request_ids.remove(prio_request_id)
-          node = node.children[token]
-
-    else:
-      self.insert(tokens=tokens, request_id=request_id)
-  
+        
   def search(self, tokens):
     node = self.root
     prefix_len = 0
@@ -75,18 +48,39 @@ class Trie:
       
     req_res = start_Node.request_ids & end_Node.request_ids
     return req_res, prefix_len 
+  # def udpate(self, tokens, request_id):
+  #   if reqs_relation_table.get(request_id):
+  #     prio_req = reqs_relation_table[request_id]
+  #     if prio_req.type == "part":
+  #       self.insert(tokens=tokens, request_id=request_id)
+  #     else:
+  #       prio_request_id = prio_req.request_id
+  #       node = self.root
+  #       for token in tokens:
+  #         if token not in node.children:
+  #           node.children[token] = TrieNode()
+  #           node.children[token].request_ids.add(request_id)
+  #         else:
+  #           node.children[token].request_ids.add(request_id)
+  #           node.children[token].request_ids.remove(prio_request_id)
+  #         node = node.children[token]
+  #   else:
+  #     self.insert(tokens=tokens, request_id=request_id)
+  
 
-# 建立公共前缀树
-trie = Trie()
-listA = [1, 2, 3, 4]
-listB = [1, 5, 7, 8]
-listC = [0, 4, 1, 2]
 
-trie.insert(listA,"1111")
-trie.insert(listB,"2222")
-trie.insert(listC, "3333")
+# # 建立公共前缀树
+# trie = Trie()
+# listA = [1, 2, 3, 4]
+# listB = [1, 5, 7, 8]
+# listC = [0, 4, 1, 2]
 
-# trie.delete(listA, "1111")
+# trie.insert(listA,"1111")
+# trie.insert(listB,"2222")
+# trie.insert(listC, "3333")
 
-req_res, prefix_len = trie.search([1,2])
-#todo choose one request_id in req_res
+# # trie.delete(listA, "1111")
+
+# req_res, prefix_len = trie.search([1,2])
+# print(req_res, prefix_len)
+# #todo choose one request_id in req_res

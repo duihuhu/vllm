@@ -108,7 +108,7 @@ def sample_requests(
     sampled_prompts = random.sample(filtered_dataset, num_requests)
     return sampled_prompts
 
-@app.post("/response")
+@app.post("/add_results")
 async def add_reqs(request: Request) -> Response:
     request_dict = await request.json()
     session_id = request.get("session_id")
