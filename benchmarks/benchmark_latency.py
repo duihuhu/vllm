@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single batch of '
         'requests till completion.')
-    parser.add_argument('--model', type=str, default='facebook/opt-125m')
+    parser.add_argument('--model', type=str, default='/workspace/Llama-2-7b-100k/model/snapshots/242c6469cab41b41d30826e850afa4687e422f24')
     parser.add_argument('--tokenizer', type=str, default=None)
     parser.add_argument('--quantization',
                         '-q',
