@@ -77,7 +77,7 @@ for data in tokenizer_dataset:
 file_path = "/workspace/vllm/benchmarks/account.txt"
 with open(file_path, 'a') as file:
     for data in filtered_dataset:
-        file.write(f"prompt tokens len {data[0]}, output tokens len {data[1]}/n")
+        file.write(f"prompt tokens len {data[0]}, output tokens len {data[1]}\n")
 
 prompts_lens = [prompt for prompt, _ in filtered_dataset]
 outputs_lens = [output for _, output in filtered_dataset]
