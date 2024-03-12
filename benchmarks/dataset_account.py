@@ -1,5 +1,5 @@
 import json
-from vllm.transformers_utils.tokenizer import get_tokenizer
+from transformers import AutoTokenizer
 import numpy as np
 
 def process(prompts_lens):
@@ -44,7 +44,7 @@ def process(prompts_lens):
     print(f"{i / len(prompts_lens):.2f}")
 
 tokenizer_path = "/workspace/opt-125m"
-tokenizer = get_tokenizer(tokenizer_path)
+tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
 dataset_path = "/workspace/ShareGPT_V3_unfiltered_cleaned_split.json"
 with open(dataset_path) as f:
