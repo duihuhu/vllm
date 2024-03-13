@@ -6,6 +6,13 @@ from typing import Dict, List, Tuple, Set, Optional
 import torch
 import torch.distributed
 
+#todo
+from vllm.global_vars import BATCH_METHOD, ALIGN, ENABLE_RTC
+from torch.cuda import (get_device_name, current_device, empty_cache, reset_peak_memory_stats, set_device,
+                        synchronize, max_memory_allocated, get_device_capability)
+from vllm.sequence import SequenceData
+from vllm.utils import get_max_shared_memory_bytes
+
 from vllm.config import (CacheConfig, ModelConfig, ParallelConfig,
                          SchedulerConfig, LoRAConfig)
 from vllm.model_executor import set_random_seed
@@ -19,6 +26,8 @@ from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 from vllm.lora.request import LoRARequest
 
+import json
+import socket
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -87,6 +96,8 @@ class Worker:
             init_custom_ar()
         # Initialize the model.
         set_random_seed(self.model_config.seed)
+
+        #todo hucc CreateGlobalNcclComm 
 
     def load_model(self):
         self.model_runner.load_model()
@@ -183,6 +194,7 @@ class Worker:
         blocks_to_swap_in: Optional[Dict[int, int]] = None,
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
+        wait_for_swap_out: List[str] = None,
     ) -> Optional[SamplerOutput]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
@@ -205,7 +217,11 @@ class Worker:
             blocks_to_copy = data["blocks_to_copy"]
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
-
+        
+        #todo hucc
+        if wait_for_swap_out:
+            self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
+            
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}

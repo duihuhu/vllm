@@ -4,9 +4,18 @@ from typing import Dict, List, Tuple
 import torch
 
 from vllm._C import cache_ops
+
+
 from vllm.config import CacheConfig, ModelConfig, ParallelConfig
 from vllm.logger import init_logger
 from vllm.utils import in_wsl, STR_DTYPE_TO_TORCH_DTYPE
+
+#todo list
+from vllm.npu_ops import copy_blocks, SendReqeustRemote, RecvRequestRemote, SendBlocksRemote, RecvBlocksRemote
+#hucc
+from torch.cuda import current_device, Stream, Event, stream
+
+
 
 logger = init_logger(__name__)
 
@@ -26,6 +35,7 @@ class CacheEngine:
         cache_config: CacheConfig,
         model_config: ModelConfig,
         parallel_config: ParallelConfig,
+        request_id_size: int = 32,
     ) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
@@ -44,15 +54,41 @@ class CacheEngine:
         else:
             self.dtype = STR_DTYPE_TO_TORCH_DTYPE[cache_config.cache_dtype]
 
+        #hucc
+        self.cache_size_per_block = self.block_size *self.num_heads * self.head_size * _get_dtype_size(self.dtype)
+        self.request_id_size = request_id_size
+        
         # Initialize the cache.
         self.gpu_cache = self.allocate_gpu_cache()
         self.cpu_cache = self.allocate_cpu_cache()
 
+        #hucc Initialize the stream for caching operations
+        self.swap_in_stream = Stream(device=current_device())
+        self.swap_out_stream = Stream(device=current_device())
+        
+        self.remote_send_streams: Dict[str, Stream] = {}
+        self.remote_recv_streams: Dict[str, Stream] = {}
+        
+        #Initizlize the events for stream synchronization
+        self.swap_in_events: Dict[str, Event] = {}
+        self.swap_out_events: Dict[str, Event] = {}
+        
+        #send方在一个channel对应的Stream中只能有一个未完成时间，可能是传请求时间也可能是传数据时间
+        #todo list FSM
+        self.remote_send_events: Dict[str, Tuple[str, Event]] = {}
+        #send放在一个channel对应的Stream中可以有多个未完成时间，传请求和传数据绑定在一个事件中
+        self.remote_recv_events: Dict[str, List[Tuple[str, Event]]]
+        
+        #request_id to request tensor
+        self.remote_recv_waiting_request_ids: Dict[str, torch.Tensor] = {}
+        #channel to request tensor
+        self.remote_send_waiting_request_ids: Dict[str, torch.Tensor] = {}
+        
         # Initialize the stream for caching operations.
-        self.cache_stream = torch.cuda.Stream()
-        assert self.cache_stream != torch.cuda.current_stream()
+        # self.cache_stream = torch.cuda.Stream()
+        # assert self.cache_stream != torch.cuda.current_stream()
         # Initialize the events for stream synchronization.
-        self.events = [torch.cuda.Event() for _ in range(self.num_layers)]
+        # self.events = [torch.cuda.Event() for _ in range(self.num_layers)]
 
     def get_key_block_shape(self) -> Tuple[int, int, int, int]:
         element_size = torch.tensor([], dtype=self.dtype).element_size()
@@ -70,6 +106,14 @@ class CacheEngine:
             self.head_size,
             self.block_size,
         )
+    #hucc
+    #for request id: send gpu->gpu , copy request id from gpu to cpu 
+    def tensor_to_str(self, channel: str, device_tensor: torch.Tensor) -> str:
+        with stream(self.remote_send_streams[channel]):
+            cpu_tensor = torch.ones(size=(self.request_id_size,), dtype=torch.uint8)
+            cpu_tensor = device_tensor
+            data_int = cpu_tensor.tolist()
+        return ''.join([hex(data)[2:] for data in data_int])
 
     def allocate_gpu_cache(self) -> List[KVCache]:
         gpu_cache: List[KVCache] = []
@@ -131,11 +175,67 @@ class CacheEngine:
                 event = self.events[i]
                 event.record(stream=self.cache_stream)
 
-    def swap_in(self, src_to_dst: Dict[int, int]) -> None:
-        self._swap(self.cpu_cache, self.gpu_cache, src_to_dst)
+    # def swap_in(self, src_to_dst: Dict[int, int]) -> None:
+    #     self._swap(self.cpu_cache, self.gpu_cache, src_to_dst)
 
-    def swap_out(self, src_to_dst: Dict[int, int]) -> None:
-        self._swap(self.gpu_cache, self.cpu_cache, src_to_dst)
+    # def swap_out(self, src_to_dst: Dict[int, int]) -> None:
+    #     self._swap(self.gpu_cache, self.cpu_cache, src_to_dst)
+
+    #hucc
+    def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
+        with stream(self.swap_in_stream):
+            copy_blocks(self.gpu_cache, self.cpu_cache, src_to_dst, self.cache_size_per_block, True)
+            event = Event()
+            event.record()
+        self.swap_in_events[key] = event
+
+    #todo  share one stream or two stream
+    def swap_out(self, src_to_dst: Dict[int, int], key: str) -> None:
+        with stream(self.swap_in_stream):
+            copy_blocks(self.cpu_cache, self.gpu_cache, src_to_dst, self.cache_size_per_block, False)
+            event = Event()
+            event.record()
+        self.swap_out_stream[key] = event
+
+    # pull语义, 由send方法调用
+    def remote_recv_request(self, channel: str, remote_rank: int) -> str:
+        if channel not in self.remote_send_streams:
+            self.remote_send_streams[channel] = Stream(device=current_device())
+            
+        with stream(self.remote_send_streams[channel]):
+            tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
+                                               dtype=torch.uint8).cuda()
+            RecvRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, remote_rank)
+            self.remote_send_waiting_request_ids[channel] = tensor_of_request_id
+            event = Event()
+            event.record()
+        self.remote_send_events[channel] = (None, event)
+        
+    def remote_send_blocks(self, channel: str, request_id: str, src_blocks: List[int], remote_rank: int) -> None:      
+        if channel not in self.remote_send_streams:
+            self.remote_send_streams[channel] = Stream(device=current_device())
+        
+        with stream(self.remote_send_streams[channel]):
+            SendBlocksRemote(self.gpu_cache, src_blocks, self.cache_size_per_block, remote_rank)
+            event = Event()
+            event.record()
+        self.remote_send_events[channel] = (request_id, event)
+
+    def remote_recv_blocks(self, channel: str, request_id: str, dst_blocks: List[int], remote_rank: int) -> str: 
+        if channel not in self.remote_recv_streams:
+            self.remote_recv_streams[channel] = Stream(device=current_device())
+        
+        with stream(self.remote_recv_streams[channel]):
+            tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
+            self.remote_recv_waiting_request_ids[request_id] = tensor_of_request_id
+            SendReqeustRemote(tensor_of_request_id.data_ptr(), self.request_id_size, remote_rank)
+            RecvBlocksRemote(self.gpu_cache, dst_blocks, self.cache_size_per_block, remote_rank)
+            event = Event()
+            event.record() 
+        if channel not in self.remote_recv_events:
+            self.remote_recv_events[channel] = [(request_id, event)]
+        else:
+            self.remote_recv_events[channel].append((request_id, event))
 
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         key_caches = [key_cache for key_cache, _ in self.gpu_cache]
@@ -143,6 +243,76 @@ class CacheEngine:
         # NOTE(woosuk): This operation implicitly synchronizes the CPU and GPU.
         cache_ops.copy_blocks(key_caches, value_caches, src_to_dsts)
 
+    def wait_for_swap_out_events(self, wait_for_swap_out: List[str]) -> None:
+        for key in wait_for_swap_out:
+            event = self.swap_out_events.pop(key)
+            event.synchronize()
+    
+    def check_finished_events(self) -> Tuple[List[str], List[str]]:
+        #swap in events
+        swap_in_finished_req_ids: List[str] = []
+        for key, event in self.swap_in_events.items():
+            if event.query():
+                swap_in_finished_req_ids.append(key)
+            else:
+                break
+        for key in swap_in_finished_req_ids:
+            self.swap_in_events.pop(key)
+        
+        swap_out_finished_req_ids: List[str] = []
+        for key, event in self.swap_out_events.items():
+            if event.query():
+                swap_out_finished_req_ids.append(key)
+            else:
+                break
+        for key in swap_out_finished_req_ids:
+            self.swap_out_events.pop(key)
+        
+        return (swap_in_finished_req_ids, swap_out_finished_req_ids)
+    
+    #todo Tuple
+    def check_remote_send_finished_events(self) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]]]:
+        #process send events
+        remote_send_finished_events: List[str] = []
+        remote_send_trans_request_finished_requests: List[Tuple[str, str]] = []
+        remote_send_trans_data_finished_requests: List[str] = []
+        for channel, (request_id, event) in self.remote_send_events.items():
+            if event.query():
+                remote_send_finished_events.append(channel)
+                #接收请求结束或发送数据结束
+                if not request_id:
+                    request_tensor = self.remote_send_waiting_request_ids[channel]
+                    #提取请求request_id
+                    finished_request_id = self.tensor_to_str(channel, request_tensor)
+                    remote_send_trans_request_finished_requests.append((channel, finished_request_id))
+                    #删除request_tensor
+                    del self.remote_send_waiting_request_ids[channel]
+                else:
+                    remote_send_trans_data_finished_requests.append(((channel, )))
+        # release send events
+        for channel in remote_send_finished_events:
+            self.remote_send_events.pop(channel)
+        
+        return remote_send_trans_request_finished_requests, remote_send_trans_data_finished_requests
+    
+    def check_remote_recv_finished_events(self) -> List[Tuple[str, str]]:
+        #process recv events
+        remote_recv_finished_events: List[Tuple[str, List[int]]] = []
+        remote_recv_trans_finished_requests: List[Tuple[str, str]] = []
+        for channel, request_ids_and_events in self.remote_recv_events.items():
+            for idx, (request_id, event) in enumerate(request_ids_and_events):
+                if event.query():
+                    remote_recv_trans_finished_requests.append((channel, request_id))
+                    remote_recv_finished_events.append((channel, idx))
+                    # request_tensor = self.remote_recv_waiting_request_ids[request_id]
+                    del self.remote_recv_waiting_request_ids[request_id]
+                else:
+                    break
+        for channel, idx in remote_recv_finished_events:
+            self.remote_recv_events[channel].pop(idx)
+            
+        return remote_recv_trans_finished_requests
+        
     @staticmethod
     def get_cache_block_size(
         block_size: int,
