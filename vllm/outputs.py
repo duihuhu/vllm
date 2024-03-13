@@ -80,7 +80,7 @@ class RequestOutput:
         self.outputs = outputs
         self.finished = finished
         self.lora_request = lora_request
-
+        self.global_ranks: List[int] = None
     @classmethod
     def from_seq_group(cls, seq_group: SequenceGroup) -> "RequestOutput":
         # Get the top-n sequences.
@@ -131,3 +131,34 @@ class RequestOutput:
                 f"outputs={self.outputs}, "
                 f"finished={self.finished}, "
                 f"lora_request={self.lora_request})")
+
+
+class KvPreparedResponse:
+    def __init__(
+        self,
+        request_id: str,
+        error: int,
+        error_msg: str,
+    ) -> None:
+        self.request_id = request_id
+        self.error = error
+        self.error_msg = error_msg
+        self.global_ranks = None
+
+
+class VLLMLoadInfo:
+    def __init__(
+        self,
+        used_gpu_blocks: int,
+        used_cpu_blocks: int,
+        remained_gpu_blocks: int,
+        remained_cpu_blocks: int,
+        num_unfinished_requests: int,
+        timestamp: float
+    ) -> None:
+        self.used_gpu_blocks = used_gpu_blocks
+        self.used_cpu_blocks = used_cpu_blocks
+        self.remained_gpu_blocks = remained_gpu_blocks
+        self.remained_cpu_blocks = remained_cpu_blocks
+        self.num_unfinished_requests = num_unfinished_requests
+        self.timestamp = timestamp

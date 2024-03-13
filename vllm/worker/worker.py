@@ -6,8 +6,7 @@ from typing import Dict, List, Tuple, Set, Optional
 import torch
 import torch.distributed
 
-#todo
-from vllm.global_vars import BATCH_METHOD, ALIGN, ENABLE_RTC
+
 from torch.cuda import (get_device_name, current_device, empty_cache, reset_peak_memory_stats, set_device,
                         synchronize, max_memory_allocated, get_device_capability)
 from vllm.sequence import SequenceData
@@ -195,7 +194,7 @@ class Worker:
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
         wait_for_swap_out: List[str] = None,
-    ) -> Optional[SamplerOutput]:
+    ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
             num_seq_groups = len(seq_group_metadata_list)
@@ -221,14 +220,23 @@ class Worker:
         #todo hucc
         if wait_for_swap_out:
             self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
-            
+        
+        if not seq_group_metadata_list:
+            swap_finished_req_ids = self.cache_engine.check_finished_events()
+    
+            return ([[]], swap_finished_req_ids)
+        #
+        
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
-        return output
+        
+        swap_finished_req_ids = self.cache_engine.check_finished_events()
+        
+        return (output, swap_finished_req_ids)
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
         return self.model_runner.add_lora(lora_request)
@@ -239,7 +247,37 @@ class Worker:
     def list_loras(self) -> Set[int]:
         return self.model_runner.list_loras()
 
-
+    #hucc
+    def remote_recv_request(
+        self,
+        channel: str,
+        remote_ranks: List[int]
+    ) -> str:
+        self.cache_engine.remote_recv_request(channel, remote_ranks[self.rank])
+    
+    def remote_send_blocks(
+        self,
+        channel: str,
+        request_id: str,
+        remote_ranks: List[int],
+        blocks: List[int]
+    ) -> None:
+        self.cache_engine.remote_send_blocks(channel, request_id, blocks, remote_ranks[self.rank])
+    
+    def remote_recv_blocks(
+        self,
+        channel: str,
+        request_id: str,
+        remote_ranks: List[int],
+        blocks: List[int]
+    ) -> None:
+        self.cache_engine.remote_recv_blocks(channel, request_id, blocks, remote_ranks[self.rank])
+    
+    def check_remote_trans_finished(self) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]], List[Tuple[str, str]]]:
+        recv_request_finished, send_data_finished = self.cache_engine.check_remote_send_finished_events()
+        recv_data_finished = self.cache_engine.check_remote_recv_finished_events()
+        return recv_request_finished, send_data_finished, recv_data_finished
+    
 def init_distributed_environment(
     parallel_config: ParallelConfig,
     rank: int,

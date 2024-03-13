@@ -18,6 +18,9 @@ from vllm.lora.layers import LoRAMapping
 from vllm.lora.request import LoRARequest
 from vllm.utils import in_wsl
 
+#todo hucc
+from vllm.global_vars import BATCH_METHOD, ALIGN, ENABLE_RTC
+
 logger = init_logger(__name__)
 
 KVCache = Tuple[torch.Tensor, torch.Tensor]
@@ -524,6 +527,12 @@ class ModelRunner:
 
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
+
+        #todo 
+        if ENABLE_RTC and len(input_metadata.prompt_lens) > 0:
+            input_tokens, input_positions = RtcEngine.preprocess_input(input_tokens, input_positions, input_metadata)
+            input_metadata.rtc_engine = True
+            input_metadata.block_size = self.block_size
 
         # Execute the model.
         if input_metadata.use_cuda_graph:

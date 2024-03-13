@@ -7,19 +7,23 @@ from typing import (TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple,
 
 from vllm.lora.request import LoRARequest
 from vllm.config import (CacheConfig, ModelConfig, ParallelConfig,
-                         SchedulerConfig, LoRAConfig)
+                         SchedulerConfig, LoRAConfig, DeployConfig)
 from vllm.core.scheduler import Scheduler, SchedulerOutputs
 from vllm.engine.arg_utils import EngineArgs
 from vllm.engine.metrics import record_metrics
 from vllm.engine.ray_utils import RayWorkerVllm, initialize_cluster, ray
 from vllm.logger import init_logger
-from vllm.outputs import RequestOutput
+from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
 from vllm.sequence import (SamplerOutput, Sequence, SequenceGroup,
                            SequenceGroupOutput, SequenceOutput, SequenceStatus)
 from vllm.transformers_utils.tokenizer import (detokenize_incrementally,
                                                TokenizerGroup)
 from vllm.utils import Counter, set_cuda_visible_devices, get_ip, get_open_port, get_distributed_init_method
+
+from vllm.core.kv_trans_scheduler import KvTransScheduler
+
+from functools import partial
 
 if ray:
     from ray.util.scheduling_strategies import PlacementGroupSchedulingStrategy
@@ -65,6 +69,7 @@ class LLMEngine:
         cache_config: CacheConfig,
         parallel_config: ParallelConfig,
         scheduler_config: SchedulerConfig,
+        deploy_config: DeployConfig,
         lora_config: Optional[LoRAConfig],
         placement_group: Optional["PlacementGroup"],
         log_stats: bool,
@@ -94,6 +99,7 @@ class LLMEngine:
         self.lora_config = lora_config
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
+        self.depoly_config = deploy_config
         self.log_stats = log_stats
         self._verify_args()
 
@@ -115,6 +121,10 @@ class LLMEngine:
 
         # Create the scheduler.
         self.scheduler = Scheduler(scheduler_config, cache_config, lora_config)
+
+        #hucc
+        if self.depoly_config.enable_separate:
+            self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.world_size)
 
         # Logging.
         self.last_logging_time = 0.0
@@ -738,6 +748,53 @@ class LLMEngine:
                                    scheduler_outputs.num_batched_tokens)
         return request_outputs
 
+    #hucc todo 
+    def trans_kv_step(self):
+        if not self.deploy_config.enable_separate:
+            return
+        # check trans kv finished requests
+        finished_requests = self._run_workers(
+            "check_remote_trans_finished",
+            get_all_outputs=True
+        )
+        has_finished_request: bool = False
+        for worker_finished_requests in finished_requests:
+            real_finished_reqs = self.kv_trans_scheduler.register_finished_requests(worker_finished_requests)
+            self.scheduler.add_remote_transfer_finished(real_finished_reqs)
+            has_finished_request = has_finished_request or worker_finished_requests[0] or \
+                worker_finished_requests[1] or worker_finished_requests[2]
+        
+        #schedule
+        scheduler_outputs = self.kv_trans_scheduler.schedule()
+        if scheduler_outputs.empty() and not has_finished_request:
+            # time.sleep(0.05)
+            return
+
+        #recv request
+        channel_for_recv_request = scheduler_outputs.channel_for_recv_request
+        if channel_for_recv_request:
+            self._run_workers(
+                "remote_recv_request",
+                *channel_for_recv_request
+            )
+        
+        # send kv data 
+        request_for_send_data = scheduler_outputs.request_for_send_data
+        if request_for_send_data:
+            self._run_workers(
+                "remote_send_blocks",
+                *request_for_send_data
+            )
+            
+        #send request and recv kv data
+        request_for_recv_data = scheduler_outputs.request_for_recv_data
+        if request_for_recv_data:
+            self._run_workers(
+                "remote_recv_blocks",
+                *request_for_recv_data
+            )
+        
+        
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
@@ -791,6 +848,14 @@ class LLMEngine:
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
+        if scheduler_outputs.is_empty():
+            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+                self.scheduler.remote_send_transfering or self.scheduler.remote_recv_transfering:
+                    logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+                    time.sleep(0.05)
+            else:
+                return None
+            
         if not scheduler_outputs.is_empty():
             # Execute the model.
             all_outputs = self._run_workers(
@@ -807,8 +872,19 @@ class LLMEngine:
         else:
             output = []
 
-        return self._process_model_outputs(output, scheduler_outputs)
-
+        processed_outputs = self._process_model_outputs(output, scheduler_outputs)
+        
+        #prompt eng pull metadata in separate mode
+        #assume after do prefill, the reqeust will not finish
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
+            prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
+            for processed_output in processed_outputs:
+                processed_output.finished = True
+            for seq_group in prefilled_seq_groups:
+                self.scheduler.add_remote_send_transfering(seq_group)
+        
+        return processed_outputs
+    
     def do_log_stats(self) -> None:
         self._log_system_stats(False, 0)
 
@@ -953,6 +1029,27 @@ class LLMEngine:
     def list_loras(self) -> List[int]:
         return self._run_workers("list_loras")
 
+    def _run_worker(
+        self,
+        rank,
+        method: str,
+        *args,
+        **kwargs,
+    ) -> Any:
+        if rank >= len(self.workers):
+            return
+        worker = self.workers[rank]
+        if self.parallel_config.worker_use_ray:
+            executor = partial(worker.execute_method.remote, method)
+        else:
+            executor = getattr(worker, method)
+        output = executor(*args, **kwargs)
+
+        if self.parallel_config.worker_use_ray:
+            output = ray.get(output)
+            
+        return output
+        
     def _run_workers(
         self,
         method: str,
