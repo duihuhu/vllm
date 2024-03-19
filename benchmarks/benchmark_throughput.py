@@ -48,6 +48,7 @@ def sample_requests(
     # print(prompts[71])
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[str, int, int]] = []
+    t = 0
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
         if prompt_len < 4 or output_len < 4:
@@ -58,12 +59,14 @@ def sample_requests(
             # Prune too long sequences.
             continue
         filtered_dataset.append((prompt, prompt_len, output_len))
-
+        t += 1
+        if t == num_requests:
+            break
     # Sample the requests.
     # sampled_requests = filtered_dataset[:num_requests]
-    sampled_requests = random.sample(filtered_dataset, num_requests)
-    return sampled_requests
-
+    #sampled_requests = random.sample(filtered_dataset, num_requests)
+    #return sampled_requests
+    return filtered_dataset
 
 def run_vllm(
     requests: List[Tuple[str, int, int]],
@@ -101,13 +104,15 @@ def run_vllm(
             sampling_params=sampling_params,
         )
 
-    start = time.time()
+    #start = time.time()
     # FIXME(woosuk): Do use internal method.
     outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
-    end = time.time()
+    #end = time.time()
+    with open("/workspace/vllm/benchmarks/log_13b.txt", 'a') as file:
+        for output in outputs:
+            file.write(f"prompt {len(output.prompt_token_ids)}, output {len(output.outputs[0].token_ids)}\n")
     
-    
-    elapsed_time = end-start 
+    '''elapsed_time = end-start 
     total_num_tokens = sum(
         len(output.prompt_token_ids) + len(output.outputs[0].token_ids)
         for output in outputs
@@ -116,9 +121,10 @@ def run_vllm(
     print("total_num_reqs: ", len(outputs))
     print("total_num_tokens: ", total_num_tokens)
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-         f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+         f"{total_num_tokens / elapsed_time:.2f} tokens/s")'''
 
-    return end - start
+    #return end - start
+    return -1
 
 
 def run_hf(
@@ -195,12 +201,12 @@ def main(args: argparse.Namespace):
                               args.use_beam_search, args.hf_max_batch_size)
     else:
         raise ValueError(f"Unknown backend: {args.backend}")
-    total_num_tokens = sum(
+    '''total_num_tokens = sum(
         prompt_len + output_len
         for _, prompt_len, output_len in requests
     )
     print(f"Throughput: {len(requests) / elapsed_time:.2f} requests/s, "
-          f"{total_num_tokens / elapsed_time:.2f} tokens/s")
+          f"{total_num_tokens / elapsed_time:.2f} tokens/s")'''
 
 
 if __name__ == "__main__":
@@ -209,13 +215,13 @@ if __name__ == "__main__":
                         default="vllm")
     parser.add_argument("--dataset", type=str, required=True,
                         help="Path to the dataset.")
-    parser.add_argument("--model", type=str, default="facebook/opt-125m")
+    parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
-    parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=1)
+    parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=4)
     parser.add_argument("--n", type=int, default=1,
                         help="Number of generated sequences per prompt.")
     parser.add_argument("--use-beam-search", action="store_true")
-    parser.add_argument("--num-prompts", type=int, default=1000,
+    parser.add_argument("--num-prompts", type=int, default=100,
                         help="Number of prompts to process.")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
