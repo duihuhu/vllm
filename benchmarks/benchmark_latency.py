@@ -53,11 +53,12 @@ def main(args: argparse.Namespace):
     tokenized_dataset = []
     for i in range(len(dataset)):
         output_len = len(completion_token_ids[i])
-        if output_len == 1000 and len(prompt_token_ids[i]) == 167:
+        if output_len == 1000:
             tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
+            break
 
     #dummy_prompt_token_ids = [[0] * args.input_len] * args.batch_size
-
+    print(tokenized_dataset)
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
