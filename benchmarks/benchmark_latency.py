@@ -1,13 +1,14 @@
 """Benchmark the latency of processing a single batch of requests."""
 import argparse
 import time
+import json
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
 from vllm import LLM, SamplingParams
-
+from vllm.transformers_utils.tokenizer import get_tokenizer
 
 def main(args: argparse.Namespace):
     print(args)
@@ -20,7 +21,8 @@ def main(args: argparse.Namespace):
         tokenizer=args.tokenizer,
         tensor_parallel_size=args.tensor_parallel_size,
         max_num_seqs=args.batch_size,
-        max_num_batched_tokens=args.batch_size * args.input_len,
+        #max_num_batched_tokens=args.batch_size * args.input_len,
+        max_num_batched_tokens = 4096
     )
 
     sampling_params = SamplingParams(
@@ -32,14 +34,37 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
-    dummy_prompt_token_ids = [[0] * args.input_len] * args.batch_size
+
+    tokenizer = get_tokenizer(args.model)
+    with open("/workspace/ShareGPT_V3_unfiltered_cleaned_split.json") as f:
+        dataset = json.load(f)
+    dataset = [
+        data for data in dataset
+        if len(data["conversations"]) >= 2
+    ]
+    dataset = [
+        (data["conversations"][0]["value"], data["conversations"][1]["value"])
+        for data in dataset
+    ]
+    prompts = [prompt for prompt, _ in dataset]
+    prompt_token_ids = tokenizer(prompts).input_ids
+    completions = [completion for _, completion in dataset]
+    completion_token_ids = tokenizer(completions).input_ids
+    tokenized_dataset = []
+    for i in range(len(dataset)):
+        output_len = len(completion_token_ids[i])
+        if output_len == 1000 and len(prompt_token_ids[i]) == 167:
+            tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
+
+    #dummy_prompt_token_ids = [[0] * args.input_len] * args.batch_size
 
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
 
-        llm.generate(prompt_token_ids=dummy_prompt_token_ids,
+        llm.generate(#prompt_token_ids=dummy_prompt_token_ids,
+                     prompt_token_ids=tokenized_dataset[1],
                      sampling_params=sampling_params,
                      use_tqdm=False)
 
@@ -63,12 +88,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single batch of '
                     'requests till completion.')
-    parser.add_argument('--model', type=str, default='facebook/opt-125m')
+    parser.add_argument('--model', type=str, default='/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/')
     parser.add_argument('--tokenizer', type=str, default=None)
-    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
+    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=32)
-    parser.add_argument('--output-len', type=int, default=128)
-    parser.add_argument('--batch-size', type=int, default=8)
+    parser.add_argument('--output-len', type=int, default=200)
+    parser.add_argument('--batch-size', type=int, default=2)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')

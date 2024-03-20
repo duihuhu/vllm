@@ -146,9 +146,9 @@ class LLM:
             pbar = tqdm(total=num_requests, desc="Processed prompts")
         # Run the engine.
         outputs: List[RequestOutput] = []
-        interation = 0
-        #st = time.time()
-        #print(f"Start Prefill at {st}")
+        #interation = 0
+        st = time.time()
+        print(f"Start Prefill at {st}")
         if split_two_phase == 1:
             total_num_token = 0
         #iteration_time = []
@@ -158,7 +158,7 @@ class LLM:
             step_outputs = self.llm_engine.step()
             #iteartion_end = time.time()
             #iteration_time.append(iteartion_end-iteration_start)
-            interation = interation  + 1
+            #interation = interation  + 1
             for output in step_outputs:
                 if output.finished:
                     # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
@@ -167,7 +167,7 @@ class LLM:
                         pbar.update(1)
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
-                #total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
+                total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
         #with open("iteration_time.txt", "w") as fd:
         #    for line in iteration_time:
         #        fd.write(str(line)+'\n')
@@ -182,12 +182,16 @@ class LLM:
             self.llm_engine.covert_prefilled_to_running()
             st2 = time.time()
             print(f"Start Decode at {st2}")
-            interation = 0
+            #interation = 0
 
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
+                ites = time.time()
                 step_outputs = self.llm_engine.step()
-                interation = interation  + 1
+                itee = time.time()
+                with open("/workspace/vllm/benchmarks/log167_1000.txt", 'a') as file:
+                    file.write(f"costs {itee - ites} seconds\n")
+                #interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
                         # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
@@ -195,7 +199,7 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
-            print(f"iteration {interation}")
+            #print(f"iteration {interation}")
             print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
             print(f"Decode process {total_num_token2} tokens")
