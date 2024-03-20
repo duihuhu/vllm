@@ -64,7 +64,7 @@ def main(args: argparse.Namespace):
         start_time = time.time()
 
         llm.generate(#prompt_token_ids=dummy_prompt_token_ids,
-                     prompt_token_ids=tokenized_dataset[1],
+                     prompt_token_ids=tokenized_dataset[0][1],
                      sampling_params=sampling_params,
                      use_tqdm=False)
 
