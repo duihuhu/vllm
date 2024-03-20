@@ -51,13 +51,9 @@ def main(args: argparse.Namespace):
     completions = [completion for _, completion in dataset]
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
-    t = 0
     for i in range(len(dataset)):
         output_len = len(completion_token_ids[i])
-        if output_len == 1000:
-            if t == 0:
-                t += 1
-                continue
+        if output_len == 1000 and len(prompt_token_ids[i]) > 160:
             tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
             break
 
