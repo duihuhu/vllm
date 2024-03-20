@@ -189,7 +189,7 @@ class LLM:
                 ites = time.time()
                 step_outputs = self.llm_engine.step()
                 itee = time.time()
-                with open("/workspace/vllm/benchmarks/log167_1000.txt", 'a') as file:
+                with open("/workspace/vllm/benchmarks/log167_200.txt", 'a') as file:
                     file.write(f"costs {itee - ites} seconds\n")
                 #interation = interation  + 1
                 for output in step_outputs:
