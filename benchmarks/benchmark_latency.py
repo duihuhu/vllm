@@ -58,14 +58,16 @@ def main(args: argparse.Namespace):
             break
 
     #dummy_prompt_token_ids = [[0] * args.input_len] * args.batch_size
-    print(tokenized_dataset)
+    #print(tokenized_dataset)
+    dummy_prompt_token_ids = []
+    dummy_prompt_token_ids.append(tokenized_dataset[0][1])
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
 
-        llm.generate(#prompt_token_ids=dummy_prompt_token_ids,
-                     prompt_token_ids=tokenized_dataset[0][1],
+        llm.generate(prompt_token_ids=dummy_prompt_token_ids,
+                     #prompt_token_ids=tokenized_dataset[0][1],
                      sampling_params=sampling_params,
                      use_tqdm=False)
 
