@@ -127,7 +127,7 @@ class LLM:
             else:
                 token_ids = prompt_token_ids[i]
             self._add_request(prompt, sampling_params, token_ids)
-        return self._run_engine(use_tqdm)
+        return self._run_engine(use_tqdm, split_two_phase=1)
 
     def _add_request(
         self,
