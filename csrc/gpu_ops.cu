@@ -68,7 +68,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     constexpr int32_t ROOT_INFO_OK = 1;
     constexpr const char *shmName = "NcclRootInfo";
     int32_t g_tpSize = NumDevice;
-    if (NumDevice < =1) {
+    if (NumDevice <=1) {
         g_tpSize = 1;
         return 0;
     }
@@ -77,7 +77,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     int shmSize = sizeof(ncclUniqueId);
     if (rank == ROOT_RANK) {
         // 创建共享内存
-        shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+        shm_fd = shm_open(shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
         if (shm_fd < 0) {
             perror("shm_open");
             exit(1);
@@ -111,7 +111,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     } else {
         int sleepTime = 0;
         // 等待共享内存就绪
-        while (((shm_fd = shm_open(SHM_NAME, O_RDONLY, 0)) < 0) && (sleepTime < TIME_OUT)) {
+        while (((shm_fd = shm_open(shmName, O_RDONLY, 0)) < 0) && (sleepTime < TIME_OUT)) {
             sleepTime++;
             sleep(1);
         }
@@ -142,10 +142,10 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
         exit(1);
     }
 
-    NCCLCHECK(ncclCommInitRank(&g_globalNcclComm, NumDevice, uniqueId ,rank))
+    NCCLCHECK(ncclCommInitRank(&g_globalNcclComm, NumDevice, uniqueId ,rank));
 
     // 删除共享内存对象
-    if (shm_unlink(SHM_NAME) == -1) {
+    if (shm_unlink(shmName) == -1) {
         perror("shm_unlink");
         exit(1);
     }
@@ -226,7 +226,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
 
 // }
 
-void copy_blocks_in_layer(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,
+void copy_blocks_in_layer(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,\
 std:map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
 {
     using namespace torch::indexing;
@@ -259,12 +259,12 @@ std:map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
             void *dstValueCachePtr = dstValueCache.index({dst_idx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({src_idx}).data_ptr();
 
-            if (ACL_SUCCESS != cudaMemcpyAsync(dstKeyCachePtr, cacheSize, srcKeyCachePtr, cacheSize,\
+            if (cudaSuccess != cudaMemcpyAsync(dstKeyCachePtr, srcKeyCachePtr, cacheSize,\
                 memcpy_type, cudaStream)) {
                     std::cout<< "[error] aclrMemcpy error!!" << std::endl;
             }
 
-            if (ACL_SUCCESS != cudaMemcpyAsync(dstValueCachePtr, cacheSize, srcValueCachePtr, cacheSize,\
+            if (cudaSuccess != cudaMemcpyAsync(dstValueCachePtr, srcValueCachePtr, cacheSize,\
                 memcpy_type, cudaStream)) {
                     std::cout<< "[error] aclrMemcpy error!!" << std::endl;
             }
@@ -354,7 +354,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             std::cout << "start send value cache " << srcValueCachePtr << std::endl;
 
             if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
-                g_globalHcclComm, cudaStream)) {
+                g_globalNcclComm, cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
         }
@@ -386,14 +386,14 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
             std::cout << "start send key cache: " << dstKeyCachePtr << std::endl;
             if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt, srcRank,\
-                g_globalHcclComm, cudaStream)) {
+                g_globalNcclComm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
 
             std::cout << "start send value cache " << dstValueCachePtr << std::endl;
 
             if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt, srcRank,\
-                g_globalHcclComm, cudaStream)) {
+                g_globalNcclComm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
         }
