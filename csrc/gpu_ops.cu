@@ -1,6 +1,6 @@
 #include <cassert>
 #include <iostream>
-#include <torch.extension.h>
+#include <torch/extension.h>
 // #include <torch_npu/csrc/core/npu/NPUStream.h>
 // #include "acl/acl.h"
 //#include "kernel_entry.h"
