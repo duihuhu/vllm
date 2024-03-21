@@ -11,13 +11,14 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include "nccl.h"
-#include <ATen/cuda/CUDAStream.h>
+// #include <ATen/cuda/CUDAStream.h>
 #include <cuda_runtime.h>
 // #include "mpi.h"
 
 //#include "hccl/hccl.h"
 //#include "hccl/hccl_type.h"
 using namespace torch::indexing;
+using namespace at; 
 
 #define MPICHECK(cmd) do {                          \
   int e = cmd;                                      \
