@@ -104,24 +104,29 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "CreateGlobalNcclComm");
 
   gpu_ops.def(
-    "SendRequest",
-    &SendRequest,
-    "SendRequest");
+    "copy_blocks",
+    &copy_blocks,
+    "copy_blocks");
 
   gpu_ops.def(
-    "RecvRequest",
-    &RecvRequest,
-    "RecvRequest");
+    "SendRequestRemote",
+    &SendRequestRemote,
+    "SendRequestRemote");
 
   gpu_ops.def(
-    "SendBlocks",
-    &SendBlocks,
-    "SendBlocks");
+    "RecvRequestRemote",
+    &RecvRequestRemote,
+    "RecvRequestRemote");
 
   gpu_ops.def(
-    "RecvBlocks",
-    &RecvBlocks,
-    "RecvBlocks");
+    "SendBlocksRemote",
+    &SendBlocksRemote,
+    "SendBlocksRemote");
+
+  gpu_ops.def(
+    "RecvBlocksRemote",
+    &RecvBlocksRemote,
+    "RecvBlocksRemote");
 
 
 #ifndef USE_ROCM
