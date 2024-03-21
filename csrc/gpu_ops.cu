@@ -13,6 +13,7 @@
 #include "nccl.h"
 // #include <ATen/cuda/CUDAStream.h>
 #include <cuda_runtime.h>
+#include <c10/cuda/CUDAStream.h>
 // #include "mpi.h"
 
 //#include "hccl/hccl.h"
@@ -240,7 +241,7 @@ std::map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
     int deviceId = 0;
     cudaGetDevice(&deviceId);
     // auto gpuStream = at::cuda::getCurrentCUDAStream();
-    auto gpuStream = getCurrentCUDAStream();
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
     auto cudaStream = gpuStream.stream();
     CUDACHECK(cudaStreamCreate(&cudaStream));
@@ -291,7 +292,7 @@ void SendRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint3
     int deviceId = 0;
     cudaGetDevice(&deviceId);
     // auto gpuStream = at::cuda::getCurrentCUDAStream();
-    auto gpuStream = getCurrentCUDAStream();
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
     NCCLCHECK(ncclSend((void*) requestIdOnDevice, requestIdSize, ncclInt, destRank, g_globalNcclComm, cudaStream));
     // Synchronize stream
@@ -316,7 +317,7 @@ void RecvRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint3
     int deviceId = 0;
     cudaGetDevice(&deviceId);
     // auto gpuStream = at::cuda::getCurrentCUDAStream();
-    auto gpuStream = getCurrentCUDAStream();
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
 
     NCCLCHECK(ncclRecv((void*) requestIdOnDevice, requestIdSize, ncclInt, srcRank, g_globalNcclComm, cudaStream));
@@ -339,7 +340,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
     int deviceId = 0;
     cudaGetDevice(&deviceId);
     // auto gpuStream = at::cuda::getCurrentCUDAStream();
-    auto gpuStream = getCurrentCUDAStream();
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
 
     for (int i=0; i < layerNum; i++) {
@@ -379,8 +380,8 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     int deviceId = 0;
     cudaGetDevice(&deviceId);
     // auto gpuStream = at::cuda::getCurrentCUDAStream();
-    auto gpuStream = getCurrentCUDAStream();
-
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    
     auto cudaStream = gpuStream.stream();
 
     for (int i=0; i < layerNum; i++) {
