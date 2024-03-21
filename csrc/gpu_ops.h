@@ -1,5 +1,5 @@
 #pragma once
-#include <torch.extension.h>
+#include <torch/extension.h>
 
 using namespace torch::indexing;
 
