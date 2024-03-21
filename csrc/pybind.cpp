@@ -104,9 +104,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "CreateGlobalNcclComm");
 
   gpu_ops.def(
-    "copy_blocks",
-    &copy_blocks,
-    "copy_blocks");
+    "copy_blocks_in_layer",
+    &copy_blocks_in_layer,
+    "copy_blocks_in_layer");
 
   gpu_ops.def(
     "SendRequestRemote",

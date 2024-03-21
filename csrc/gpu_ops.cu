@@ -225,7 +225,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
 
 // }
 
-void copy_blocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,
+void copy_blocks_in_layer(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,
 std:map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
 {
     using namespace torch::indexing;

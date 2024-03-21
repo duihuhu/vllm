@@ -11,7 +11,7 @@ from vllm.logger import init_logger
 from vllm.utils import in_wsl, STR_DTYPE_TO_TORCH_DTYPE
 
 #todo list
-from vllm._C.gpu_ops import copy_blocks, SendRequestRemote, RecvRequestRemote, SendBlocksRemote, RecvBlocksRemote
+from vllm._C.gpu_ops import copy_blocks_in_layer, SendRequestRemote, RecvRequestRemote, SendBlocksRemote, RecvBlocksRemote
 
 #hucc
 # from torch.cuda import current_device, Stream, Event, stream
@@ -185,7 +185,7 @@ class CacheEngine:
     #hucc
     def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
         with torch.cuda.stream(self.swap_in_stream):
-            copy_blocks(self.gpu_cache, self.cpu_cache, src_to_dst, self.cache_size_per_block, True)
+            copy_blocks_in_layer(self.gpu_cache, self.cpu_cache, src_to_dst, self.cache_size_per_block, True)
             event = torch.cuda.Event()
             event.record()
         self.swap_in_events[key] = event
@@ -193,7 +193,7 @@ class CacheEngine:
     #todo  share one stream or two stream
     def swap_out(self, src_to_dst: Dict[int, int], key: str) -> None:
         with torch.cuda.stream(self.swap_in_stream):
-            copy_blocks(self.cpu_cache, self.gpu_cache, src_to_dst, self.cache_size_per_block, False)
+            copy_blocks_in_layer(self.cpu_cache, self.gpu_cache, src_to_dst, self.cache_size_per_block, False)
             event = torch.cuda.Event()
             event.record()
         self.swap_out_stream[key] = event
