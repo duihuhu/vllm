@@ -13,7 +13,7 @@
 #include "nccl.h"
 #include <ATen/cuda/CUDAStream.h>
 #include <cuda_runtime.h>
-#include "mpi.h"
+// #include "mpi.h"
 
 //#include "hccl/hccl.h"
 //#include "hccl/hccl_type.h"
@@ -66,35 +66,51 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     constexpr int32_t TIME_OUT = 180;
     constexpr int32_t ROOT_INFO_OK = 1;
     constexpr const char *shmName = "NcclRootInfo";
-    g_tpSize = tpSize;
-    if (tpSize < =1) {
+    int32_t g_tpSize = NumDevice;
+    if (NumDevice < =1) {
         g_tpSize = 1;
         return 0;
     }
-
-    HcclRootInfo *pRootInfo = nullptr;
+    ncclUniqueId uniqueId;
     int shm_fd;
-    int shmSize = sizeof(HcclRootInfo) + sizeof(int32_t);
+    int shmSize = sizeof(ncclUniqueId);
     if (rank == ROOT_RANK) {
-        /* create the shared memory object */
-        shm_fd = shm_open(shmName, O_CREAT | O_RDWR, 0666);
-        /*configure the size of the shared memory object*/
-        ftruncate(shm_df, shmSize);
-        /* memory map the shared memory object*/
-        pRootInfo = (HcclRootInfo *) mmap(0, shmSize, PROT_WRITE, MAP_SHARED, shm_fd, 0);
-
-        for (int i=0; i<shmSize; i++) {
-            ((char *)pRootInfo)[i] = 0;
+        // 创建共享内存
+        shm_fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+        if (shm_fd < 0) {
+            perror("shm_open");
+            exit(1);
         }
 
-        HCCLCHECK(HcclGetRootInfo(pRootInfo));
-        
-        // End tag of RootInfo
-        *(int32_t *)((char *)pRootInfo + sizeof(HcclRootInfo)) = ROOT_INFO_OK;
+        // 设置共享内存大小
+        if (ftruncate(shm_fd, shmSize) == -1) {
+            perror("ftruncate");
+            exit(1);
+        }
+
+        // 映射共享内存
+        void* shmaddr = mmap(NULL, shmSize, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+        if (shmaddr == MAP_FAILED) {
+            perror("mmap");
+            exit(1);
+        }
+
+        // 生成唯一ID
+        ncclGetUniqueId(&uniqueId);
+
+        // 将唯一ID写入共享内存
+        memcpy(shmaddr, &uniqueId, shmSize);
+
+        // 解除映射
+        if (munmap(shmaddr, shmSize) == -1) {
+            perror("munmap");
+            exit(1);
+        }
+
     } else {
         int sleepTime = 0;
-        /* open the shared memory object */
-        while (((shm_fd = shm_open(shmName, O_RDONLY, 0666)) < 0) && (sleepTime < TIME_OUT)) {
+        // 等待共享内存就绪
+        while (((shm_fd = shm_open(SHM_NAME, O_RDONLY, 0)) < 0) && (sleepTime < TIME_OUT)) {
             sleepTime++;
             sleep(1);
         }
@@ -102,36 +118,114 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
             std::cout << "shm_open timeout" << std::endl;
             return -1;
         }
-
-        /*memory map the shared memory object */
-        if ((pRootInfo = (HcclRootInfo *)mmap(0, shmSize, PROT_READ, MAP_SHARED, shm_fd, 0)) == nullptr) {
-            std::cout << "mmap Error" << std::endl;
-            return -1;
+        // 映射共享内存
+        void* shmaddr = mmap(NULL, shmSize, PROT_READ, MAP_SHARED, shm_fd, 0);
+        if (shmaddr == MAP_FAILED) {
+            perror("mmap");
+            exit(1);
         }
 
-        sleepTime = 0;
-        while ((*(int32_t *)((char *)pRootInfo + sizeof(HcclRootInfo)) != ROOT_INFO_OK) && (sleepTime < TIME_OUT)) {
-            sleepTime++;
-            sleep(1);
-        }
+        // 从共享内存中读取唯一ID
+        memcpy(&uniqueId, shmaddr, shmSize);
 
-        if (sleepTime >= TIME_OUT) {
-            std::cout << "shm_open timeout" << std::endl;
-            return -1;
+        // 解除映射
+        if (munmap(shmaddr, shmSize) == -1) {
+            perror("munmap");
+            exit(1);
         }
     }
 
-    HCCLCHECK(HcclCommInitRootInfo(tpSize, pRootInfo, rank, & &g_globalNcclComm));
+    // 关闭共享内存
+    if (close(shm_fd) == -1) {
+        perror("close");
+        exit(1);
+    }
 
-    /*remote the shared memory object*/
-    shm_unlink(shmName);
-    std::cout << "Create Tp Hccl Comm Success" << std::endl;
+    NCCLCHECK(ncclCommInitRank(&g_globalNcclComm, NumDevice, uniqueId ,rank))
+
+    // 删除共享内存对象
+    if (shm_unlink(SHM_NAME) == -1) {
+        perror("shm_unlink");
+        exit(1);
+    }
+
+    std::cout << "Create Global NCCL Comm Success" << std::endl;
 
     return 0;
-
 }
 
-void copy_blocks(std:vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,
+// int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
+//     constexpr int32_t ROOT_RANK = 0;
+//     constexpr int32_t TIME_OUT = 180;
+//     constexpr int32_t ROOT_INFO_OK = 1;
+//     constexpr const char *shmName = "NcclRootInfo";
+//     g_tpSize = tpSize;
+//     if (tpSize < =1) {
+//         g_tpSize = 1;
+//         return 0;
+//     }
+
+//     ncclRootInfo *pRootInfo = nullptr;
+//     int shm_fd;
+//     int shmSize = sizeof(ncclRootInfo) + sizeof(int32_t);
+//     if (rank == ROOT_RANK) {
+//         /* create the shared memory object */
+//         shm_fd = shm_open(shmName, O_CREAT | O_RDWR, 0666);
+//         /*configure the size of the shared memory object*/
+//         ftruncate(shm_df, shmSize);
+//         /* memory map the shared memory object*/
+//         pRootInfo = (ncclRootInfo *) mmap(0, shmSize, PROT_WRITE, MAP_SHARED, shm_fd, 0);
+
+//         for (int i=0; i<shmSize; i++) {
+//             ((char *)pRootInfo)[i] = 0;
+//         }
+
+//         // HCCLCHECK(ncclGetRootInfo(pRootInfo));
+        
+//         // End tag of RootInfo
+//         *(int32_t *)((char *)pRootInfo + sizeof(ncclRootInfo)) = ROOT_INFO_OK;
+//     } else {
+//         int sleepTime = 0;
+//         /* open the shared memory object */
+//         while (((shm_fd = shm_open(shmName, O_RDONLY, 0666)) < 0) && (sleepTime < TIME_OUT)) {
+//             sleepTime++;
+//             sleep(1);
+//         }
+//         if (sleepTime >= TIME_OUT) {
+//             std::cout << "shm_open timeout" << std::endl;
+//             return -1;
+//         }
+
+//         /*memory map the shared memory object */
+//         if ((pRootInfo = (ncclRootInfo *)mmap(0, shmSize, PROT_READ, MAP_SHARED, shm_fd, 0)) == nullptr) {
+//             std::cout << "mmap Error" << std::endl;
+//             return -1;
+//         }
+
+//         sleepTime = 0;
+//         while ((*(int32_t *)((char *)pRootInfo + sizeof(ncclRootInfo)) != ROOT_INFO_OK) && (sleepTime < TIME_OUT)) {
+//             sleepTime++;
+//             sleep(1);
+//         }
+
+//         if (sleepTime >= TIME_OUT) {
+//             std::cout << "shm_open timeout" << std::endl;
+//             return -1;
+//         }
+//     }
+
+//     // HCCLCHECK(HcclCommInitRootInfo(tpSize, pRootInfo, rank, &g_globalNcclComm));
+
+//     NCCLCHECK(ncclCommInitRank(&g_globalNcclComm, tpRank, uniqueId ,rank)
+//     /*remote the shared memory object*/
+//     shm_unlink(shmName);
+//     std::cout << "Create Tp Hccl Comm Success" << std::endl;
+
+//     return 0;
+
+// }
+
+void copy_blocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,
 std:map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
 {
     using namespace torch::indexing;
