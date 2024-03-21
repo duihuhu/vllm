@@ -227,7 +227,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
 // }
 
 void copy_blocks_in_layer(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,\
-std:map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
+std::map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
 {
     using namespace torch::indexing;
     int layerNum = srcCaches.size();
@@ -253,7 +253,7 @@ std:map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
         at::Tensor dstKeyCache = dstCaches[i].first;
         at::Tensor dstValueCache = dstCaches[i].second;
 
-        for (std::map<<uint32_t, uint32_t>:: iterator it = srcToDsts.begin(); it != srcToDsts.end(); it++) {
+        for (std::map<uint32_t, uint32_t>:: iterator it = srcToDsts.begin(); it != srcToDsts.end(); it++) {
             int src_idx = it->first;
             int dst_idx = it->second;
             void *dstKeyCachePtr = dstKeyCache.index({dst_idx}).data_ptr();
