@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from vllm.sequence import (PromptLogprobs, SampleLogprobs, SequenceGroup,
                            SequenceStatus)
@@ -145,6 +145,13 @@ class KvPreparedResponse:
         self.error_msg = error_msg
         self.global_ranks = None
 
+    def __json__(self) -> Dict:
+        return {
+            "request_id": self.request_id,
+            "global_ranks": self.global_ranks,
+            "error": self.error,
+            "error_msg": self.error_msg,
+        }
 
 class VLLMLoadInfo:
     def __init__(
@@ -162,3 +169,13 @@ class VLLMLoadInfo:
         self.remained_cpu_blocks = remained_cpu_blocks
         self.num_unfinished_requests = num_unfinished_requests
         self.timestamp = timestamp
+        
+    def __json__(self):
+        return {
+            "used_gpu_blocks": self.used_gpu_blocks,
+            "used_cpu_blocks": self.used_cpu_blocks,
+            "remained_gpu_blocks": self.remained_gpu_blocks,
+            "remained_cpu_blocks": self.remained_cpu_blocks,
+            "num_unfinished_requests": self.num_unfinished_requests,
+            "timestamp": self.timestamp
+        }

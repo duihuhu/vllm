@@ -64,7 +64,7 @@ class KvTransScheduler:
                 self.channel_requests[opp_rank_str][1].append(request_id)
                 self.channel_requests_num[opp_rank_str][1] += 1
                 
-    def _get_channel_for_recv_request(self) -> Tuple(str, List[int]):
+    def _get_channel_for_recv_request(self) -> Tuple[str, List[int]]:
         #调度最多requests的且可以使用的channel
         sort_items = sorted(self.channel_requests_num.items(), key=lambda x:x[1][0], reverse=True)
         scheduled_channel = None

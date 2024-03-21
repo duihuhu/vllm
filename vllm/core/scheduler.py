@@ -69,6 +69,14 @@ class SchedulerOutputs:
     def lora_requests(self) -> Set[LoRARequest]:
         return {g.lora_request for g in self.scheduled_seq_groups}
 
+class SwappingSequenceGroup:
+    def __init__(
+        self,
+        seq_group: SequenceGroup,
+        num_swapping_workers: int,
+        ) -> None:
+            self.seq_group = seq_group
+            self.num_swapping_workers = num_swapping_workers
 
 class Scheduler:
 
@@ -107,6 +115,16 @@ class Scheduler:
         # Sequence groups in the SWAPPED state.
         self.swapped: Deque[SequenceGroup] = deque()
 
+        self.swap_finished_req_ids: List[Tuple[List[str], List[str]]] = []
+        self.swapping_in: List[SwappingSequenceGroup] = []
+        self.swapping_out: List[SwappingSequenceGroup] = []
+        
+        self.remote_transfer_finished_req_ids: List[Tuple[List[str], List[str]]] = []
+        self.remote_send_transfering: Dict[str, SwappingSequenceGroup] = {}
+        self.remote_recv_transfering: Dict[str, SwappingSequenceGroup] = {}
+        self.num_workers: int = 0
+        
+
     @property
     def lora_enabled(self) -> bool:
         return bool(self.lora_config)
@@ -115,6 +133,27 @@ class Scheduler:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
 
+    def add_remote_transfer_finished(self, request_ids: Tuple[List[str], List[str]]):
+        if request_ids !=([], []):
+            self.remote_transfer_finished_req_ids.append(request_ids)
+    
+    def add_remote_send_transfering(self, seq_group: SequenceGroup) -> None:
+        #Add sequence groups to the remote waiting map.
+        self.remote_send_transfering[seq_group.request_id] = SwappingSequenceGroup(seq_group, self.num_workers)
+    
+    def del_remote_send_transfering(self, request_id: str) -> None:
+        # Delete sequence groups to the remote waiting map 
+        del self.remote_send_transfering[request_id]
+    
+    def get_remote_send_transfering(self, request_id: str) -> None:
+        if request_id not in self.remote_send_transfering:
+            return None
+        return self.remote_send_transfering[request_id].seq_group
+
+    def add_remote_recv_transfering(self, seq_group: SequenceGroup) -> None:
+        # add sequece groups to the remote waiting map.
+        self.remote_recv_transfering[seq_group.request_id] = SwappingSequenceGroup(seq_group, self.num_workers)
+    
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a sequence group with the given ID.
 
@@ -152,10 +191,34 @@ class Scheduler:
                     self.free_seq(seq)
 
     def has_unfinished_seqs(self) -> bool:
-        return self.waiting or self.running or self.swapped
+        return (self.waiting or self.running or self.swapped or
+                self.swapping_in or self.swapping_out)
 
+    def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
+        prefilled_seq_groups = []
+        while self.running:
+            prefilled_seq_groups.append(self.running.pop())
+        return prefilled_seq_groups
+    
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
+
+    def allocate_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
+        seq = seq_group.get_seqs()[0]
+        if not self.block_manager.can_allocate(seq_group):
+            return None
+        else:
+            self._allocate(seq_group)
+            self.block_manager.block_tables[seq.seq_id]
+            block_table = self.block_manager.block_tables[seq.seq_id]
+            blocks = [phy_block.block_number for phy_block in block_table]
+            return blocks
+    
+    def fetch_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
+        seq = seq_group.get_seqs()[0]
+        block_table = self.block_manager.block_tables[seq.seq_id]
+        blocks = [phy_block.block_number for phy_block in block_table]
+        return blocks
 
     def _schedule(self) -> SchedulerOutputs:
         # Blocks that need to be swaped or copied before model execution.
@@ -492,3 +555,29 @@ class Scheduler:
         blocks_to_swap_out.update(mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
             seq.status = SequenceStatus.SWAPPED
+
+    def _check_remote_transfer_finished_req(self) -> None:
+        while self.remote_transfer_finished_req_ids:
+            remote_send_req_ids, remote_recv_req_ids = self.remote_transfer_finished_req_ids.pop()
+            for remote_send_req_id in remote_send_req_ids:
+                self.remote_send_transfering[remote_send_req_id].num_swapping_workers -= 1
+            for remote_recv_req_id in remote_recv_req_ids:
+                self.remote_recv_transfering[remote_recv_req_id].num_swapping_workers -= 1
+        
+        remote_send_finished_req_ids = []
+        for request_id, swap_seq_group in self.remote_send_transfering.items():
+            if swap_seq_group.num_swapping_workers == 0:
+                #todo:后续不释放，执行被动淘汰
+                seq = swap_seq_group.seq_group.get_seqs()[0]
+                self.free_seq(seq)
+                remote_send_finished_req_ids.append(request_id)
+        for finished_req_id in remote_send_finished_req_ids:
+            del self.remote_send_transfering[finished_req_id]
+            
+        remote_recv_finished_req_ids = []
+        for request_id, swap_seq_group in self.remote_recv_transfering.items():
+            if swap_seq_group.num_swapping_workers == 0:
+                self.running.append(swap_seq_group.seq_group)
+                remote_recv_finished_req_ids.append(request_id)
+        for finished_req_id in remote_recv_finished_req_ids:
+            del self.remote_recv_transfering[finished_req_id]

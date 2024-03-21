@@ -7,13 +7,14 @@ import torch
 import torch.distributed
 
 
-from torch.cuda import (get_device_name, current_device, empty_cache, reset_peak_memory_stats, set_device,
-                        synchronize, max_memory_allocated, get_device_capability)
+# from torch.cuda import (get_device_name, current_device, empty_cache, reset_peak_memory_stats, set_device,
+#                         synchronize, max_memory_allocated, get_device_capability)
+
 from vllm.sequence import SequenceData
 from vllm.utils import get_max_shared_memory_bytes
 
 from vllm.config import (CacheConfig, ModelConfig, ParallelConfig,
-                         SchedulerConfig, LoRAConfig)
+                         SchedulerConfig, LoRAConfig, DeployConfig)
 from vllm.model_executor import set_random_seed
 from vllm.model_executor.parallel_utils.communication_op import (
     broadcast_tensor_dict)
@@ -24,7 +25,9 @@ from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 from vllm.lora.request import LoRARequest
-
+from vllm._C.gpu_ops import CreateGlobalNcclComm
+import logger
+import ray
 import json
 import socket
 
@@ -44,6 +47,7 @@ class Worker:
         local_rank: int,
         rank: int,
         distributed_init_method: str,
+        deploy_config: DeployConfig = None,
         lora_config: Optional[LoRAConfig] = None,
         kv_cache_dtype: Optional[str] = "auto",
         is_driver_worker: bool = False,
@@ -56,6 +60,7 @@ class Worker:
         self.distributed_init_method = distributed_init_method
         self.lora_config = lora_config
         self.is_driver_worker = is_driver_worker
+        self.deploy_config = deploy_config
         if self.is_driver_worker:
             assert self.rank == 0, "The driver worker must have rank 0."
 
@@ -72,6 +77,21 @@ class Worker:
         self.cache_events = None
         self.gpu_cache = None
 
+    def _get_local_device_info(self, rank_table_file: str):
+        local_server_ip = socket.gethostbyname(socket.gethostname())
+        local_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0])
+        with open(rank_table_file, 'r') as rank_table_reader:
+            rank_table = json.load(rank_table_reader)
+            for server_info in rank_table.get("server_list"):
+                server_ip = server_info.get("server_id")
+                if server_ip != local_server_ip:
+                    continue
+                for device_info in server_info.get("device"):
+                    device_id = int(device_info.get("device_id"))
+                    if device_id == local_rank:
+                        global_rank = int(device_info.get("rank_id"))
+                        return local_rank, global_rank
+
     def init_model(self) -> None:
         # torch.distributed.all_reduce does not free the input tensor until
         # the synchronization point. This causes the memory usage to grow
@@ -83,6 +103,14 @@ class Worker:
 
         # This env var set by Ray causes exceptions with graph building.
         os.environ.pop("NCCL_ASYNC_ERROR_HANDLING", None)
+        
+        # if self.rank_table_file:
+        #     self.local_rank, self.global_rank = self._get_local_device_info(self.deploy_config.rank_table_file)
+        #     logger.info("rank = %d, local rank = %d global rank = %d", self.rank, self.local_rank, self.global_rank )
+        # else:
+        self.local_rank, self.global_rank = int(ray.get_runtime_text().get_accelerator_ids()["GPU"][0]), None
+        logger.info("rank = %d, local rank = %d global rank = %d", self.rank, self.local_rank, self.global_rank )
+        
         self.device = torch.device(f"cuda:{self.local_rank}")
         torch.cuda.set_device(self.device)
 
@@ -95,8 +123,14 @@ class Worker:
             init_custom_ar()
         # Initialize the model.
         set_random_seed(self.model_config.seed)
-
+        
         #todo hucc CreateGlobalNcclComm 
+        # if self.deploy_config.rank_table_file:
+        #     if CreateGlobalNcclComm(self.deploy_config.rank_table_file, self.global_rank) !=0:
+        #         raise ValueError("CreateHcclFromRankTable error")
+
+        if CreateGlobalNcclComm(self.local_rank) !=0:
+            raise ValueError("CreateHcclFromRankTable error")
 
     def load_model(self):
         self.model_runner.load_model()

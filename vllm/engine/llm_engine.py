@@ -99,7 +99,7 @@ class LLMEngine:
         self.lora_config = lora_config
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
-        self.depoly_config = deploy_config
+        self.deploy_config = deploy_config
         self.log_stats = log_stats
         self._verify_args()
 
@@ -123,7 +123,7 @@ class LLMEngine:
         self.scheduler = Scheduler(scheduler_config, cache_config, lora_config)
 
         #hucc
-        if self.depoly_config.enable_separate:
+        if self.deploy_config.enable_separate:
             self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.world_size)
 
         # Logging.
@@ -136,6 +136,9 @@ class LLMEngine:
     def get_tokenizer_for_seq(self, sequence: Sequence):
         return self.tokenizer.get_lora_tokenizer(sequence.lora_request)
 
+    def get_global_ranks(self):
+        return self.deploy_config.get_global_ranks()
+    
     def _init_workers(self):
         # Lazy import the Worker to avoid importing torch.cuda/xformers
         # before CUDA_VISIBLE_DEVICES is set in the Worker
@@ -157,6 +160,7 @@ class LLMEngine:
             lora_config=self.lora_config,
             kv_cache_dtype=self.cache_config.cache_dtype,
             is_driver_worker=True,
+            deploy_config=self.deploy_config,
         )
         self._run_workers("init_model")
         self._run_workers("load_model")
@@ -262,6 +266,7 @@ class LLMEngine:
                     distributed_init_method,
                     lora_config=self.lora_config,
                     kv_cache_dtype=self.cache_config.cache_dtype,
+                    deploy_config=self.deploy_config
                 ))
 
         driver_rank = 0
@@ -276,6 +281,7 @@ class LLMEngine:
             lora_config=self.lora_config,
             kv_cache_dtype=self.cache_config.cache_dtype,
             is_driver_worker=True,
+            deploy_config=self.deploy_config
         )
 
         self._run_workers("init_model")
@@ -382,6 +388,18 @@ class LLMEngine:
                                                      lora_request=lora_request)
         return prompt_token_ids
 
+    def add_kv_response(
+        self,
+        response: KvPreparedResponse
+    ) -> None:
+        request_id = response.request_id
+        if response.error != 0:
+            self.scheduler.del_remote_send_transfering(request_id)
+            logger.info("remote recv engine prepare kv fail.")
+            return
+        blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_remote_send_transfering(request_id))
+        self.kv_trans_scheduler.register_kv_request(request_id, True, response.global_ranks, blocks)
+
     def add_request(
         self,
         request_id: str,
@@ -391,7 +409,8 @@ class LLMEngine:
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         prefix_pos: Optional[int] = None,
-    ) -> None:
+        prefill_request_output: Optional[RequestOutput] = None
+    ) -> KvPreparedResponse:
         """Add a request to the engine's request pool.
 
         The request is added to the request pool and will be processed by the
@@ -459,12 +478,31 @@ class LLMEngine:
             prompt_token_ids[:prefix_pos], lora_request.lora_int_id
             if lora_request else 0) if prefix_pos is not None else None
 
+        #reconstruct sequence
+        if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+            prefilled_token_ids = prefill_request_output.outputs[0].token_ids
+            output_logprobs = prefill_request_output.outputs[0].logprobs
+            for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                seq.append_token_id(token_id, output_logprob)
+                
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, prefix)
 
+        kv_response = None
         # Add the sequence group to the scheduler.
-        self.scheduler.add_seq_group(seq_group)
+        if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
+            self.scheduler.add_seq_group(seq_group)
+        else:
+            blocks = self.scheduler.allocate_kv_blocks(seq_group)
+            if not blocks:
+                kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
+            else:
+                kv_response = KvPreparedResponse(request_id, 0, None)
+                self.scheduler.add_remote_recv_transfering(seq_group)
+                self.kv_trans_scheduler.register_kv_request(request_id, False,
+                                                            prefill_request_output.global_ranks, blocks)
+        return kv_response
 
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a request(s) with the given ID.
@@ -793,7 +831,6 @@ class LLMEngine:
                 "remote_recv_blocks",
                 *request_for_recv_data
             )
-        
         
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.

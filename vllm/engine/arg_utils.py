@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 
 from vllm.config import (CacheConfig, ModelConfig, ParallelConfig,
-                         SchedulerConfig, LoRAConfig)
+                         SchedulerConfig, LoRAConfig, DeployConfig)
 
 
 @dataclass
@@ -43,6 +43,9 @@ class EngineArgs:
     lora_extra_vocab_size: int = 256
     lora_dtype = 'auto'
     max_cpu_loras: Optional[int] = None
+    enable_separate: bool = False
+    role: str = None
+    rank_table_file: str = None
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -255,6 +258,25 @@ class EngineArgs:
             help=('Maximum number of LoRAs to store in CPU memory. '
                   'Must be >= than max_num_seqs. '
                   'Defaults to max_num_seqs.'))
+        
+        parser.add_argument(
+            '--enable-separate',
+            action="store_true",
+            help=('separate or not '))
+    
+        parser.add_argument(
+            '--role',
+            type=str,
+            choices=['prompt', 'decoder'],
+            default=None,
+            help=('instance '))
+    
+        parser.add_argument(
+            '--rank-table-file',
+            type=str,
+            default="",
+            help=('rank table file '))
+
         return parser
 
     @classmethod
@@ -296,8 +318,9 @@ class EngineArgs:
             lora_dtype=self.lora_dtype,
             max_cpu_loras=self.max_cpu_loras if self.max_cpu_loras
             and self.max_cpu_loras > 0 else None) if self.enable_lora else None
-        return model_config, cache_config, parallel_config, scheduler_config, lora_config
-
+    
+        deploy_config = DeployConfig(self.enable_separate, self.role , self.rank_table_file)
+        return model_config, cache_config, parallel_config, scheduler_config, lora_config, deploy_config
 
 @dataclass
 class AsyncEngineArgs(EngineArgs):

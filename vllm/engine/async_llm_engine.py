@@ -10,7 +10,7 @@ from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.llm_engine import LLMEngine
 from vllm.engine.ray_utils import initialize_cluster, ray
 from vllm.logger import init_logger
-from vllm.outputs import RequestOutput
+from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
 
 logger = init_logger(__name__)
@@ -78,6 +78,8 @@ class RequestTracker:
         self._finished_requests: asyncio.Queue[str] = asyncio.Queue()
         self._new_requests: asyncio.Queue[Tuple[AsyncStream,
                                                 dict]] = asyncio.Queue()
+        self._kv_responses: asyncio.Queue[Tuple[AsyncStream,
+                                                dict]] = asyncio.Queue()
         self.new_requests_event = None
 
     def __contains__(self, item):
@@ -98,6 +100,7 @@ class RequestTracker:
                 stream.put(exc)
 
     def process_request_output(self,
+                               global_ranks: List[int],
                                request_output: RequestOutput,
                                *,
                                verbose: bool = False) -> None:
@@ -110,6 +113,16 @@ class RequestTracker:
                 logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
 
+    def process_kv_response(self,
+                            global_ranks: List[int],
+                            kv_response: KvPreparedResponse) -> None:
+        """Process a request output from the engine"""
+        request_id = kv_response.request_id
+        kv_response.global_ranks = global_ranks
+        self._request_streams.get(request_id).put(kv_response)
+        if kv_response.error !=0:
+            self.abort_request(request_id)
+        
     def add_request(self, request_id: str,
                     **engine_add_request_kwargs) -> AsyncStream:
         """Add a request to be sent to the engine on the next background
@@ -127,6 +140,12 @@ class RequestTracker:
 
         return stream
 
+    def add_kv_response(self,
+                        **engine_kv_response_kwargs) -> None:
+        self._kv_responses.put_nowait({
+            **engine_kv_response_kwargs
+        })
+    
     def abort_request(self, request_id: str, *, verbose: bool = False) -> None:
         """Abort a request during next background loop iteration."""
         if verbose:
@@ -141,6 +160,13 @@ class RequestTracker:
 
         self._request_streams[request_id].finish()
 
+    def get_kv_responses(self) -> List[dict]:
+        kv_responses: List = []
+        while not self._kv_responses.empty():
+            response = self._kv_responses.get_nowait()
+            kv_responses.append(response)
+        return kv_responses    
+        
     def get_new_and_finished_requests(self) -> Tuple[List[Dict], Set[str]]:
         """Get the new requests and finished requests to be
         sent to the engine."""
@@ -184,6 +210,14 @@ class _AsyncLLMEngine(LLMEngine):
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
+        if scheduler_outputs.is_empty():
+            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+                self.scheduler.remote_send_transfering or self.scheduler.remote_recv_transfering:
+                    logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+                    time.sleep(0.05)
+            else:
+                return None
+
         if not scheduler_outputs.is_empty():
             # Execute the model.
             all_outputs = await self._run_workers_async(
@@ -199,8 +233,19 @@ class _AsyncLLMEngine(LLMEngine):
             output = all_outputs[0]
         else:
             output = []
-
-        return self._process_model_outputs(output, scheduler_outputs)
+            
+        processed_outputs = self._process_model_outputs(output, scheduler_outputs)
+        
+        #prompt eng pull metadata in separate mode
+        #assume after do prefill, the reqeust will not finish
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
+            prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
+            for processed_output in processed_outputs:
+                processed_output.finished = True
+            for seq_group in prefilled_seq_groups:
+                self.scheduler.add_remote_send_transfering(seq_group)
+        
+        return processed_outputs
 
     async def encode_request_async(
         self,
@@ -226,6 +271,7 @@ class _AsyncLLMEngine(LLMEngine):
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         prefix_pos: Optional[int] = None,
+        prefill_request_output: Optional[RequestOutput] = None
     ) -> None:
         if lora_request is not None and not self.lora_config:
             raise ValueError(f"Got lora_request {lora_request} but LoRA is "
@@ -246,6 +292,7 @@ class _AsyncLLMEngine(LLMEngine):
             arrival_time=arrival_time,
             lora_request=lora_request,
             prefix_pos=prefix_pos,
+            prefill_request_output=prefill_request_output
         )
 
     async def _run_workers_async(
@@ -276,6 +323,50 @@ class _AsyncLLMEngine(LLMEngine):
         all_outputs = await asyncio.gather(*coros)
         return all_outputs
 
+    async def trans_kv_step_aysnc(self) -> None:
+        if not self.deploy_config.enable_separate:
+            return
+        # check trans kv finished requests
+        finished_requests = self._run_workers_async(
+            "check_remote_trans_finished",
+            get_all_outputs=True
+        )
+        has_finished_request: bool = False
+        for worker_finished_requests in finished_requests:
+            real_finished_reqs = self.kv_trans_scheduler.register_finished_requests(worker_finished_requests)
+            self.scheduler.add_remote_transfer_finished(real_finished_reqs)
+            has_finished_request = has_finished_request or worker_finished_requests[0] or \
+                worker_finished_requests[1] or worker_finished_requests[2]
+        
+        #schedule
+        scheduler_outputs = self.kv_trans_scheduler.schedule()
+        if scheduler_outputs.empty() and not has_finished_request:
+            # time.sleep(0.05)
+            return
+
+        #recv request
+        channel_for_recv_request = scheduler_outputs.channel_for_recv_request
+        if channel_for_recv_request:
+            self._run_workers_async(
+                "remote_recv_request",
+                *channel_for_recv_request
+            )
+        
+        # send kv data 
+        request_for_send_data = scheduler_outputs.request_for_send_data
+        if request_for_send_data:
+            self._run_workers_async(
+                "remote_send_blocks",
+                *request_for_send_data
+            )
+            
+        #send request and recv kv data
+        request_for_recv_data = scheduler_outputs.request_for_recv_data
+        if request_for_recv_data:
+            self._run_workers_async(
+                "remote_recv_blocks",
+                *request_for_recv_data
+            )
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
@@ -371,6 +462,7 @@ class AsyncLLMEngine:
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
 
+        kv_response = None
         for new_request in new_requests:
             # Add the request into the vLLM engine's waiting queue.
             # TODO: Maybe add add_request_batch to reduce Ray overhead
@@ -379,12 +471,26 @@ class AsyncLLMEngine:
             else:
                 await self.engine.add_request_async(**new_request)
 
+        if kv_response:
+            self._request_tracker.process_kv_response(
+                self.engine.get_global_ranks(), kv_response)
+            
         if finished_requests:
             await self._engine_abort(finished_requests)
 
+        kv_responses = self._request_tracker.get_kv_responses()
+        for kv_response in kv_responses:
+            # Add the response
+            if self.engine_use_ray:
+                await self.engine.add_kv_response.remote(**kv_response)
+            else:
+                self.engine.add_kv_response(**kv_response)
+                
         if self.engine_use_ray:
+            await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
         else:
+            await self.engine.trans_kv_step_aysnc()
             request_outputs = await self.engine.step_async()
 
         # Put the outputs into the corresponding streams.
@@ -404,7 +510,11 @@ class AsyncLLMEngine:
         # Initialize the RequestTracker here so it uses the right event loop.
         has_requests_in_progress = False
         while True:
-            if not has_requests_in_progress:
+            if (not has_requests_in_progress and
+                not self.engine.scheduler.swapping_in and
+                not self.engine.scheduler.swapping_out and
+                not self.engine.scheduler.remote_send_transfering and
+                not self.engine.scheduler.remote_recv_transfering):
                 await self._request_tracker.wait_for_new_requests()
             has_requests_in_progress = await self.engine_step()
             await asyncio.sleep(0)
@@ -418,6 +528,7 @@ class AsyncLLMEngine:
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         prefix_pos: Optional[int] = None,
+        prefill_request_output: Optional[RequestOutput] = None
     ) -> AsyncStream:
         if self.log_requests:
             shortened_prompt = prompt
@@ -468,10 +579,17 @@ class AsyncLLMEngine:
             prompt_token_ids=prompt_token_ids,
             arrival_time=arrival_time,
             lora_request=lora_request,
-            prefix_pos=prefix_pos)
+            prefix_pos=prefix_pos,
+            prefill_request_output=prefill_request_output)
 
         return stream
 
+    async def add_kv_response(
+        self,
+        response: KvPreparedResponse,
+    ) -> None:
+        self._request_tracker.add_kv_response(response=response)
+        
     async def generate(
         self,
         prompt: Optional[str],
@@ -480,6 +598,7 @@ class AsyncLLMEngine:
         prompt_token_ids: Optional[List[int]] = None,
         lora_request: Optional[LoRARequest] = None,
         prefix_pos: Optional[int] = None,
+        prefill_request_output: Optional[RequestOutput] = None
     ) -> AsyncIterator[RequestOutput]:
         """Generate outputs for a request.
 
@@ -561,6 +680,7 @@ class AsyncLLMEngine:
                 arrival_time=arrival_time,
                 lora_request=lora_request,
                 prefix_pos=prefix_pos,
+                prefill_request_output=prefill_request_output
             )
 
             async for request_output in stream:

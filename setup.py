@@ -45,6 +45,10 @@ CXX_FLAGS = ["-g", "-O2", "-std=c++17"]
 # TODO(woosuk): Should we use -O3?
 NVCC_FLAGS = ["-O2", "-std=c++17"]
 
+
+# 定义 MPI 编译器选项
+MPICXX_FLAGS = ["-DMPI_ENABLED", '-lnccl']  
+
 if _is_hip():
     if ROCM_HOME is None:
         raise RuntimeError(
@@ -286,6 +290,8 @@ if _is_cuda():
                     "nvcc": NVCC_FLAGS_PUNICA,
                 },
             ))
+
+    
 elif _is_hip():
     amd_archs = os.getenv("GPU_ARCHS")
     if amd_archs is None:
@@ -314,6 +320,9 @@ vllm_extension_sources = [
 ]
 
 if _is_cuda():
+    vllm_extension_sources.append("csrc/gpu_ops.cu")
+    
+if _is_cuda():
     vllm_extension_sources.append("csrc/quantization/awq/gemm_kernels.cu")
     vllm_extension_sources.append("csrc/custom_all_reduce.cu")
 
@@ -322,7 +331,7 @@ if not _is_neuron():
         name="vllm._C",
         sources=vllm_extension_sources,
         extra_compile_args={
-            "cxx": CXX_FLAGS,
+            "cxx": CXX_FLAGS ,
             "nvcc": NVCC_FLAGS,
         },
         libraries=["cuda"] if _is_cuda() else [],
@@ -429,3 +438,5 @@ setuptools.setup(
     cmdclass={"build_ext": BuildExtension} if not _is_neuron() else {},
     package_data=package_data,
 )
+
+

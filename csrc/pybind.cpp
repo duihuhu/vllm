@@ -1,6 +1,7 @@
 #include "cache.h"
 #include "cuda_utils.h"
 #include "ops.h"
+#include "gpu_ops.h"
 #include <torch/extension.h>
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -95,6 +96,33 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "get_max_shared_memory_per_block_device_attribute",
     &get_max_shared_memory_per_block_device_attribute,
     "Gets the maximum shared memory per block device attribute.");
+
+  pybind11::module gpu_ops = m.def_submodule("gpu_ops", "vLLM gpu nccl utils");
+  gpu_ops.def(
+    "CreateGlobalNcclComm",
+    &CreateGlobalNcclComm,
+    "CreateGlobalNcclComm");
+
+  gpu_ops.def(
+    "SendRequest",
+    &SendRequest,
+    "SendRequest");
+
+  gpu_ops.def(
+    "RecvRequest",
+    &RecvRequest,
+    "RecvRequest");
+
+  gpu_ops.def(
+    "SendBlocks",
+    &SendBlocks,
+    "SendBlocks");
+
+  gpu_ops.def(
+    "RecvBlocks",
+    &RecvBlocks,
+    "RecvBlocks");
+
 
 #ifndef USE_ROCM
   // Custom all-reduce kernels
