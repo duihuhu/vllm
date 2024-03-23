@@ -189,15 +189,18 @@ class LLM:
 
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
-                ites = time.time()
+                #ites = time.time()
                 step_outputs = self.llm_engine.step()
-                itee = time.time()
+                iteed = time.time()
+                #itee = time.time()
                 #with open("/workspace/vllm/benchmarks/log_vllm_bs16_t128.txt", 'a') as file:
                 #    file.write(f"costs {itee - ites} seconds\n")
                 #interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
                         # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
+                        with open("/workspace/vllm/benchmarks/decode_ite.txt", 'a') as file:
+                            file.write(f"req {output.request_id} ends at {iteed} costs {iteed - st2} seconds\n")
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
