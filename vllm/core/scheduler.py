@@ -109,6 +109,7 @@ class Scheduler:
     def has_unfinished_seqs(self) -> bool:
         # return self.waiting or self.running or self.swapped or self.running_stay
         return self.waiting or self.running or self.swapped
+        # return self.waiting or self.running or self.swapped or self.prefilled
 
     def has_unfinished_prefill_requests(self) -> bool:
         return self.waiting or self.running or self.swapped or self.waiting_add
@@ -224,9 +225,9 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        # while self.running_stay:
-        #     seq_group = self.running_stay.pop(0)
-        #     self.running.append(seq_group)
+        while self.running_stay:
+             seq_group = self.running_stay.pop(0)
+             self.running.append(seq_group)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -234,10 +235,40 @@ class Scheduler:
         # the sequence groups in the RUNNING state.
         # In this case, the policy is responsible for deciding which sequence
         # groups to preempt.
-        if self.running_waiting:
-            while self.running_waiting:
-                self.running.append(self.running_waiting.pop(0))
-                
+        #if self.running_waiting:
+        #    while self.running_waiting:
+        #        self.running.append(self.running_waiting.pop(0))
+        
+        '''for seq_group in self.prefilled:
+            seq_group.sg_proirty()
+        self.prefilled.sort(key = lambda x: x.proirity, reverse = True)
+
+        for seq_group in self.running:
+            seq_group.sg_proirty()
+        self.running.sort(key = lambda x: x.proirity, reverse = True)
+
+        temp_prefilleds = []
+        temp_runnings = []
+        while True:
+            if not self.running:
+                num = 0
+                while num < self.scheduler_config.max_num_seqs:
+                    temp_group = self.prefilled.pop(0)
+                    self.running.append(temp_group)
+                    num += 1
+                break
+            seq_running = self.running[-1]
+            seq_prefilled = self.prefilled[0]
+            if seq_prefilled.proirity > seq_running:
+                temp_running = self.running.pop(-1)
+                temp_prefilled = self.prefilled.pop(0)
+                temp_prefilleds.append(temp_running)
+                temp_runnings.append(temp_prefilled)
+            else:
+                break
+        self.prefilled.extend(temp_prefilleds)
+        self.running.extend(temp_runnings)'''
+
         self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
@@ -245,7 +276,7 @@ class Scheduler:
         # Reserve new token slots for the running sequence groups.
         running: List[SequenceGroup] = []
         preempted: List[SequenceGroup] = []
-        index = 0
+        #index = 0
         while self.running:
             # if index %2 == 0:
             seq_group = self.running.pop(0)
@@ -258,21 +289,23 @@ class Scheduler:
                     victim_seq_group = self.running.pop(-1)
                     self._preempt(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
+                    print(f"In running no space 0")
                 else:
                     # No other sequence groups can be preempted.
                     # Preempt the current sequence group.
                     self._preempt(seq_group, blocks_to_swap_out)
                     preempted.append(seq_group)
+                    print(f"In running no space 0")
                     break
             else:
                 # Append new slots to the sequence group.
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
                 # index = index + 1
-                # if len(running) >= self.scheduler_config.max_num_seqs:
-                #     while self.running:
-                #         seq_group = self.running.pop(0)
-                #         self.running_stay.append(seq_group)
+                if len(running) >= self.scheduler_config.max_num_seqs:
+                     while self.running:
+                         seq_group = self.running.pop(0)
+                         self.running_stay.append(seq_group)
         self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
@@ -284,6 +317,7 @@ class Scheduler:
                 break
             # If the sequence group cannot be swapped in, stop.
             if not self.block_manager.can_swap_in(seq_group):
+                print(f"In swapped no space 1")
                 break
 
             # The total number of sequences in the RUNNING state should not
@@ -294,6 +328,7 @@ class Scheduler:
                 for seq_group in self.running)
             if (num_curr_seqs + num_new_seqs >
                     self.scheduler_config.max_num_seqs):
+                print(f"In swapped exceed bs")
                 break
 
             seq_group = self.swapped.pop(0)
@@ -336,13 +371,13 @@ class Scheduler:
 
                 # If the sequence group cannot be allocated, stop.
                 if not self.block_manager.can_allocate(seq_group):
-                    # print("no space 2")
+                    print("In waiting no space 2")
                     break
 
                 # If the number of batched tokens exceeds the limit, stop.
                 if (num_batched_tokens + num_prompt_tokens >
                         self.scheduler_config.max_num_batched_tokens):
-                    # print("exceed max_num_batched_tokens")
+                    print("In waiting exceed max_num_batched_tokens")
                     break
 
                 # The total number of sequences in the RUNNING state should not
@@ -354,6 +389,7 @@ class Scheduler:
                     for seq_group in self.running)
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
+                    print(f"In waiting exceed of bs")
                     break
                 # print(seq_group.request_id)
                 seq_group = self.waiting.pop(0)
@@ -561,6 +597,8 @@ class Scheduler:
         # NOTE: For FCFS, we insert the preempted sequence group to the front
         # of the waiting queue.
         self.waiting.insert(0, seq_group)
+        with open("/workspace/vllm/benchmarks/scheduler.txt", 'a') as file:
+            file.write(f"seq {seq_group.request_id} has been recomputed\n")
 
     def _preempt_by_swap(
         self,
@@ -572,6 +610,8 @@ class Scheduler:
             seq.status = SequenceStatus.SWAPPED
         self._swap_out(seq_group, blocks_to_swap_out)
         self.swapped.append(seq_group)
+        with open("/workspace/vllm/benchmarks/scheduler.txt", 'a') as file:
+            file.write(f"seq {seq_group.request_id} has been swapped\n")
 
     def _swap_in(
         self,

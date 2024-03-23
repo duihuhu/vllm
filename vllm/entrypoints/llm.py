@@ -163,6 +163,9 @@ class LLM:
                 if output.finished:
                     # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                     outputs.append(output)
+                    #with open("/workspace/vllm/benchmarks/decode.txt", 'a') as file:
+                    #    s = "req " + output.request_id + "ends at " + str(time.time()) + "\n"
+                    #    file.write(s)
                     if use_tqdm:
                         pbar.update(1)
             if split_two_phase == 1:
@@ -179,7 +182,7 @@ class LLM:
             print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
 
         if split_two_phase == 1:
-            self.llm_engine.covert_prefilled_to_running()
+            #self.llm_engine.covert_prefilled_to_running()
             st2 = time.time()
             print(f"Start Decode at {st2}")
             #interation = 0
@@ -189,8 +192,8 @@ class LLM:
                 ites = time.time()
                 step_outputs = self.llm_engine.step()
                 itee = time.time()
-                with open("/workspace/vllm/benchmarks/log167_200.txt", 'a') as file:
-                    file.write(f"costs {itee - ites} seconds\n")
+                #with open("/workspace/vllm/benchmarks/log_vllm_bs16_t128.txt", 'a') as file:
+                #    file.write(f"costs {itee - ites} seconds\n")
                 #interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:

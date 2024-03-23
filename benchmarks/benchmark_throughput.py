@@ -51,11 +51,11 @@ def sample_requests(
     t = 0
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
-        if prompt_len < 4 or output_len < 4:
+        #if prompt_len < 4 or output_len < 4:
             # Prune too short sequences.
-            continue
+        #    continue
         # if prompt_len > 1024 or prompt_len + output_len > 2048:
-        if prompt_len > 1024 or prompt_len + output_len > 2048:
+        if prompt_len > 2048 or prompt_len + output_len > 4096:
             # Prune too long sequences.
             continue
         filtered_dataset.append((prompt, prompt_len, output_len))
@@ -108,9 +108,9 @@ def run_vllm(
     # FIXME(woosuk): Do use internal method.
     outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
     #end = time.time()
-    with open("/workspace/vllm/benchmarks/log_13b.txt", 'a') as file:
+    '''with open("/workspace/vllm/benchmarks/log_13b.txt", 'a') as file:
         for output in outputs:
-            file.write(f"prompt {len(output.prompt_token_ids)}, output {len(output.outputs[0].token_ids)}\n")
+            file.write(f"prompt {len(output.prompt_token_ids)}, output {len(output.outputs[0].token_ids)}\n")'''
     
     '''elapsed_time = end-start 
     total_num_tokens = sum(
@@ -213,21 +213,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
     parser.add_argument("--backend", type=str, choices=["vllm", "hf"],
                         default="vllm")
-    parser.add_argument("--dataset", type=str, required=True,
+    parser.add_argument("--dataset", default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json", type=str, required=True,
                         help="Path to the dataset.")
     parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
-    parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=4)
+    parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=2)
     parser.add_argument("--n", type=int, default=1,
                         help="Number of generated sequences per prompt.")
     parser.add_argument("--use-beam-search", action="store_true")
-    parser.add_argument("--num-prompts", type=int, default=100,
+    parser.add_argument("--num-prompts", type=int, default=128,
                         help="Number of prompts to process.")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--hf-max-batch-size", type=int, default=None,
                         help="Maximum batch size for HF backend.")
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--split-two-phase", type=int, default=0)
+    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--split-two-phase", type=int, default=1)
     args = parser.parse_args()
 
     if args.backend == "vllm":
