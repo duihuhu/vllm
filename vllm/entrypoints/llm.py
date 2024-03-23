@@ -182,7 +182,7 @@ class LLM:
             print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
 
         if split_two_phase == 1:
-            #self.llm_engine.covert_prefilled_to_running()
+            self.llm_engine.covert_prefilled_to_running()
             st2 = time.time()
             print(f"Start Decode at {st2}")
             #interation = 0
