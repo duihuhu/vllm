@@ -263,12 +263,12 @@ std::map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
 
             if (cudaSuccess != cudaMemcpyAsync(dstKeyCachePtr, srcKeyCachePtr, cacheSize,\
                 memcpy_type, cudaStream)) {
-                    std::cout<< "[error] aclrMemcpy error!!" << std::endl;
+                    std::cout<< "[error] cudaMemcpy error!!" << std::endl;
             }
 
             if (cudaSuccess != cudaMemcpyAsync(dstValueCachePtr, srcValueCachePtr, cacheSize,\
                 memcpy_type, cudaStream)) {
-                    std::cout<< "[error] aclrMemcpy error!!" << std::endl;
+                    std::cout<< "[error] cudaMemcpy error!!" << std::endl;
             }
 
         }

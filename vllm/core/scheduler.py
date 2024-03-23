@@ -3,7 +3,7 @@ import enum
 import time
 from typing import Deque, Dict, Iterable, List, Optional, Tuple, Union, Set
 
-from vllm.config import CacheConfig, LoRAConfig, SchedulerConfig
+from vllm.config import CacheConfig, LoRAConfig, SchedulerConfig, DeployConfig
 from vllm.core.block_manager import AllocStatus, BlockSpaceManager
 from vllm.core.policy import PolicyFactory
 from vllm.lora.request import LoRARequest
@@ -84,15 +84,16 @@ class Scheduler:
         self,
         scheduler_config: SchedulerConfig,
         cache_config: CacheConfig,
+        deploy_config: DeployConfig, 
         lora_config: Optional[LoRAConfig],
     ) -> None:
         self.scheduler_config = scheduler_config
         self.cache_config = cache_config
+        self.deploy_config = deploy_config
         # Note for LoRA scheduling: the current policy is extremely
         # simple and NOT fair. It can lead to starvation of some
         # LoRAs. This should be improved in the future.
         self.lora_config = lora_config
-
         self.prompt_limit = min(self.scheduler_config.max_model_len,
                                 self.scheduler_config.max_num_batched_tokens)
 
@@ -119,9 +120,12 @@ class Scheduler:
         self.swapping_in: List[SwappingSequenceGroup] = []
         self.swapping_out: List[SwappingSequenceGroup] = []
         
-        self.remote_transfer_finished_req_ids: List[Tuple[List[str], List[str]]] = []
-        self.remote_send_transfering: Dict[str, SwappingSequenceGroup] = {}
-        self.remote_recv_transfering: Dict[str, SwappingSequenceGroup] = {}
+        self.send_finished_req_ids: List[str] = []
+        self.recv_finished_req_ids: List[str] = []
+        
+        self.send_transfering: Dict[str, SequenceGroup] = {}
+        self.recv_transfering: Dict[str, SequenceGroup] = {}
+        
         self.num_workers: int = 0
         
 
@@ -133,27 +137,30 @@ class Scheduler:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
 
-    def add_remote_transfer_finished(self, request_ids: Tuple[List[str], List[str]]):
-        if request_ids !=([], []):
-            self.remote_transfer_finished_req_ids.append(request_ids)
+    def prefill_add_send_finished(self, request_ids: List[str]):
+        self.send_finished_req_ids = request_ids
     
-    def add_remote_send_transfering(self, seq_group: SequenceGroup) -> None:
-        #Add sequence groups to the remote waiting map.
-        self.remote_send_transfering[seq_group.request_id] = SwappingSequenceGroup(seq_group, self.num_workers)
+    def prefill_add_send_transfering(self, seq_group: SequenceGroup) -> None:
+        #Add sequence groups to the send transfering map.
+        self.send_transfering[seq_group.request_id] = seq_group
     
-    def del_remote_send_transfering(self, request_id: str) -> None:
-        # Delete sequence groups to the remote waiting map 
-        del self.remote_send_transfering[request_id]
+    def prefill_del_send_transfering(self, request_id: str) -> None:
+        # Delete sequence groups to the send  transfering map 
+        if request_id in self.send_transfering:
+            del self.send_transfering[request_id]
     
-    def get_remote_send_transfering(self, request_id: str) -> None:
-        if request_id not in self.remote_send_transfering:
+    def prefill_get_send_transfering(self, request_id: str) -> None:
+        if request_id not in self.send_transfering:
             return None
-        return self.remote_send_transfering[request_id].seq_group
+        return self.send_transfering[request_id]
 
-    def add_remote_recv_transfering(self, seq_group: SequenceGroup) -> None:
-        # add sequece groups to the remote waiting map.
-        self.remote_recv_transfering[seq_group.request_id] = SwappingSequenceGroup(seq_group, self.num_workers)
+    def decode_add_recv_finished(self, request_ids: List[str]):
+        self.recv_finished_req_ids = request_ids
     
+    def decode_add_recv_transfering(self, seq_group: SequenceGroup) -> None:
+        #Add sequence groups to the recv transfering map
+        self.recv_transfering[seq_group.request_id] = seq_group
+
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a sequence group with the given ID.
 
@@ -556,28 +563,17 @@ class Scheduler:
         for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
             seq.status = SequenceStatus.SWAPPED
 
-    def _check_remote_transfer_finished_req(self) -> None:
-        while self.remote_transfer_finished_req_ids:
-            remote_send_req_ids, remote_recv_req_ids = self.remote_transfer_finished_req_ids.pop()
-            for remote_send_req_id in remote_send_req_ids:
-                self.remote_send_transfering[remote_send_req_id].num_swapping_workers -= 1
-            for remote_recv_req_id in remote_recv_req_ids:
-                self.remote_recv_transfering[remote_recv_req_id].num_swapping_workers -= 1
-        
-        remote_send_finished_req_ids = []
-        for request_id, swap_seq_group in self.remote_send_transfering.items():
-            if swap_seq_group.num_swapping_workers == 0:
-                #todo:后续不释放，执行被动淘汰
-                seq = swap_seq_group.seq_group.get_seqs()[0]
+    def _check_tranfer_finished_req(self) -> None:
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
+            for request_id in self.send_finished_req_ids[:]:
+                seq_group = self.send_transfering[request_id]
+                seq = seq_group.get_seqs()[0]
                 self.free_seq(seq)
-                remote_send_finished_req_ids.append(request_id)
-        for finished_req_id in remote_send_finished_req_ids:
-            del self.remote_send_transfering[finished_req_id]
-            
-        remote_recv_finished_req_ids = []
-        for request_id, swap_seq_group in self.remote_recv_transfering.items():
-            if swap_seq_group.num_swapping_workers == 0:
-                self.running.append(swap_seq_group.seq_group)
-                remote_recv_finished_req_ids.append(request_id)
-        for finished_req_id in remote_recv_finished_req_ids:
-            del self.remote_recv_transfering[finished_req_id]
+                del self.send_transfering[request_id]
+                self.send_finished_req_ids.remove(request_id)
+        elif self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
+            for request_id in self.recv_finished_req_ids[:]:
+                seq_group = self.recv_transfering[request_id]
+                self.running.append(seq_group)
+                del self.recv_transfering[request_id]
+                self.recv_finished_req_ids.remove(request_id)

@@ -528,11 +528,11 @@ class ModelRunner:
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
 
-        #todo 
-        if ENABLE_RTC and len(input_metadata.prompt_lens) > 0:
-            input_tokens, input_positions = RtcEngine.preprocess_input(input_tokens, input_positions, input_metadata)
-            input_metadata.rtc_engine = True
-            input_metadata.block_size = self.block_size
+        # #todo 
+        # if ENABLE_RTC and len(input_metadata.prompt_lens) > 0:
+        #     input_tokens, input_positions = RtcEngine.preprocess_input(input_tokens, input_positions, input_metadata)
+        #     input_metadata.rtc_engine = True
+        #     input_metadata.block_size = self.block_size
 
         # Execute the model.
         if input_metadata.use_cuda_graph:

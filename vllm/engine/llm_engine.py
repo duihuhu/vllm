@@ -21,7 +21,7 @@ from vllm.transformers_utils.tokenizer import (detokenize_incrementally,
                                                TokenizerGroup)
 from vllm.utils import Counter, set_cuda_visible_devices, get_ip, get_open_port, get_distributed_init_method
 
-from vllm.core.kv_trans_scheduler import KvTransScheduler
+from vllm.core.kv_trans_scheduler import PrefillKvTransScheduler, DecodeKvTransScheduler
 
 from functools import partial
 
@@ -120,11 +120,16 @@ class LLMEngine:
         self._init_cache()
 
         # Create the scheduler.
-        self.scheduler = Scheduler(scheduler_config, cache_config, lora_config)
+        self.scheduler = Scheduler(scheduler_config, cache_config, deploy_config, lora_config)
 
         #hucc
-        if self.deploy_config.enable_separate:
-            self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.world_size)
+        # if self.deploy_config.enable_separate:
+        #     self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.world_size)
+
+        if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
+            self.kv_trans_scheduler = PrefillKvTransScheduler(self.parallel_config)
+        elif self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+            self.kv_trans_scheduler = DecodeKvTransScheduler(self.parallel_config)
 
         # Logging.
         self.last_logging_time = 0.0
@@ -394,11 +399,11 @@ class LLMEngine:
     ) -> None:
         request_id = response.request_id
         if response.error != 0:
-            self.scheduler.del_remote_send_transfering(request_id)
+            self.scheduler.prefill_del_send_transfering(request_id)
             logger.info("remote recv engine prepare kv fail.")
             return
-        blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_remote_send_transfering(request_id))
-        self.kv_trans_scheduler.register_kv_request(request_id, True, response.global_ranks, blocks)
+        blocks = self.scheduler.fetch_kv_blocks(self.scheduler.prefill_get_send_transfering(request_id))
+        self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks)
 
     def add_request(
         self,
@@ -499,8 +504,8 @@ class LLMEngine:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
             else:
                 kv_response = KvPreparedResponse(request_id, 0, None)
-                self.scheduler.add_remote_recv_transfering(seq_group)
-                self.kv_trans_scheduler.register_kv_request(request_id, False,
+                self.scheduler.decode_add_recv_transfering(seq_group)
+                self.kv_trans_scheduler.add_kv_request(request_id,
                                                             prefill_request_output.global_ranks, blocks)
         return kv_response
 
@@ -790,47 +795,48 @@ class LLMEngine:
     def trans_kv_step(self):
         if not self.deploy_config.enable_separate:
             return
-        # check trans kv finished requests
-        finished_requests = self._run_workers(
-            "check_remote_trans_finished",
-            get_all_outputs=True
-        )
-        has_finished_request: bool = False
-        for worker_finished_requests in finished_requests:
-            real_finished_reqs = self.kv_trans_scheduler.register_finished_requests(worker_finished_requests)
-            self.scheduler.add_remote_transfer_finished(real_finished_reqs)
-            has_finished_request = has_finished_request or worker_finished_requests[0] or \
-                worker_finished_requests[1] or worker_finished_requests[2]
-        
-        #schedule
-        scheduler_outputs = self.kv_trans_scheduler.schedule()
-        if scheduler_outputs.empty() and not has_finished_request:
-            # time.sleep(0.05)
-            return
 
-        #recv request
-        channel_for_recv_request = scheduler_outputs.channel_for_recv_request
-        if channel_for_recv_request:
-            self._run_workers(
-                "remote_recv_request",
-                *channel_for_recv_request
+        if self.deploy_config.role == 'prompt':
+            finished_tasks = self._run_workers(
+                "check_prefill_finished_transfer_task",
+                get_all_outputs=True
             )
-        
-        # send kv data 
-        request_for_send_data = scheduler_outputs.request_for_send_data
-        if request_for_send_data:
-            self._run_workers(
-                "remote_send_blocks",
-                *request_for_send_data
-            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.prefill_add_send_finished(real_finished_req_ids)
             
-        #send request and recv kv data
-        request_for_recv_data = scheduler_outputs.request_for_recv_data
-        if request_for_recv_data:
-            self._run_workers(
-                "remote_recv_blocks",
-                *request_for_recv_data
+            prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            if prefill_scheduler_outputs.task_for_send_blocks:
+                self._run_workers(
+                    "prefill_send_blocks",
+                    prefill_scheduler_outputs.task_for_send_blocks
+                )
+        
+        else:
+            finished_tasks = self._run_workers(
+                "check_decode_finished_transfer_task",
+                get_all_outputs=True
             )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.decode_add_recv_finished(real_finished_req_ids)
+            
+            decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            
+            if decode_scheduler_outputs.task_for_recv_request_id:
+                self._run_workers(
+                    "decode_recv_request_id",
+                    decode_scheduler_outputs.task_for_recv_request_id
+                )
+                
+            if decode_scheduler_outputs.task_for_recv_blocks:
+                self._run_workers(
+                    "decode_recv_blocks",
+                    decode_scheduler_outputs.task_for_recv_blocks
+                )
+                
         
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
@@ -918,7 +924,7 @@ class LLMEngine:
             for processed_output in processed_outputs:
                 processed_output.finished = True
             for seq_group in prefilled_seq_groups:
-                self.scheduler.add_remote_send_transfering(seq_group)
+                self.scheduler.prefill_add_send_transfering(seq_group)
         
         return processed_outputs
     

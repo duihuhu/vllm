@@ -30,6 +30,7 @@ import logger
 import ray
 import json
 import socket
+from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferRequestIdTask, TransferBlocksTask
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -281,36 +282,66 @@ class Worker:
     def list_loras(self) -> Set[int]:
         return self.model_runner.list_loras()
 
-    #hucc
-    def remote_recv_request(
+    def decode_recv_request_id(
         self,
-        channel: str,
-        remote_ranks: List[int]
+        task: TransferRequestIdTask
     ) -> str:
-        self.cache_engine.remote_recv_request(channel, remote_ranks[self.rank])
+        self.cache_engine.recv_request_id(task.channel, task.opposite_ranks[self.rank])
     
-    def remote_send_blocks(
+    def prefill_send_blocks(
         self,
-        channel: str,
-        request_id: str,
-        remote_ranks: List[int],
-        blocks: List[int]
+        task: TransferBlocksTask
     ) -> None:
-        self.cache_engine.remote_send_blocks(channel, request_id, blocks, remote_ranks[self.rank])
+        task_meta = task.meta
+        self.cache_engine.send_blocks(task_meta.channel, task_meta.request_id,
+                                      task.blocks, task.opposite_ranks[self.rank])
     
-    def remote_recv_blocks(
+    def decode_recv_blocks(
         self,
-        channel: str,
-        request_id: str,
-        remote_ranks: List[int],
-        blocks: List[int]
+        task: TransferBlocksTask
     ) -> None:
-        self.cache_engine.remote_recv_blocks(channel, request_id, blocks, remote_ranks[self.rank])
+        task_meta = task.meta
+        self.cache_engine.recv_blocks(task_meta.channel, task_meta.request_id,
+                                      task.blocks, task.opposite_ranks[self.rank])
+        
+    def check_prefill_finished_transfer_task(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta]]:
+        send_blocks_finished = self.cache_engine.check_send_finished_events()
+        return send_blocks_finished
     
-    def check_remote_trans_finished(self) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]], List[Tuple[str, str]]]:
-        recv_request_finished, send_data_finished = self.cache_engine.check_remote_send_finished_events()
-        recv_data_finished = self.cache_engine.check_remote_recv_finished_events()
-        return recv_request_finished, send_data_finished, recv_data_finished
+    def check_decode_finished_transfer_task(self) -> List[TransferTaskMeta]:
+        recv_request_id_finished, recv_blocks_finished = self.cache_engine.check_recv_finished_events()
+        return recv_request_id_finished, recv_blocks_finished
+
+    #hucc
+    # def remote_recv_request(
+    #     self,
+    #     channel: str,
+    #     remote_ranks: List[int]
+    # ) -> str:
+    #     self.cache_engine.remote_recv_request(channel, remote_ranks[self.rank])
+    
+    # def remote_send_blocks(
+    #     self,
+    #     channel: str,
+    #     request_id: str,
+    #     remote_ranks: List[int],
+    #     blocks: List[int]
+    # ) -> None:
+    #     self.cache_engine.remote_send_blocks(channel, request_id, blocks, remote_ranks[self.rank])
+    
+    # def remote_recv_blocks(
+    #     self,
+    #     channel: str,
+    #     request_id: str,
+    #     remote_ranks: List[int],
+    #     blocks: List[int]
+    # ) -> None:
+    #     self.cache_engine.remote_recv_blocks(channel, request_id, blocks, remote_ranks[self.rank])
+    
+    # def check_remote_trans_finished(self) -> Tuple[List[Tuple[str, str]], List[Tuple[str, str]], List[Tuple[str, str]]]:
+    #     recv_request_finished, send_data_finished = self.cache_engine.check_remote_send_finished_events()
+    #     recv_data_finished = self.cache_engine.check_remote_recv_finished_events()
+    #     return recv_request_finished, send_data_finished, recv_data_finished
     
 def init_distributed_environment(
     parallel_config: ParallelConfig,

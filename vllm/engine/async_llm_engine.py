@@ -100,15 +100,16 @@ class RequestTracker:
                 stream.put(exc)
 
     def process_request_output(self,
+                               is_prefill: bool,
                                global_ranks: List[int],
                                request_output: RequestOutput,
                                *,
                                verbose: bool = False) -> None:
         """Process a request output from the engine."""
         request_id = request_output.request_id
-
+        request_output.global_ranks = global_ranks
         self._request_streams[request_id].put(request_output)
-        if request_output.finished:
+        if is_prefill or request_output.finished:
             if verbose:
                 logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
@@ -240,10 +241,8 @@ class _AsyncLLMEngine(LLMEngine):
         #assume after do prefill, the reqeust will not finish
         if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
             prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
-            for processed_output in processed_outputs:
-                processed_output.finished = True
             for seq_group in prefilled_seq_groups:
-                self.scheduler.add_remote_send_transfering(seq_group)
+                self.scheduler.prefill_add_send_transfering(seq_group)
         
         return processed_outputs
 
@@ -326,48 +325,48 @@ class _AsyncLLMEngine(LLMEngine):
     async def trans_kv_step_aysnc(self) -> None:
         if not self.deploy_config.enable_separate:
             return
-        # check trans kv finished requests
-        finished_requests = self._run_workers_async(
-            "check_remote_trans_finished",
-            get_all_outputs=True
-        )
-        has_finished_request: bool = False
-        for worker_finished_requests in finished_requests:
-            real_finished_reqs = self.kv_trans_scheduler.register_finished_requests(worker_finished_requests)
-            self.scheduler.add_remote_transfer_finished(real_finished_reqs)
-            has_finished_request = has_finished_request or worker_finished_requests[0] or \
-                worker_finished_requests[1] or worker_finished_requests[2]
-        
-        #schedule
-        scheduler_outputs = self.kv_trans_scheduler.schedule()
-        if scheduler_outputs.empty() and not has_finished_request:
-            # time.sleep(0.05)
-            return
 
-        #recv request
-        channel_for_recv_request = scheduler_outputs.channel_for_recv_request
-        if channel_for_recv_request:
-            self._run_workers_async(
-                "remote_recv_request",
-                *channel_for_recv_request
+        if self.deploy_config.role == 'prompt':
+            finished_tasks = await self._run_workers_async(
+                "check_prefill_finished_transfer_task",
+                get_all_outputs=True
             )
-        
-        # send kv data 
-        request_for_send_data = scheduler_outputs.request_for_send_data
-        if request_for_send_data:
-            self._run_workers_async(
-                "remote_send_blocks",
-                *request_for_send_data
-            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.prefill_add_send_finished(real_finished_req_ids)
             
-        #send request and recv kv data
-        request_for_recv_data = scheduler_outputs.request_for_recv_data
-        if request_for_recv_data:
-            self._run_workers_async(
-                "remote_recv_blocks",
-                *request_for_recv_data
+            prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            if prefill_scheduler_outputs.task_for_send_blocks:
+                await self._run_workers_async(
+                    "prefill_send_blocks",
+                    prefill_scheduler_outputs.task_for_send_blocks
+                )
+        
+        else:
+            finished_tasks = await self._run_workers_async(
+                "check_decode_finished_transfer_task",
+                get_all_outputs=True
             )
-
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.decode_add_recv_finished(real_finished_req_ids)
+            
+            decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            
+            if decode_scheduler_outputs.task_for_recv_request_id:
+                await self._run_workers_async(
+                    "decode_recv_request_id",
+                    decode_scheduler_outputs.task_for_recv_request_id
+                )
+                
+            if decode_scheduler_outputs.task_for_recv_blocks:
+                await self._run_workers_async(
+                    "decode_recv_blocks",
+                    decode_scheduler_outputs.task_for_recv_blocks
+                )
+                
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
 
@@ -462,18 +461,18 @@ class AsyncLLMEngine:
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
 
-        kv_response = None
         for new_request in new_requests:
             # Add the request into the vLLM engine's waiting queue.
             # TODO: Maybe add add_request_batch to reduce Ray overhead
+            kv_response = None
             if self.engine_use_ray:
-                await self.engine.add_request.remote(**new_request)
+                kv_response = await self.engine.add_request.remote(**new_request)
             else:
-                await self.engine.add_request_async(**new_request)
+                kv_response = await self.engine.add_request_async(**new_request)
 
-        if kv_response:
-            self._request_tracker.process_kv_response(
-                self.engine.get_global_ranks(), kv_response)
+            if kv_response:
+                self._request_tracker.process_kv_response(
+                    self.engine.get_global_ranks(), kv_response)
             
         if finished_requests:
             await self._engine_abort(finished_requests)
@@ -496,6 +495,8 @@ class AsyncLLMEngine:
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
             self._request_tracker.process_request_output(
+                self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
+                self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
 
         return len(request_outputs) > 0
