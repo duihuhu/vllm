@@ -73,14 +73,18 @@ class Scheduler:
 
         # Sequence groups in the WAITING state.
         self.waiting: List[SequenceGroup] = []
+        
         self.waiting_add: List[SequenceGroup] = []
         # Sequence groups in the RUNNING state.
         self.running: List[SequenceGroup] = []
-        # self.running_stay: List[SequenceGroup] = []
+        
+        self.running_stay: List[SequenceGroup] = []
+        
         self.running_waiting: List[SequenceGroup] = []
         
         # Sequence groups in the SWAPPED state.
         self.swapped: List[SequenceGroup] = []
+        
         self.prefilled: List[SequenceGroup] = []
         
         self.last_logging_time: float = 0.0
