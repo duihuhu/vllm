@@ -213,8 +213,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
     parser.add_argument("--backend", type=str, choices=["vllm", "hf"],
                         default="vllm")
-    parser.add_argument("--dataset", default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json", type=str, required=True,
-                        help="Path to the dataset.")
+    parser.add_argument("--dataset", type=str, default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json")
     parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=2)
