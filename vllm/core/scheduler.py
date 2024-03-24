@@ -243,24 +243,25 @@ class Scheduler:
         #    while self.running_waiting:
         #        self.running.append(self.running_waiting.pop(0))
         
-        total_seqs: List[SequenceGroup] = []
-        while self.prefilled:
-            seq_group = self.prefilled.pop(0)
-            seq_group.sg_proirty()
-            total_seqs.append(seq_group)
-        while self.running:
-            seq_group = self.running.pop(0)
-            seq_group.sg_proirty()
-            total_seqs.append(seq_group)
-        total_seqs.sort(key = lambda x: x.proirity, reverse = True)
-        ite_num = 0
-        while ite_num < self.scheduler_config.max_num_seqs:
-            seq_group = total_seqs.pop(0)
-            self.running.append(seq_group)
-            ite_num += 1
-        while total_seqs:
-            seq_group = total_seqs.pop(0)
-            self.prefilled.append(seq_group)
+        if self.prefilled or self.running:
+            total_seqs: List[SequenceGroup] = []
+            while self.prefilled:
+                seq_group = self.prefilled.pop(0)
+                seq_group.sg_proirty()
+                total_seqs.append(seq_group)
+            while self.running:
+                seq_group = self.running.pop(0)
+                seq_group.sg_proirty()
+                total_seqs.append(seq_group)
+            total_seqs.sort(key = lambda x: x.proirity, reverse = True)
+            ite_num = 0
+            while ite_num < self.scheduler_config.max_num_seqs and total_seqs:
+                seq_group = total_seqs.pop(0)
+                self.running.append(seq_group)
+                ite_num += 1
+            while total_seqs:
+                seq_group = total_seqs.pop(0)
+                self.prefilled.append(seq_group)
         
         '''for seq_group in self.prefilled:
             seq_group.sg_proirty()
