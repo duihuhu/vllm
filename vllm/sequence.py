@@ -214,7 +214,7 @@ class SequenceGroup:
         self.proirity = 1.0
     
     def sg_proirty(self) -> None:
-        ite_remain = self.ite_need - self.seqs[0].get_output_len
+        ite_remain = self.ite_need - self.seqs[0].get_output_len()
         if self.wait_ite == 0:
             self.proirity = (1 + float(ite_remain)) / float(ite_remain)
             self.wait_ite += 1
