@@ -111,9 +111,9 @@ class Scheduler:
                     return
 
     def has_unfinished_seqs(self) -> bool:
-        return self.waiting or self.running or self.swapped or self.running_stay
+        # return self.waiting or self.running or self.swapped or self.running_stay
         # return self.waiting or self.running or self.swapped
-        # return self.waiting or self.running or self.swapped or self.prefilled
+        return self.waiting or self.running or self.swapped or self.prefilled
 
     def has_unfinished_prefill_requests(self) -> bool:
         return self.waiting or self.running or self.swapped or self.waiting_add
@@ -242,6 +242,25 @@ class Scheduler:
         #if self.running_waiting:
         #    while self.running_waiting:
         #        self.running.append(self.running_waiting.pop(0))
+        
+        total_seqs: List[SequenceGroup] = []
+        while self.prefilled:
+            seq_group = self.prefilled.pop(0)
+            seq_group.sg_proirty()
+            total_seqs.append(seq_group)
+        while self.running:
+            seq_group = self.running.pop(0)
+            seq_group.sg_proirty()
+            total_seqs.append(seq_group)
+        total_seqs.sort(key = lambda x: x.proirity, reverse = True)
+        ite_num = 0
+        while ite_num < self.scheduler_config.max_num_seqs:
+            seq_group = total_seqs.pop(0)
+            self.running.append(seq_group)
+            ite_num += 1
+        while total_seqs:
+            seq_group = total_seqs.pop(0)
+            self.prefilled.append(seq_group)
         
         '''for seq_group in self.prefilled:
             seq_group.sg_proirty()

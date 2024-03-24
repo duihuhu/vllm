@@ -209,19 +209,18 @@ class SequenceGroup:
         self.sampling_params = sampling_params
         self.arrival_time = arrival_time
         
-        #self.ite_need = self.sampling_params.max_tokens
-        #self.wait_ite = 0
-        #self.proirity = 1.0
+        self.ite_need = self.sampling_params.max_tokens
+        self.wait_ite = 0
+        self.proirity = 1.0
     
-    '''def sg_proirty(self, 
-                   first: bool) -> None:
+    def sg_proirty(self) -> None:
         ite_remain = self.ite_need - self.seqs[0].get_output_len
-        if first:
+        if self.wait_ite == 0:
             self.proirity = (1 + float(ite_remain)) / float(ite_remain)
             self.wait_ite += 1
         else:
             self.proirity = (float(self.wait_ite) + float(ite_remain)) / float(ite_remain)
-            self.wait_ite += 1'''
+            self.wait_ite += 1
 
     def get_seqs(
         self,
