@@ -112,8 +112,8 @@ class Scheduler:
 
     def has_unfinished_seqs(self) -> bool:
         # return self.waiting or self.running or self.swapped or self.running_stay
-        # return self.waiting or self.running or self.swapped
-        return self.waiting or self.running or self.swapped or self.prefilled
+        return self.waiting or self.running or self.swapped
+        # return self.waiting or self.running or self.swapped or self.prefilled
 
     def has_unfinished_prefill_requests(self) -> bool:
         return self.waiting or self.running or self.swapped or self.waiting_add
@@ -229,9 +229,13 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        #while self.running_stay:
-        #     seq_group = self.running_stay.pop(0)
-        #     self.running.append(seq_group)
+        
+        while self.running_stay:
+             seq_group = self.running_stay.pop(0)
+             self.running.append(seq_group)
+        for seq_group in self.running:
+            seq_group.sg_proirty()
+        self.running.sort(key = lambda x: x.proirity, reverse = True)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -243,7 +247,7 @@ class Scheduler:
         #    while self.running_waiting:
         #        self.running.append(self.running_waiting.pop(0))
         
-        if self.prefilled or self.running:
+        '''if self.prefilled or self.running:
             total_seqs: List[SequenceGroup] = []
             while self.prefilled:
                 seq_group = self.prefilled.pop(0)
@@ -261,7 +265,7 @@ class Scheduler:
                 ite_num += 1
             while total_seqs:
                 seq_group = total_seqs.pop(0)
-                self.prefilled.append(seq_group)
+                self.prefilled.append(seq_group)'''
         
         '''for seq_group in self.prefilled:
             seq_group.sg_proirty()
@@ -293,7 +297,7 @@ class Scheduler:
         self.prefilled.extend(temp_prefilleds)
         self.running.extend(temp_runnings)'''
 
-        self.running = self.policy.sort_by_priority(now, self.running)
+        # self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
 
@@ -326,10 +330,10 @@ class Scheduler:
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
                 # index = index + 1
-                #if len(running) >= self.scheduler_config.max_num_seqs:
-                #     while self.running:
-                #         seq_group = self.running.pop(0)
-                #         self.running_stay.append(seq_group)
+                if len(running) >= self.scheduler_config.max_num_seqs:
+                     while self.running:
+                         seq_group = self.running.pop(0)
+                         self.running_stay.append(seq_group)
         self.running = running
 
         # Swap in the sequence groups in the SWAPPED state if possible.
