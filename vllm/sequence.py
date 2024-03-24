@@ -2,6 +2,7 @@
 import copy
 import enum
 from typing import Dict, List, Optional, Union
+import math
 
 from vllm.block import LogicalTokenBlock
 from vllm.sampling_params import SamplingParams
@@ -215,6 +216,7 @@ class SequenceGroup:
     
     def sg_proirty(self) -> None:
         ite_remain = self.ite_need - self.seqs[0].get_output_len()
+        ite_remain = math.ceil(ite_remain / 10)
         if self.wait_ite == 0:
             self.proirity = (1 + float(ite_remain)) / float(ite_remain)
             self.wait_ite += 1
