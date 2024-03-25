@@ -12,3 +12,10 @@ client_port = 8000
 forward_res_url = "http://%s:%s/add_results"
 
 forward_epd_url = "http://%s:%s/epd_add"
+
+eprefill_host =  "127.0.0.1"
+eprefill_port =  8082
+
+edecode_host =  "127.0.0.1"
+edecode_port =  8083
+

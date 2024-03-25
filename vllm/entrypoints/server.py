@@ -7,7 +7,7 @@ from vllm.sampling_params import SamplingParams
 from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader
 from vllm.entrypoints.server_meta import InferResults
 import entrypoints_config as cfg
-import unicorn
+import uvicorn
 import threading
 import queue
 import argparse
@@ -178,7 +178,7 @@ class Server:
             CommEngine.send_to(self.gs_entry_point, "monitor_report", data)
             
     def run_server(self):
-        unicorn.run(app,
+        uvicorn.run(app,
                     host=self.local_entry_point[0],
                     port=self.local_entry_point[1],
                     log_level="debug",
