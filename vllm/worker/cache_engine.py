@@ -11,8 +11,9 @@ from vllm.logger import init_logger
 from vllm.utils import in_wsl, STR_DTYPE_TO_TORCH_DTYPE
 
 #todo list
-from vllm._C.gpu_ops import copy_blocks_in_layer, SendRequestRemote, RecvRequestRemote, SendBlocksRemote, RecvBlocksRemote
+# from vllm._C.gpu_ops import copy_blocks_in_layer, SendRequestRemote, RecvRequestRemote, SendBlocksRemote, RecvBlocksRemote
 
+from vllm._C import gpu_ops
 #hucc
 # from torch.cuda import current_device, Stream, Event, stream
 
@@ -187,7 +188,7 @@ class CacheEngine:
     #hucc
     def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
         with torch.cuda.stream(self.swap_in_stream):
-            copy_blocks_in_layer(self.gpu_cache, self.cpu_cache, src_to_dst, self.cache_size_per_block, True)
+            gpu_ops.copy_blocks_in_layer(self.gpu_cache, self.cpu_cache, src_to_dst, self.cache_size_per_block, True)
             event = torch.cuda.Event()
             event.record()
         self.swap_in_events[key] = event
@@ -195,7 +196,7 @@ class CacheEngine:
     #todo  share one stream or two stream
     def swap_out(self, src_to_dst: Dict[int, int], key: str) -> None:
         with torch.cuda.stream(self.swap_in_stream):
-            copy_blocks_in_layer(self.cpu_cache, self.gpu_cache, src_to_dst, self.cache_size_per_block, False)
+            gpu_ops.copy_blocks_in_layer(self.cpu_cache, self.gpu_cache, src_to_dst, self.cache_size_per_block, False)
             event = torch.cuda.Event()
             event.record()
         self.swap_out_stream[key] = event
@@ -208,7 +209,7 @@ class CacheEngine:
         with torch.cuda.stream(self.recv_streams[channel]):
             tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
                                                dtype=torch.uint8).cuda()
-            RecvRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
+            gpu_ops.RecvRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
             self.recv_waiting_request_ids[channel] = tensor_of_request_id
             event = torch.cuda.Event()
             event.record()
@@ -219,7 +220,7 @@ class CacheEngine:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         
         with torch.cuda.stream(self.recv_streams[channel]):
-            RecvBlocksRemote(self.gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
+            gpu_ops.RecvBlocksRemote(self.gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
             event = torch.cuda.Event()
             event.record()
         self.recv_events[channel] = (request_id, event)
@@ -231,8 +232,8 @@ class CacheEngine:
         with torch.cuda.stream(self.send_streams[channel]):
             tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
             self.send_waiting_request_ids[request_id] = tensor_of_request_id
-            SendRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
-            SendBlocksRemote(self.gpu_cache, dst_blocks, self.cache_size_per_block, opposite_rank)
+            gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
+            gpu_ops.SendBlocksRemote(self.gpu_cache, dst_blocks, self.cache_size_per_block, opposite_rank)
             event = torch.cuda.Event()
             event.record() 
         if channel not in self.send_events:
