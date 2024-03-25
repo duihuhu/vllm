@@ -26,11 +26,13 @@ from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 from vllm.lora.request import LoRARequest
 from vllm._C import gpu_ops 
-import logger
+from vllm.logger import init_logger
 import ray
 import json
 import socket
 from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferRequestIdTask, TransferBlocksTask
+
+logger = init_logger(__name__)
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
