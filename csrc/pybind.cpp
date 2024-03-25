@@ -97,6 +97,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &get_max_shared_memory_per_block_device_attribute,
     "Gets the maximum shared memory per block device attribute.");
 
+  // nccl utils
   pybind11::module gpu_ops = m.def_submodule("gpu_ops", "vLLM gpu nccl utils");
   gpu_ops.def(
     "CreateGlobalNcclComm",

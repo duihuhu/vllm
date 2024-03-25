@@ -308,6 +308,7 @@ elif _is_neuron():
 
 vllm_extension_sources = [
     "csrc/cache_kernels.cu",
+    "csrc/gpu_ops.cu",
     "csrc/attention/attention_kernels.cu",
     "csrc/pos_encoding_kernels.cu",
     "csrc/activation_kernels.cu",
@@ -319,8 +320,8 @@ vllm_extension_sources = [
     "csrc/pybind.cpp",
 ]
 
-if _is_cuda():
-    vllm_extension_sources.append("csrc/gpu_ops.cu")
+# if _is_cuda():
+#     vllm_extension_sources.append("csrc/gpu_ops.cu")
     
 if _is_cuda():
     vllm_extension_sources.append("csrc/quantization/awq/gemm_kernels.cu")
