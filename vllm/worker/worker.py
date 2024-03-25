@@ -25,7 +25,7 @@ from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 from vllm.lora.request import LoRARequest
-from vllm._C.gpu_ops import CreateGlobalNcclComm
+from vllm._C import gpu_ops 
 import logger
 import ray
 import json
@@ -130,7 +130,7 @@ class Worker:
         #     if CreateGlobalNcclComm(self.deploy_config.rank_table_file, self.global_rank) !=0:
         #         raise ValueError("CreateHcclFromRankTable error")
 
-        if CreateGlobalNcclComm(self.local_rank) !=0:
+        if gpu_ops.CreateGlobalNcclComm(self.local_rank) !=0:
             raise ValueError("CreateHcclFromRankTable error")
 
     def load_model(self):
