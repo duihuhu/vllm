@@ -19,7 +19,7 @@ from vllm.lora.request import LoRARequest
 from vllm.utils import in_wsl
 
 #todo hucc
-from vllm.global_vars import BATCH_METHOD, ALIGN, ENABLE_RTC
+# from vllm.global_vars import BATCH_METHOD, ALIGN, ENABLE_RTC
 
 logger = init_logger(__name__)
 
