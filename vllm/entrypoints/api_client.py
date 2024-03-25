@@ -61,8 +61,9 @@ async def main(args, prompts):
     coroutines = []
     for prompt in prompts:
         print(f"prompt:", end=' ', flush=True)
-        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
-    asyncio.gather(*coroutines)
+        post_request_and_get_response(args, prompt)
+    #     coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
+    # asyncio.gather(*coroutines)
 
 
 
@@ -76,4 +77,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
-    asyncio.run(main(args,prompts))
+    # asyncio.run(main(args,prompts))
+
+    prompts = ['San Francisco is a']
+    main(args,prompts)
+    

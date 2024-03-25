@@ -80,7 +80,7 @@ async def generate_decode(request: Request) -> Response:
             )
             yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")
     
-        return StreamingResponse(stream_results())
+    return StreamingResponse(stream_results())
     
     
 @app.post("/generate_prefill")
