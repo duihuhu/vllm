@@ -514,8 +514,8 @@ class AsyncLLMEngine:
             if (not has_requests_in_progress and
                 not self.engine.scheduler.swapping_in and
                 not self.engine.scheduler.swapping_out and
-                not self.engine.scheduler.remote_send_transfering and
-                not self.engine.scheduler.remote_recv_transfering):
+                not self.engine.scheduler.recv_transfering and
+                not self.engine.scheduler.send_transfering):
                 await self._request_tracker.wait_for_new_requests()
             has_requests_in_progress = await self.engine_step()
             await asyncio.sleep(0)

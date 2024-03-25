@@ -289,7 +289,7 @@ class EngineArgs:
 
     def create_engine_configs(
         self,
-    ) -> Tuple[ModelConfig, CacheConfig, ParallelConfig, SchedulerConfig,
+    ) -> Tuple[ModelConfig, CacheConfig, ParallelConfig, SchedulerConfig, DeployConfig, 
                Optional[LoRAConfig]]:
         model_config = ModelConfig(self.model, self.tokenizer,
                                    self.tokenizer_mode, self.trust_remote_code,
@@ -320,7 +320,7 @@ class EngineArgs:
             and self.max_cpu_loras > 0 else None) if self.enable_lora else None
     
         deploy_config = DeployConfig(self.enable_separate, self.role , self.rank_table_file)
-        return model_config, cache_config, parallel_config, scheduler_config, lora_config, deploy_config
+        return model_config, cache_config, parallel_config, scheduler_config, deploy_config, lora_config
 
 @dataclass
 class AsyncEngineArgs(EngineArgs):

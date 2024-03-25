@@ -69,10 +69,10 @@ class LLMEngine:
         cache_config: CacheConfig,
         parallel_config: ParallelConfig,
         scheduler_config: SchedulerConfig,
+        deploy_config: DeployConfig,
         lora_config: Optional[LoRAConfig],
         placement_group: Optional["PlacementGroup"],
         log_stats: bool,
-        deploy_config: DeployConfig,
     ) -> None:
         logger.info(
             "Initializing an LLM engine with config: "
