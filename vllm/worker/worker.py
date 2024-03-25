@@ -111,7 +111,7 @@ class Worker:
         #     self.local_rank, self.global_rank = self._get_local_device_info(self.deploy_config.rank_table_file)
         #     logger.info("rank = %d, local rank = %d global rank = %d", self.rank, self.local_rank, self.global_rank )
         # else:
-        self.local_rank, self.global_rank = int(ray.get_runtime_text().get_accelerator_ids()["GPU"][0]), None
+        self.local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
         logger.info("rank = %d, local rank = %d global rank = %d", self.rank, self.local_rank, self.global_rank )
         
         self.device = torch.device(f"cuda:{self.local_rank}")
