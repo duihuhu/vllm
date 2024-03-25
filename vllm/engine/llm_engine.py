@@ -226,7 +226,7 @@ class LLMEngine:
             self.driver_dummy_worker.get_node_and_gpu_ids.remote())
         worker_node_and_gpu_ids = ray.get(
             [worker.get_node_and_gpu_ids.remote() for worker in self.workers])
-
+        print("worker_node_and_gpu_ids ", worker_node_and_gpu_ids)
         node_workers = defaultdict(list)
         node_gpus = defaultdict(list)
 
