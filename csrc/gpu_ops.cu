@@ -144,7 +144,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     //     exit(1);
     // }
     std::cout << "Start init Global NCCL Comm Success" << std::endl;
-
+    cudaSetDevice(rank);
     NCCLCHECK(ncclCommInitRank(&g_globalNcclComm, NumDevice, uniqueId ,rank));
 
     // 删除共享内存对象
