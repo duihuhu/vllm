@@ -226,7 +226,7 @@ class LLMEngine:
             self.driver_dummy_worker.get_node_and_gpu_ids.remote())
         worker_node_and_gpu_ids = ray.get(
             [worker.get_node_and_gpu_ids.remote() for worker in self.workers])
-
+        print("worker_node_and_gpu_ids ", worker_node_and_gpu_ids)
         node_workers = defaultdict(list)
         node_gpus = defaultdict(list)
 
@@ -243,7 +243,7 @@ class LLMEngine:
         set_cuda_visible_devices(node_gpus[driver_node_id])
         for worker, (node_id, _) in zip(self.workers, worker_node_and_gpu_ids):
             worker.set_cuda_visible_devices.remote(node_gpus[node_id])
-            print("nodeid ", node_id)
+
         distributed_init_method = get_distributed_init_method(
             driver_ip, get_open_port())
 
