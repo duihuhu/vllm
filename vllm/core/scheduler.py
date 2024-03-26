@@ -233,9 +233,9 @@ class Scheduler:
         while self.running_stay:
              seq_group = self.running_stay.pop(0)
              self.running.append(seq_group)
-        for seq_group in self.running:
-            seq_group.sg_proirty()
-        self.running.sort(key = lambda x: x.proirity, reverse = True)
+        #for seq_group in self.running:
+        #    seq_group.sg_proirty()
+        #self.running.sort(key = lambda x: x.proirity, reverse = True)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -297,7 +297,7 @@ class Scheduler:
         self.prefilled.extend(temp_prefilleds)
         self.running.extend(temp_runnings)'''
 
-        # self.running = self.policy.sort_by_priority(now, self.running)
+        self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
 
