@@ -76,6 +76,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     ncclUniqueId uniqueId;
     int shm_fd;
     int shmSize = sizeof(ncclUniqueId);
+    std::cout << "Start rank " << rank << std::endl;
     if (rank == ROOT_RANK) {
         // 创建共享内存
         shm_fd = shm_open(shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
