@@ -57,12 +57,13 @@ def main(args: argparse.Namespace):
         if output_len > 2000:
             tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
             break'''
-
+    
+    random.seed(0)
     inputs = []
     dummy_prompt_token_ids = [random.randint(1, 9) * args.input_len]
-    dummy_prompt_token_ids2 = [random.randint(1, 9) * (2 * args.input_len)]
+    #dummy_prompt_token_ids2 = [random.randint(1, 9) * (2 * args.input_len)]
     inputs.append(dummy_prompt_token_ids)
-    inputs.append(dummy_prompt_token_ids2)
+    #inputs.append(dummy_prompt_token_ids2)
     #print(tokenized_dataset)
     #dummy_prompt_token_ids = []
     #dummy_prompt_token_ids.append(tokenized_dataset[0][1])
@@ -88,7 +89,7 @@ def main(args: argparse.Namespace):
 
     # Benchmark.
     latencies = []
-    for _ in tqdm(range(args.num_iters - 1), desc="Profiling iterations"):
+    for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
 
@@ -100,7 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/')
     parser.add_argument('--tokenizer', type=str, default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=50)
+    parser.add_argument('--input-len', type=int, default=100)
     parser.add_argument('--output-len', type=int, default=2000)
     parser.add_argument('--batch-size', type=int, default=2)
     parser.add_argument('--n', type=int, default=1,
