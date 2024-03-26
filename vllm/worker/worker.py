@@ -114,7 +114,9 @@ class Worker:
         if not self.is_driver_worker:
             self.local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
             logger.info("rank = %d, local rank = %d ", self.rank, self.local_rank)
-            
+        else:
+            logger.info("rank = %d, local rank = %d ", self.rank, self.local_rank)
+
         self.device = torch.device(f"cuda:{self.local_rank}")
         torch.cuda.set_device(self.device)
 
