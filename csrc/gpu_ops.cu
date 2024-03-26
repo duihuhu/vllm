@@ -138,10 +138,11 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     }
 
     // 关闭共享内存
-    if (close(shm_fd) == -1) {
-        perror("close");
-        exit(1);
-    }
+    // if (close(shm_fd) == -1) {
+    //     perror("close");
+    //     exit(1);
+    // }
+    std::cout << "Start init Global NCCL Comm Success" << std::endl;
 
     NCCLCHECK(ncclCommInitRank(&g_globalNcclComm, NumDevice, uniqueId ,rank));
 
