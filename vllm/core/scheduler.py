@@ -147,6 +147,8 @@ class Scheduler:
     def prefill_del_send_transfering(self, request_id: str) -> None:
         # Delete sequence groups to the send  transfering map 
         if request_id in self.send_transfering:
+            seq = self.send_transfering[request_id].get_seqs()[0]
+            self.free_seq(seq)
             del self.send_transfering[request_id]
     
     def prefill_get_send_transfering(self, request_id: str) -> None:

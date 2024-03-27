@@ -112,9 +112,9 @@ class Worker:
         #     logger.info("rank = %d, local rank = %d global rank = %d", self.rank, self.local_rank, self.global_rank )
         # else:
         
-        # if not self.is_driver_worker:
-        #     self.local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
-        #     logger.info("rank = %d, local rank = %d ", self.rank, self.local_rank)
+        if not self.is_driver_worker:
+            self.get_local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
+            logger.info("worker get from rank = %d, ", self.get_local_rank)
         # else:
             # self.local_rank
 
