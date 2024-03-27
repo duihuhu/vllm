@@ -121,7 +121,7 @@ class Worker:
 
         _check_if_gpu_supports_dtype(self.model_config.dtype)
         
-        logger.info("self.rank, self.local_rank ", self.rank, self.local_rank)
+        logger.info("self.rank = %d , self.local_rank = %d ", self.rank, self.local_rank)
         # Initialize the distributed environment.
         init_distributed_environment(self.parallel_config, self.local_rank,
                                      self.distributed_init_method)
