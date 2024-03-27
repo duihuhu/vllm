@@ -225,7 +225,7 @@ class LLMEngine:
         driver_node_id, driver_gpu_ids = ray.get(
             self.driver_dummy_worker.get_node_and_gpu_ids.remote())
 
-        print("driver_gpu_ids ", driver_gpu_ids)
+        driver_device_id = driver_gpu_ids[0]
         
         worker_node_and_gpu_ids = ray.get(
             [worker.get_node_and_gpu_ids.remote() for worker in self.workers])
@@ -291,7 +291,8 @@ class LLMEngine:
             lora_config=self.lora_config,
             kv_cache_dtype=self.cache_config.cache_dtype,
             is_driver_worker=True,
-            deploy_config=self.deploy_config
+            deploy_config=self.deploy_config,
+            device_id = driver_device_id,
         )
 
         self._run_workers("init_model")
