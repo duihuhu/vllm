@@ -231,7 +231,7 @@ class _AsyncLLMEngine(LLMEngine):
                 })
 
             # Only the driver worker returns the sampling results.
-            output = all_outputs[0]
+            output = all_outputs[0][0]
         else:
             output = []
         
