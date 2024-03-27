@@ -102,7 +102,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
         ncclGetUniqueId(&uniqueId);
 
         for(int i=0; i<shmSize; ++i)
-            std::cout<<shmaddr[i];
+            std::cout<<(&uniqueId)[i];
         std::cout<<std::endl;
         // 将唯一ID写入共享内存
         memcpy(shmaddr, &uniqueId, shmSize);
@@ -133,7 +133,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
 
         // 从共享内存中读取唯一ID
         memcpy(&uniqueId, shmaddr, shmSize);
-        
+
         std::cout<<std::endl;
         for(int i=0; i<shmSize; ++i)
             std::cout<<(&uniqueId)[i];
