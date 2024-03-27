@@ -224,6 +224,7 @@ class LLMEngine:
 
         driver_node_id, driver_gpu_ids = ray.get(
             self.driver_dummy_worker.get_node_and_gpu_ids.remote())
+
         print("driver_gpu_ids ", driver_gpu_ids)
         
         worker_node_and_gpu_ids = ray.get(

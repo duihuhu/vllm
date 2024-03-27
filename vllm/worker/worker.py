@@ -125,7 +125,7 @@ class Worker:
         
         logger.info("self.rank = %d , self.local_rank = %d ", self.rank, self.local_rank)
         # Initialize the distributed environment.
-        init_distributed_environment(self.parallel_config, self.local_rank,
+        init_distributed_environment(self.parallel_config, self.rank,
                                      self.distributed_init_method)
         
         if not self.parallel_config.disable_custom_all_reduce:
