@@ -245,6 +245,7 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in prefilled_seq_groups:
                 self.scheduler.prefill_add_send_transfering(seq_group)
         
+        print("new schedule end ")
         return processed_outputs
 
     async def encode_request_async(
