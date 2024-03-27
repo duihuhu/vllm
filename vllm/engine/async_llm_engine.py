@@ -460,8 +460,6 @@ class AsyncLLMEngine:
 
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
-        if new_requests:
-            logger.info("has new requests ")
             
         for new_request in new_requests:
             # Add the request into the vLLM engine's waiting queue.
@@ -519,7 +517,6 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.recv_transfering and
                 not self.engine.scheduler.send_transfering):
                 await self._request_tracker.wait_for_new_requests()
-            logger.info("engine_step ")
             has_requests_in_progress = await self.engine_step()
             await asyncio.sleep(0)
 

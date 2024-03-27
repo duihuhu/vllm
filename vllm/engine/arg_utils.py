@@ -45,7 +45,7 @@ class EngineArgs:
     max_cpu_loras: Optional[int] = None
     enable_separate: bool = False
     role: str = None
-    rank_table_file: str = None
+    rank_table_file: Optional[str] = None
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -319,7 +319,7 @@ class EngineArgs:
             max_cpu_loras=self.max_cpu_loras if self.max_cpu_loras
             and self.max_cpu_loras > 0 else None) if self.enable_lora else None
     
-        deploy_config = DeployConfig(self.enable_separate, self.role , self.rank_table_file)
+        deploy_config = DeployConfig(self.enable_separate, self.role)
         return model_config, cache_config, parallel_config, scheduler_config, deploy_config, lora_config
 
 @dataclass
