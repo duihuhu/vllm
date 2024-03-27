@@ -7,8 +7,13 @@ from typing import Iterable, List
 import requests
 import asyncio
 import time
+import uuid
 
 G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
+
+
+def random_uuid() -> str:
+    return str(uuid.uuid4().hex)
 
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -24,6 +29,7 @@ def post_http_request(prompt: str,
     headers = {"User-Agent": "Test Client"}
     pload = {
         "prompt": prompt,
+        "request_id": random_uuid(), 
         "n": n,
         "use_beam_search": True,
         "temperature": 0.0,

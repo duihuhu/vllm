@@ -8,7 +8,7 @@ import httpx
 import random
 from vllm.entrypoints.global_trie_tree import Trie
 from vllm.entrypoints.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
-from vllm.entrypoints.comm import EngineType, RequestType
+from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.entrypoints.entrypoints_config as cfg
 from typing import Dict, Set, List, Iterable, AsyncGenerator
