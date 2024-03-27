@@ -82,6 +82,7 @@ class LLM:
         sampling_params: Optional[SamplingParams] = None,
         prompt_token_ids: Optional[List[List[int]]] = None,
         use_tqdm: bool = True,
+        filepath: Optional[str] = None
     ) -> List[RequestOutput]:
         """Generates the completions for the input prompts.
 
@@ -127,7 +128,7 @@ class LLM:
             else:
                 token_ids = prompt_token_ids[i]
             self._add_request(prompt, sampling_params, token_ids)
-        return self._run_engine(use_tqdm, split_two_phase=1)
+        return self._run_engine(use_tqdm, split_two_phase=1, filepath=filepath)
 
     def _add_request(
         self,
@@ -139,7 +140,7 @@ class LLM:
         self.llm_engine.add_request(request_id, prompt, sampling_params,
                                     prompt_token_ids)
 
-    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int]) -> List[RequestOutput]:
+    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int], filepath: str) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -193,7 +194,7 @@ class LLM:
                 step_outputs = self.llm_engine.step()
                 #iteed = time.time()
                 itee = time.time()
-                with open("/workspace/vllm/benchmarks/decode_ite.txt", 'a') as file:
+                with open(filepath, 'a') as file:
                     file.write(f"costs {itee - ites} seconds\n")
                 #interation = interation  + 1
                 for output in step_outputs:
