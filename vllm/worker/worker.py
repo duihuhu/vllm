@@ -264,16 +264,16 @@ class Worker:
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
        
-        print("execute model 1 ")
+        logger.info("execute model 1 ")
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         
-        print("execute model 2 ")
+        logger.info("execute model 2 ")
         #todo hucc
         if wait_for_swap_out:
             self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
         
-        print("execute model 3 ")
+        logger.info("execute model 3 ")
         
         if not seq_group_metadata_list:
             swap_finished_req_ids = self.cache_engine.check_finished_events()
@@ -284,13 +284,13 @@ class Worker:
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
-        print("execute model 4 ")
+        logger.info("execute model 4 ")
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
-        print("execute model 5 ")
+        logger.info("execute model 5 ")
         swap_finished_req_ids = self.cache_engine.check_finished_events()
-        print("execute model 6 ")
+        logger.info("execute model 6 ")
         return (output, swap_finished_req_ids)
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
