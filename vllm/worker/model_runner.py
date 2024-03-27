@@ -527,6 +527,8 @@ class ModelRunner:
 
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
+       
+        print("runner execute model 1 ")
 
         # #todo 
         # if ENABLE_RTC and len(input_metadata.prompt_lens) > 0:
@@ -546,12 +548,13 @@ class ModelRunner:
             kv_caches=kv_caches,
             input_metadata=input_metadata,
         )
-        
+        print("runner execute model 2 ")
         # Sample the next token.
         output = self.model.sample(
             hidden_states=hidden_states,
             sampling_metadata=sampling_metadata,
         )
+        print("runner execute model 3 ")
         return output
 
     @torch.inference_mode()
