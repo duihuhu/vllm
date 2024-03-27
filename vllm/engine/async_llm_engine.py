@@ -582,7 +582,8 @@ class AsyncLLMEngine:
             lora_request=lora_request,
             prefix_pos=prefix_pos,
             prefill_request_output=prefill_request_output)
-
+        
+        logger.info("_request_tracker return stream ")
         return stream
 
     async def add_kv_response(
