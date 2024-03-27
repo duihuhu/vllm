@@ -805,7 +805,7 @@ class LLMEngine:
         if self.deploy_config.role == 'prompt':
             finished_tasks = self._run_workers(
                 "check_prefill_finished_transfer_task",
-                get_all_outputs=True
+                # get_all_outputs=True
             )
             for worker_finished_tasks in finished_tasks:
                 real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
@@ -822,7 +822,7 @@ class LLMEngine:
         else:
             finished_tasks = self._run_workers(
                 "check_decode_finished_transfer_task",
-                get_all_outputs=True
+                # get_all_outputs=True
             )
             for worker_finished_tasks in finished_tasks:
                 real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)

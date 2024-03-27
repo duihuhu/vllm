@@ -329,7 +329,7 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.role == 'prompt':
             finished_tasks = await self._run_workers_async(
                 "check_prefill_finished_transfer_task",
-                get_all_outputs=True
+                # get_all_outputs=True
             )
             for worker_finished_tasks in finished_tasks:
                 real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
@@ -346,7 +346,7 @@ class _AsyncLLMEngine(LLMEngine):
         else:
             finished_tasks = await self._run_workers_async(
                 "check_decode_finished_transfer_task",
-                get_all_outputs=True
+                # get_all_outputs=True
             )
             for worker_finished_tasks in finished_tasks:
                 real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
@@ -473,7 +473,7 @@ class AsyncLLMEngine:
             if kv_response:
                 self._request_tracker.process_kv_response(
                     self.engine.get_global_ranks(), kv_response)
-            
+        
         if finished_requests:
             await self._engine_abort(finished_requests)
 
