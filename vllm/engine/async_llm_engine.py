@@ -518,6 +518,7 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.send_transfering):
                 await self._request_tracker.wait_for_new_requests()
             has_requests_in_progress = await self.engine_step()
+            logger.info("engine_step ")
             await asyncio.sleep(0)
 
     async def add_request(
@@ -581,9 +582,7 @@ class AsyncLLMEngine:
             arrival_time=arrival_time,
             lora_request=lora_request,
             prefix_pos=prefix_pos,
-            prefill_request_output=prefill_request_output)
-        
-        logger.info("_request_tracker return stream ")
+            prefill_request_output=prefill_request_output)        
         return stream
 
     async def add_kv_response(

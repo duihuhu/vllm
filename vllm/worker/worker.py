@@ -363,9 +363,7 @@ def init_distributed_environment(
     distributed_init_method: Optional[str] = None,
 ) -> None:
     """Initialize the distributed environment."""
-    if torch.distributed.is_initialized():
-        print("distributed_init_method 2 ", distributed_init_method)
-        
+    if torch.distributed.is_initialized():        
         torch_world_size = torch.distributed.get_world_size()
         if torch_world_size != parallel_config.world_size:
             raise RuntimeError(
@@ -377,14 +375,12 @@ def init_distributed_environment(
             "distributed_init_method must be set if torch.distributed "
             "is not already initialized")
     else:
-        print("distributed_init_method 3 ", distributed_init_method)
         torch.distributed.init_process_group(
             backend="nccl",
             world_size=parallel_config.world_size,
             rank=rank,
             init_method=distributed_init_method,
         )
-    print("distributed_init_method 4 ", distributed_init_method)
 
     # A small all_reduce for warmup.
     torch.distributed.all_reduce(torch.zeros(1).cuda())
