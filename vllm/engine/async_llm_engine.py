@@ -220,7 +220,7 @@ class _AsyncLLMEngine(LLMEngine):
             else:
                 return None
             
-        print("new schedule end 1")
+        print("new schedule 1")
 
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -237,7 +237,7 @@ class _AsyncLLMEngine(LLMEngine):
             output = all_outputs[0]
         else:
             output = []
-        print("new schedule end 3")
+        print("new schedule 3")
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         
         #prompt eng pull metadata in separate mode
@@ -247,7 +247,7 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in prefilled_seq_groups:
                 self.scheduler.prefill_add_send_transfering(seq_group)
         
-        print("new schedule end ")
+        print("new schedule 4 ")
         return processed_outputs
 
     async def encode_request_async(

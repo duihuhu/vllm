@@ -547,8 +547,6 @@ class ModelRunner:
             input_metadata=input_metadata,
         )
         
-        print("execute_model ")
-
         # Sample the next token.
         output = self.model.sample(
             hidden_states=hidden_states,
