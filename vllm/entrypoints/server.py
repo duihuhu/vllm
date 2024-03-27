@@ -69,7 +69,7 @@ async def generate_decode(request: Request) -> Response:
         async for request_output in results_generator:
             infer_result = InferResults(
                 request_id = request_output.request_id,
-                global_ranks = request_output.global_ranks,
+                opp_ranks = request_output.global_ranks,
                 prompt_token_ids = request_output.prompt_token_ids,
                 prefilled_token_id = request_output.outputs[0].token_ids,
                 output_logprobs = request_output.outputs[0].logprobs,
@@ -108,7 +108,7 @@ async def generate_prefill(request: Request) -> Response:
         async for request_output in results_generator:
             infer_results = InferResults(
                 request_id = request_output.request_id,
-                global_ranks = request_output.global_ranks,
+                opp_ranks = request_output.global_ranks,
                 prompt_token_ids = request_output.prompt_token_ids,
                 prefilled_token_id = request_output.outputs[0].token_ids,
                 output_logprobs = request_output.outputs[0].logprobs,
