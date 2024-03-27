@@ -210,7 +210,6 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
-        print("new schedule ")
 
         if scheduler_outputs.is_empty():
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
@@ -220,8 +219,6 @@ class _AsyncLLMEngine(LLMEngine):
             else:
                 return None
             
-        print("new schedule 1")
-
         if not scheduler_outputs.is_empty():
             # Execute the model.
             all_outputs = await self._run_workers_async(
@@ -237,7 +234,8 @@ class _AsyncLLMEngine(LLMEngine):
             output = all_outputs[0]
         else:
             output = []
-        print("new schedule 3")
+        
+        print("output " , output)
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         
         #prompt eng pull metadata in separate mode

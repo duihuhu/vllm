@@ -527,9 +527,7 @@ class ModelRunner:
 
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
-       
-        logger.info("runner execute model 1 ")
-
+    
         # #todo 
         # if ENABLE_RTC and len(input_metadata.prompt_lens) > 0:
         #     input_tokens, input_positions = RtcEngine.preprocess_input(input_tokens, input_positions, input_metadata)
@@ -548,13 +546,11 @@ class ModelRunner:
             kv_caches=kv_caches,
             input_metadata=input_metadata,
         )
-        logger.info("runner execute model 2 ")
         # Sample the next token.
         output = self.model.sample(
             hidden_states=hidden_states,
             sampling_metadata=sampling_metadata,
         )
-        logger.info("runner execute model 3 ")
         return output
 
     @torch.inference_mode()
