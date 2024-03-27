@@ -264,14 +264,6 @@ class Worker:
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
        
-        if seq_group_metadata_list:
-            logger.info("seq len list is =%d " , len(seq_group_metadata_list))
-            logger.info("num_seq_groups = %d " , num_seq_groups)
-            logger.info("num_seq_groups = %d " , self.is_driver_worker)
-        else:
-            logger.info("seq len list is =%d " , 0)
-            logger.info("num_seq_groups = %d " , num_seq_groups)
-            logger.info("num_seq_groups = %d " , self.is_driver_worker)
             
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         
@@ -279,7 +271,7 @@ class Worker:
         if wait_for_swap_out:
             self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
                 
-        if not seq_group_metadata_list:
+        if not seq_group_metadata_list and self.is_driver_worker:
             swap_finished_req_ids = self.cache_engine.check_finished_events()
     
             return ([[]], swap_finished_req_ids)
