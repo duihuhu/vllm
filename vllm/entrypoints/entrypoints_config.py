@@ -1,5 +1,5 @@
 global_scheduler_ip = "127.0.0.1"
-global_scheduler_port = 8001
+global_scheduler_port = 8081
 
 forward_eprefill_url = "http://%s:%s/generate_prefill"
 
