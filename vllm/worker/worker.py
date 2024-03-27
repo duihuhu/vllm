@@ -120,9 +120,12 @@ class Worker:
         else:
             self.get_local_rank = self.device_id
 
-        self.device = torch.device(f"cuda:{self.local_rank}")
-        torch.cuda.set_device(self.device)
+        # self.device = torch.device(f"cuda:{self.local_rank}")
+        # torch.cuda.set_device(self.device)
 
+        self.device = torch.device(f"cuda:{self.get_local_rank}")
+        torch.cuda.set_device(self.device)
+        
         _check_if_gpu_supports_dtype(self.model_config.dtype)
         
         logger.info("self.rank = %d , self.local_rank = %d ", self.rank, self.local_rank)
