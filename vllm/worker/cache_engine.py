@@ -191,7 +191,7 @@ class CacheEngine:
             gpu_ops.copy_blocks_in_layer(self.gpu_cache, self.cpu_cache, src_to_dst, self.cache_size_per_block, True)
             event = torch.cuda.Event()
             event.record()
-            self.swap_in_events[key] = event
+        self.swap_in_events[key] = event
 
     #todo  share one stream or two stream
     def swap_out(self, src_to_dst: Dict[int, int], key: str) -> None:
@@ -199,7 +199,7 @@ class CacheEngine:
             gpu_ops.copy_blocks_in_layer(self.cpu_cache, self.gpu_cache, src_to_dst, self.cache_size_per_block, False)
             event = torch.cuda.Event()
             event.record()
-            self.swap_out_stream[key] = event
+        self.swap_out_stream[key] = event
 
     # pull语义, 由send方法调用
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:

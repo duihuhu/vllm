@@ -244,7 +244,6 @@ class Worker:
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
         wait_for_swap_out: List[str] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
-        logger.info(len(seq_group_metadata_list))
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
             num_seq_groups = len(seq_group_metadata_list)
@@ -265,20 +264,14 @@ class Worker:
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
        
-        logger.info(num_seq_groups)
-
-       
-        logger.info("execute model 1 ")
+        logger.info("num_seq_groups " , num_seq_groups)
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         
-        logger.info("execute model 2 ")
         #todo hucc
         if wait_for_swap_out:
             self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
-        
-        logger.info("execute model 3 ")
-        
+                
         if not seq_group_metadata_list:
             swap_finished_req_ids = self.cache_engine.check_finished_events()
     
@@ -288,13 +281,10 @@ class Worker:
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
-        logger.info("execute model 4 ")
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
-        logger.info("execute model 5 ")
         swap_finished_req_ids = self.cache_engine.check_finished_events()
-        logger.info("execute model 6 ")
         return (output, swap_finished_req_ids)
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
