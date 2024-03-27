@@ -6,6 +6,9 @@ from typing import Iterable, List
 
 import requests
 import asyncio
+import time
+
+G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
 
 def clear_line(n: int = 1) -> None:
     LINE_UP = '\033[1A'
@@ -37,8 +40,8 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
                                      delimiter=b"\0"):
         if chunk:
             data = json.loads(chunk.decode("utf-8"))
-            output = data["text"]
-            yield output
+            # output = data["text"]
+            yield data
 
 
 def get_response(response: requests.Response) -> List[str]:
@@ -47,23 +50,25 @@ def get_response(response: requests.Response) -> List[str]:
     return output
 
 def post_request_and_get_response(args, prompt):
-    rsp = post_http_request(prompt, f"http://{args.host}:{args.port}/add_request", args.n, args.stream)
+    rsp = post_http_request(prompt, G_URL, args.n, args.stream)
     if args.stream:
         num_printed_lines = 0
         for h in get_streaming_response(rsp):
-            clear_line(num_printed_lines)
-            num_printed_lines = 0
-            for _, line in enumerate(h):
-                num_printed_lines += 1
-                print(f"vllm : {line!r}", flush=True)
+            print("res", h)
+            # clear_line(num_printed_lines)
+            # num_printed_lines = 0
+            # for _, line in enumerate(h):
+            #     num_printed_lines += 1
+            #     print(f"vllm : {line!r}", flush=True)
                 
-async def main(args, prompts):
+def main(args, prompts):
     coroutines = []
     for prompt in prompts:
         print(f"prompt:", end=' ', flush=True)
         post_request_and_get_response(args, prompt)
     #     coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
-    # asyncio.gather(*coroutines)
+    # await asyncio.gather(*coroutines)
+
 
 
 
@@ -75,10 +80,9 @@ if __name__ == "__main__":
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
     args = parser.parse_args()
-    prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
+    # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
     # asyncio.run(main(args,prompts))
-
     prompts = ['San Francisco is a']
     main(args,prompts)
     
