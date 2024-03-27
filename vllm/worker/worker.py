@@ -264,7 +264,7 @@ class Worker:
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
        
-        logger.info("num_seq_groups " , num_seq_groups)
+        logger.info("num_seq_groups = %d " , num_seq_groups)
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         
