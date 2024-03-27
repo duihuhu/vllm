@@ -165,7 +165,7 @@ if __name__ == "__main__":
     tokenizer = get_tokenizer(args.tokenizer)
     trie = Trie()
     uvicorn.run(app,
-                host=cfg.host_ip,
+                host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,
                 log_level="debug",
                 timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
