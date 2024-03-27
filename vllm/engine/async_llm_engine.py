@@ -210,6 +210,7 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+        print("new schedule ")
 
         if scheduler_outputs.is_empty():
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
@@ -476,7 +477,7 @@ class AsyncLLMEngine:
         
         if finished_requests:
             await self._engine_abort(finished_requests)
-
+            
         kv_responses = self._request_tracker.get_kv_responses()
         for kv_response in kv_responses:
             # Add the response
