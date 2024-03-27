@@ -264,8 +264,15 @@ class Worker:
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
        
-        logger.info("num_seq_groups = %d " , num_seq_groups)
-
+        if seq_group_metadata_list:
+            logger.info("seq len list is =%d " , len(seq_group_metadata_list))
+            logger.info("num_seq_groups = %d " , num_seq_groups)
+            logger.info("num_seq_groups = %d " , self.is_driver_worker)
+        else:
+            logger.info("seq len list is =%d " , 0)
+            logger.info("num_seq_groups = %d " , num_seq_groups)
+            logger.info("num_seq_groups = %d " , self.is_driver_worker)
+            
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
         
         #todo hucc

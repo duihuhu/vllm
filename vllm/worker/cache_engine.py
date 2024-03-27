@@ -199,7 +199,7 @@ class CacheEngine:
             gpu_ops.copy_blocks_in_layer(self.cpu_cache, self.gpu_cache, src_to_dst, self.cache_size_per_block, False)
             event = torch.cuda.Event()
             event.record()
-        self.swap_out_stream[key] = event
+        self.swap_in_events[key] = event
 
     # pull语义, 由send方法调用
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:
