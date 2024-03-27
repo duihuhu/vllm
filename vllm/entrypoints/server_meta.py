@@ -9,7 +9,6 @@ class InferResults:
         prefilled_token_id,
         output_logprobs,
         cumulative_logprob,
-        speculate_token_ids,
         sampling_params,
         texts: List[str],
         finished: bool
@@ -20,7 +19,7 @@ class InferResults:
         self.prefilled_token_id = prefilled_token_id
         self.output_logprobs = output_logprobs
         self.cumulative_logprob = cumulative_logprob
-        self.speculate_token_ids = speculate_token_ids
+        # self.speculate_token_ids = speculate_token_ids
         self.sampling_params = sampling_params
         self.texts = texts
         self.finished = finished
@@ -33,7 +32,7 @@ class InferResults:
             "prefilled_token_id": self.prefilled_token_id,
             "output_logprobs": self.output_logprobs,
             "cumulative_logprob": self.cumulative_logprob,
-            "speculate_token_ids": self.speculate_token_ids,
+            # "speculate_token_ids": self.speculate_token_ids,
             "sampling_params": self.sampling_params.__json__(),
             "texts": self.texts,
             "finished": self.finished
