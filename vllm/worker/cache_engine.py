@@ -254,7 +254,6 @@ class CacheEngine:
     
     def check_finished_events(self) -> Tuple[List[str], List[str]]:
         #swap in events
-        logger.info("check_finished_events 1 ")
         swap_in_finished_req_ids: List[str] = []
         for key, event in self.swap_in_events.items():
             if event.query():
@@ -263,7 +262,6 @@ class CacheEngine:
                 break
         for key in swap_in_finished_req_ids:
             self.swap_in_events.pop(key)
-        logger.info("check_finished_events 2 ")
         swap_out_finished_req_ids: List[str] = []
         for key, event in self.swap_out_events.items():
             if event.query():
@@ -272,7 +270,6 @@ class CacheEngine:
                 break
         for key in swap_out_finished_req_ids:
             self.swap_out_events.pop(key)
-        logger.info("check_finished_events 3 ")
         return (swap_in_finished_req_ids, swap_out_finished_req_ids)
     
     #todo Tuple

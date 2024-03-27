@@ -244,6 +244,7 @@ class Worker:
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
         wait_for_swap_out: List[str] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
+        logger.info(len(seq_group_metadata_list))
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
             num_seq_groups = len(seq_group_metadata_list)
@@ -263,6 +264,9 @@ class Worker:
             blocks_to_swap_in = data["blocks_to_swap_in"]
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
+       
+        logger.info(num_seq_groups)
+
        
         logger.info("execute model 1 ")
 
