@@ -517,8 +517,8 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.recv_transfering and
                 not self.engine.scheduler.send_transfering):
                 await self._request_tracker.wait_for_new_requests()
-            has_requests_in_progress = await self.engine_step()
             logger.info("engine_step ")
+            has_requests_in_progress = await self.engine_step()
             await asyncio.sleep(0)
 
     async def add_request(
