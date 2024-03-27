@@ -96,6 +96,8 @@ async def generate_prefill(request: Request) -> Response:
     payload = await request.json()
     prompt = payload.pop("prompt")
     request_id = payload.pop("request_id")
+    stream = payload.pop("stream", False)
+
     #todo 适配prefix_req 结合本地缓存复用策略
     
     sampling_params = SamplingParams(**payload)
