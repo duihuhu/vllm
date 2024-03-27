@@ -135,9 +135,10 @@ class Worker:
         # if self.deploy_config.rank_table_file:
         #     if CreateGlobalNcclComm(self.deploy_config.rank_table_file, self.global_rank) !=0:
         #         raise ValueError("CreateHcclFromRankTable error")
-        if gpu_ops.CreateGlobalNcclComm(self.local_rank, 8) !=0:
-            print("self.local_rank ", self.local_rank)
-            raise ValueError("CreateHcclFromRankTable error")
+        
+        # if gpu_ops.CreateGlobalNcclComm(self.local_rank, 8) !=0:
+        #     print("self.local_rank ", self.local_rank)
+        #     raise ValueError("CreateHcclFromRankTable error")
 
     def load_model(self):
         self.model_runner.load_model()
