@@ -89,10 +89,10 @@ class CacheEngine:
         self.recv_waiting_request_ids: Dict[str, torch.Tensor] = {}
         
         # Initialize the stream for caching operations.
-        # self.cache_stream = torch.cuda.Stream()
-        # assert self.cache_stream != torch.cuda.current_stream()
+        self.cache_stream = torch.cuda.Stream()
+        assert self.cache_stream != torch.cuda.current_stream()
         # Initialize the events for stream synchronization.
-        # self.events = [torch.cuda.Event() for _ in range(self.num_layers)]
+        self.events = [torch.cuda.Event() for _ in range(self.num_layers)]
 
     def get_key_block_shape(self) -> Tuple[int, int, int, int]:
         element_size = torch.tensor([], dtype=self.dtype).element_size()

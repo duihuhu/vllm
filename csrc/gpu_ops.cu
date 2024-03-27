@@ -126,7 +126,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
         char *out = (char*)(&uniqueId);
         std::cout<<std::endl;
         for(int i=0; i<shmSize; ++i)
-            std::cout<<[i];
+            std::cout<<out[i];
         std::cout<<std::endl;
 
         // 解除映射
