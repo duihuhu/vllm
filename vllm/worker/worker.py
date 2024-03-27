@@ -121,13 +121,11 @@ class Worker:
 
         _check_if_gpu_supports_dtype(self.model_config.dtype)
         
-        print("self.local_rank 1 ", self.local_rank)
 
         # Initialize the distributed environment.
         init_distributed_environment(self.parallel_config, self.rank,
                                      self.distributed_init_method)
         
-        print("self.local_rank 2 ", self.local_rank)
         if not self.parallel_config.disable_custom_all_reduce:
             init_custom_ar()
         # Initialize the model.
@@ -137,7 +135,6 @@ class Worker:
         # if self.deploy_config.rank_table_file:
         #     if CreateGlobalNcclComm(self.deploy_config.rank_table_file, self.global_rank) !=0:
         #         raise ValueError("CreateHcclFromRankTable error")
-        print("self.local_rank 3 ", self.local_rank)
         if gpu_ops.CreateGlobalNcclComm(self.local_rank, 8) !=0:
             print("self.local_rank ", self.local_rank)
             raise ValueError("CreateHcclFromRankTable error")

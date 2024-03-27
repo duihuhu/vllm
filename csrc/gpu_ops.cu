@@ -52,17 +52,6 @@ using namespace at;
 
 ncclComm_t g_globalNcclComm = nullptr;
 
-//HcclComm g_globalHcclComm = nullptr;
-
-// int32_t CreateGlobalNcclComm(const char *rankTable, uint32_t globalRank) 
-// {
-//     if (ncclSuccess != NcclCommInitClusterInfo(rankTable, globalRank, &g_globalNcclComm)) {
-//         return -1;
-//     }
-//     std::cout << "create global hccl comm success" << std::endl;
-//     return 0;
-// }
-
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
@@ -137,7 +126,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
         char *out = (char*)(&uniqueId);
         std::cout<<std::endl;
         for(int i=0; i<shmSize; ++i)
-            std::cout<<out[i];
+            std::cout<<[i];
         std::cout<<std::endl;
 
         // 解除映射
@@ -153,7 +142,7 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     //     exit(1);
     // }
     std::cout << "Start init Global NCCL Comm Success" << std::endl;
-    cudaSetDevice(rank);
+
     NCCLCHECK(ncclCommInitRank(&g_globalNcclComm, NumDevice, uniqueId ,rank));
 
     // 删除共享内存对象
