@@ -52,17 +52,6 @@ using namespace at;
 
 ncclComm_t g_globalNcclComm = nullptr;
 
-//HcclComm g_globalHcclComm = nullptr;
-
-// int32_t CreateGlobalNcclComm(const char *rankTable, uint32_t globalRank) 
-// {
-//     if (ncclSuccess != NcclCommInitClusterInfo(rankTable, globalRank, &g_globalNcclComm)) {
-//         return -1;
-//     }
-//     std::cout << "create global hccl comm success" << std::endl;
-//     return 0;
-// }
-
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
