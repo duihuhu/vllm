@@ -460,7 +460,9 @@ class AsyncLLMEngine:
 
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
-
+        if new_requests:
+            logger.info("has new requests ")
+            
         for new_request in new_requests:
             # Add the request into the vLLM engine's waiting queue.
             # TODO: Maybe add add_request_batch to reduce Ray overhead
