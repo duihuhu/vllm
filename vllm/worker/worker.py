@@ -121,9 +121,9 @@ class Worker:
 
         _check_if_gpu_supports_dtype(self.model_config.dtype)
         
-        print("self.rank, self.local_rank 1 ", self.rank, self.local_rank)
+        logger.info("self.rank, self.local_rank ", self.rank, self.local_rank)
         # Initialize the distributed environment.
-        init_distributed_environment(self.parallel_config, self.rank,
+        init_distributed_environment(self.parallel_config, self.local_rank,
                                      self.distributed_init_method)
         
         if not self.parallel_config.disable_custom_all_reduce:
