@@ -494,6 +494,7 @@ class LLMEngine:
             prefilled_token_ids = prefill_request_output.outputs[0].token_ids
             output_logprobs = prefill_request_output.outputs[0].logprobs
             for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                print("token_id ", token_id, output_logprob)
                 seq.append_token_id(token_id, output_logprob)
                 
         # Create the sequence group.
