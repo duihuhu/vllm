@@ -24,7 +24,6 @@ server=None
 async def response_kv_prepared(response: Request) -> None:
     print("send_to_prefill_response_kv_prepared")
     payload = await response.json()
-    request_id = payload.get("request_id")
     global_ranks = payload.pop("global_ranks")
     kv_response = KvPreparedResponse(**payload)
     kv_response.global_ranks = global_ranks
