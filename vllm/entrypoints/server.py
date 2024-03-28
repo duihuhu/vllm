@@ -28,7 +28,7 @@ async def response_kv_prepared(response: Request) -> None:
     global_ranks = payload.pop("global_ranks")
     kv_response = KvPreparedResponse(**payload)
     kv_response.global_ranks = global_ranks
-    await server.engine.add_kv_response(request_id, kv_response)
+    await server.engine.add_kv_response(kv_response)
 
 def pprobs_key_s2i(prompt_logprobs):
     t_prompt_logprobs = []
