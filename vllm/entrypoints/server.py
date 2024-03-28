@@ -110,7 +110,7 @@ async def generate_prefill(request: Request) -> Response:
     stream = payload.pop("stream", False)
 
     #todo 适配prefix_req 结合本地缓存复用策略
-    print("payload.get ", payload.get("logprobs"))
+    print("payload.pop ", payload.pop("logprobs"))
     sampling_params = SamplingParams(**payload)
     print("sampling_param" , sampling_params.logprobs)
     results_generator = server.engine.generate(prompt, sampling_params, request_id)
