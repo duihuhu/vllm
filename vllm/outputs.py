@@ -98,7 +98,7 @@ class RequestOutput:
         outputs: List[CompletionOutput] = []
         for seq in top_n_seqs:
             logprobs = seq.output_logprobs
-            print("seq logprobs ", logprobs)
+
             if seq_group.sampling_params.logprobs is None:
                 # NOTE: We need to take care of this case because the sequence
                 # always has the logprobs of the sampled tokens even if the
