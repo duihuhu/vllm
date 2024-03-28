@@ -771,6 +771,7 @@ class LLMEngine:
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
         for seq_group, outputs in zip(scheduled_seq_groups, output):
+            print("output ", outputs)
             self._process_sequence_group_outputs(seq_group, outputs)
 
         # Free the finished sequence groups.
