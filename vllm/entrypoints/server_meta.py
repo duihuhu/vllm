@@ -36,6 +36,7 @@ class InferResults:
             "cumulative_logprob": self.cumulative_logprob,
             # "speculate_token_ids": self.speculate_token_ids,
             "sampling_params": self.sampling_params.__json__(),
+            "index": self.index,
             "texts": self.texts,
             "finished": self.finished
         }
