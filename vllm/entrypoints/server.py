@@ -27,6 +27,26 @@ async def response_kv_prepared(response: Request) -> None:
     kv_response = KvPreparedResponse(**payload)
     await server.engine.add_kv_response(request_id, kv_response)
 
+def pprobs_key_s2i(prompt_logprobs):
+    t_prompt_logprobs = []
+    for logprob in prompt_logprobs:
+        if logprob != None:
+            t_logprob = {}
+            for key, value in logprob:
+                t_logprob[int(key)] = value
+        else:
+            t_prompt_logprobs.append(logprob)
+    return t_prompt_logprobs
+
+def cprobs_key_s2i(cumulative_logprob):
+    t_cumulative_logprob = []
+    for logprob in cumulative_logprob:
+        t_logprob = {}
+        for key, value in logprob:
+            t_logprob[int(key)] = value
+            t_cumulative_logprob.append(t_logprob)
+    return t_cumulative_logprob
+    
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
@@ -42,6 +62,10 @@ async def generate_decode(request: Request) -> Response:
     index = payload.pop("index")
     texts = payload.pop("texts")
     finished = payload.pop("finished")
+    
+    prompt_logprobs = pprobs_key_s2i(prompt_logprobs)
+    output_logprobs = cprobs_key_s2i(output_logprobs)
+    
     
     sampling_params = SamplingParams(**sampling_params_json)
     
