@@ -98,7 +98,6 @@ class RequestOutput:
         outputs: List[CompletionOutput] = []
         for seq in top_n_seqs:
             logprobs = seq.output_logprobs
-            print("seq.output_logprobs ", logprobs,  seq.output_logprobs)
             if seq_group.sampling_params.logprobs is None:
                 # NOTE: We need to take care of this case because the sequence
                 # always has the logprobs of the sampled tokens even if the
@@ -109,6 +108,7 @@ class RequestOutput:
                                       seq.get_output_token_ids(),
                                       seq.get_cumulative_logprob(), logprobs,
                                       finshed_reason)
+            print("output.logprobs ", output.logprobs)
             outputs.append(output)
 
         # Every sequence in the sequence group should have the same prompt.
