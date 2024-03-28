@@ -158,7 +158,7 @@ class DecodeKvTransScheduler:
         self.block_ids[request_id] = blocks
         self.finished_worker_count[request_id] = self.num_workers
         print(" opp_ranks ", opp_ranks)
-        opp_rank_str = "_".join([str[rank] for rank in opp_ranks])
+        opp_rank_str = "_".join([str(rank) for rank in opp_ranks])
         if opp_rank_str not in self.channel_ranks:
             self.channel_ranks[opp_rank_str] = opp_ranks
             self.channel_requests_ids[opp_rank_str] = []
