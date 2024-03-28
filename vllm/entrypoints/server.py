@@ -39,11 +39,11 @@ async def generate_decode(request: Request) -> Response:
     sampling_params_json = payload.pop("sampling_params")
     sampling_params = SamplingParams(**sampling_params_json)
     
-    #reconstuct output_logprobs
-    output_logprobs_new = [{}] * len(output_logprobs)
-    for idx, output_logprob in enumerate(output_logprobs):
-        for output_logprob_key, output_logprob_value in output_logprob.items():
-            output_logprobs_new[idx][int(output_logprob_key)] = output_logprob_value
+    # #reconstuct output_logprobs
+    # output_logprobs_new = [{}] * len(output_logprobs)
+    # for idx, output_logprob in enumerate(output_logprobs):
+    #     for output_logprob_key, output_logprob_value in output_logprob.items():
+    #         output_logprobs_new[idx][int(output_logprob_key)] = output_logprob_value
     
     request_output = RequestOutput(
         request_id=request_id,
@@ -106,7 +106,6 @@ async def generate_prefill(request: Request) -> Response:
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
-            print("logprobs " , request_output.outputs[0].logprobs)
             infer_results = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
