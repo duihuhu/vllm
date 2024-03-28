@@ -339,7 +339,6 @@ class _AsyncLLMEngine(LLMEngine):
                 real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
                 if real_finished_req_ids:
                     self.scheduler.prefill_add_send_finished(real_finished_req_ids)
-                    print("prefill real_finished_req_ids ",  real_finished_req_ids)
             
             prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
             if prefill_scheduler_outputs.task_for_send_blocks:
@@ -357,7 +356,6 @@ class _AsyncLLMEngine(LLMEngine):
                 real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
                 if real_finished_req_ids:
                     self.scheduler.decode_add_recv_finished(real_finished_req_ids)
-                    print("decode real_finished_req_ids ",  real_finished_req_ids)
 
             decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
             

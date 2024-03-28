@@ -238,6 +238,8 @@ class Scheduler:
         # Fix the current time.
         now = time.monotonic()
 
+        self._check_tranfer_finished_req()
+        
         # Join waiting sequences if possible.
         if not self.swapped:
             ignored_seq_groups: List[SequenceGroup] = []
