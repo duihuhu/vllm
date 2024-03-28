@@ -85,7 +85,7 @@ class CacheEngine:
         self.send_waiting_request_ids: Dict[str, torch.Tensor] = {}
         
         self.recv_streams: Dict[str, torch.cuda.Stream] = {}
-        self.recv_events: Dict[str, List[Tuple[str, torch.cuda.Event]]]
+        self.recv_events: Dict[str, List[Tuple[str, torch.cuda.Event]]] = {}
         self.recv_waiting_request_ids: Dict[str, torch.Tensor] = {}
         
         # Initialize the stream for caching operations.
