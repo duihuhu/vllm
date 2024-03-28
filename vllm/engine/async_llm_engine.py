@@ -224,6 +224,7 @@ class _AsyncLLMEngine(LLMEngine):
             # Execute the model.
             all_outputs = await self._run_workers_async(
                 "execute_model",
+                args={"seq_group_metadata_list": seq_group_metadata_list},
                 driver_kwargs={
                     "seq_group_metadata_list": seq_group_metadata_list,
                     "blocks_to_swap_in": scheduler_outputs.blocks_to_swap_in,
@@ -238,7 +239,7 @@ class _AsyncLLMEngine(LLMEngine):
             output = []
         
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
-        
+        print("new schedule 2 ")
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':

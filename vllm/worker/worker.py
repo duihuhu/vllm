@@ -272,7 +272,7 @@ class Worker:
         if wait_for_swap_out:
             self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
                 
-        if not seq_group_metadata_list and self.is_driver_worker:
+        if not seq_group_metadata_list:
             swap_finished_req_ids = self.cache_engine.check_finished_events()
     
             return ([[]], swap_finished_req_ids)
