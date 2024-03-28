@@ -81,12 +81,10 @@ async def forward_request_to_decode(prefill_res, api_url):
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
-async def send_to_prefill_response_kv_prepared(request_id, api_url):
+async def send_to_prefill_response_kv_prepared(d_res, api_url):
     headers = {"User-Agent": "Test Client"}
-    pload = {
-        "request_id": request_id,
-    }
-    response = requests.post(api_url, headers=headers, json=pload, stream=True)
+    pload = d_res
+    response = requests.post(api_url, headers=headers, pload=pload, stream=True)
     return response
 
 
@@ -133,7 +131,7 @@ async def add_request(request: Request) -> Response:
                 print("res", h, n)
                 #first send to prefll: add_response_kv_prepared
                 if n == 0:
-                    await send_to_prefill_response_kv_prepared(h['request_id'], cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
+                    await send_to_prefill_response_kv_prepared(h, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
                 else:
                     yield (json.dumps(h) + "\0").encode("utf-8")
                 n = n + 1

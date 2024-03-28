@@ -210,6 +210,7 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+        print("new schedule 1 ")
 
         if scheduler_outputs.is_empty():
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
@@ -245,7 +246,7 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in prefilled_seq_groups:
                 self.scheduler.prefill_add_send_transfering(seq_group)
         
-        print("new schedule 4 ")
+        # print("new schedule 4 ")
         return processed_outputs
 
     async def encode_request_async(
