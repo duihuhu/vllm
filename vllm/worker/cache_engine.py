@@ -203,6 +203,7 @@ class CacheEngine:
 
     # pull语义, 由send方法调用
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:
+        print("recv_request_id")
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
             
