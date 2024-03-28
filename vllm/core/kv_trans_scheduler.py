@@ -73,7 +73,7 @@ class PrefillKvTransScheduler:
     ) -> None:
         self.block_ids[request_id] = blocks
         self.finished_worker_count[request_id] = self.num_workers
-        opp_rank_str = "_".join([str[rank] for rank in global_ranks])
+        opp_rank_str = "_".join([str(rank) for rank in global_ranks])
         if opp_rank_str not in self.channel_ranks:
             self.channel_ranks[opp_rank_str] = global_ranks
             self.channel_requests_ids[opp_rank_str] = []
