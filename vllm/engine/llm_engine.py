@@ -127,9 +127,9 @@ class LLMEngine:
         #     self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.world_size)
 
         if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
-            self.kv_trans_scheduler = PrefillKvTransScheduler(self.parallel_config)
+            self.kv_trans_scheduler = PrefillKvTransScheduler(self.parallel_config.tensor_parallel_size)
         elif self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
-            self.kv_trans_scheduler = DecodeKvTransScheduler(self.parallel_config)
+            self.kv_trans_scheduler = DecodeKvTransScheduler(self.parallel_config.tensor_parallel_size)
 
         # Logging.
         self.last_logging_time = 0.0
