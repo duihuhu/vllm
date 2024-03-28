@@ -77,14 +77,13 @@ async def forward_request_to_prefill(request_dict, api_url):
 async def forward_request_to_decode(prefill_res, api_url):
     headers = {"User-Agent": "Test Client"}
     pload = prefill_res
-    
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
 async def send_to_prefill_response_kv_prepared(d_res, api_url):
     headers = {"User-Agent": "Test Client"}
     pload = d_res
-    response = requests.post(api_url, headers=headers, pload=pload, stream=True)
+    response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
 
