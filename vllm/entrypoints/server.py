@@ -31,7 +31,7 @@ async def response_kv_prepared(response: Request) -> None:
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
     request_id = payload.pop("request_id")
-    global_ranks = payload.pop("global_ranks")
+    opp_ranks = payload.pop("opp_ranks")
     prompt_token_ids = payload.pop("prompt_token_ids")
     prefilled_token_id = payload.pop("prefilled_token_id")
     output_logprobs = payload.pop("output_logprobs")
@@ -53,7 +53,7 @@ async def generate_decode(request: Request) -> Response:
                                    logprobs=output_logprobs)],
         prompt_token_ids=prompt_token_ids
     )
-    request_output.global_ranks = global_ranks
+    request_output.global_ranks = opp_ranks
     
     results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
