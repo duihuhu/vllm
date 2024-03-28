@@ -292,7 +292,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             }
         }
     }
-    std::cout << "send blocks success" << srcValueCachePtr << std::endl;
+    std::cout << "send blocks success" << std::endl;
 }
 
 void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
@@ -333,7 +333,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             }
         }
     }
-    std::cout << "recv blocks success" << srcValueCachePtr << std::endl;
+    std::cout << "recv blocks success" << std::endl;
 }
 
 // PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
