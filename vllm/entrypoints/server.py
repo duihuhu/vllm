@@ -128,7 +128,7 @@ async def generate_prefill(request: Request) -> Response:
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
-            print(infer_results.__json__())
+            print(json.dumps(infer_results.__json__()))
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
