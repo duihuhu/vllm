@@ -113,7 +113,7 @@ class CacheEngine:
     #hucc
     #for request id: send gpu->gpu , copy request id from gpu to cpu 
     def get_request_id_from_tensor(self, channel: str, device_tensor: torch.Tensor) -> str:
-        with torch.cuda.stream(self.remote_send_streams[channel]):
+        with torch.cuda.stream(self.recv_streams[channel]):
             cpu_tensor = torch.ones(size=(self.request_id_size,), dtype=torch.uint8)
             cpu_tensor = device_tensor
             data_int = cpu_tensor.tolist()
