@@ -146,6 +146,7 @@ class Worker:
         if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4) !=0:
             print("self.local_rank ", self.get_local_rank)
             raise ValueError("CreateHcclFromRankTable error")
+        return self.get_local_rank
 
     def load_model(self):
         self.model_runner.load_model()

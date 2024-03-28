@@ -295,7 +295,9 @@ class LLMEngine:
             device_id = driver_device_id,
         )
 
-        self._run_workers("init_model")
+        global_ranks = self._run_workers("init_model")
+        self.deploy_config.set_global_ranks(global_ranks)
+        
         self._run_workers(
             "load_model",
             max_concurrent_workers=self.parallel_config.
