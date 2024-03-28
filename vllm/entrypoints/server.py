@@ -42,7 +42,7 @@ def cprobs_key_s2i(cumulative_logprob):
     t_cumulative_logprob = []
     for logprob in cumulative_logprob:
         t_logprob = {}
-        for key, value in logprob:
+        for key, value in logprob.items():
             t_logprob[int(key)] = value
             t_cumulative_logprob.append(t_logprob)
     return t_cumulative_logprob
