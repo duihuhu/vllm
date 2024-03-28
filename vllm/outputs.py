@@ -98,23 +98,24 @@ class RequestOutput:
         outputs: List[CompletionOutput] = []
         for seq in top_n_seqs:
             logprobs = seq.output_logprobs
+            print("seq logprobs ", logprobs)
             if seq_group.sampling_params.logprobs is None:
                 # NOTE: We need to take care of this case because the sequence
                 # always has the logprobs of the sampled tokens even if the
                 # logprobs are not requested.
                 logprobs = None
                 
-            t_logprobs = []
-            for logprob in logprobs:
-                t_logprob = {}
-                for key, value in logprob.items():
-                    t_logprob[int(key)] = value
-                t_logprobs.append(t_logprob)
-                    
+            # t_logprobs = []
+            # for logprob in logprobs:
+            #     t_logprob = {}
+            #     for key, value in logprob.items():
+            #         t_logprob[int(key)] = value
+            #     t_logprobs.append(t_logprob)
+            
             finshed_reason = SequenceStatus.get_finished_reason(seq.status)
             output = CompletionOutput(seqs.index(seq), seq.output_text,
                                       seq.get_output_token_ids(),
-                                      seq.get_cumulative_logprob(), t_logprobs,
+                                      seq.get_cumulative_logprob(), logprobs,
                                       finshed_reason)
             outputs.append(output)
 
