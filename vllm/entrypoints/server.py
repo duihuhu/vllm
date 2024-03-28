@@ -30,6 +30,7 @@ async def response_kv_prepared(response: Request) -> None:
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
+    print(json.loads(payload))
     request_id = payload.pop("request_id")
     opp_ranks = payload.pop("opp_ranks")
     prompt_token_ids = payload.pop("prompt_token_ids")
@@ -128,7 +129,6 @@ async def generate_prefill(request: Request) -> Response:
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
-            print(json.dumps(infer_results.__json__()))
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
