@@ -217,7 +217,7 @@ class _AsyncLLMEngine(LLMEngine):
                     logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
                     time.sleep(0.05)
             else:
-                return None
+                return []
             
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -494,7 +494,6 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step_aysnc()
             request_outputs = await self.engine.step_async()
             
-        print("request_outputs ", request_outputs)
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
             self._request_tracker.process_request_output(
