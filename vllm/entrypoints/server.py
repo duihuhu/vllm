@@ -30,7 +30,7 @@ async def response_kv_prepared(response: Request) -> None:
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
-    print(json.loads(payload))
+    print(payload)
     request_id = payload.pop("request_id")
     opp_ranks = payload.pop("opp_ranks")
     prompt_token_ids = payload.pop("prompt_token_ids")
