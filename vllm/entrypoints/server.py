@@ -37,6 +37,9 @@ async def generate_decode(request: Request) -> Response:
     output_logprobs = payload.pop("output_logprobs")
     cumulative_logprob  = payload.pop("cumulative_logprob")
     sampling_params_json = payload.pop("sampling_params")
+    index = payload.pop("index")
+    texts = payload.pop("texts")
+
     sampling_params = SamplingParams(**sampling_params_json)
     
     # #reconstuct output_logprobs
@@ -48,7 +51,9 @@ async def generate_decode(request: Request) -> Response:
     request_output = RequestOutput(
         request_id=request_id,
         prompt=None,
-        outputs= [CompletionOutput(token_ids=prefilled_token_id,
+        outputs= [CompletionOutput(index=index,
+                                   text=texts[0],
+                                   token_ids=prefilled_token_id,
                                    cumulative_logprob=cumulative_logprob,
                                    logprobs=output_logprobs)],
         prompt_token_ids=prompt_token_ids
@@ -75,6 +80,7 @@ async def generate_decode(request: Request) -> Response:
                 output_logprobs = request_output.outputs[0].logprobs,
                 cumulative_logprob = request_output.outputs[0].cumulative_logprob,
                 sampling_params = sampling_params,
+                index = request_output.outputs[0].index,
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )

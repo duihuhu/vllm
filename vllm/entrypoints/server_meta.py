@@ -10,6 +10,7 @@ class InferResults:
         output_logprobs,
         cumulative_logprob,
         sampling_params,
+        index,
         texts: List[str],
         finished: bool
     ) -> None:
@@ -21,6 +22,7 @@ class InferResults:
         self.cumulative_logprob = cumulative_logprob
         # self.speculate_token_ids = speculate_token_ids
         self.sampling_params = sampling_params
+        self.index = index
         self.texts = texts
         self.finished = finished
     
