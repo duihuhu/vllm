@@ -33,13 +33,15 @@ async def generate_decode(request: Request) -> Response:
     request_id = payload.pop("request_id")
     opp_ranks = payload.pop("opp_ranks")
     prompt_token_ids = payload.pop("prompt_token_ids")
+    prompt_logprobs = payload.pop("prompt_logprobs")
     prefilled_token_id = payload.pop("prefilled_token_id")
     output_logprobs = payload.pop("output_logprobs")
     cumulative_logprob  = payload.pop("cumulative_logprob")
     sampling_params_json = payload.pop("sampling_params")
     index = payload.pop("index")
     texts = payload.pop("texts")
-
+    finished = payload.pop("finished")
+    
     sampling_params = SamplingParams(**sampling_params_json)
     
     # #reconstuct output_logprobs
@@ -56,7 +58,9 @@ async def generate_decode(request: Request) -> Response:
                                    token_ids=prefilled_token_id,
                                    cumulative_logprob=cumulative_logprob,
                                    logprobs=output_logprobs)],
-        prompt_token_ids=prompt_token_ids
+        prompt_token_ids=prompt_token_ids,
+        prompt_logprobs=prompt_logprobs,
+        finished=finished,
     )
     request_output.global_ranks = opp_ranks
     
@@ -76,6 +80,7 @@ async def generate_decode(request: Request) -> Response:
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
                 prompt_token_ids = request_output.prompt_token_ids,
+                prompt_logprobs = request_output.prompt_logprobs,
                 prefilled_token_id = request_output.outputs[0].token_ids,
                 output_logprobs = request_output.outputs[0].logprobs,
                 cumulative_logprob = request_output.outputs[0].cumulative_logprob,
@@ -116,6 +121,7 @@ async def generate_prefill(request: Request) -> Response:
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
                 prompt_token_ids = request_output.prompt_token_ids,
+                prompt_logprobs = request_output.prompt_logprobs,
                 prefilled_token_id = request_output.outputs[0].token_ids,
                 output_logprobs = request_output.outputs[0].logprobs,
                 cumulative_logprob = request_output.outputs[0].cumulative_logprob,
