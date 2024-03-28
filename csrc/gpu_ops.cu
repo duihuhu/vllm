@@ -221,6 +221,7 @@ void SendRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint3
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
     NCCLCHECK(ncclSend((void*) requestIdOnDevice, requestIdSize, ncclInt, destRank, g_globalNcclComm, cudaStream));
+    std::cout << "send request id success " << std::endl;
     // Synchronize stream
     // CUDACHECK(cudaStreamSynchronize(cudaStream));
 
@@ -246,6 +247,8 @@ void RecvRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint3
     auto cudaStream = gpuStream.stream();
 
     NCCLCHECK(ncclRecv((void*) requestIdOnDevice, requestIdSize, ncclInt, srcRank, g_globalNcclComm, cudaStream));
+
+    std::cout << "recv request id success " << std::endl;
     // Synchronize stream
     // CUDACHECK(cudaStreamSynchronize(cudaStream));
 
@@ -289,6 +292,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             }
         }
     }
+    std::cout << "send blocks success" << srcValueCachePtr << std::endl;
 }
 
 void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
@@ -315,13 +319,13 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             int blockIdx = dstBlocks[j];
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
-            std::cout << "start send key cache: " << dstKeyCachePtr << std::endl;
+            std::cout << "start recv key cache: " << dstKeyCachePtr << std::endl;
             if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt, srcRank,\
                 g_globalNcclComm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
 
-            std::cout << "start send value cache " << dstValueCachePtr << std::endl;
+            std::cout << "start recv value cache " << dstValueCachePtr << std::endl;
 
             if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt, srcRank,\
                 g_globalNcclComm, cudaStream)) {
@@ -329,6 +333,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             }
         }
     }
+    std::cout << "recv blocks success" << srcValueCachePtr << std::endl;
 }
 
 // PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
