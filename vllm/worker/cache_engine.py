@@ -112,11 +112,10 @@ class CacheEngine:
         )
     #hucc
     #for request id: send gpu->gpu , copy request id from gpu to cpu 
-    def get_request_id_from_tensor(self, channel: str, device_tensor: torch.Tensor) -> str:
-        with torch.cuda.stream(self.recv_streams[channel]):
-            cpu_tensor = torch.ones(size=(self.request_id_size,), dtype=torch.uint8)
-            cpu_tensor = device_tensor
-            data_int = cpu_tensor.tolist()
+    def get_request_id_from_tensor(self, device_tensor: torch.Tensor) -> str:
+        cpu_tensor = torch.ones(size=(self.request_id_size,), dtype=torch.uint8)
+        cpu_tensor = device_tensor
+        data_int = cpu_tensor.tolist()
         return ''.join([hex(data)[2:] for data in data_int])
 
     def allocate_gpu_cache(self) -> List[KVCache]:
@@ -303,7 +302,7 @@ class CacheEngine:
                 if not request_id:
                     request_tensor = self.recv_waiting_request_ids[channel]
                     #提取请求request_id
-                    finished_request_id = self.get_request_id_from_tensor(channel, request_tensor)
+                    finished_request_id = self.get_request_id_from_tensor(request_tensor)
                     recv_request_id_finished.append(TransferTaskMeta(channel, finished_request_id))
                     #删除request_tensor
                     del self.recv_waiting_request_ids[channel]
