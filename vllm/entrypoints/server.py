@@ -120,6 +120,7 @@ async def generate_prefill(request: Request) -> Response:
                 output_logprobs = request_output.outputs[0].logprobs,
                 cumulative_logprob = request_output.outputs[0].cumulative_logprob,
                 sampling_params = sampling_params,
+                index = request_output.outputs[0].index,
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
