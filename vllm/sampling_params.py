@@ -255,3 +255,28 @@ class SamplingParams:
             f"skip_special_tokens={self.skip_special_tokens}, "
             "spaces_between_special_tokens="
             f"{self.spaces_between_special_tokens})")
+
+    def __json__(self) -> Dict:
+        return {
+            "n": self.n,
+            "best_of": self.best_of,
+            "presence_penalty": self.presence_penalty,
+            "frequency_penalty": self.frequency_penalty,
+            "repetition_penalty": self.repetition_penalty,
+            "temperature": self.temperature,
+            "top_p": self.top_p,
+            "top_k": self.top_k,
+            "min_p": self.min_p,
+            "use_beam_search": self.use_beam_search,
+            "length_penalty": self.length_penalty,
+            "early_stopping": self.early_stopping,
+            "stop": self.stop,
+            "stop_token_ids": self.stop_token_ids,
+            "include_stop_str_in_output": self.include_stop_str_in_output,
+            "ignore_eos": self.ignore_eos,
+            "max_tokens": self.max_tokens,
+            "logprobs": self.logprobs,
+            "prompt_logprobs": self.prompt_logprobs,
+            "skip_special_tokens": self.skip_special_tokens,
+            "spaces_between_special_tokens": self.spaces_between_special_tokens,
+        }

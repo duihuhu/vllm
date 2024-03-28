@@ -275,7 +275,6 @@ class Worker:
             swap_finished_req_ids = self.cache_engine.check_finished_events()
     
             return ([[]], swap_finished_req_ids)
-        #
         
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
