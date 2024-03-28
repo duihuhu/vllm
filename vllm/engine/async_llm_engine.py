@@ -230,6 +230,7 @@ class _AsyncLLMEngine(LLMEngine):
                     "blocks_to_copy": scheduler_outputs.blocks_to_copy,
                 })
 
+            self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.
             output = all_outputs[0][0]
         else:

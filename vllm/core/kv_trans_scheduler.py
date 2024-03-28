@@ -223,7 +223,7 @@ class DecodeKvTransScheduler:
                 real_finished_req_ids.append(task_meta.request_id)
         return real_finished_req_ids
 
-    def add_finished_task(
+    def add_finished_tasks(
         self,
         recv_request_id_finished: List[TransferTaskMeta],
         recv_blocks_finished: List[TransferTaskMeta]
