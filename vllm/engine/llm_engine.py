@@ -779,7 +779,7 @@ class LLMEngine:
         # Create the outputs.
         request_outputs: List[RequestOutput] = []
         for seq_group in scheduled_seq_groups:
-            print("seq_group.seqs " , seq_group.seqs[0].output_logprobs)
+            print("seq_group.seqs " , seq_group.get_seqs()[0].output_logprobs)
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
         for seq_group in scheduler_outputs.ignored_seq_groups:
