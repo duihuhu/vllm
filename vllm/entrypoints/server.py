@@ -30,10 +30,9 @@ async def response_kv_prepared(response: Request) -> None:
 def pprobs_key_s2i(prompt_logprobs):
     t_prompt_logprobs = []
     for logprob in prompt_logprobs:
-        print(type(logprob), logprob)
         if logprob != None:
             t_logprob = {}
-            for key, value in logprob:
+            for key, value in logprob.items():
                 t_logprob[int(key)] = value
         else:
             t_prompt_logprobs.append(logprob)
