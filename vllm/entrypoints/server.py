@@ -30,6 +30,7 @@ async def response_kv_prepared(response: Request) -> None:
 def pprobs_key_s2i(prompt_logprobs):
     t_prompt_logprobs = []
     for logprob in prompt_logprobs:
+        print(type(logprob), logprob)
         if logprob != None:
             t_logprob = {}
             for key, value in logprob:
@@ -50,7 +51,6 @@ def cprobs_key_s2i(cumulative_logprob):
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
-    print(payload)
     request_id = payload.pop("request_id")
     opp_ranks = payload.pop("opp_ranks")
     prompt_token_ids = payload.pop("prompt_token_ids")
