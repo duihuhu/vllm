@@ -104,11 +104,12 @@ class RequestOutput:
                 # logprobs are not requested.
                 logprobs = None
             finshed_reason = SequenceStatus.get_finished_reason(seq.status)
+            print("before output.logprobs ", seq_group.sampling_params.logprobs, logprobs)
             output = CompletionOutput(seqs.index(seq), seq.output_text,
                                       seq.get_output_token_ids(),
                                       seq.get_cumulative_logprob(), logprobs,
                                       finshed_reason)
-            print("output.logprobs ", output.logprobs)
+            print("after output.logprobs ", output.logprobs)
             outputs.append(output)
 
         # Every sequence in the sequence group should have the same prompt.
