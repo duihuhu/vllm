@@ -103,6 +103,9 @@ class RequestOutput:
                 # always has the logprobs of the sampled tokens even if the
                 # logprobs are not requested.
                 logprobs = None
+            for key, value in logprobs:
+                logprobs[int(key)] = value
+                
             finshed_reason = SequenceStatus.get_finished_reason(seq.status)
             output = CompletionOutput(seqs.index(seq), seq.output_text,
                                       seq.get_output_token_ids(),
