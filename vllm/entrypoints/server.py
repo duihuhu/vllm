@@ -115,7 +115,6 @@ async def generate_prefill(request: Request) -> Response:
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
-            print("prefill ", request_output.outputs[0].logprobs)
             infer_results = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
@@ -129,6 +128,7 @@ async def generate_prefill(request: Request) -> Response:
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
+            print(infer_results.__json__())
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
