@@ -110,14 +110,14 @@ async def generate_prefill(request: Request) -> Response:
     stream = payload.pop("stream", False)
 
     #todo 适配prefix_req 结合本地缓存复用策略
-    
+    print("payload.get ", payload.get("logprobs"))
     sampling_params = SamplingParams(**payload)
+    print("sampling_param" , sampling_params.logprobs)
     results_generator = server.engine.generate(prompt, sampling_params, request_id)
     
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
-            print("prefill request_output " , request_output.outputs[0].logprobs)
             infer_results = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
