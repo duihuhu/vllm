@@ -630,6 +630,7 @@ class LLMEngine:
             for child_sample in child_samples[:-1]:
                 new_child_seq_id = next(self.seq_counter)
                 child = parent.fork(new_child_seq_id)
+                print("child_sample.logprobs .logprobs ", child_sample.logprobs)
                 child.append_token_id(child_sample.output_token,
                                       child_sample.logprobs)
                 child_seqs.append((child, parent))
@@ -637,6 +638,7 @@ class LLMEngine:
             # We reuse the parent sequence here to reduce redundant memory
             # copies, especially when using non-beam search sampling methods.
             last_child_sample = child_samples[-1]
+            print("last_child_sample.logprobs ", last_child_sample.logprobs)
             parent.append_token_id(last_child_sample.output_token,
                                    last_child_sample.logprobs)
             child_seqs.append((parent, parent))
@@ -771,7 +773,6 @@ class LLMEngine:
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
         for seq_group, outputs in zip(scheduled_seq_groups, output):
-            print("output ", outputs)
             self._process_sequence_group_outputs(seq_group, outputs)
 
         # Free the finished sequence groups.
