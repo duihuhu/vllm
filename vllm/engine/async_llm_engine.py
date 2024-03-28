@@ -210,7 +210,6 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
-        print("new schedule 1 ")
 
         if scheduler_outputs.is_empty():
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
@@ -239,7 +238,6 @@ class _AsyncLLMEngine(LLMEngine):
             output = []
         
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
-        print("new schedule 2 ")
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
@@ -495,7 +493,8 @@ class AsyncLLMEngine:
         else:
             await self.engine.trans_kv_step_aysnc()
             request_outputs = await self.engine.step_async()
-
+            
+        print("request_outputs ", request_outputs)
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
             self._request_tracker.process_request_output(
