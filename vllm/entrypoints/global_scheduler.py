@@ -116,6 +116,7 @@ async def add_request(request: Request) -> Response:
         #提出 prefill repsonse内容text
         for res in get_streaming_response(prefill_response):
             prefill_res = res
+            print("gs prefill_res ", prefill_res)
             
         #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
         decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port))
