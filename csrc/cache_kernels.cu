@@ -14,9 +14,9 @@ void swap_blocks(
   torch::Device dst_device = dst.device();
   cudaMemcpyKind memcpy_type;
   if (src_device.is_cuda() && dst_device.is_cuda()) {
-    TORCH_CHECK(
+    /*TORCH_CHECK(
       src_device.index() == dst_device.index(),
-      "src and dst must be on the same GPU");
+      "src and dst must be on the same GPU");*/
     memcpy_type = cudaMemcpyDeviceToDevice;
   } else if (src_device.is_cuda() && dst_device.is_cpu()) {
     memcpy_type = cudaMemcpyDeviceToHost;
