@@ -59,11 +59,11 @@ def main(args: argparse.Namespace):
             break'''
     
     #andom.seed(0)
-    #inputs = []
-    dummy_prompt_token_ids = [[1] * args.input_len] * 1
-    #dummy_prompt_token_ids2 = [random.randint(1, 9) * (2 * args.input_len)]
-    #inputs.append(dummy_prompt_token_ids)
-    #inputs.append(dummy_prompt_token_ids2)
+    inputs = []
+    dummy_prompt_token_ids = [1] * args.input_len
+    dummy_prompt_token_ids2 = [1] * 128
+    inputs.append(dummy_prompt_token_ids)
+    inputs.append(dummy_prompt_token_ids2)
     #print(tokenized_dataset)
     #dummy_prompt_token_ids = []
     #dummy_prompt_token_ids.append(tokenized_dataset[0][1])
@@ -72,8 +72,8 @@ def main(args: argparse.Namespace):
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
 
-        llm.generate(#prompt_token_ids=inputs,
-                     prompt_token_ids=dummy_prompt_token_ids,
+        llm.generate(prompt_token_ids=inputs,
+                     #prompt_token_ids=dummy_prompt_token_ids,
                      #prompt_token_ids=tokenized_dataset[0][1],
                      sampling_params=sampling_params,
                      use_tqdm=False,
@@ -102,14 +102,14 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/')
     parser.add_argument('--tokenizer', type=str, default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=100)
-    parser.add_argument('--output-len', type=int, default=2000)
-    parser.add_argument('--batch-size', type=int, default=2)
+    parser.add_argument('--input-len', type=int, default=57)
+    parser.add_argument('--output-len', type=int, default=105)
+    parser.add_argument('--batch-size', type=int, default=3)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')
-    parser.add_argument('--num-iters', type=int, default=3,
+    parser.add_argument('--num-iters', type=int, default=5,
                         help='Number of iterations to run.')
-    parser.add_argument('--filepath', type=str, default="/workspace/vllm/benchmarks/decode_ite.txt")
+    parser.add_argument('--filepath', type=str, default="/workspace/vllm/benchmarks/decode_ite4.txt")
     args = parser.parse_args()
     main(args)
