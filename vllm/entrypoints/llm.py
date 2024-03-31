@@ -194,8 +194,8 @@ class LLM:
                 step_outputs = self.llm_engine.step()
                 #iteed = time.time()
                 itee = time.time()
-                with open(filepath, 'a') as file:
-                    file.write(f"costs {itee - ites} seconds\n")
+                #with open(filepath, 'a') as file:
+                #    file.write(f"costs {itee - ites} seconds\n")
                 #interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:

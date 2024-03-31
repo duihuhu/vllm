@@ -60,7 +60,7 @@ def main(args: argparse.Namespace):
     
     #andom.seed(0)
     #inputs = []
-    dummy_prompt_token_ids = [[1] * args.input_len] * 1
+    dummy_prompt_token_ids = [[1] * args.input_len] * 10
     #dummy_prompt_token_ids2 = [1] * 128
     #inputs.append(dummy_prompt_token_ids)
     #inputs.append(dummy_prompt_token_ids2)
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=57)
     parser.add_argument('--output-len', type=int, default=105)
-    parser.add_argument('--batch-size', type=int, default=2)
+    parser.add_argument('--batch-size', type=int, default=12)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')
