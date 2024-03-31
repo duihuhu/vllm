@@ -36,6 +36,15 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
 
+    sampling_params2 = SamplingParams(
+        n=args.n,
+        temperature=0.0 if args.use_beam_search else 1.0,
+        top_p=1.0,
+        use_beam_search=args.use_beam_search,
+        ignore_eos=True,
+        max_tokens=args.long_len,
+    )
+
     '''tokenizer = get_tokenizer(args.model)
     with open("/workspace/ShareGPT_V3_unfiltered_cleaned_split.json") as f:
         dataset = json.load(f)
@@ -87,10 +96,8 @@ def main(args: argparse.Namespace):
                              sampling_params=sampling_params,
                              prompt_token_ids=dummy_prompt_token_ids)
         for _ in range(args.ratio):
-            temp_sampling = sampling_params
-            temp_sampling.max_tokens = args.long_len
             llm._add_request(prompt=None,
-                             sampling_params=temp_sampling,
+                             sampling_params=sampling_params2,
                              prompt_token_ids=dummy_prompt_token_ids)
         
         llm._run_engine(use_tqdm=False,split_two_phase=1, filepath=args.filepath)
