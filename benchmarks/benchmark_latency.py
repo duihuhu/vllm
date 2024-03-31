@@ -59,9 +59,12 @@ def main(args: argparse.Namespace):
             break'''
     
     #andom.seed(0)
-    #inputs = []
-    dummy_prompt_token_ids = [[1] * args.input_len] * 10
-    #dummy_prompt_token_ids2 = [1] * 128
+    inputs = []
+    dummy_prompt_token_ids = [1] * args.input_len
+    dummy_prompt_token_ids2 = [1] * 1943
+    for _ in range(10 - 1):
+        inputs.append(dummy_prompt_token_ids)
+    inputs.append(dummy_prompt_token_ids2)
     #inputs.append(dummy_prompt_token_ids)
     #inputs.append(dummy_prompt_token_ids2)
     #print(tokenized_dataset)
@@ -72,8 +75,8 @@ def main(args: argparse.Namespace):
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
 
-        llm.generate(#prompt_token_ids=inputs,
-                     prompt_token_ids=dummy_prompt_token_ids,
+        llm.generate(prompt_token_ids=inputs,
+                     #prompt_token_ids=dummy_prompt_token_ids,
                      #prompt_token_ids=tokenized_dataset[0][1],
                      sampling_params=sampling_params,
                      use_tqdm=False,
