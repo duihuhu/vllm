@@ -111,8 +111,8 @@ class Scheduler:
                     return
 
     def has_unfinished_seqs(self) -> bool:
-        # return self.waiting or self.running or self.swapped or self.running_stay
-        return self.waiting or self.running or self.swapped
+        return self.waiting or self.running or self.swapped or self.running_stay
+        # return self.waiting or self.running or self.swapped
         # return self.waiting or self.running or self.swapped or self.prefilled
 
     def has_unfinished_prefill_requests(self) -> bool:
