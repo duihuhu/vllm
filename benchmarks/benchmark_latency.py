@@ -57,14 +57,15 @@ def main(args: argparse.Namespace):
         if output_len > 2000:
             tokenized_dataset.append((prompts[i], prompt_token_ids[i], output_len))
             break'''
-    
+
     #andom.seed(0)
-    inputs = []
+    #inputs = []
     dummy_prompt_token_ids = [1] * args.input_len
-    dummy_prompt_token_ids2 = [1] * 1943
-    for _ in range(10 - 1):
-        inputs.append(dummy_prompt_token_ids)
-    inputs.append(dummy_prompt_token_ids2)
+    #dummy_prompt_token_ids2 = [1] * args.long_len
+    #for _ in range(10 - args.ratio):
+    #    inputs.append(dummy_prompt_token_ids)
+    #for _ in range(args.ratio):
+    #    inputs.append(dummy_prompt_token_ids2)
     #inputs.append(dummy_prompt_token_ids)
     #inputs.append(dummy_prompt_token_ids2)
     #print(tokenized_dataset)
@@ -75,12 +76,24 @@ def main(args: argparse.Namespace):
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
 
-        llm.generate(prompt_token_ids=inputs,
+        '''llm.generate(prompt_token_ids=inputs,
                      #prompt_token_ids=dummy_prompt_token_ids,
                      #prompt_token_ids=tokenized_dataset[0][1],
                      sampling_params=sampling_params,
                      use_tqdm=False,
-                     filepath=args.filepath)
+                     filepath=args.filepath)'''
+        for _ in range(10 - args.ratio):
+            llm._add_request(prompt=None,
+                             sampling_params=sampling_params,
+                             prompt_token_ids=dummy_prompt_token_ids)
+        for _ in range(args.ratio):
+            temp_sampling = sampling_params
+            temp_sampling.max_tokens = args.long_len
+            llm._add_request(prompt=None,
+                             sampling_params=temp_sampling,
+                             prompt_token_ids=dummy_prompt_token_ids)
+        
+        llm._run_engine(use_tqdm=False,split_two_phase=1, filepath=args.filepath)
 
         end_time = time.time()
         latency = end_time - start_time
@@ -115,5 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-iters', type=int, default=5,
                         help='Number of iterations to run.')
     parser.add_argument('--filepath', type=str, default="/workspace/vllm/benchmarks/decode_ite4.txt")
+    parser.add_argument('--ratio', type=int, default=0)
+    parser.add_argument('--long-len', type=int, default=1024)
     args = parser.parse_args()
     main(args)
