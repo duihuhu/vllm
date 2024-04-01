@@ -237,8 +237,11 @@ class Scheduler:
         # Fix the current time.
         now = time.time()
         
-        if self.running is None and self.running_stay is None:
-            self.covert_prefilled_to_running(num=128)
+        for seq_group in self.prefilled:
+            seq_group.sg_proirty()
+
+        if self.running is None and self.running_stay is None and self.prefilled is not None:
+            self.covert_prefilled_to_running(num=64)
 
         while self.running_stay:
              seq_group = self.running_stay.pop(0)

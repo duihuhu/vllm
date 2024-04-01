@@ -304,7 +304,7 @@ class LLMEngine:
         self.scheduler.move_waitingadd_to_waiting()
 
     def covert_prefilled_to_running(self):
-        self.scheduler.covert_prefilled_to_running(num=128)
+        self.scheduler.covert_prefilled_to_running(num=64)
 
     def convert_reqs_status(self, request_ids):
         self.scheduler.convert_reqs_status(request_ids)
