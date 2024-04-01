@@ -190,7 +190,7 @@ class LLM:
 
             while self.llm_engine.has_unfinished_requests():
                 #print("interation: ", interation)
-                ites = time.time()
+                #ites = time.time()
                 step_outputs = self.llm_engine.step()
                 #iteed = time.time()
                 itee = time.time()
@@ -203,7 +203,7 @@ class LLM:
                         #with open("/workspace/vllm/benchmarks/decode_req.txt", 'a') as file:
                         #    file.write(f"req {output.request_id} ends at {iteed} costs {iteed - st2} seconds\n")
                         with open(filepath, 'a') as file:
-                            file.write(f"req {output.request_id} outpus {len(output.outputs[0].token_ids)} finishes at {itee} costs {itee - st2} seconds\n")
+                            file.write(f"req {output.request_id}, prompts {len(output.prompt_token_ids)} tokens, outpus {len(output.outputs[0].token_ids)} tokens, finishes at {itee}, costs {itee - st2} seconds\n")
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)

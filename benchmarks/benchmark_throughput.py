@@ -17,7 +17,7 @@ def sample_requests(
     dataset_path: str,
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
-) -> List[Tuple[str, int, int]]:
+) -> List[Tuple[str, List[int], int]]:
     # Load the dataset.
     with open(dataset_path) as f:
         dataset = json.load(f)
@@ -47,7 +47,7 @@ def sample_requests(
         #     tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
     # print(prompts[71])
     # Filter out too long sequences.
-    filtered_dataset: List[Tuple[str, int, int]] = []
+    filtered_dataset: List[Tuple[str, List[int], int]] = []
     t = 0
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
@@ -55,10 +55,10 @@ def sample_requests(
             # Prune too short sequences.
         #    continue
         # if prompt_len > 1024 or prompt_len + output_len > 2048:
-        if prompt_len > 2048 or prompt_len + output_len > 4096:
+        if prompt_len >=2048 or output_len >=2048 or prompt_len + output_len >= 2048:
             # Prune too long sequences.
             continue
-        filtered_dataset.append((prompt, prompt_len, output_len))
+        filtered_dataset.append((prompt, prompt_token_ids, output_len))
         t += 1
         if t == num_requests:
             break
@@ -69,7 +69,7 @@ def sample_requests(
     return filtered_dataset
 
 def run_vllm(
-    requests: List[Tuple[str, int, int]],
+    requests: List[Tuple[str, List[int], int]],
     model: str,
     tokenizer: str,
     tensor_parallel_size: int,
@@ -85,10 +85,11 @@ def run_vllm(
         tensor_parallel_size=tensor_parallel_size,
         seed=seed,
         max_num_seqs=batch_size,
+        max_num_batched_tokens = 4096
     )
 
     # Add the requests to the engine.
-    for prompt, _, output_len in requests:
+    for _, prompt_token_ids, output_len in requests:
         sampling_params = SamplingParams(
             n=n,
             temperature=0.0 if use_beam_search else 1.0,
@@ -99,14 +100,14 @@ def run_vllm(
         )
         # FIXME(woosuk): Do not use internal method.
         llm._add_request(
-            prompt=prompt,
-            prompt_token_ids=None,
+            prompt=None,
+            prompt_token_ids=prompt_token_ids,
             sampling_params=sampling_params,
         )
 
     #start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
+    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase, filepath=args.file)
     #end = time.time()
     '''with open("/workspace/vllm/benchmarks/log_13b.txt", 'a') as file:
         for output in outputs:
@@ -227,6 +228,7 @@ if __name__ == "__main__":
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--split-two-phase", type=int, default=1)
+    parser.add_argument("--file", type=str, default="/workspace/vllm/benchmarks/bin200count128.txt")
     args = parser.parse_args()
 
     if args.backend == "vllm":

@@ -111,9 +111,9 @@ class Scheduler:
                     return
 
     def has_unfinished_seqs(self) -> bool:
-        return self.waiting or self.running or self.swapped or self.running_stay
+        # return self.waiting or self.running or self.swapped or self.running_stay
         # return self.waiting or self.running or self.swapped
-        # return self.waiting or self.running or self.swapped or self.prefilled
+        return self.waiting or self.running or self.swapped or self.prefilled or self.running_stay
 
     def has_unfinished_prefill_requests(self) -> bool:
         return self.waiting or self.running or self.swapped or self.waiting_add
@@ -131,12 +131,16 @@ class Scheduler:
                 seq.status = SequenceStatus.WAITING
             self.waiting.append(seq_group)
             
-    def covert_prefilled_to_running(self):
+    def covert_prefilled_to_running(self, num: int):
+        t = 0
         while self.prefilled:
             seq_group = self.prefilled.pop(0)
             for seq in seq_group.get_seqs():
                 seq.status = SequenceStatus.RUNNING
             self.running.append(seq_group)
+            t += 1
+            if t == num:
+                break
         # self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
     
     def convert_reqs_status(self, request_ids):
@@ -230,12 +234,15 @@ class Scheduler:
         # Fix the current time.
         now = time.time()
         
+        if self.running is None and self.running_stay is None:
+            self.covert_prefilled_to_running(num=128)
+
         while self.running_stay:
              seq_group = self.running_stay.pop(0)
              self.running.append(seq_group)
-        #for seq_group in self.running:
-        #    seq_group.sg_proirty()
-        #self.running.sort(key = lambda x: x.proirity, reverse = True)
+        for seq_group in self.running:
+            seq_group.sg_proirty()
+        self.running.sort(key = lambda x: x.proirity, reverse = True)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -297,7 +304,7 @@ class Scheduler:
         self.prefilled.extend(temp_prefilleds)
         self.running.extend(temp_runnings)'''
 
-        self.running = self.policy.sort_by_priority(now, self.running)
+        # self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
 
