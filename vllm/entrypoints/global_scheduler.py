@@ -117,9 +117,9 @@ async def add_request(request: Request) -> Response:
             
         #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
         
-        decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port))
-        # decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, \
-        #     cfg.edecode_port if random.choice([True, False]) else cfg.edecode_port1))
+        # decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port))
+        decode_port = cfg.edecode_port if random.choice([True, False]) else cfg.edecode_port1
+        decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, decode_port))
         
         #decode_response
 
