@@ -2,16 +2,11 @@
 import argparse
 import json
 import random
-import time
 from typing import List, Tuple
 
-import torch
-from transformers import AutoModelForCausalLM, PreTrainedTokenizerBase
-from tqdm import tqdm
+from transformers import PreTrainedTokenizerBase
 
-from vllm import LLM, SamplingParams
 from vllm.transformers_utils.tokenizer import get_tokenizer
-
 
 def sample_requests(
     dataset_path: str,
@@ -48,22 +43,26 @@ def sample_requests(
     # print(prompts[71])
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[str, int, int]] = []
+    num = 0
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
-        if prompt_len < 4 or output_len < 4:
+        #if prompt_len < 4 or output_len < 4:
             # Prune too short sequences.
-            continue
+        #    continue
         # if prompt_len > 1024 or prompt_len + output_len > 2048:
-        if prompt_len > 1024 or prompt_len + output_len > 2048:
+        if prompt_len >= 2048 or output_len >= 2048 or prompt_len + output_len >= 2048:
             # Prune too long sequences.
             continue
         filtered_dataset.append((prompt, prompt_len, output_len))
+        num += 1
+        if num == 256:
+            break
 
     # Sample the requests.
     # sampled_requests = filtered_dataset[:num_requests]
-    sampled_requests = random.sample(filtered_dataset, num_requests)
-    return sampled_requests
-
+    #sampled_requests = random.sample(filtered_dataset, num_requests)
+    #return sampled_requests
+    return filtered_dataset
 
 
 def sample_requests_summary(dataset_path: str,
@@ -107,7 +106,9 @@ def main(args: argparse.Namespace):
 
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
-    # requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    for _, prompt_len, output_len in requests:
+        print(f"prompt {prompt_len} output {output_len}")
     # sample_requests_summary(args.dataset, tokenizer)
     sample_requests_write(args.dataset, tokenizer)
 
@@ -115,9 +116,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
     parser.add_argument("--backend", type=str, choices=["vllm", "hf"],
                         default="vllm")
-    parser.add_argument("--dataset", type=str, required=True,
+    parser.add_argument("--dataset", type=str, default="/workspace/ShareGPT_V3_unfiltered_cleaned_split.json",
                         help="Path to the dataset.")
-    parser.add_argument("--model", type=str, default="facebook/opt-125m")
+    parser.add_argument("--model", type=str, default="/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=1)
     parser.add_argument("--n", type=int, default=1,
