@@ -188,7 +188,7 @@ class LLM:
             print(f"Start Decode at {st2}")
             #interation = 0
 
-            while self.llm_engine.has_unfinished_requests():
+            while self.llm_engine.has_unprocessed_requests():
                 #print("interation: ", interation)
                 #ites = time.time()
                 step_outputs = self.llm_engine.step()
