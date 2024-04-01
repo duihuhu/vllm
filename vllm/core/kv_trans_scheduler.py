@@ -202,7 +202,6 @@ class DecodeKvTransScheduler:
         recv_request_id_finished: List[TransferTaskMeta]
     ) -> None:
         for task_meta in recv_request_id_finished:
-            print("self.finished_worker_count[task_meta.request_id] " , self.finished_worker_count[task_meta.request_id])
             self.finished_worker_count[task_meta.request_id] -= 1
             if self.finished_worker_count[task_meta.request_id] == 0:
                 self.recv_waiting_requests.append(task_meta)
