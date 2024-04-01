@@ -56,7 +56,7 @@ def get_response(response: requests.Response) -> List[str]:
     output = data["text"]
     return output
 
-def post_request_and_get_response(args, prompt):
+async def post_request_and_get_response(args, prompt):
     rsp = post_http_request(prompt, G_URL, args.n, args.stream)
     if args.stream:
         num_printed_lines = 0
@@ -84,9 +84,9 @@ if __name__ == "__main__":
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
     args = parser.parse_args()
-    # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
+    prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
-    # asyncio.run(main(args,prompts))
-    prompts = ['San Francisco is a']
-    main(args,prompts)
+    asyncio.run(main(args,prompts))
+    # prompts = ['San Francisco is a']
+    # main(args,prompts)
     
