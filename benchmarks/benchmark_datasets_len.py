@@ -110,7 +110,7 @@ def main(args: argparse.Namespace):
     for _, prompt_len, output_len in requests:
         print(f"prompt {prompt_len} output {output_len}")
     # sample_requests_summary(args.dataset, tokenizer)
-    sample_requests_write(args.dataset, tokenizer)
+    #sample_requests_write(args.dataset, tokenizer)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark the throughput.")
