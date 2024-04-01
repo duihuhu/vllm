@@ -116,7 +116,7 @@ class Scheduler:
         # return self.waiting or self.running or self.swapped or self.prefilled or self.running_stay
 
     def has_unprocessed_seqs(self) -> bool:
-        return self.prefilled or self.running or self.running_stay
+        return self.prefilled or self.running or self.running_stay or self.swapped
 
     def has_unfinished_prefill_requests(self) -> bool:
         return self.waiting or self.running or self.swapped or self.waiting_add
@@ -237,10 +237,10 @@ class Scheduler:
         # Fix the current time.
         now = time.time()
         
-        for seq_group in self.prefilled:
-            seq_group.sg_proirty()
+        #for seq_group in self.prefilled:
+        #    seq_group.sg_proirty()
 
-        if self.running is None and self.running_stay is None and self.prefilled is not None:
+        if len(self.running) == 0 and len(self.running_stay) == 0 and len(self.prefilled) != 0:
             self.covert_prefilled_to_running(num=64)
 
         while self.running_stay:
