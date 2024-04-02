@@ -116,7 +116,7 @@ class Scheduler:
         # return self.waiting or self.running or self.swapped or self.prefilled or self.running_stay
 
     def has_unprocessed_seqs(self) -> bool:
-        return self.prefilled or self.running or self.running_stay or self.swapped
+        return self.waiting or self.running or self.swapped or self.running_stay or self.prefilled
 
     def has_unfinished_prefill_requests(self) -> bool:
         return self.waiting or self.running or self.swapped or self.waiting_add
@@ -135,16 +135,24 @@ class Scheduler:
             self.waiting.append(seq_group)
             
     def covert_prefilled_to_running(self, num: int):
-        t = 0
-        while self.prefilled:
-            seq_group = self.prefilled.pop(0)
-            for seq in seq_group.get_seqs():
-                seq.status = SequenceStatus.RUNNING
-            self.running.append(seq_group)
-            t += 1
-            if t == num:
-                break
-        # self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
+        if num == -1:
+            while self.prefilled:
+                seq_group = self.prefilled.pop(0)
+                for seq in seq_group.get_seqs():
+                    seq.status = SequenceStatus.RUNNING
+                self.running.append(seq_group)
+            return
+        else:
+            t = 0
+            while self.prefilled:
+                seq_group = self.prefilled.pop(0)
+                for seq in seq_group.get_seqs():
+                    seq.status = SequenceStatus.RUNNING
+                self.running.append(seq_group)
+                t += 1
+                if t == num:
+                    return
+            # self.running.sort(key=lambda x:int(len(x.seqs[0].prompt)))
     
     def convert_reqs_status(self, request_ids):
         prefilled: List[SequenceGroup] = []
@@ -219,7 +227,9 @@ class Scheduler:
         # response = requests.post(api_url_notify_decode, headers=headers, json=pload, stream=True)
         print("after send_mprefilled_to_mdecode ", time.time())
     def _schedule(
-            self) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
+            self,
+            is_decode: Optional[bool] = False,
+            num: Optional[int] = -1) -> Tuple[SchedulerOutputs, List[str], List[SequenceGroup]]:
 
         total_num_gpu_blocks = self.cache_config.num_gpu_blocks
         num_free_gpu_blocks = self.block_manager.get_num_free_gpu_blocks()
@@ -240,15 +250,16 @@ class Scheduler:
         #for seq_group in self.prefilled:
         #    seq_group.sg_proirty()
 
-        if len(self.running) == 0 and len(self.running_stay) == 0 and len(self.prefilled) != 0:
-            self.covert_prefilled_to_running(num=64)
+        if is_decode:
+            if len(self.running) == 0 and len(self.running_stay) == 0 and len(self.prefilled) != 0:
+                self.covert_prefilled_to_running(num=num)
 
-        while self.running_stay:
-             seq_group = self.running_stay.pop(0)
-             self.running.append(seq_group)
-        for seq_group in self.running:
-            seq_group.sg_proirty()
-        self.running.sort(key = lambda x: x.proirity, reverse = True)
+            while self.running_stay:
+                seq_group = self.running_stay.pop(0)
+                self.running.append(seq_group)
+            for seq_group in self.running:
+                seq_group.sg_proirty()
+            self.running.sort(key = lambda x: x.proirity, reverse = True)
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
@@ -310,7 +321,8 @@ class Scheduler:
         self.prefilled.extend(temp_prefilleds)
         self.running.extend(temp_runnings)'''
 
-        # self.running = self.policy.sort_by_priority(now, self.running)
+        if not is_decode:
+            self.running = self.policy.sort_by_priority(now, self.running)
 
         # self.running.sort(key=lambda x:int(x.sampling_params.max_tokens))
 
@@ -505,14 +517,16 @@ class Scheduler:
     #             print(" waiting seq after interation",seq.seq_id) 
                 
     def schedule(
-        self
+        self,
+        is_decode: Optional[bool] = False,
+        num: Optional[int] = -1
     ) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs,
                List[SequenceGroup]]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
         (scheduler_outputs, prompt_group_ids,
-         ignored_seq_groups) = self._schedule()
+         ignored_seq_groups) = self._schedule(is_decode=is_decode, num=num)
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []

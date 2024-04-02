@@ -303,8 +303,8 @@ class LLMEngine:
     def move_waitingadd_to_waiting(self):
         self.scheduler.move_waitingadd_to_waiting()
 
-    def covert_prefilled_to_running(self):
-        self.scheduler.covert_prefilled_to_running(num=64)
+    def covert_prefilled_to_running(self, num: int):
+        self.scheduler.covert_prefilled_to_running(num=num)
 
     def convert_reqs_status(self, request_ids):
         self.scheduler.convert_reqs_status(request_ids)
@@ -312,7 +312,9 @@ class LLMEngine:
     def convert_reqs_status_by_num(self, request_num):
         self.scheduler.convert_reqs_status_by_num(request_num)
 
-    def step(self) -> List[RequestOutput]:
+    def step(self,
+             is_decode: Optional[bool] = False,
+             num: Optional[int] = -1) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         This function performs one decoding iteration of the engine. It first
@@ -322,7 +324,7 @@ class LLMEngine:
         the sequences and returns the newly generated results.
         """
         (seq_group_metadata_list, scheduler_outputs,
-         ignored_seq_groups) = self.scheduler.schedule()
+         ignored_seq_groups) = self.scheduler.schedule(is_decode=is_decode, num=num)
         if ((not seq_group_metadata_list) and scheduler_outputs.is_empty()
                 and (not ignored_seq_groups)):
             # Nothing to do.

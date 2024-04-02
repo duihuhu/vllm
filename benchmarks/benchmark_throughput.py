@@ -107,7 +107,7 @@ def run_vllm(
 
     #start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase, filepath=args.file)
+    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase, filepath=args.file, num=args.num)
     #end = time.time()
     '''with open("/workspace/vllm/benchmarks/log_13b.txt", 'a') as file:
         for output in outputs:
@@ -229,6 +229,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--split-two-phase", type=int, default=1)
     parser.add_argument("--file", type=str, default="/workspace/vllm/benchmarks/bin200count128.txt")
+    parser.add_argument("--num", type=int, default=-1)
     args = parser.parse_args()
 
     if args.backend == "vllm":

@@ -128,7 +128,7 @@ class LLM:
             else:
                 token_ids = prompt_token_ids[i]
             self._add_request(prompt, sampling_params, token_ids)
-        return self._run_engine(use_tqdm, split_two_phase=1, filepath=filepath)
+        return self._run_engine(use_tqdm, split_two_phase=1, filepath=filepath, num=-1)
 
     def _add_request(
         self,
@@ -140,7 +140,7 @@ class LLM:
         self.llm_engine.add_request(request_id, prompt, sampling_params,
                                     prompt_token_ids)
 
-    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int], filepath: str) -> List[RequestOutput]:
+    def _run_engine(self, use_tqdm: bool, split_two_phase: Optional[int], filepath: str, num: int) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -156,7 +156,7 @@ class LLM:
         while self.llm_engine.has_unfinished_requests():
             #print("interation: ", interation)
             #iteration_start = time.time()
-            step_outputs = self.llm_engine.step()
+            step_outputs = self.llm_engine.step(is_decode=False, num=-1)
             #iteartion_end = time.time()
             #iteration_time.append(iteartion_end-iteration_start)
             #interation = interation  + 1
@@ -180,10 +180,10 @@ class LLM:
             ed = time.time()
             print(f"End Prefill at {ed}", "total prefill time: ", ed-st)
             print(f"Prefill process {total_num_token} tokens")
-            print(f"{(total_num_token / (ed-st)):.2f} tokens/s")
+            print(f"Prefill Throughput {(total_num_token / (ed-st)):.2f} tokens/s")
 
         if split_two_phase == 1:
-            self.llm_engine.covert_prefilled_to_running()
+            self.llm_engine.covert_prefilled_to_running(num=num)
             st2 = time.time()
             print(f"Start Decode at {st2}")
             #interation = 0
@@ -191,7 +191,7 @@ class LLM:
             while self.llm_engine.has_unprocessed_requests():
                 #print("interation: ", interation)
                 #ites = time.time()
-                step_outputs = self.llm_engine.step()
+                step_outputs = self.llm_engine.step(is_decode=True, num=num)
                 #iteed = time.time()
                 itee = time.time()
                 #with open(filepath, 'a') as file:
