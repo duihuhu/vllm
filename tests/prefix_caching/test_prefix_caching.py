@@ -5,7 +5,7 @@ Run `pytest tests/prefix_caching/test_prefix_caching.py`.
 import pytest
 
 from vllm import LLM, SamplingParams
-
+import time
 prefix = (
     "You are an expert school principal, skilled in effectively managing "
     "faculty and staff. Draft 10-15 questions for a potential first grade "
@@ -18,7 +18,7 @@ prefix = (
     "the following paragraph: ")
 
 
-@pytest.mark.parametrize("model", ["facebook/opt-125m"])
+@pytest.mark.parametrize("model", ["/home/jovyan/models/Llama-2-13b-hf/"])
 @pytest.mark.parametrize("max_tokens", [16])
 def test_prefix_caching(
     example_prompts,
