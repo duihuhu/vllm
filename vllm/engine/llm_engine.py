@@ -450,7 +450,7 @@ class LLMEngine:
             if lora_request else 0) if prefix_pos is not None else None
 
         if prefix:
-            print(prefix.block_size)
+            print(prefix.computed)
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, prefix)
