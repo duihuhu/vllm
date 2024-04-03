@@ -14,6 +14,7 @@ import argparse
 import time
 import json
 from vllm.outputs import KvPreparedResponse, VLLMLoadInfo, RequestOutput, CompletionOutput
+from vllm.sequence import Logprob
 
 TIMEOUT_KEEP_ALIVE = 5
 ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
@@ -34,7 +35,7 @@ def pprobs_key_s2i(prompt_logprobs):
         if logprob != None:
             t_logprob = {}
             for key, value in logprob.items():
-                t_logprob[int(key)] = value
+                t_logprob[int(key)] = Logprob(**value)
         else:
             t_prompt_logprobs.append(logprob)
     return t_prompt_logprobs
@@ -44,7 +45,7 @@ def cprobs_key_s2i(cumulative_logprob):
     for logprob in cumulative_logprob:
         t_logprob = {}
         for key, value in logprob.items():
-            t_logprob[int(key)] = value
+            t_logprob[int(key)] = Logprob(**value)
             t_cumulative_logprob.append(t_logprob)
     return t_cumulative_logprob
     
