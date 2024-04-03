@@ -668,7 +668,7 @@ class LLMEngine:
             return
 
         if self.deploy_config.role == 'prompt':
-            finished_tasks = self._run_workers(
+            finished_tasks = self.model_executor._run_workers(
                 "check_prefill_finished_transfer_task",
                 # get_all_outputs=True
             )
@@ -679,13 +679,13 @@ class LLMEngine:
             
             prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
             if prefill_scheduler_outputs.task_for_send_blocks:
-                self._run_workers(
+                self.model_executor._run_workers(
                     "prefill_send_blocks",
                     prefill_scheduler_outputs.task_for_send_blocks
                 )
         
         else:
-            finished_tasks = self._run_workers(
+            finished_tasks = self.model_executor._run_workers(
                 "check_decode_finished_transfer_task",
                 # get_all_outputs=True
             )
@@ -697,13 +697,13 @@ class LLMEngine:
             decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
             
             if decode_scheduler_outputs.task_for_recv_request_id:
-                self._run_workers(
+                self.model_executor._run_workers(
                     "decode_recv_request_id",
                     decode_scheduler_outputs.task_for_recv_request_id
                 )
                 
             if decode_scheduler_outputs.task_for_recv_blocks:
-                self._run_workers(
+                self.model_executor._run_workers(
                     "decode_recv_blocks",
                     decode_scheduler_outputs.task_for_recv_blocks
                 )
@@ -714,7 +714,7 @@ class LLMEngine:
             return
 
         if self.deploy_config.role == 'prompt':
-            finished_tasks = self._run_workers(
+            finished_tasks = self.model_executor._run_workers(
                 "check_prefill_finished_transfer_task",
                 # get_all_outputs=True
             )
@@ -725,7 +725,7 @@ class LLMEngine:
             
             prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
             if prefill_scheduler_outputs.task_for_send_blocks:
-                self._run_workers(
+                self.model_executor._run_workers(
                     "prefill_send_blocks",
                     prefill_scheduler_outputs.task_for_send_blocks
                 )
@@ -743,13 +743,13 @@ class LLMEngine:
             decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
             
             if decode_scheduler_outputs.task_for_recv_request_id:
-                self._run_workers(
+                self.model_executor._run_workers(
                     "decode_recv_request_id",
                     decode_scheduler_outputs.task_for_recv_request_id
                 )
                 
             if decode_scheduler_outputs.task_for_recv_blocks:
-                self._run_workers(
+                self.model_executor._run_workers(
                     "decode_recv_blocks",
                     decode_scheduler_outputs.task_for_recv_blocks
                 )

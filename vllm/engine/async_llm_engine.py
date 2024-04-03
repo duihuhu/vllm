@@ -322,7 +322,7 @@ class _AsyncLLMEngine(LLMEngine):
             return
 
         if self.deploy_config.role == 'prompt':
-            finished_tasks = await self._run_workers_async(
+            finished_tasks = await self.model_executor._run_workers_async(
                 "check_prefill_finished_transfer_task",
                 # get_all_outputs=True
             )
@@ -333,13 +333,13 @@ class _AsyncLLMEngine(LLMEngine):
             
             prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
             if prefill_scheduler_outputs.task_for_send_blocks:
-                await self._run_workers_async(
+                await self.model_executor._run_workers_async(
                     "prefill_send_blocks",
                     prefill_scheduler_outputs.task_for_send_blocks
                 )
         
         else:
-            finished_tasks = await self._run_workers_async(
+            finished_tasks = await self.model_executor._run_workers_async(
                 "check_decode_finished_transfer_task",
                 # get_all_outputs=True
             )
@@ -351,13 +351,13 @@ class _AsyncLLMEngine(LLMEngine):
             decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
             
             if decode_scheduler_outputs.task_for_recv_request_id:
-                await self._run_workers_async(
+                await self.model_executor._run_workers_async(
                     "decode_recv_request_id",
                     decode_scheduler_outputs.task_for_recv_request_id
                 )
                 
             if decode_scheduler_outputs.task_for_recv_blocks:
-                await self._run_workers_async(
+                await self.model_executor._run_workers_async(
                     "decode_recv_blocks",
                     decode_scheduler_outputs.task_for_recv_blocks
                 )
