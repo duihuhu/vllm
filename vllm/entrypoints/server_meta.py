@@ -32,7 +32,8 @@ class InferResults:
         prompt_logprobs = []
         for d in self.prompt_logprobs:
             if d == None:
-                break
+                prompt_logprobs.append(d)
+                continue
             serialized_d = {}
             for key, value in d.items():
                 serialized_value = value.__json__()
@@ -42,7 +43,8 @@ class InferResults:
         output_logprobs = []
         for d in self.output_logprobs:
             if d == None:
-                break
+                output_logprobs.append(d)
+                continue
             serialized_d = {}
             for key, value in d.items():
                 serialized_value = value.__json__()
