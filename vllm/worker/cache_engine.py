@@ -52,10 +52,6 @@ class CacheEngine:
         #hucc
         self.cache_size_per_block = self.block_size *self.num_heads * self.head_size * _get_dtype_size(self.dtype)
         self.request_id_size = request_id_size
-        
-        # Initialize the cache.
-        self.gpu_cache = self.allocate_gpu_cache()
-        self.cpu_cache = self.allocate_cpu_cache()
 
         #hucc Initialize the stream for caching operations
         self.swap_in_stream = torch.cuda.Stream(device=torch.cuda.current_device())
