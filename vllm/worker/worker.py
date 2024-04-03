@@ -141,7 +141,7 @@ class Worker:
         # Set random seed.
         set_random_seed(self.model_config.seed)
         
-        if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 3) !=0:
+        if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4) !=0:
             print("self.local_rank ", self.get_local_rank)
             raise ValueError("CreateHcclFromRankTable error")
         return self.get_local_rank
