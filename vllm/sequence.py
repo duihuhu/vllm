@@ -27,6 +27,12 @@ class Logprob:
     rank: Optional[int] = None
     decoded_token: Optional[str] = None
 
+    def __json__(self) -> Dict:
+        return {
+            "logprob": self.logprob,
+            "rank": self.rank,
+            "decoded_token": self.decoded_token
+        }
 
 PromptLogprobs = List[Optional[Dict[int, Logprob]]]
 SampleLogprobs = List[Dict[int, Logprob]]
