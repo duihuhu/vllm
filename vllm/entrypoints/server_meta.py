@@ -29,11 +29,27 @@ class InferResults:
         self.finished = finished
     
     def __json__(self) -> Dict:
+        prompt_logprobs = []
+        for d in self.prompt_logprobs:
+            serialized_d = {}
+            for key, value in d.items():
+                serialized_value = value.__json__()
+                serialized_d[key] = serialized_value
+            prompt_logprobs.append(serialized_d)
+    
+        output_logprobs = []
+        for d in self.output_logprobs:
+            serialized_d = {}
+            for key, value in d.items():
+                serialized_value = value.__json__()
+                serialized_d[key] = serialized_value
+            output_logprobs.append(serialized_d)
+    
         return {
             "request_id": self.request_id,
             "opp_ranks": self.opp_ranks,
             "prompt_token_ids": self.prompt_token_ids,
-            'prompt_logprobs': self.prompt_logprobs,
+            'prompt_logprobs': prompt_logprobs,
             "prefilled_token_id": self.prefilled_token_id,
             "output_logprobs": self.output_logprobs,
             "cumulative_logprob": self.cumulative_logprob,
