@@ -30,8 +30,6 @@ class InferResults:
     
     def __json__(self) -> Dict:
         prompt_logprobs = []
-        print("self.prompt_logprobs ", self.prompt_logprobs)
-        print("self.prompt_logprobs ", self.output_logprobs)
         if self.prompt_logprobs != None:
             for d in self.prompt_logprobs:
                 if d == None:
