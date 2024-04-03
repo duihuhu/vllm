@@ -31,6 +31,8 @@ class InferResults:
     def __json__(self) -> Dict:
         prompt_logprobs = []
         for d in self.prompt_logprobs:
+            if d == None:
+                break
             serialized_d = {}
             for key, value in d.items():
                 serialized_value = value.__json__()
@@ -39,6 +41,8 @@ class InferResults:
     
         output_logprobs = []
         for d in self.output_logprobs:
+            if d == None:
+                break
             serialized_d = {}
             for key, value in d.items():
                 serialized_value = value.__json__()
