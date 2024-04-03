@@ -6,8 +6,11 @@ from typing import Dict, List, Optional, Set, Tuple
 import torch
 import torch.distributed
 
+from vllm.sequence import SequenceData
+from vllm.utils import get_max_shared_memory_bytes
+
 from vllm.config import (CacheConfig, DeviceConfig, LoRAConfig, ModelConfig,
-                         ParallelConfig, SchedulerConfig, VisionLanguageConfig)
+                         ParallelConfig, SchedulerConfig, VisionLanguageConfig, DeployConfig)
 from vllm.lora.request import LoRARequest
 from vllm.model_executor import set_random_seed
 from vllm.model_executor.parallel_utils import pynccl_utils
@@ -20,7 +23,14 @@ from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 
+from vllm._C import gpu_ops 
+from vllm.logger import init_logger
+import ray
+import json
+import socket
+from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferRequestIdTask, TransferBlocksTask
 
+logger = init_logger(__name__)
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
 
@@ -38,10 +48,12 @@ class Worker:
         local_rank: int,
         rank: int,
         distributed_init_method: str,
+        deploy_config: DeployConfig = None,
         lora_config: Optional[LoRAConfig] = None,
         vision_language_config: Optional[VisionLanguageConfig] = None,
         kv_cache_dtype: Optional[str] = "auto",
         is_driver_worker: bool = False,
+        device_id: Optional[int] = 0,
     ) -> None:
         self.model_config = model_config
         self.parallel_config = parallel_config
@@ -52,6 +64,8 @@ class Worker:
         self.distributed_init_method = distributed_init_method
         self.lora_config = lora_config
         self.is_driver_worker = is_driver_worker
+        self.deploy_config = deploy_config
+        self.device_id = device_id
         if self.is_driver_worker:
             assert self.rank == 0, "The driver worker must have rank 0."
 
@@ -75,6 +89,23 @@ class Worker:
         self.cache_engine = None
         self.gpu_cache = None
 
+
+    def _get_local_device_info(self, rank_table_file: str):
+        local_server_ip = socket.gethostbyname(socket.gethostname())
+        local_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0])
+        with open(rank_table_file, 'r') as rank_table_reader:
+            rank_table = json.load(rank_table_reader)
+            for server_info in rank_table.get("server_list"):
+                server_ip = server_info.get("server_id")
+                if server_ip != local_server_ip:
+                    continue
+                for device_info in server_info.get("device"):
+                    device_id = int(device_info.get("device_id"))
+                    if device_id == local_rank:
+                        global_rank = int(device_info.get("rank_id"))
+                        return local_rank, global_rank
+
+
     def init_device(self) -> None:
         if self.device_config.device.type == "cuda":
             # torch.distributed.all_reduce does not free the input tensor until
@@ -96,12 +127,24 @@ class Worker:
         else:
             raise RuntimeError(
                 f"Not support device type: {self.device_config.device}")
+        
+        if not self.is_driver_worker:
+            self.get_local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
+            logger.info("worker get from rank = %d, ", self.get_local_rank)
+        else:
+            self.get_local_rank = self.device_id
+            
         # Initialize the distributed environment.
         init_distributed_environment(self.parallel_config, self.rank,
                                      self.distributed_init_method,
                                      self.local_rank)
         # Set random seed.
         set_random_seed(self.model_config.seed)
+        
+        if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 3) !=0:
+            print("self.local_rank ", self.get_local_rank)
+            raise ValueError("CreateHcclFromRankTable error")
+        return self.get_local_rank
 
     def load_model(self):
         self.model_runner.load_model()
@@ -191,7 +234,8 @@ class Worker:
         blocks_to_swap_in: Optional[Dict[int, int]] = None,
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
-    ) -> Optional[SamplerOutput]:
+        wait_for_swap_out: List[str] = None,
+    ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
             num_seq_groups = len(seq_group_metadata_list)
@@ -214,13 +258,24 @@ class Worker:
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
+        #todo hucc
+        if wait_for_swap_out:
+            self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
+                
+        if not seq_group_metadata_list:
+            swap_finished_req_ids = self.cache_engine.check_finished_events()
+    
+            return ([[]], swap_finished_req_ids)
+        
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
-        return output
+        
+        swap_finished_req_ids = self.cache_engine.check_finished_events()
+        return (output, swap_finished_req_ids)
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
         return self.model_runner.add_lora(lora_request)
@@ -230,6 +285,37 @@ class Worker:
 
     def list_loras(self) -> Set[int]:
         return self.model_runner.list_loras()
+
+    def decode_recv_request_id(
+        self,
+        task: TransferRequestIdTask
+    ) -> str:
+        self.cache_engine.recv_request_id(task.channel, task.opposite_ranks[self.rank])
+    
+    def prefill_send_blocks(
+        self,
+        task: TransferBlocksTask
+    ) -> None:
+        task_meta = task.meta
+        self.cache_engine.send_blocks(task_meta.channel, task_meta.request_id,
+                                      task.blocks, task.opposite_ranks[self.rank])
+    
+    def decode_recv_blocks(
+        self,
+        task: TransferBlocksTask
+    ) -> None:
+        task_meta = task.meta
+        self.cache_engine.recv_blocks(task_meta.channel, task_meta.request_id,
+                                      task.blocks, task.opposite_ranks[self.rank])
+        
+    def check_prefill_finished_transfer_task(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta]]:
+        send_blocks_finished = self.cache_engine.check_send_finished_events()
+        return send_blocks_finished
+    
+    def check_decode_finished_transfer_task(self) -> List[TransferTaskMeta]:
+        recv_request_id_finished, recv_blocks_finished = self.cache_engine.check_recv_finished_events()
+        return recv_request_id_finished, recv_blocks_finished
+
 
     @property
     def max_model_len(self) -> int:

@@ -13,7 +13,7 @@ from vllm.engine.llm_engine import LLMEngine
 from vllm.engine.ray_utils import initialize_ray_cluster, ray
 from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
-from vllm.outputs import RequestOutput
+from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
 from vllm.sequence import MultiModalData
 from vllm.usage.usage_lib import UsageContext
@@ -87,6 +87,9 @@ class RequestTracker:
         self._new_requests: asyncio.Queue[Tuple[AsyncStream,
                                                 dict]] = asyncio.Queue()
         self.new_requests_event = asyncio.Event()
+        
+        self._kv_responses: asyncio.Queue[Tuple[AsyncStream,
+                                        dict]] = asyncio.Queue()
 
     def __contains__(self, item):
         return item in self._request_streams
@@ -108,18 +111,30 @@ class RequestTracker:
                 self.abort_request(rid)
 
     def process_request_output(self,
+                               is_prefill: bool,
+                               global_ranks: List[int],
                                request_output: RequestOutput,
                                *,
                                verbose: bool = False) -> None:
         """Process a request output from the engine."""
         request_id = request_output.request_id
-
+        request_output.global_ranks = global_ranks
         self._request_streams[request_id].put(request_output)
-        if request_output.finished:
+        if is_prefill or request_output.finished:
             if verbose:
                 logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
 
+    def process_kv_response(self,
+                            global_ranks: List[int],
+                            kv_response: KvPreparedResponse) -> None:
+        """Process a request output from the engine"""
+        request_id = kv_response.request_id
+        kv_response.global_ranks = global_ranks
+        self._request_streams.get(request_id).put(kv_response)
+        if kv_response.error !=0:
+            self.abort_request(request_id)
+            
     def process_exception(self,
                           request_id: str,
                           exception: Exception,
@@ -148,6 +163,12 @@ class RequestTracker:
 
         return stream
 
+    def add_kv_response(self,
+                        **engine_kv_response_kwargs) -> None:
+        self._kv_responses.put_nowait({
+            **engine_kv_response_kwargs
+        })
+        
     def abort_request(self, request_id: str, *, verbose: bool = False) -> None:
         """Abort a request during next background loop iteration."""
         if verbose:
@@ -162,6 +183,13 @@ class RequestTracker:
 
         self._request_streams[request_id].finish()
 
+    def get_kv_responses(self) -> List[dict]:
+        kv_responses: List = []
+        while not self._kv_responses.empty():
+            response = self._kv_responses.get_nowait()
+            kv_responses.append(response)
+        return kv_responses    
+    
     def get_new_and_finished_requests(self) -> Tuple[List[Dict], Set[str]]:
         """Get the new requests and finished requests to be
         sent to the engine."""
@@ -208,16 +236,37 @@ class _AsyncLLMEngine(LLMEngine):
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
+        if scheduler_outputs.is_empty():
+            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+                self.scheduler.send_transfering or self.scheduler.recv_transfering:
+                    logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+                    time.sleep(0.05)
+            else:
+                return []
+            
         if not scheduler_outputs.is_empty():
             # Execute the model.
-            output = await self.model_executor.execute_model_async(
+            all_outputs = await self.model_executor.execute_model_async(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
                 scheduler_outputs.blocks_to_swap_out,
                 scheduler_outputs.blocks_to_copy)
+            
+            self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
+            # Only the driver worker returns the sampling results.
+            output = all_outputs[0][0]
         else:
             output = []
 
-        return self._process_model_outputs(output, scheduler_outputs)
+        processed_outputs = self._process_model_outputs(output, scheduler_outputs)
+        #prompt eng pull metadata in separate mode
+        #assume after do prefill, the reqeust will not finish
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
+            prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
+            for seq_group in prefilled_seq_groups:
+                self.scheduler.prefill_add_send_transfering(seq_group)
+        
+        # print("new schedule 4 ")
+        return processed_outputs
 
     async def encode_request_async(
         self,
@@ -243,6 +292,7 @@ class _AsyncLLMEngine(LLMEngine):
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
+        prefill_request_output: Optional[RequestOutput] = None
     ) -> None:
         if lora_request is not None and not self.lora_config:
             raise ValueError(f"Got lora_request {lora_request} but LoRA is "
@@ -261,11 +311,56 @@ class _AsyncLLMEngine(LLMEngine):
                                 sampling_params=sampling_params,
                                 arrival_time=arrival_time,
                                 lora_request=lora_request,
-                                multi_modal_data=multi_modal_data)
+                                multi_modal_data=multi_modal_data,
+                                prefill_request_output=prefill_request_output)
 
     async def check_health_async(self) -> None:
         self.model_executor.check_health()
 
+    async def trans_kv_step_aysnc(self) -> None:
+        if not self.deploy_config.enable_separate:
+            return
+
+        if self.deploy_config.role == 'prompt':
+            finished_tasks = await self._run_workers_async(
+                "check_prefill_finished_transfer_task",
+                # get_all_outputs=True
+            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.prefill_add_send_finished(real_finished_req_ids)
+            
+            prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            if prefill_scheduler_outputs.task_for_send_blocks:
+                await self._run_workers_async(
+                    "prefill_send_blocks",
+                    prefill_scheduler_outputs.task_for_send_blocks
+                )
+        
+        else:
+            finished_tasks = await self._run_workers_async(
+                "check_decode_finished_transfer_task",
+                # get_all_outputs=True
+            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.decode_add_recv_finished(real_finished_req_ids)
+
+            decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            
+            if decode_scheduler_outputs.task_for_recv_request_id:
+                await self._run_workers_async(
+                    "decode_recv_request_id",
+                    decode_scheduler_outputs.task_for_recv_request_id
+                )
+                
+            if decode_scheduler_outputs.task_for_recv_blocks:
+                await self._run_workers_async(
+                    "decode_recv_blocks",
+                    decode_scheduler_outputs.task_for_recv_blocks
+                )
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
@@ -430,13 +525,17 @@ class AsyncLLMEngine:
             self._request_tracker.get_new_and_finished_requests())
 
         for new_request in new_requests:
+            kv_response = None
             # Add the request into the vLLM engine's waiting queue.
             # TODO: Maybe add add_request_batch to reduce Ray overhead
             try:
                 if self.engine_use_ray:
-                    await self.engine.add_request.remote(**new_request)
+                    kv_response = await self.engine.add_request.remote(**new_request)
                 else:
-                    await self.engine.add_request_async(**new_request)
+                    kv_response = await self.engine.add_request_async(**new_request)
+                if kv_response:
+                    self._request_tracker.process_kv_response(
+                        self.engine.get_global_ranks(), kv_response)
             except ValueError as e:
                 # TODO: use a vLLM specific error for failed validation
                 self._request_tracker.process_exception(
@@ -444,18 +543,29 @@ class AsyncLLMEngine:
                     e,
                     verbose=self.log_requests,
                 )
-
         if finished_requests:
             await self._engine_abort(finished_requests)
 
+        kv_responses = self._request_tracker.get_kv_responses()
+        for kv_response in kv_responses:
+            # Add the response
+            if self.engine_use_ray:
+                await self.engine.add_kv_response.remote(**kv_response)
+            else:
+                self.engine.add_kv_response(**kv_response)
+                              
         if self.engine_use_ray:
+            await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
         else:
+            await self.engine.trans_kv_step_aysnc()
             request_outputs = await self.engine.step_async()
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
             self._request_tracker.process_request_output(
+                self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
+                self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
 
         return len(request_outputs) > 0
@@ -469,7 +579,12 @@ class AsyncLLMEngine:
     async def run_engine_loop(self):
         has_requests_in_progress = False
         while True:
-            if not has_requests_in_progress:
+            if (not has_requests_in_progress and
+                not self.engine.scheduler.swapping_in and
+                not self.engine.scheduler.swapping_out and
+                not self.engine.scheduler.recv_transfering and
+                not self.engine.scheduler.send_transfering):
+                
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
                 logger.debug("Got new requests!")
@@ -495,6 +610,7 @@ class AsyncLLMEngine:
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
+        prefill_request_output: Optional[RequestOutput] = None
     ) -> AsyncStream:
         if self.log_requests:
             shortened_prompt = prompt
@@ -545,10 +661,17 @@ class AsyncLLMEngine:
             arrival_time=arrival_time,
             lora_request=lora_request,
             multi_modal_data=multi_modal_data,
+            prefill_request_output=prefill_request_output
         )
 
         return stream
 
+    async def add_kv_response(
+        self,
+        response: KvPreparedResponse,
+    ) -> None:
+        self._request_tracker.add_kv_response(response=response)
+        
     async def generate(
         self,
         prompt: Optional[str],
@@ -556,7 +679,8 @@ class AsyncLLMEngine:
         request_id: str,
         prompt_token_ids: Optional[List[int]] = None,
         lora_request: Optional[LoRARequest] = None,
-        multi_modal_data: Optional[MultiModalData] = None
+        multi_modal_data: Optional[MultiModalData] = None,
+        prefill_request_output: Optional[RequestOutput] = None
     ) -> AsyncIterator[RequestOutput]:
         """Generate outputs for a request.
 
@@ -633,6 +757,7 @@ class AsyncLLMEngine:
                 arrival_time=arrival_time,
                 lora_request=lora_request,
                 multi_modal_data=multi_modal_data,
+                prefill_request_output=prefill_request_output
             )
 
             async for request_output in stream:

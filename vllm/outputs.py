@@ -1,5 +1,5 @@
 import time
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 from vllm.lora.request import LoRARequest
 from vllm.sequence import (PromptLogprobs, RequestMetrics, SampleLogprobs,
@@ -90,6 +90,7 @@ class RequestOutput:
         self.finished = finished
         self.metrics = metrics
         self.lora_request = lora_request
+        self.global_ranks: List[int] = None
 
     @classmethod
     def from_seq_group(cls, seq_group: SequenceGroup) -> "RequestOutput":
@@ -146,3 +147,50 @@ class RequestOutput:
                 f"finished={self.finished}, "
                 f"metrics={self.metrics}, "
                 f"lora_request={self.lora_request})")
+
+class KvPreparedResponse:
+    def __init__(
+        self,
+        request_id: str,
+        error: int,
+        error_msg: str,
+    ) -> None:
+        self.request_id = request_id
+        self.error = error
+        self.error_msg = error_msg
+        self.global_ranks = None
+
+    def __json__(self) -> Dict:
+        return {
+            "request_id": self.request_id,
+            "global_ranks": self.global_ranks,
+            "error": self.error,
+            "error_msg": self.error_msg,
+        }
+
+class VLLMLoadInfo:
+    def __init__(
+        self,
+        used_gpu_blocks: int,
+        used_cpu_blocks: int,
+        remained_gpu_blocks: int,
+        remained_cpu_blocks: int,
+        num_unfinished_requests: int,
+        timestamp: float
+    ) -> None:
+        self.used_gpu_blocks = used_gpu_blocks
+        self.used_cpu_blocks = used_cpu_blocks
+        self.remained_gpu_blocks = remained_gpu_blocks
+        self.remained_cpu_blocks = remained_cpu_blocks
+        self.num_unfinished_requests = num_unfinished_requests
+        self.timestamp = timestamp
+        
+    def __json__(self):
+        return {
+            "used_gpu_blocks": self.used_gpu_blocks,
+            "used_cpu_blocks": self.used_cpu_blocks,
+            "remained_gpu_blocks": self.remained_gpu_blocks,
+            "remained_cpu_blocks": self.remained_cpu_blocks,
+            "num_unfinished_requests": self.num_unfinished_requests,
+            "timestamp": self.timestamp
+        }

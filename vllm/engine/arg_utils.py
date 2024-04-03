@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 
 from vllm.config import (CacheConfig, DeviceConfig, LoRAConfig, ModelConfig,
                          ParallelConfig, SchedulerConfig, TokenizerPoolConfig,
-                         VisionLanguageConfig)
+                         VisionLanguageConfig, DeployConfig)
 from vllm.utils import str_to_int_tuple
 
 
@@ -63,6 +63,10 @@ class EngineArgs:
     image_feature_size: Optional[int] = None
     scheduler_delay_factor: float = 0.0
     enable_chunked_prefill: bool = False
+    
+    enable_separate: bool = False
+    role: str = None
+    rank_table_file: Optional[str] = None
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -363,6 +367,23 @@ class EngineArgs:
             default=False,
             help='If True, the prefill requests can be chunked based on the '
             'max_num_batched_tokens')
+        parser.add_argument(
+            '--enable-separate',
+            action="store_true",
+            help=('separate or not '))
+    
+        parser.add_argument(
+            '--role',
+            type=str,
+            choices=['prompt', 'decoder'],
+            default=None,
+            help=('instance '))
+    
+        parser.add_argument(
+            '--rank-table-file',
+            type=str,
+            default="",
+            help=('rank table file '))
         return parser
 
     @classmethod
@@ -376,7 +397,7 @@ class EngineArgs:
     def create_engine_configs(
         self,
     ) -> Tuple[ModelConfig, CacheConfig, ParallelConfig, SchedulerConfig,
-               DeviceConfig, Optional[LoRAConfig],
+               DeviceConfig, DeployConfig, Optional[LoRAConfig],
                Optional[VisionLanguageConfig]]:
         device_config = DeviceConfig(self.device)
         model_config = ModelConfig(
@@ -433,8 +454,9 @@ class EngineArgs:
         else:
             vision_language_config = None
 
+        deploy_config = DeployConfig(self.enable_separate, self.role)
         return (model_config, cache_config, parallel_config, scheduler_config,
-                device_config, lora_config, vision_language_config)
+                device_config, deploy_config, lora_config, vision_language_config)
 
 
 @dataclass

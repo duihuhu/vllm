@@ -5,7 +5,7 @@ from transformers import PreTrainedTokenizer
 
 import vllm
 from vllm.config import (CacheConfig, DeviceConfig, LoRAConfig, ModelConfig,
-                         ParallelConfig, SchedulerConfig, VisionLanguageConfig)
+                         ParallelConfig, SchedulerConfig, VisionLanguageConfig, DeployConfig)
 from vllm.core.scheduler import Scheduler, SchedulerOutputs
 from vllm.engine.arg_utils import EngineArgs
 from vllm.engine.metrics import StatLogger, Stats
@@ -14,7 +14,7 @@ from vllm.executor.executor_base import ExecutorBase
 from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
 from vllm.model_executor.model_loader import get_architecture_class_name
-from vllm.outputs import RequestOutput
+from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
 from vllm.sequence import (MultiModalData, SamplerOutput, Sequence,
                            SequenceGroup, SequenceGroupOutput, SequenceOutput,
@@ -25,7 +25,9 @@ from vllm.transformers_utils.tokenizer_group import (BaseTokenizerGroup,
 from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter
+from vllm.core.kv_trans_scheduler import PrefillKvTransScheduler, DecodeKvTransScheduler
 
+from functools import partial
 logger = init_logger(__name__)
 _LOCAL_LOGGING_INTERVAL_SEC = 5
 
@@ -66,6 +68,7 @@ class LLMEngine:
         parallel_config: ParallelConfig,
         scheduler_config: SchedulerConfig,
         device_config: DeviceConfig,
+        deploy_config: DeployConfig,
         lora_config: Optional[LoRAConfig],
         vision_language_config: Optional["VisionLanguageConfig"],
         executor_class: Type[ExecutorBase],
@@ -101,6 +104,7 @@ class LLMEngine:
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
         self.device_config = device_config
+        self.deploy_config = deploy_config
         self.log_stats = log_stats
         self._verify_args()
 
@@ -110,9 +114,14 @@ class LLMEngine:
 
         self.model_executor = executor_class(model_config, cache_config,
                                              parallel_config, scheduler_config,
-                                             device_config, lora_config,
+                                             device_config, deploy_config, lora_config,
                                              vision_language_config)
 
+        if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
+            self.kv_trans_scheduler = PrefillKvTransScheduler(self.parallel_config.tensor_parallel_size)
+        elif self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+            self.kv_trans_scheduler = DecodeKvTransScheduler(self.parallel_config.tensor_parallel_size)
+            
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
             usage_message.report_usage(
@@ -205,6 +214,9 @@ class LLMEngine:
     def get_tokenizer(self) -> "PreTrainedTokenizer":
         return self.tokenizer.get_lora_tokenizer(None)
 
+    def get_global_ranks(self):
+        return self.deploy_config.get_global_ranks()
+    
     def get_tokenizer_for_seq(self,
                               sequence: Sequence) -> "PreTrainedTokenizer":
         return self.tokenizer.get_lora_tokenizer(sequence.lora_request)
@@ -244,6 +256,18 @@ class LLMEngine:
                                                      lora_request=lora_request)
         return prompt_token_ids
 
+    def add_kv_response(
+        self,
+        response: KvPreparedResponse
+    ) -> None:
+        request_id = response.request_id
+        if response.error != 0:
+            self.scheduler.prefill_del_send_transfering(request_id)
+            logger.info("remote recv engine prepare kv fail.")
+            return
+        blocks = self.scheduler.fetch_kv_blocks(self.scheduler.prefill_get_send_transfering(request_id))
+        self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks)
+
     def add_request(
         self,
         request_id: str,
@@ -253,7 +277,9 @@ class LLMEngine:
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-    ) -> None:
+        prefill_request_output: Optional[RequestOutput] = None
+    ) -> KvPreparedResponse:
+        
         """Add a request to the engine's request pool.
 
         The request is added to the request pool and will be processed by the
@@ -328,13 +354,34 @@ class LLMEngine:
         # processing
         sampling_params.eos_token_id = seq.eos_token_id
 
+        #reconstruct sequence
+        if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+            prefilled_token_ids = prefill_request_output.outputs[0].token_ids
+            output_logprobs = prefill_request_output.outputs[0].logprobs
+            for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                seq.append_token_id(token_id, output_logprob)
+                
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data)
 
         # Add the sequence group to the scheduler.
-        self.scheduler.add_seq_group(seq_group)
 
+        kv_response = None
+        # Add the sequence group to the scheduler.
+        if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
+            self.scheduler.add_seq_group(seq_group)
+        else:
+            blocks = self.scheduler.allocate_kv_blocks(seq_group)
+            if not blocks:
+                kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
+            else:
+                kv_response = KvPreparedResponse(request_id, 0, None)
+                self.scheduler.decode_add_recv_transfering(seq_group)
+                self.kv_trans_scheduler.add_kv_request(request_id,
+                                                            prefill_request_output.global_ranks, blocks)
+        return kv_response
+    
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a request(s) with the given ID.
 
@@ -615,6 +662,99 @@ class LLMEngine:
             self.stat_logger.log(self._get_stats(scheduler_outputs))
         return request_outputs
 
+    #hucc todo 
+    def trans_kv_step(self):
+        if not self.deploy_config.enable_separate:
+            return
+
+        if self.deploy_config.role == 'prompt':
+            finished_tasks = self._run_workers(
+                "check_prefill_finished_transfer_task",
+                # get_all_outputs=True
+            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.prefill_add_send_finished(real_finished_req_ids)
+            
+            prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            if prefill_scheduler_outputs.task_for_send_blocks:
+                self._run_workers(
+                    "prefill_send_blocks",
+                    prefill_scheduler_outputs.task_for_send_blocks
+                )
+        
+        else:
+            finished_tasks = self._run_workers(
+                "check_decode_finished_transfer_task",
+                # get_all_outputs=True
+            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.decode_add_recv_finished(real_finished_req_ids)
+            
+            decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            
+            if decode_scheduler_outputs.task_for_recv_request_id:
+                self._run_workers(
+                    "decode_recv_request_id",
+                    decode_scheduler_outputs.task_for_recv_request_id
+                )
+                
+            if decode_scheduler_outputs.task_for_recv_blocks:
+                self._run_workers(
+                    "decode_recv_blocks",
+                    decode_scheduler_outputs.task_for_recv_blocks
+                )
+
+    #hucc todo 
+    def trans_kv_step(self):
+        if not self.deploy_config.enable_separate:
+            return
+
+        if self.deploy_config.role == 'prompt':
+            finished_tasks = self._run_workers(
+                "check_prefill_finished_transfer_task",
+                # get_all_outputs=True
+            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.prefill_add_send_finished(real_finished_req_ids)
+            
+            prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            if prefill_scheduler_outputs.task_for_send_blocks:
+                self._run_workers(
+                    "prefill_send_blocks",
+                    prefill_scheduler_outputs.task_for_send_blocks
+                )
+        
+        else:
+            finished_tasks = self._run_workers(
+                "check_decode_finished_transfer_task",
+                # get_all_outputs=True
+            )
+            for worker_finished_tasks in finished_tasks:
+                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+                if real_finished_req_ids:
+                    self.scheduler.decode_add_recv_finished(real_finished_req_ids)
+            
+            decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
+            
+            if decode_scheduler_outputs.task_for_recv_request_id:
+                self._run_workers(
+                    "decode_recv_request_id",
+                    decode_scheduler_outputs.task_for_recv_request_id
+                )
+                
+            if decode_scheduler_outputs.task_for_recv_blocks:
+                self._run_workers(
+                    "decode_recv_blocks",
+                    decode_scheduler_outputs.task_for_recv_blocks
+                )
+
+
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
@@ -668,15 +808,36 @@ class LLMEngine:
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
+        if scheduler_outputs.is_empty():
+            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+                self.scheduler.remote_send_transfering or self.scheduler.remote_recv_transfering:
+                    logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+                    time.sleep(0.05)
+            else:
+                return None
+            
         if not scheduler_outputs.is_empty():
             output = self.model_executor.execute_model(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
                 scheduler_outputs.blocks_to_swap_out,
                 scheduler_outputs.blocks_to_copy)
+            
+            output = output[0]
         else:
             output = []
 
-        return self._process_model_outputs(output, scheduler_outputs)
+        processed_outputs = self._process_model_outputs(output, scheduler_outputs)
+        
+        #prompt eng pull metadata in separate mode
+        #assume after do prefill, the reqeust will not finish
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
+            prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
+            for processed_output in processed_outputs:
+                processed_output.finished = True
+            for seq_group in prefilled_seq_groups:
+                self.scheduler.prefill_add_send_transfering(seq_group)
+        
+        return processed_outputs
 
     def do_log_stats(self) -> None:
         """Forced log when no requests active."""

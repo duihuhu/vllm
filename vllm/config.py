@@ -11,6 +11,7 @@ from transformers import PretrainedConfig
 from vllm.logger import init_logger
 from vllm.transformers_utils.config import get_config, get_hf_text_config
 from vllm.utils import get_cpu_memory, get_nvcc_cuda_version, is_hip, is_neuron
+from typing import List
 
 if TYPE_CHECKING:
     from ray.util.placement_group import PlacementGroup
@@ -819,3 +820,36 @@ def _get_and_verify_max_len(
                 "to incorrect model outputs or CUDA errors. Make sure the "
                 "value is correct and within the model context size.")
     return int(max_model_len)
+
+class DeployConfig:
+    """Deploy configuration
+    Args:
+        enable_separate: use P/D separate mode or not
+        role: the role of the engine is prompt or decoder when use P/D separate model iteration
+     
+    """
+    def __init__(
+        self,
+        enable_separate: bool=False,
+        role: str=None,
+        rank_table_file: Optional[str]=None,
+        ) -> None:
+            self.enable_separate = enable_separate
+            self.role = role
+            self.rank_table_file = rank_table_file
+            self.global_ranks = None
+            self._verify_args()
+    
+    def _verify_args(self) -> None:
+        if self.enable_separate and self.role not in ['prompt', 'decoder']:
+            raise ValueError(f"role of LLM Engine Instance must be prompt or decoder in separate mode")
+        # if self.enable_separate and not self.rank_table_file:
+        #     raise ValueError(f"the rank_table_file must be specified in separate mode")
+    
+    def set_global_ranks(self, global_ranks: List[int]) -> None:
+        self.global_ranks = global_ranks
+        self.global_ranks.sort()
+        
+    def get_global_ranks(self) -> List[int]:
+        return self.global_ranks
+        

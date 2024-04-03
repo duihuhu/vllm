@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from vllm.config import (CacheConfig, DeviceConfig, LoRAConfig, ModelConfig,
-                         ParallelConfig, SchedulerConfig, VisionLanguageConfig)
+                         ParallelConfig, SchedulerConfig, VisionLanguageConfig, DeployConfig)
 from vllm.engine.ray_utils import RayWorkerVllm, ray
 from vllm.executor.executor_base import ExecutorAsyncBase, ExecutorBase
 from vllm.executor.utils import check_block_size_valid
@@ -39,6 +39,7 @@ class RayGPUExecutor(ExecutorBase):
         parallel_config: ParallelConfig,
         scheduler_config: SchedulerConfig,
         device_config: DeviceConfig,
+        deploy_config: DeployConfig,
         lora_config: Optional[LoRAConfig],
         vision_language_config: Optional[VisionLanguageConfig],
     ) -> None:
@@ -48,6 +49,7 @@ class RayGPUExecutor(ExecutorBase):
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
         self.device_config = device_config
+        self.deploy_config = deploy_config
         self.vision_language_config = vision_language_config
 
         assert self.parallel_config.worker_use_ray
@@ -118,6 +120,8 @@ class RayGPUExecutor(ExecutorBase):
         # Get the set of GPU IDs used on each node.
         driver_node_id, driver_gpu_ids = ray.get(
             self.driver_dummy_worker.get_node_and_gpu_ids.remote())
+        driver_device_id = driver_gpu_ids[0]
+        
         worker_node_and_gpu_ids = ray.get(
             [worker.get_node_and_gpu_ids.remote() for worker in self.workers])
 
@@ -167,6 +171,7 @@ class RayGPUExecutor(ExecutorBase):
                     local_rank,
                     rank,
                     distributed_init_method,
+                    deploy_config=self.deploy_config,
                     lora_config=lora_config,
                     kv_cache_dtype=kv_cache_dtype,
                 ))
@@ -182,13 +187,17 @@ class RayGPUExecutor(ExecutorBase):
             driver_local_rank,
             driver_rank,
             distributed_init_method,
+            deploy_config=self.deploy_config,
             lora_config=self.lora_config,
             vision_language_config=self.vision_language_config,
             kv_cache_dtype=kv_cache_dtype,
             is_driver_worker=True,
+            device_id = driver_device_id,
         )
 
-        self._run_workers("init_device")
+        global_ranks = self._run_workers("init_device")
+        self.deploy_config.set_global_ranks(global_ranks)
+        
         self._run_workers(
             "load_model",
             max_concurrent_workers=self.parallel_config.
@@ -417,6 +426,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
     ) -> SamplerOutput:
         all_outputs = await self._run_workers_async(
             "execute_model",
+            seq_group_metadata_list=seq_group_metadata_list,
             driver_kwargs={
                 "seq_group_metadata_list": seq_group_metadata_list,
                 "blocks_to_swap_in": blocks_to_swap_in,
@@ -425,8 +435,8 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
             })
 
         # Only the driver worker returns the sampling results.
-        output = all_outputs[0]
-        return output
+        # output = all_outputs[0]
+        return all_outputs
 
     async def check_health_async(self) -> None:
         """Raises an error if engine is unhealthy."""

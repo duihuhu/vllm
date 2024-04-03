@@ -106,6 +106,38 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "get_max_shared_memory_per_block_device_attribute",
     &get_max_shared_memory_per_block_device_attribute,
     "Gets the maximum shared memory per block device attribute.");
+    
+  // nccl utils
+  pybind11::module gpu_ops = m.def_submodule("gpu_ops", "vLLM gpu nccl utils");
+  gpu_ops.def(
+    "CreateGlobalNcclComm",
+    &CreateGlobalNcclComm,
+    "CreateGlobalNcclComm");
+
+  gpu_ops.def(
+    "copy_blocks_in_layer",
+    &copy_blocks_in_layer,
+    "copy_blocks_in_layer");
+
+  gpu_ops.def(
+    "SendRequestRemote",
+    &SendRequestRemote,
+    "SendRequestRemote");
+
+  gpu_ops.def(
+    "RecvRequestRemote",
+    &RecvRequestRemote,
+    "RecvRequestRemote");
+
+  gpu_ops.def(
+    "SendBlocksRemote",
+    &SendBlocksRemote,
+    "SendBlocksRemote");
+
+  gpu_ops.def(
+    "RecvBlocksRemote",
+    &RecvBlocksRemote,
+    "RecvBlocksRemote");
 
 #ifndef USE_ROCM
   // Custom all-reduce kernels
