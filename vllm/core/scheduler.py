@@ -4,7 +4,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Deque, Dict, Iterable, List, Optional, Set, Tuple, Union
 
-from vllm.config import CacheConfig, LoRAConfig, SchedulerConfig
+from vllm.config import CacheConfig, LoRAConfig, SchedulerConfig, DeployConfig
 from vllm.core.interfaces import AllocStatus, BlockSpaceManager
 from vllm.core.policy import PolicyFactory
 from vllm.logger import init_logger
@@ -106,16 +106,27 @@ class SchedulerOutputs:
         return {g.seq_group.lora_request for g in self.scheduled_seq_groups}
 
 
+class SwappingSequenceGroup:
+    def __init__(
+        self,
+        seq_group: SequenceGroup,
+        num_swapping_workers: int,
+        ) -> None:
+            self.seq_group = seq_group
+            self.num_swapping_workers = num_swapping_workers
+
 class Scheduler:
 
     def __init__(
         self,
         scheduler_config: SchedulerConfig,
         cache_config: CacheConfig,
+        deploy_config: DeployConfig, 
         lora_config: Optional[LoRAConfig],
     ) -> None:
         self.scheduler_config = scheduler_config
         self.cache_config = cache_config
+        self.deploy_config = deploy_config
         # Note for LoRA scheduling: the current policy is extremely
         # simple and NOT fair. It can lead to starvation of some
         # LoRAs. This should be improved in the future.
@@ -152,6 +163,18 @@ class Scheduler:
         self.prev_prompt = False
         # Latency of the last prompt step
         self.last_prompt_latency = 0.0
+        
+        self.swap_finished_req_ids: List[Tuple[List[str], List[str]]] = []
+        self.swapping_in: List[SwappingSequenceGroup] = []
+        self.swapping_out: List[SwappingSequenceGroup] = []
+        
+        self.send_finished_req_ids: List[str] = []
+        self.recv_finished_req_ids: List[str] = []
+        
+        self.send_transfering: Dict[str, SequenceGroup] = {}
+        self.recv_transfering: Dict[str, SequenceGroup] = {}
+        
+        self.num_workers: int = 0
 
     @property
     def lora_enabled(self) -> bool:
@@ -161,6 +184,33 @@ class Scheduler:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
 
+
+    def prefill_add_send_finished(self, request_ids: List[str]):
+        self.send_finished_req_ids = request_ids
+    
+    def prefill_add_send_transfering(self, seq_group: SequenceGroup) -> None:
+        #Add sequence groups to the send transfering map.
+        self.send_transfering[seq_group.request_id] = seq_group
+    
+    def prefill_del_send_transfering(self, request_id: str) -> None:
+        # Delete sequence groups to the send  transfering map 
+        if request_id in self.send_transfering:
+            seq = self.send_transfering[request_id].get_seqs()[0]
+            self.free_seq(seq)
+            del self.send_transfering[request_id]
+    
+    def prefill_get_send_transfering(self, request_id: str) -> None:
+        if request_id not in self.send_transfering:
+            return None
+        return self.send_transfering[request_id]
+
+    def decode_add_recv_finished(self, request_ids: List[str]):
+        self.recv_finished_req_ids = request_ids
+    
+    def decode_add_recv_transfering(self, seq_group: SequenceGroup) -> None:
+        #Add sequence groups to the recv transfering map
+        self.recv_transfering[seq_group.request_id] = seq_group
+        
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a sequence group with the given ID.
 
@@ -198,10 +248,34 @@ class Scheduler:
                     self.free_seq(seq)
 
     def has_unfinished_seqs(self) -> bool:
-        return self.waiting or self.running or self.swapped
+        return (self.waiting or self.running or self.swapped or
+                self.swapping_in or self.swapping_out)
 
+    def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
+        prefilled_seq_groups = []
+        while self.running:
+            prefilled_seq_groups.append(self.running.pop())
+        return prefilled_seq_groups
+    
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
+    
+    def allocate_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
+        seq = seq_group.get_seqs()[0]
+        if not self.block_manager.can_allocate(seq_group):
+            return None
+        else:
+            self._allocate(seq_group)
+            self.block_manager.block_tables[seq.seq_id]
+            block_table = self.block_manager.block_tables[seq.seq_id]
+            blocks = [phy_block.block_number for phy_block in block_table]
+            return blocks
+    
+    def fetch_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
+        seq = seq_group.get_seqs()[0]
+        block_table = self.block_manager.block_tables[seq.seq_id]
+        blocks = [phy_block.block_number for phy_block in block_table]
+        return blocks
 
     def _schedule(self) -> SchedulerOutputs:
         # Blocks that need to be swapped or copied before model execution.
@@ -211,7 +285,9 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-
+        
+        self._check_tranfer_finished_req()
+        
         # Join waiting sequences if possible.
         if not self.swapped:
             ignored_seq_groups: List[SequenceGroup] = []
@@ -588,3 +664,18 @@ class Scheduler:
         else:
             passed_delay = True
         return passed_delay
+
+    def _check_tranfer_finished_req(self) -> None:
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
+            for request_id in self.send_finished_req_ids[:]:
+                seq_group = self.send_transfering[request_id]
+                seq = seq_group.get_seqs()[0]
+                self.free_seq(seq)
+                del self.send_transfering[request_id]
+                self.send_finished_req_ids.remove(request_id)
+        elif self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
+            for request_id in self.recv_finished_req_ids[:]:
+                seq_group = self.recv_transfering[request_id]
+                self.running.append(seq_group)
+                del self.recv_transfering[request_id]
+                self.recv_finished_req_ids.remove(request_id)
