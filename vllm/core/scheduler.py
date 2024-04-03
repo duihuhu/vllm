@@ -260,6 +260,10 @@ class Scheduler:
             for seq_group in self.running:
                 seq_group.sg_proirty()
             self.running.sort(key = lambda x: x.proirity, reverse = True)
+            backup_list = self.running.copy()
+            for i in range(1, len(self.running)):
+                self.running[i] = backup_list[i - 1]
+            self.running[0] = backup_list[-1]
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
