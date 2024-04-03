@@ -51,7 +51,7 @@ class InferResults:
             "prompt_token_ids": self.prompt_token_ids,
             'prompt_logprobs': prompt_logprobs,
             "prefilled_token_id": self.prefilled_token_id,
-            "output_logprobs": self.output_logprobs,
+            "output_logprobs": output_logprobs,
             "cumulative_logprob": self.cumulative_logprob,
             # "speculate_token_ids": self.speculate_token_ids,
             "sampling_params": self.sampling_params.__json__(),
