@@ -32,26 +32,28 @@ class InferResults:
         prompt_logprobs = []
         print("self.prompt_logprobs ", self.prompt_logprobs)
         print("self.prompt_logprobs ", self.output_logprobs)
-        for d in self.prompt_logprobs:
-            if d == None:
-                prompt_logprobs.append(d)
-                continue
-            serialized_d = {}
-            for key, value in d.items():
-                serialized_value = value.__json__()
-                serialized_d[key] = serialized_value
-            prompt_logprobs.append(serialized_d)
+        if self.prompt_logprobs != None:
+            for d in self.prompt_logprobs:
+                if d == None:
+                    prompt_logprobs.append(d)
+                    continue
+                serialized_d = {}
+                for key, value in d.items():
+                    serialized_value = value.__json__()
+                    serialized_d[key] = serialized_value
+                prompt_logprobs.append(serialized_d)
     
         output_logprobs = []
-        for d in self.output_logprobs:
-            if d == None:
-                output_logprobs.append(d)
-                continue
-            serialized_d = {}
-            for key, value in d.items():
-                serialized_value = value.__json__()
-                serialized_d[key] = serialized_value
-            output_logprobs.append(serialized_d)
+        if self.output_logprobs != None:
+            for d in self.output_logprobs:
+                if d == None:
+                    output_logprobs.append(d)
+                    continue
+                serialized_d = {}
+                for key, value in d.items():
+                    serialized_value = value.__json__()
+                    serialized_d[key] = serialized_value
+                output_logprobs.append(serialized_d)
     
         return {
             "request_id": self.request_id,
