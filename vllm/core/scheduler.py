@@ -557,7 +557,6 @@ class Scheduler:
         # This is because the engine assumes that a failure in model execution
         # will crash the vLLM instance / will not retry.
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
-            print("in marks ")
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
 

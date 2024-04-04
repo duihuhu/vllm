@@ -630,7 +630,7 @@ class AsyncLLMEngine:
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
                 logger.debug("Got new requests!")
-
+            print(has_requests_in_progress, self.engine.scheduler.swapping_in, self.engine.scheduler.swapping_out,  self.engine.scheduler.recv_transfering, self.engine.scheduler.send_transfering)
             # Abort if iteration takes too long due to unrecoverable errors
             # (eg. NCCL timeouts).
             try:

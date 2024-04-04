@@ -552,16 +552,15 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def compute_full_blocks_in_seq(self, seq: Sequence):
         if seq.seq_id not in self.block_tables:
-            print("not in  seq.block_tables ")
             return
         max_full_block = seq.get_len() // self.block_size - 1
         block_table = self.block_tables[seq.seq_id]
         if max_full_block == -1:
             return
+
         for i in reversed(range(max_full_block)):
             if block_table[i].computed:
                 break
-            print("compute_full_blocks_in_seq computed ", block_table[i].block_number)
             block_table[i].computed = True
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:
@@ -590,7 +589,5 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def mark_blocks_as_computed(self, seq_group: SequenceGroup):
         if self.enable_caching:
-            print("in marks 1 ")
             for seq in seq_group.seqs_dict.values():
-                print("in marks 2 ")
                 self.compute_full_blocks_in_seq(seq)
