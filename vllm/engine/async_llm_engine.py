@@ -281,7 +281,6 @@ class _AsyncLLMEngine(LLMEngine):
                 return []
             
         if not scheduler_outputs.is_empty():
-            print("scheduler_outputs ", scheduler_outputs)
             # Execute the model.
             all_outputs = await self.model_executor.execute_model_async(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,

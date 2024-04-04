@@ -279,6 +279,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Set the reference counts of the token blocks.
                 block.ref_count = seq_group.num_seqs()
             elif self.enable_caching:
+                print("enable_caching ",  seq.hash_of_block(logical_idx))
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
@@ -559,6 +560,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for i in reversed(range(max_full_block)):
             if block_table[i].computed:
                 break
+            print("compute_full_blocks_in_seq computed ", block_table[i].block_number)
             block_table[i].computed = True
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:
