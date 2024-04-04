@@ -130,13 +130,19 @@ async def add_request(request: Request) -> Response:
             n = 0
             yield (json.dumps(prefill_res) + "\0").encode("utf-8")
 
-            for h in get_streaming_response(decode_response):
-                print("res", h, n)
+            for res in get_streaming_response(decode_response):
+                # print("res", res, n)
                 #first send to prefll: add_response_kv_prepared
                 if n == 0:
-                    await send_to_prefill_response_kv_prepared(h, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
+                    await send_to_prefill_response_kv_prepared(res, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
                 else:
-                    yield (json.dumps(h) + "\0").encode("utf-8")
+                    if res['finished'] == True:
+                        prompt_token_ids = res['prompt_token_ids']
+                        prefilled_token_id = res['prefilled_token_id']
+                        print(prompt_token_ids, prefilled_token_id)
+                        # prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % (cfg.eprefill_host, cfg.eprefill_port))
+                        
+                    yield (json.dumps(res) + "\0").encode("utf-8")
                 n = n + 1
         return StreamingResponse(stream_results())
         
