@@ -702,6 +702,7 @@ class Scheduler:
 
         for request_id in self.recv_finished_req_ids[:]:
             seq_group = self.recv_transfering[request_id]
-            self.running.append(seq_group)
+            if self.deploy_config.role == "decoder":
+                self.running.append(seq_group)
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
