@@ -186,27 +186,27 @@ class Scheduler:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
 
-    def prefill_add_send_finished(self, request_ids: List[str]):
+    def add_send_finished(self, request_ids: List[str]):
         self.send_finished_req_ids.extend(request_ids)
     
-    def prefill_add_send_transfering(self, seq_group: SequenceGroup) -> None:
+    def add_send_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the send transfering map.
         self.send_transfering[seq_group.request_id] = seq_group
     
     #todo check free_seq
-    def prefill_del_send_transfering(self, request_id: str) -> None:
+    def del_send_transfering(self, request_id: str) -> None:
         # Delete sequence groups to the send  transfering map 
         if request_id in self.send_transfering:
             seq = self.send_transfering[request_id].get_seqs()[0]
             self.free_seq(seq)
             del self.send_transfering[request_id]
     
-    def prefill_get_send_transfering(self, request_id: str) -> None:
+    def get_send_transfering(self, request_id: str) -> None:
         if request_id not in self.send_transfering:
             return None
         return self.send_transfering[request_id]
 
-    def decode_add_recv_finished(self, request_ids: List[str]):
+    def add_recv_finished(self, request_ids: List[str]):
         self.recv_finished_req_ids.extend(request_ids)
     
     def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
