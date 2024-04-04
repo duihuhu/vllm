@@ -290,7 +290,7 @@ class LLMEngine:
         else:
             kv_response = KvPreparedResponse(request_id, 0, None)
             self.scheduler.add_recv_transfering(seq_group)
-            self.kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
+            self.kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks, False)
         
         return kv_response
     
@@ -304,7 +304,7 @@ class LLMEngine:
             logger.info("remote recv engine prepare kv fail.")
             return
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
-        self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks)
+        self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks, True)
 
     def add_request(
         self,
@@ -417,7 +417,7 @@ class LLMEngine:
                 kv_response = KvPreparedResponse(request_id, 0, None)
                 self.scheduler.add_recv_transfering(seq_group)
                 self.kv_trans_scheduler.add_kv_request(request_id,
-                                                            prefill_request_output.global_ranks, blocks)
+                                                            prefill_request_output.global_ranks, blocks, False)
         return kv_response
     
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
