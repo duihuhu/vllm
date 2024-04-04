@@ -90,6 +90,6 @@ if __name__ == "__main__":
     # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
     # asyncio.run(main(args,prompts))
-    prompts = ['San Francisco is a']
+    prompts = ['San Francisco is a San Francisco is a San Francisco is a']
     main(args,prompts)
     
