@@ -139,6 +139,16 @@ class RequestTracker:
         if kv_response.error !=0:
             self.abort_request(request_id)
             
+    def process_kv_results(self,
+                        global_ranks: List[int],
+                        kv_response: KvPreparedResponse) -> None:
+        """Process a request output from the engine"""
+        request_id = kv_response.request_id
+        kv_response.global_ranks = global_ranks
+        self._kv_results_requests_streams.get(request_id).put(kv_response)
+        if kv_response.error !=0:
+            self.abort_request(request_id)
+            
     def process_exception(self,
                           request_id: str,
                           exception: Exception,
@@ -588,7 +598,7 @@ class AsyncLLMEngine:
             else:
                 kv_response = self.engine.add_kv_results_request(**kv_result_requests)
             if kv_response:
-                self._request_tracker.process_kv_response(
+                self._request_tracker.process_kv_results(
                     self.engine.get_global_ranks(), kv_response)
     
         if self.engine_use_ray:
