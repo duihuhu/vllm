@@ -301,7 +301,11 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in prefilled_seq_groups:
                 self.scheduler.prefill_add_send_transfering(seq_group)
         
-        # print("new schedule 4 ")
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
+            decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
+            for seq_group in decoded_seq_groups:
+                self.scheduler.prefill_add_send_transfering(seq_group)
+        
         return processed_outputs
 
     async def encode_request_async(

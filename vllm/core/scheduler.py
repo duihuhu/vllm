@@ -251,6 +251,17 @@ class Scheduler:
         return (self.waiting or self.running or self.swapped or
                 self.swapping_in or self.swapping_out)
 
+    def fetch_decoded_seq_groups(self, decoded_seq_groups) -> List[SequenceGroup]:
+        decoded_seq_groups = []
+        running: Deque[SequenceGroup] = deque()
+        for seq_group in self.running:
+            if seq_group.get_seqs()[0].status != SequenceStatus.RUNNING:
+                decoded_seq_groups.append(seq_group)
+            else:
+                running.append(seq_group)
+        self.running = running
+        return decoded_seq_groups
+
     def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
         prefilled_seq_groups = []
         while self.running:
