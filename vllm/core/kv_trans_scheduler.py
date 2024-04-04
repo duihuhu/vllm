@@ -152,6 +152,7 @@ class KvTransScheduler:
         for task_meta in send_blocks_finished:
             self.send_finished_worker_count[task_meta.request_id] -= 1
             if self.send_finished_worker_count[task_meta.request_id] == 0:
+                print("send request blocks finished ")
                 self.channel_requests_ids[task_meta.channel][0].remove(task_meta.request_id)
                 self.channel_requests_num[task_meta.channel][0] -= 1
                 del self.send_block_ids[task_meta.request_id]
@@ -167,6 +168,7 @@ class KvTransScheduler:
         for task_meta in recv_request_id_finished:
             self.recv_finished_worker_count[task_meta.request_id] -= 1
             if self.recv_finished_worker_count[task_meta.request_id] == 0:
+                print("recv request id finished ")
                 self.recv_waiting_requests.append(task_meta)
                 self.recv_finished_worker_count[task_meta.request_id] = self.num_workers
 
@@ -178,6 +180,7 @@ class KvTransScheduler:
         for task_meta in recv_blocks_finished:
             self.recv_finished_worker_count[task_meta.request_id] -= 1
             if self.recv_finished_worker_count[task_meta.request_id] == 0:
+                print("recv request blocks finished ")
                 self.channel_requests_ids[task_meta.channel][1].pop(0)
                 self.channel_requests_num[task_meta.channel][1] -= 1
                 del self.recv_block_ids[task_meta.request_id]
