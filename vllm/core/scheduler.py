@@ -202,7 +202,6 @@ class Scheduler:
             del self.send_transfering[request_id]
     
     def get_send_transfering(self, request_id: str) -> None:
-        print("self.send_transfering ", self.send_transfering)
         if request_id not in self.send_transfering:
             return None
         return self.send_transfering[request_id]
