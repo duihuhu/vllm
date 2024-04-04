@@ -142,7 +142,7 @@ async def add_request(request: Request) -> Response:
                                 "token_ids": res['prompt_token_ids'] + res['prefilled_token_id'],
                             }
                         pkv_response = await forward_request_to_prefill(pload, cfg.forward_eprefill_res_kv_url % (cfg.eprefill_host, cfg.eprefill_port))
-                        
+                        print("pkv_response ", pkv_response)
                     yield (json.dumps(res) + "\0").encode("utf-8")
                 n = n + 1
         return StreamingResponse(stream_results())
