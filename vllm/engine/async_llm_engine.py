@@ -586,7 +586,7 @@ class AsyncLLMEngine:
             if self.engine_use_ray:
                 kv_response = await self.engine.add_kv_results_request.remote(**kv_result_requests)
             else:
-                kv_response = self.engine.add_kv_results_request(**kv_response)
+                kv_response = self.engine.add_kv_results_request(**kv_result_requests)
             if kv_response:
                 self._request_tracker.process_kv_response(
                     self.engine.get_global_ranks(), kv_response)
