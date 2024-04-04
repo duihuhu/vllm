@@ -90,6 +90,10 @@ class RequestTracker:
         
         self._kv_responses: asyncio.Queue[Tuple[AsyncStream,
                                         dict]] = asyncio.Queue()
+    
+        self._kv_results_requests_streams: Dict[str, AsyncStream] = {}
+        self._kv_results_requests: asyncio.Queue[Tuple[AsyncStream,
+                                    dict]] = asyncio.Queue()
 
     def __contains__(self, item):
         return item in self._request_streams
@@ -146,6 +150,20 @@ class RequestTracker:
             logger.info(f"Finished request {request_id}.")
         self.abort_request(request_id)
 
+    def add_kv_results_request(self, request_id: str,
+                    **engine_add_request_kwargs) -> AsyncStream:
+        """Add a request to be sent to the engine on the next background
+        loop iteration."""
+        if request_id in self._kv_results_requests_streams:
+            raise KeyError(f"Request {request_id} already exists.")
+
+        stream = AsyncStream(request_id)
+        self._kv_results_requests.put_nowait((stream, {
+            "request_id": request_id,
+            **engine_add_request_kwargs
+        }))
+        return stream
+
     def add_request(self, request_id: str,
                     **engine_add_request_kwargs) -> AsyncStream:
         """Add a request to be sent to the engine on the next background
@@ -158,9 +176,7 @@ class RequestTracker:
             "request_id": request_id,
             **engine_add_request_kwargs
         }))
-
         self.new_requests_event.set()
-
         return stream
 
     def add_kv_response(self,
@@ -190,6 +206,14 @@ class RequestTracker:
             kv_responses.append(response)
         return kv_responses    
     
+    def get_new_kv_results_request(self) -> List[Dict]:
+        kv_results_requests: List[Dict] = []
+        while not self._kv_results_requests.empty():
+            stream, kv_results_request = self._kv_results_requests.get_nowait()
+            self._kv_results_requests_streams[stream.request_id] = stream
+            kv_results_requests.append(kv_results_request)
+        return kv_results_requests
+    
     def get_new_and_finished_requests(self) -> Tuple[List[Dict], Set[str]]:
         """Get the new requests and finished requests to be
         sent to the engine."""
@@ -209,7 +233,7 @@ class RequestTracker:
                 continue
             self._request_streams[stream.request_id] = stream
             new_requests.append(new_request)
-
+            
         return new_requests, finished_requests
 
     async def wait_for_new_requests(self):
@@ -553,7 +577,15 @@ class AsyncLLMEngine:
                 await self.engine.add_kv_response.remote(**kv_response)
             else:
                 self.engine.add_kv_response(**kv_response)
-                              
+        
+        kv_results_requests = self._request_tracker.get_new_kv_results_request()
+        for kv_result_requests in kv_results_requests:
+            if self.engine_use_ray:
+                await self.engine.add_kv_results_request.remote(**kv_result_requests)
+            else:
+                self.engine.add_kv_results_request(**kv_response)
+
+        
         if self.engine_use_ray:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
@@ -601,6 +633,17 @@ class AsyncLLMEngine:
                 raise
             await asyncio.sleep(0)
 
+    async def add_kv_results_request(
+        self, 
+        request_id: str,
+        token_ids: List[int]
+    ) -> AsyncStream:
+        stream = self._request_tracker.add_kv_results_request(
+            request_id,
+            token_ids=token_ids,
+        )
+        return stream
+        
     async def add_request(
         self,
         request_id: str,

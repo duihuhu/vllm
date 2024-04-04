@@ -21,6 +21,25 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+@app.post("/prepare_kv_result")
+async def prepare_kv_result(response: Request) -> None:
+    payload = await response.json()
+    request_id = payload.pop("request_id")
+    token_ids = payload.pop("token_ids")
+    
+    results_generator = server.engine.add_kv_results_request(request_id=request_id,
+                                            token_ids=token_ids)
+   
+    #return results to global scheduler
+    async def stream_results() -> AsyncGenerator[bytes, None]:
+        #response to d
+        async for kv_result in results_generator:
+            print("prepare_kv_result ", kv_result)
+            yield (json.dumps(kv_result) + "\0").encode("utf-8")
+            break
+    return StreamingResponse(stream_results())
+
+        
 @app.post("/response_kv_prepared")
 async def response_kv_prepared(response: Request) -> None:
     payload = await response.json()
@@ -69,12 +88,6 @@ async def generate_decode(request: Request) -> Response:
     
     
     sampling_params = SamplingParams(**sampling_params_json)
-    
-    # #reconstuct output_logprobs
-    # output_logprobs_new = [{}] * len(output_logprobs)
-    # for idx, output_logprob in enumerate(output_logprobs):
-    #     for output_logprob_key, output_logprob_value in output_logprob.items():
-    #         output_logprobs_new[idx][int(output_logprob_key)] = output_logprob_value
     
     request_output = RequestOutput(
         request_id=request_id,

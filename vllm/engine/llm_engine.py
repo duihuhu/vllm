@@ -256,6 +256,14 @@ class LLMEngine:
                                                      lora_request=lora_request)
         return prompt_token_ids
 
+    def add_kv_results_request(
+        self,
+        results_request):
+        # request_id = results_request.request_id
+        # self.scheduler._allocate()
+        logger.info("add_kv_results_request ")
+        return {"add":"ok"}
+    
     def add_kv_response(
         self,
         response: KvPreparedResponse
