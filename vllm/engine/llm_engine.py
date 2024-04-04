@@ -303,6 +303,8 @@ class LLMEngine:
             self.scheduler.del_send_transfering(request_id)
             logger.info("remote recv engine prepare kv fail.")
             return
+        if self.scheduler.get_send_transfering(request_id) is None:
+            print("self.scheduler.get_send_transfering(request_id) nonon ")
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
         self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks, True)
 
