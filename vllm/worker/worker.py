@@ -286,13 +286,13 @@ class Worker:
     def list_loras(self) -> Set[int]:
         return self.model_runner.list_loras()
 
-    def decode_recv_request_id(
+    def recv_request_id(
         self,
         task: TransferRequestIdTask
     ) -> str:
         self.cache_engine.recv_request_id(task.channel, task.opposite_ranks[self.rank])
     
-    def prefill_send_blocks(
+    def send_blocks(
         self,
         task: TransferBlocksTask
     ) -> None:
@@ -300,7 +300,7 @@ class Worker:
         self.cache_engine.send_blocks(task_meta.channel, task_meta.request_id,
                                       task.blocks, task.opposite_ranks[self.rank])
     
-    def decode_recv_blocks(
+    def recv_blocks(
         self,
         task: TransferBlocksTask
     ) -> None:
@@ -308,14 +308,10 @@ class Worker:
         self.cache_engine.recv_blocks(task_meta.channel, task_meta.request_id,
                                       task.blocks, task.opposite_ranks[self.rank])
         
-    def check_prefill_finished_transfer_task(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta]]:
+    def check_finished_transfer_task(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta], List[TransferTaskMeta]]:
         send_blocks_finished = self.cache_engine.check_send_finished_events()
-        return send_blocks_finished
-    
-    def check_decode_finished_transfer_task(self) -> List[TransferTaskMeta]:
         recv_request_id_finished, recv_blocks_finished = self.cache_engine.check_recv_finished_events()
-        return recv_request_id_finished, recv_blocks_finished
-
+        return send_blocks_finished, recv_request_id_finished, recv_blocks_finished
 
     @property
     def max_model_len(self) -> int:

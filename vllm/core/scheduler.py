@@ -157,6 +157,8 @@ class Scheduler:
         # Sequence groups in the SWAPPED state.
         self.swapped: Deque[SequenceGroup] = deque()
 
+        self.decode: Deque[SequenceGroup] = deque()
+
         # Time at previous scheduling step
         self.prev_time = 0.0
         # Did we schedule a prompt at previous step?
@@ -184,14 +186,14 @@ class Scheduler:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
 
-
     def prefill_add_send_finished(self, request_ids: List[str]):
-        self.send_finished_req_ids = request_ids
+        self.send_finished_req_ids.extend(request_ids)
     
     def prefill_add_send_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the send transfering map.
         self.send_transfering[seq_group.request_id] = seq_group
     
+    #todo check free_seq
     def prefill_del_send_transfering(self, request_id: str) -> None:
         # Delete sequence groups to the send  transfering map 
         if request_id in self.send_transfering:
@@ -205,7 +207,7 @@ class Scheduler:
         return self.send_transfering[request_id]
 
     def decode_add_recv_finished(self, request_ids: List[str]):
-        self.recv_finished_req_ids = request_ids
+        self.recv_finished_req_ids.extend(request_ids)
     
     def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the recv transfering map
@@ -253,13 +255,8 @@ class Scheduler:
 
     def fetch_decoded_seq_groups(self) -> List[SequenceGroup]:
         decoded_seq_groups = []
-        running: Deque[SequenceGroup] = deque()
-        for seq_group in self.running:
-            if seq_group.get_seqs()[0].status != SequenceStatus.RUNNING:
-                decoded_seq_groups.append(seq_group)
-            else:
-                running.append(seq_group)
-        self.running = running
+        while self.decoded:
+            decoded_seq_groups.append(self.decoded.pop())
         return decoded_seq_groups
 
     def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
@@ -572,6 +569,8 @@ class Scheduler:
         self.block_manager.free(seq)
 
     def free_finished_seq_groups(self) -> None:
+        self.decoded = deque(seq_group for seq_group in self.running
+                             if seq_group.is_finished())
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
 
@@ -691,16 +690,15 @@ class Scheduler:
         return passed_delay
 
     def _check_tranfer_finished_req(self) -> None:
-        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
-            for request_id in self.send_finished_req_ids[:]:
-                seq_group = self.send_transfering[request_id]
-                seq = seq_group.get_seqs()[0]
-                self.free_seq(seq)
-                del self.send_transfering[request_id]
-                self.send_finished_req_ids.remove(request_id)
-        elif self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
-            for request_id in self.recv_finished_req_ids[:]:
-                seq_group = self.recv_transfering[request_id]
-                self.running.append(seq_group)
-                del self.recv_transfering[request_id]
-                self.recv_finished_req_ids.remove(request_id)
+        for request_id in self.send_finished_req_ids[:]:
+            seq_group = self.send_transfering[request_id]
+            seq = seq_group.get_seqs()[0]
+            self.free_seq(seq)
+            del self.send_transfering[request_id]
+            self.send_finished_req_ids.remove(request_id)
+
+        for request_id in self.recv_finished_req_ids[:]:
+            seq_group = self.recv_transfering[request_id]
+            self.running.append(seq_group)
+            del self.recv_transfering[request_id]
+            self.recv_finished_req_ids.remove(request_id)

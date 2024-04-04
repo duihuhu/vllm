@@ -299,12 +299,12 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
             prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
             for seq_group in prefilled_seq_groups:
-                self.scheduler.prefill_add_send_transfering(seq_group)
+                self.scheduler.add_send_transfering(seq_group)
         
         if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
-                self.scheduler.prefill_add_send_transfering(seq_group)
+                self.scheduler.add_send_transfering(seq_group)
         
         return processed_outputs
 
@@ -361,46 +361,36 @@ class _AsyncLLMEngine(LLMEngine):
         if not self.deploy_config.enable_separate:
             return
 
-        if self.deploy_config.role == 'prompt':
-            finished_tasks = await self.model_executor._run_workers_async(
-                "check_prefill_finished_transfer_task",
-                # get_all_outputs=True
-            )
-            for worker_finished_tasks in finished_tasks:
-                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
-                if real_finished_req_ids:
-                    self.scheduler.prefill_add_send_finished(real_finished_req_ids)
-            
-            prefill_scheduler_outputs = self.kv_trans_scheduler.schedule()
-            if prefill_scheduler_outputs.task_for_send_blocks:
-                await self.model_executor._run_workers_async(
-                    "prefill_send_blocks",
-                    prefill_scheduler_outputs.task_for_send_blocks
-                )
+        finished_tasks = await self.model_executor._run_workers_async(
+            "check_finished_transfer_task",
+            # get_all_outputs=True
+        )
         
-        else:
-            finished_tasks = await self.model_executor._run_workers_async(
-                "check_decode_finished_transfer_task",
-                # get_all_outputs=True
-            )
-            for worker_finished_tasks in finished_tasks:
-                real_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
-                if real_finished_req_ids:
-                    self.scheduler.decode_add_recv_finished(real_finished_req_ids)
-
-            decode_scheduler_outputs = self.kv_trans_scheduler.schedule()
-            
-            if decode_scheduler_outputs.task_for_recv_request_id:
-                await self.model_executor._run_workers_async(
-                    "decode_recv_request_id",
-                    decode_scheduler_outputs.task_for_recv_request_id
-                )
+        for worker_finished_tasks in finished_tasks:
+            real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+            if real_send_finished_req_ids:
+                self.scheduler.add_send_finished(real_send_finished_req_ids)
+            if real_recv_finished_req_ids:
+                self.scheduler.add_recv_finished(real_recv_finished_req_ids)
                 
-            if decode_scheduler_outputs.task_for_recv_blocks:
-                await self.model_executor._run_workers_async(
-                    "decode_recv_blocks",
-                    decode_scheduler_outputs.task_for_recv_blocks
-                )
+        scheduler_outputs = self.kv_trans_scheduler.schedule()
+        if scheduler_outputs.task_for_send_blocks:
+            await self.model_executor._run_workers_async(
+                "send_blocks",
+                scheduler_outputs.task_for_send_blocks
+            )
+            
+        if scheduler_outputs.task_for_recv_request_id:
+            await self.model_executor._run_workers_async(
+                "recv_request_id",
+                scheduler_outputs.task_for_recv_request_id
+            )
+            
+        if scheduler_outputs.task_for_recv_blocks:
+            await self.model_executor._run_workers_async(
+                "recv_blocks",
+                scheduler_outputs.task_for_recv_blocks
+            )
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
