@@ -552,6 +552,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def compute_full_blocks_in_seq(self, seq: Sequence):
         if seq.seq_id not in self.block_tables:
+            print("not in  seq.block_tables ")
             return
         max_full_block = seq.get_len() // self.block_size - 1
         block_table = self.block_tables[seq.seq_id]
