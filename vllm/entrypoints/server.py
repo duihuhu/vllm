@@ -27,7 +27,7 @@ async def prepare_kv_result(response: Request) -> None:
     request_id = payload.pop("request_id")
     token_ids = payload.pop("token_ids")
     
-    results_generator = server.engine.add_kv_results_request(request_id=request_id,
+    results_generator = await server.engine.add_kv_results_request(request_id=request_id,
                                             token_ids=token_ids)
    
     #return results to global scheduler
