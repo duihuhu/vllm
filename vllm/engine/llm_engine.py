@@ -258,11 +258,46 @@ class LLMEngine:
 
     def add_kv_results_request(
         self,
-        results_request):
-        # request_id = results_request.request_id
-        # self.scheduler._allocate()
+        request_id: str,
+        sampling_params: SamplingParams,
+        lora_request: Optional[LoRARequest] = None,
+        multi_modal_data: Optional[MultiModalData] = None,
+        request_output: Optional[RequestOutput] = None):
+
         logger.info("add_kv_results_request ")
-        return {"add":"ok"}
+        
+        # Create the sequences.
+        block_size = self.cache_config.block_size
+        seq_id = next(self.seq_counter)
+        eos_token_id = self.tokenizer.get_lora_tokenizer(
+            lora_request).eos_token_id
+        
+        seq = Sequence(seq_id, request_output.prompt, request_output.prompt_token_ids + request_output.outputs[0].token_ids, block_size,
+                       eos_token_id, lora_request)
+
+        sampling_params = sampling_params.clone()
+
+        sampling_params.eos_token_id = seq.eos_token_id
+        
+        arrival_time = time.time()
+        # Create the sequence group.
+        seq_group = SequenceGroup(request_id, [seq], sampling_params,
+                                  arrival_time, lora_request, multi_modal_data)
+        
+        phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group)
+        
+        blocks = [phy_block.block_number for phy_block in phy_blocks]
+        for phy_block in phy_blocks:
+            print("phy_block computed ", phy_block.computed)
+            
+        if not blocks:
+            kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
+        else:
+            kv_response = KvPreparedResponse(request_id, 0, None)
+            self.scheduler.add_recv_transfering(seq_group)
+            self.kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
+        
+        return kv_response
     
     def add_kv_response(
         self,
@@ -385,7 +420,7 @@ class LLMEngine:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
             else:
                 kv_response = KvPreparedResponse(request_id, 0, None)
-                self.scheduler.decode_add_recv_transfering(seq_group)
+                self.scheduler.add_recv_transfering(seq_group)
                 self.kv_trans_scheduler.add_kv_request(request_id,
                                                             prefill_request_output.global_ranks, blocks)
         return kv_response

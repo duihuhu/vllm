@@ -137,12 +137,14 @@ async def add_request(request: Request) -> Response:
                     await send_to_prefill_response_kv_prepared(res, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
                 else:
                     if res['finished'] == True:
-                        pload = {
-                                "request_id": res['request_id'], 
-                                "token_ids": res['prompt_token_ids'] + res['prefilled_token_id'],
-                            }
-                        pkv_response = await forward_request_to_prefill(pload, cfg.forward_eprefill_res_kv_url % (cfg.eprefill_host, cfg.eprefill_port))
+                        # pload = {
+                        #         "request_id": res['request_id'], 
+                        #         "token_ids": res['prompt_token_ids'] + res['prefilled_token_id'],
+                        #     }
+                        pkv_response = await forward_request_to_prefill(res, cfg.forward_eprefill_res_kv_url % (cfg.eprefill_host, cfg.eprefill_port))
                         print("pkv_response ", pkv_response)
+                        await forward_request_to_decode(pkv_response, cfg.forward_edecode_res_kv_url  % (cfg.edecode_host, cfg.edecode_port))
+                    
                     yield (json.dumps(res) + "\0").encode("utf-8")
                 n = n + 1
         return StreamingResponse(stream_results())

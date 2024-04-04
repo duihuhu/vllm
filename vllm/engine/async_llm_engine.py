@@ -162,6 +162,7 @@ class RequestTracker:
             "request_id": request_id,
             **engine_add_request_kwargs
         }))
+        self.new_requests_event.set()
         return stream
 
     def add_request(self, request_id: str,
@@ -579,13 +580,17 @@ class AsyncLLMEngine:
                 self.engine.add_kv_response(**kv_response)
         
         kv_results_requests = self._request_tracker.get_new_kv_results_request()
-        for kv_result_requests in kv_results_requests:
-            if self.engine_use_ray:
-                await self.engine.add_kv_results_request.remote(**kv_result_requests)
-            else:
-                self.engine.add_kv_results_request(**kv_response)
-
         
+        for kv_result_requests in kv_results_requests:
+            kv_response = None
+            if self.engine_use_ray:
+                kv_response = await self.engine.add_kv_results_request.remote(**kv_result_requests)
+            else:
+                kv_response = self.engine.add_kv_results_request(**kv_response)
+            if kv_response:
+                self._request_tracker.process_kv_response(
+                    self.engine.get_global_ranks(), kv_response)
+    
         if self.engine_use_ray:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
@@ -636,11 +641,17 @@ class AsyncLLMEngine:
     async def add_kv_results_request(
         self, 
         request_id: str,
-        token_ids: List[int]
+        sampling_params: SamplingParams,
+        lora_request: Optional[LoRARequest] = None,
+        multi_modal_data: Optional[MultiModalData] = None,
+        request_output: Optional[RequestOutput] = None
     ) -> AsyncStream:
         stream = self._request_tracker.add_kv_results_request(
-            request_id,
-            token_ids=token_ids,
+            request_id=request_id,
+            sampling_params=sampling_params,
+            lora_request = lora_request, 
+            multi_modal_data = multi_modal_data,
+            request_output = request_output
         )
         return stream
         

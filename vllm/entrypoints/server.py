@@ -21,14 +21,50 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
-@app.post("/prepare_kv_result")
-async def prepare_kv_result(response: Request) -> None:
+@app.post("/response_kv_result")
+async def response_kv_result(response: Request) -> None:
     payload = await response.json()
+    global_ranks = payload.pop("global_ranks")
+    kv_response = KvPreparedResponse(**payload)
+    kv_response.global_ranks = global_ranks
+    await server.engine.add_kv_response(kv_response)
+
+@app.post("/prepare_kv_result")
+async def prepare_kv_result(request: Request) -> None:
+    payload = await request.json()
     request_id = payload.pop("request_id")
-    token_ids = payload.pop("token_ids")
+    opp_ranks = payload.pop("opp_ranks")
+    prompt_token_ids = payload.pop("prompt_token_ids")
+    prompt_logprobs = payload.pop("prompt_logprobs")
+    prefilled_token_id = payload.pop("prefilled_token_id")
+    output_logprobs = payload.pop("output_logprobs")
+    cumulative_logprob  = payload.pop("cumulative_logprob")
+    sampling_params_json = payload.pop("sampling_params")
+    index = payload.pop("index")
+    texts = payload.pop("texts")
+    finished = payload.pop("finished")
+    
+    prompt_logprobs = pprobs_key_s2i(prompt_logprobs)
+    output_logprobs = cprobs_key_s2i(output_logprobs)
+    
+    sampling_params = SamplingParams(**sampling_params_json)
+    
+    request_output = RequestOutput(
+        request_id=request_id,
+        prompt=None,
+        outputs= [CompletionOutput(index=index,
+                                   text=texts[0],
+                                   token_ids=prefilled_token_id,
+                                   cumulative_logprob=cumulative_logprob,
+                                   logprobs=output_logprobs)],
+        prompt_token_ids=prompt_token_ids,
+        prompt_logprobs=prompt_logprobs,
+        finished=finished,
+    )
+    request_output.global_ranks = opp_ranks
     
     results_generator = await server.engine.add_kv_results_request(request_id=request_id,
-                                            token_ids=token_ids)
+                                            sampling_params=sampling_params, request_output=request_output)
    
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:

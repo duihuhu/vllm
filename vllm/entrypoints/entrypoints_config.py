@@ -9,6 +9,8 @@ forward_eprefill_res_url = "http://%s:%s/response_kv_prepared"
 
 forward_eprefill_res_kv_url = "http://%s:%s/prepare_kv_result"
 
+forward_edecode_res_kv_url = "http://%s:%s/response_kv_result"
+
 client_ip = "127.0.0.1"
 client_port = 8000
 forward_res_url = "http://%s:%s/add_results"

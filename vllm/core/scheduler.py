@@ -207,10 +207,10 @@ class Scheduler:
     def decode_add_recv_finished(self, request_ids: List[str]):
         self.recv_finished_req_ids = request_ids
     
-    def decode_add_recv_transfering(self, seq_group: SequenceGroup) -> None:
+    def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the recv transfering map
         self.recv_transfering[seq_group.request_id] = seq_group
-        
+
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a sequence group with the given ID.
 
@@ -260,6 +260,17 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
     
+    def allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
+        seq = seq_group.get_seqs()[0]
+        if not self.block_manager.can_allocate(seq_group):
+            return None
+        else:
+            self._only_allocate(seq_group)
+            self.block_manager.block_tables[seq.seq_id]
+            block_table = self.block_manager.block_tables[seq.seq_id]
+            phy_blocks = [phy_block for phy_block in block_table]
+            return phy_blocks
+        
     def allocate_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
         seq = seq_group.get_seqs()[0]
         if not self.block_manager.can_allocate(seq_group):
@@ -553,6 +564,9 @@ class Scheduler:
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
 
+    def _only_allocate(self, seq_group: SequenceGroup) -> None:
+        self.block_manager.allocate(seq_group)
+        
     def _allocate(self, seq_group: SequenceGroup) -> None:
         self.block_manager.allocate(seq_group)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
