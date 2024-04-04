@@ -70,7 +70,6 @@ async def prepare_kv_result(request: Request) -> None:
     async def stream_results() -> AsyncGenerator[bytes, None]:
         #response to d
         async for kv_result in results_generator:
-            print("prepare_kv_result ", kv_result)
             yield (json.dumps(kv_result.__json__()) + "\0").encode("utf-8")
             break
     return StreamingResponse(stream_results())

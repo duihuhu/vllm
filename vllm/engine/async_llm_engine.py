@@ -195,6 +195,7 @@ class RequestTracker:
         self._kv_responses.put_nowait({
             **engine_kv_response_kwargs
         })
+        self.new_requests_event.set()
         
     def abort_request(self, request_id: str, *, verbose: bool = False) -> None:
         """Abort a request during next background loop iteration."""

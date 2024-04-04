@@ -264,15 +264,12 @@ class LLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         request_output: Optional[RequestOutput] = None):
 
-        logger.info("add_kv_results_request ")
-        
         # Create the sequences.
         block_size = self.cache_config.block_size
         seq_id = next(self.seq_counter)
         eos_token_id = self.tokenizer.get_lora_tokenizer(
             lora_request).eos_token_id
         
-        print("request_output.prompt_token_ids + request_output.outputs[0].token_ids ", request_output.prompt_token_ids + request_output.outputs[0].token_ids)
         seq = Sequence(seq_id, request_output.prompt, request_output.prompt_token_ids + request_output.outputs[0].token_ids, block_size,
                        eos_token_id, lora_request)
 
