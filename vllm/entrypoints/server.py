@@ -163,9 +163,6 @@ async def generate_decode(request: Request) -> Response:
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
-            if request_output.finished == True:
-                print("prompt_token_ids ", infer_result.prompt_token_ids, len(infer_result.prompt_token_ids))
-                print("prefilled_token_ids ", infer_result.prefilled_token_id, len(infer_result.prefilled_token_id))
             yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")
     
     return StreamingResponse(stream_results())
