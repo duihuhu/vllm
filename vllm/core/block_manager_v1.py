@@ -324,6 +324,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq: Sequence,
     ) -> bool:
         token_ids_len = len(seq.data.get_token_ids())
+        print("token_ids_len  token_ids_len % seq.block_size ", token_ids_len, token_ids_len % seq.block_size)
         return token_ids_len > 0 and token_ids_len % seq.block_size == 0
 
     def _maybe_promote_last_block(
@@ -336,6 +337,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             print("_maybe_promote_last_block _is_last_block_full ")
             return self._promote_last_block(seq, last_block)
         else:
+            print("_maybe_promote_last_block  last_block")
             return last_block
 
     def _allocate_last_physical_block(
