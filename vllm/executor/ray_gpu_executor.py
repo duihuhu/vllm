@@ -426,7 +426,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
     ) -> SamplerOutput:
         all_outputs = await self._run_workers_async(
             "execute_model",
-            seq_group_metadata_list=seq_group_metadata_list,
+            # seq_group_metadata_list=seq_group_metadata_list,
             driver_kwargs={
                 "seq_group_metadata_list": seq_group_metadata_list,
                 "blocks_to_swap_in": blocks_to_swap_in,
