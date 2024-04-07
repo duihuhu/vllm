@@ -400,6 +400,8 @@ class LLMEngine:
             for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
                 seq.append_token_id(token_id, output_logprob)
                 
+                print("add decode request ", seq.data.get_len(), seq.data.get_token_ids())        
+        
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data)
