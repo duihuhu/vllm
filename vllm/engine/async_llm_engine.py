@@ -304,6 +304,7 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
+                print("end decoder token info ", len(seq_group.get_seqs()[0].data.get_len()), seq_group.get_seqs()[0].data.get_token_ids())
                 print("end decoder's block num ", self.scheduler.fetch_kv_blocks(seq_group))
                 self.scheduler.add_send_transfering(seq_group)
         
@@ -631,7 +632,6 @@ class AsyncLLMEngine:
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
                 logger.debug("Got new requests!")
-            print(has_requests_in_progress, self.engine.scheduler.swapping_in, self.engine.scheduler.swapping_out,  self.engine.scheduler.recv_transfering, self.engine.scheduler.send_transfering)
             # Abort if iteration takes too long due to unrecoverable errors
             # (eg. NCCL timeouts).
             try:
