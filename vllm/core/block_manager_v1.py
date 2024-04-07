@@ -331,7 +331,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq: Sequence,
         last_block: PhysicalTokenBlock,
     ) -> PhysicalTokenBlock:
+        
         if self._is_last_block_full(seq):
+            print("_maybe_promote_last_block _is_last_block_full ")
             return self._promote_last_block(seq, last_block)
         else:
             return last_block
@@ -392,7 +394,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # We want to append the token to the last physical block.
         last_block = block_table[-1]
         assert last_block.device == Device.GPU
-        print("last_block.ref_count ", last_block.ref_count)
         if last_block.ref_count == 1:
             # Not shared with other sequences. Appendable.
             if self.enable_caching:
