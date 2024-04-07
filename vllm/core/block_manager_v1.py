@@ -313,9 +313,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # if new_hash is already in the cached table, then free last_block
         # and return the cached version
         if self.gpu_allocator.contains_block(new_hash):
+            print("contains_block ", new_hash)
             self.gpu_allocator.free(last_block)
             return self.gpu_allocator.allocate(new_hash)
         else:
+            print("not contains_block ", new_hash)
             self.gpu_allocator.update_hash(new_hash, last_block)
             return last_block
 
@@ -332,7 +334,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq: Sequence,
         last_block: PhysicalTokenBlock,
     ) -> PhysicalTokenBlock:
-        
         if self._is_last_block_full(seq):
             print("_maybe_promote_last_block _is_last_block_full ")
             return self._promote_last_block(seq, last_block)
