@@ -304,10 +304,6 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
-                print("end decoder token info ", seq_group.get_seqs()[0].data.get_len(), seq_group.get_seqs()[0].data.get_token_ids())
-                seq = seq_group.get_seqs()[0]
-                print("end decoder logical block num ", len(seq.logical_token_blocks))
-                print("end decoder's block num ", self.scheduler.fetch_kv_blocks(seq_group))
                 self.scheduler.add_send_transfering(seq_group)
         
         return processed_outputs

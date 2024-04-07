@@ -373,6 +373,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_table = self.block_tables[seq.seq_id]
         # If we need to allocate a new physical block
         if len(block_table) < len(logical_blocks):
+            print("allocate new physical ")
             # Currently this code only supports adding one physical block
             assert len(block_table) == len(logical_blocks) - 1
 
@@ -391,6 +392,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # We want to append the token to the last physical block.
         last_block = block_table[-1]
         assert last_block.device == Device.GPU
+        print("last_block.ref_count ", last_block.ref_count)
         if last_block.ref_count == 1:
             # Not shared with other sequences. Appendable.
             if self.enable_caching:
