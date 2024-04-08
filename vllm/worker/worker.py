@@ -270,11 +270,13 @@ class Worker:
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
-
-        print("seq_group_metadata_list ", 
-              seq_group_metadata_list[0].seq_data,
-              seq_group_metadata_list[0].block_tables, 
-              seq_group_metadata_list[0].computed_block_nums,)
+        
+        if self.is_driver_worker:
+            if seq_group_metadata_list:
+                print("seq_group_metadata_list ", 
+                    seq_group_metadata_list[0].seq_data,
+                    seq_group_metadata_list[0].block_tables, 
+                    seq_group_metadata_list[0].computed_block_nums,)
         
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
