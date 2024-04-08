@@ -168,6 +168,7 @@ class KvPreparedResponse:
             "global_ranks": self.global_ranks,
             "error": self.error,
             "error_msg": self.error_msg,
+            "computed_blocks": self.computed_blocks,
         }
 
 class VLLMLoadInfo:
