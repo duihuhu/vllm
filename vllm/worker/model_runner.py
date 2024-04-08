@@ -252,10 +252,11 @@ class ModelRunner:
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
         assert max_subquery_len > 0
-
         
         print("_prepare_prompt start ")
-        print("input_tokens ", input_tokens)
+        print("seq_data ", seq_data)
+        print("computed_len ", computed_len)
+        print("input_tokens,  prefill_end, start_idx , computed_block_nums, token_chunk_size ", input_tokens, prefill_end, start_idx, computed_block_nums, token_chunk_size)
         print("input_positions ", input_positions)
         print("slot_mapping ", slot_mapping)
         print("lora_index_mapping ", lora_index_mapping)
