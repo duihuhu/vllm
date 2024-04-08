@@ -248,23 +248,10 @@ class ModelRunner:
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
             
-            print("_prepare_prompt start ")
-            print("seq_data ", seq_data)
-            print("computed_len ", computed_len)
-            print("input_tokens,  prefill_end, start_idx , computed_block_nums, token_chunk_size ", input_tokens, prefill_end, start_idx, computed_block_nums, token_chunk_size)
-            
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
         assert max_subquery_len > 0
-        
-        print("input_positions ", input_positions)
-        print("slot_mapping ", slot_mapping)
-        print("lora_index_mapping ", lora_index_mapping)
-        print("context_lens ", context_lens)
-        print("prefix_block_tables ", prefix_block_tables)
-        print("subquery_lens ", subquery_lens)
-        print("prompt_lens ", prompt_lens)
 
         input_tokens = torch.tensor(input_tokens,
                                     dtype=torch.long,
@@ -600,9 +587,12 @@ class ModelRunner:
                 prompt_lens = []
                 subquery_lens = None
                 multi_modal_input = None
+
             print("seq_group_metadata_list ", seq_group_metadata_list)
-            print("seq_group_metadata_list ", prompt_lens)
-            print("seq_group_metadata_list ", subquery_lens)
+
+            print("prompt_lens ", prompt_lens)
+            
+            print("subquery_lens ", subquery_lens)
 
             sampling_metadata = self._prepare_sample(seq_group_metadata_list,
                                                      prompt_lens,
@@ -680,8 +670,6 @@ class ModelRunner:
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         hidden_states = model_executable(**execute_model_kwargs)
-
-        print("sampling_metadata ", sampling_metadata)
 
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
