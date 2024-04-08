@@ -547,6 +547,8 @@ class ModelRunner:
 
             if sampling_params.seed is not None:
                 generators.append(seq_group_metadata.state.generator)
+                
+        print("selected_token_indices " ,selected_token_indices)
 
         selected_token_indices = async_tensor_h2d(selected_token_indices,
                                                   dtype=torch.long,
@@ -598,6 +600,10 @@ class ModelRunner:
                 prompt_lens = []
                 subquery_lens = None
                 multi_modal_input = None
+            print("seq_group_metadata_list ", seq_group_metadata_list)
+            print("seq_group_metadata_list ", prompt_lens)
+            print("seq_group_metadata_list ", subquery_lens)
+
             sampling_metadata = self._prepare_sample(seq_group_metadata_list,
                                                      prompt_lens,
                                                      subquery_lens)
