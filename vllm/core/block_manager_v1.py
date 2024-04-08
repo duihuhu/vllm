@@ -279,10 +279,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Set the reference counts of the token blocks.
                 block.ref_count = seq_group.num_seqs()
             elif self.enable_caching:
-                print(seq.seq_id, logical_idx, seq.hash_of_block(logical_idx))
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
+                print("allocate block ", seq.seq_id, logical_idx, seq.hash_of_block(logical_idx), block.block_number)
             else:
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.
