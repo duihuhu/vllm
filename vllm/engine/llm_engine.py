@@ -288,10 +288,9 @@ class LLMEngine:
         #     print("phy_block computed ", phy_block.computed)
             
         if not blocks:
-            kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
+            kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
         else:
-            kv_response = KvPreparedResponse(request_id, 0, None)
-            kv_response.computed_blocks = len(computed_blocks)
+            kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
             self.scheduler.add_recv_transfering(seq_group)
             self.kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks, False)
         
@@ -421,10 +420,9 @@ class LLMEngine:
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
             if not blocks:
-                kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
+                kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
             else:
-                kv_response = KvPreparedResponse(request_id, 0, None)
-                kv_response.computed_blocks = len(computed_blocks)
+                kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
                 self.scheduler.add_recv_transfering(seq_group)
                 self.kv_trans_scheduler.add_kv_request(request_id,
                                                             prefill_request_output.global_ranks, blocks, False)
