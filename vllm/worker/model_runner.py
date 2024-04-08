@@ -535,7 +535,7 @@ class ModelRunner:
 
             if sampling_params.seed is not None:
                 generators.append(seq_group_metadata.state.generator)
-        print("selected_token_indices " ,selected_token_indices)
+
         selected_token_indices = async_tensor_h2d(selected_token_indices,
                                                   dtype=torch.long,
                                                   target_device=self.device,
