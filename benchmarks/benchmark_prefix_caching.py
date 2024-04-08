@@ -39,7 +39,7 @@ def main(args):
     print("------start generating------")
     test_prefix(
         llm=llm,
-        prompts=[PROMPT2],
+        prompts=[PROMPT1],
         sampling_params=sampling_params,
     )
 
