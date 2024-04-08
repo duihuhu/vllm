@@ -252,6 +252,17 @@ class ModelRunner:
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
         assert max_subquery_len > 0
+        
+        print("_prepare_prompt start ")
+        print("input_tokens ", input_tokens)
+        print("input_positions ", input_positions)
+        print("slot_mapping ", slot_mapping)
+        print("lora_index_mapping ", lora_index_mapping)
+        print("context_lens ", context_lens)
+        print("prefix_block_tables ", prefix_block_tables)
+        print("subquery_lens ", subquery_lens)
+        print("prompt_lens ", prompt_lens)
+
 
         input_tokens = torch.tensor(input_tokens,
                                     dtype=torch.long,
