@@ -413,9 +413,6 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
-            seq = seq_group.get_seqs()[0]
-            for log_token in seq.logical_token_blocks:
-                print("decode ", log_token.token_ids)
             blocks = self.scheduler.allocate_kv_blocks(seq_group)
             if not blocks:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory")
