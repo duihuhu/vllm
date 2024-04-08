@@ -709,7 +709,8 @@ class Scheduler:
                 if block_table[i].computed:
                     new_block_table.append(block_table[i])
                 else:
-                    self.block_manager.gpu_allocator.free_out_evictor(block_table[i])
+                    # self.block_manager.gpu_allocator.free_out_evictor(block_table[i])
+                    self.block_manager.gpu_allocator.free(block_table[i])
             self.block_manager.block_tables[seq.seq_id] = block_table
 
         for request_id in self.recv_finished_req_ids[:]:
