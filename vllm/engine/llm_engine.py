@@ -267,7 +267,7 @@ class LLMEngine:
         eos_token_id = self.tokenizer.get_lora_tokenizer(
             lora_request).eos_token_id
         
-        seq = Sequence(seq_id, request_output.prompt, request_output.prompt_token_ids + request_output.outputs[0].token_ids, block_size,
+        seq = Sequence(seq_id, request_output.prompt, request_output.prompt_token_ids + request_output.outputs[0].token_ids[:-1], block_size,
                        eos_token_id, lora_request)
 
         sampling_params = sampling_params.clone()
