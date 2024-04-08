@@ -248,11 +248,11 @@ class ModelRunner:
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
             
-        print("_prepare_prompt start ")
-        print("seq_data ", seq_data)
-        print("computed_len ", computed_len)
-        print("input_tokens,  prefill_end, start_idx , computed_block_nums, token_chunk_size ", input_tokens, prefill_end, start_idx, computed_block_nums, token_chunk_size)
-        
+            print("_prepare_prompt start ")
+            print("seq_data ", seq_data)
+            print("computed_len ", computed_len)
+            print("input_tokens,  prefill_end, start_idx , computed_block_nums, token_chunk_size ", input_tokens, prefill_end, start_idx, computed_block_nums, token_chunk_size)
+            
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
