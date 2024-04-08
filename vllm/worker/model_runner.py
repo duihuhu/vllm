@@ -588,8 +588,10 @@ class ModelRunner:
                 multi_modal_input = None
             
             print("seq_group_metadata_list ", seq_group_metadata_list)
-            print("seq_group_metadata_list ", prompt_lens)
-            print("seq_group_metadata_list ", subquery_lens)
+
+            print("prompt_lens ", prompt_lens)
+            
+            print("subquery_lens ", subquery_lens)
             
             sampling_metadata = self._prepare_sample(seq_group_metadata_list,
                                                      prompt_lens,
