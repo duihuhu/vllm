@@ -279,6 +279,7 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data)
         
+        #there is no use for allocate kv blocks(reference not ++ , because it has not seq use to running)
         phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group)
         
         blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
@@ -572,10 +573,11 @@ class LLMEngine:
             # manager. Keep them in the sequence group as candidate output.
             # NOTE: we need to fork the new sequences before freeing the
             # old sequences.
+            #to check free_seq
             for seq, parent in child_seqs:
                 if seq is parent and seq.is_finished():
-                    # self.scheduler.free_seq(seq)
-                    pass
+                    self.scheduler.free_seq(seq)
+                    # pass
             return
 
         # Beam search case

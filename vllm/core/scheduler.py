@@ -199,7 +199,7 @@ class Scheduler:
         # Delete sequence groups to the send  transfering map 
         if request_id in self.send_transfering:
             seq = self.send_transfering[request_id].get_seqs()[0]
-            # self.free_seq(seq)
+            self.free_seq(seq)
             del self.send_transfering[request_id]
     
     def get_send_transfering(self, request_id: str) -> None:
@@ -260,6 +260,21 @@ class Scheduler:
         while self.decoded:
             decoded_seq_groups.append(self.decoded.pop())
         return decoded_seq_groups
+
+    def check_hbm_usage(self) -> Tuple[str, int]:
+        hbm_ratio = self.block_manager.gpu_allocator.get_num_free_blocks() / self.block_manager.num_total_gpu_blocks
+
+        if hbm_ratio > self.block_manager.waterswap_blocks:
+            num_blocks = int((hbm_ratio - self.block_manager.waterswap_blocks * 1.2) * self.block_manager.num_total_gpu_blocks)
+            return num_blocks
+        return 0
+
+
+    def evict_hbm_caches(self, num_blocks):
+        cache_blocks_to_swap_out: Dict[int, int] = {}
+        mapping = self.block_manager.evict_hbm_caches(num_blocks)
+        cache_blocks_to_swap_out.update(mapping)
+        return cache_blocks_to_swap_out
 
     def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
         prefilled_seq_groups = []
@@ -719,6 +734,10 @@ class Scheduler:
             seq_group = self.recv_transfering[request_id]
             if self.deploy_config.role == "decoder":
                 self.running.append(seq_group)
+            # recv cache in prompt is only cache, not has reference, so it will in evicted cache
+            if self.deploy_config.role == "prompt":
+                for seq in seq_group:
+                    self.block_manager.free(seq.seq_id)
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group)

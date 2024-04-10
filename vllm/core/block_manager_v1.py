@@ -52,7 +52,6 @@ class BlockAllocatorBase(ABC):
     def update_hash(self, block_hash: int, block: PhysicalTokenBlock):
         pass
 
-
 class CachedBlockAllocator(BlockAllocatorBase):
     """Manages free physical token blocks for a device.
 
@@ -77,6 +76,12 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
         self.default_hash_ctr = count()
 
+    def get_num_evicted_blocks(self) -> int:
+        return self.evictor.num_blocks
+    
+    def get_evicted_block(self) -> PhysicalTokenBlock:
+        return self.evictor.get_evicted_block()
+    
     def allocate_block(self, block_hash: int,
                        num_hashed_tokens: int) -> PhysicalTokenBlock:
         if self.current_num_blocks == self.num_blocks:
@@ -206,7 +211,6 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         raise NotImplementedError(
             "Invalid codepath for uncached block allocator.")
 
-
 class BlockSpaceManagerV1(BlockSpaceManager):
     """Manages the mapping between logical and physical token blocks."""
 
@@ -240,6 +244,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         self.watermark_blocks = int(watermark * num_gpu_blocks)
 
+        self.waterswap_blocks = 0.7
+        
         if self.enable_caching:
             self.gpu_allocator = CachedBlockAllocator(Device.GPU, block_size,
                                                       num_gpu_blocks)
@@ -292,7 +298,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
-                print("allocate block ", seq.seq_id, logical_idx, seq.hash_of_block(logical_idx), block.block_number, block.block_hash, block.computed, block.num_hashed_tokens)
             else:
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.
@@ -605,3 +610,24 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if self.enable_caching:
             for seq in seq_group.seqs_dict.values():
                 self.compute_full_blocks_in_seq(seq)
+
+    def evict_hbm_caches(self, num_blocks):
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+        while self.gpu_allocator.get_num_evicted_blocks():
+            gpu_evicted_block = self.gpu_allocator.get_evicted_block()
+            cpu_block = self.cpu_allocator.allocate(gpu_evicted_block.block_hash, gpu_evicted_block.num_hashed_tokens)
+            mapping[gpu_evicted_block] = cpu_block
+            num_blocks = num_blocks - 1
+            if num_blocks == 0:
+                break
+        #todo if num_evicted_blocks of gpu is not enough , need evict from cache blocks ?
+        # if num_blocks != 0:
+        #     while self.gpu_allocator.cached_blocks.
+        #     pass
+        block_number_mapping = {
+            gpu_evicted_block.block_number: cpu_block.block_number
+            for gpu_evicted_block, cpu_block in mapping.items()
+        }
+        
+        return block_number_mapping
+        

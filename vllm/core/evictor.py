@@ -44,6 +44,14 @@ class Evictor(ABC):
         """
         pass
 
+    def get_evicted_block(self) -> PhysicalTokenBlock:
+        """simple return evicted block
+
+        Returns:
+            PhysicalTokenBlock: _description_
+        """
+        pass
+    
     @abstractproperty
     def num_blocks(self) -> int:
         pass
@@ -92,6 +100,17 @@ class LRUEvictor(Evictor):
         block: PhysicalTokenBlock = self.free_table[block_hash]
         self.free_table.pop(block_hash)
         return block
+
+    def get_evicted_block(self) -> PhysicalTokenBlock:
+        evicted_block = next(iter(self.free_table.values()))
+        for _, block in self.free_table.items():
+            if evicted_block.last_accessed < block.last_accessed:
+                break
+            if evicted_block.num_hashed_tokens < block.num_hashed_tokens:
+                evicted_block = block
+
+        self.free_table.pop(evicted_block.block_hash)
+        return evicted_block
 
     @property
     def num_blocks(self) -> int:

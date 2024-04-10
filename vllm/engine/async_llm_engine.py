@@ -305,7 +305,15 @@ class _AsyncLLMEngine(LLMEngine):
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
-        
+                
+        num_blocks = self.scheduler.check_hbm_usage()
+        if not num_blocks:
+            cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
+            await self.model_executor._run_workers_async(
+                "cache_blocks_to_swap_out",
+                cache_blocks_to_swap_out
+            )
+            pass
         return processed_outputs
 
     async def encode_request_async(
