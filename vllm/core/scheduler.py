@@ -736,7 +736,7 @@ class Scheduler:
                 self.running.append(seq_group)
             # recv cache in prompt is only cache, not has reference, so it will in evicted cache
             if self.deploy_config.role == "prompt":
-                for seq in seq_group:
+                for seq in seq_group.get_seqs():
                     self.block_manager.free(seq.seq_id)
             print("gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
             del self.recv_transfering[request_id]
