@@ -199,7 +199,7 @@ class Scheduler:
         # Delete sequence groups to the send  transfering map 
         if request_id in self.send_transfering:
             seq = self.send_transfering[request_id].get_seqs()[0]
-            self.free_seq(seq)
+            # self.free_seq(seq)
             del self.send_transfering[request_id]
     
     def get_send_transfering(self, request_id: str) -> None:
@@ -738,6 +738,7 @@ class Scheduler:
             if self.deploy_config.role == "prompt":
                 for seq in seq_group:
                     self.block_manager.free(seq.seq_id)
+            print("gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
