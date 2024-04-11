@@ -280,13 +280,11 @@ class LLMEngine:
                                   arrival_time, lora_request, multi_modal_data)
         
         #there is no use for allocate kv blocks(reference not ++ , because it has not seq use to running)
-        phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group)
+        phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group, True)
         
         blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
-        computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
 
-        # for phy_block in phy_blocks:
-        #     print("phy_block computed ", phy_block.computed)
+        computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
             
         if not blocks:
             kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
@@ -416,9 +414,10 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
-            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group)
+            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
+            
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
             if not blocks:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
