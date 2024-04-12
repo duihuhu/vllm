@@ -731,10 +731,10 @@ class Scheduler:
         
             print("after send gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
 
-            num_blocks = self.block_manager.gpu_allocator.get_num_evictor_blocks()
-            if num_blocks:
-                cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-                print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            # num_blocks = self.block_manager.gpu_allocator.get_num_evictor_blocks()
+            # if num_blocks:
+            #     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
+            #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
 
 
         for request_id in self.recv_finished_req_ids[:]:
@@ -757,7 +757,7 @@ class Scheduler:
     
             print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
             
-            num_blocks = self.block_manager.gpu_allocator.get_num_evictor_blocks()
-            if num_blocks:
-                cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-                print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            # num_blocks = self.block_manager.gpu_allocator.get_num_evictor_blocks()
+            # if num_blocks:
+            #     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
+            #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
