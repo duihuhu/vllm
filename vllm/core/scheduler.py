@@ -729,7 +729,9 @@ class Scheduler:
             
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
-            
+        
+            print("after send gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
+ 
 
         for request_id in self.recv_finished_req_ids[:]:
             seq_group = self.recv_transfering[request_id]
@@ -749,4 +751,4 @@ class Scheduler:
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
     
-        print("gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
+            print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
