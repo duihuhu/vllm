@@ -339,7 +339,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             elif self.enable_caching:
                 in_hbm = self.gpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
                 in_mem = self.cpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
-                if in_hbm or in_mem is False:                        
+                if in_hbm:                        
                     block, in_evictor = self.gpu_allocator.allocate_kv_blocks(
                         seq.hash_of_block(logical_idx),
                         seq.num_hashed_tokens_of_block(logical_idx))
@@ -349,8 +349,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                             cpu_block = self.block_mapping_tables[block]
                             self.cpu_allocator.free(cpu_block)
                             del self.block_mapping_tables[block]
-                if in_mem:
-                    block = self.cpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                else:
+                    if in_mem:
+                        block = self.cpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                            seq.num_hashed_tokens_of_block(logical_idx))
+                    else:
+                        block = self.gpu_allocator.allocate(
+                        seq.hash_of_block(logical_idx),
                         seq.num_hashed_tokens_of_block(logical_idx))
             else:
                 block = self.gpu_allocator.allocate()
