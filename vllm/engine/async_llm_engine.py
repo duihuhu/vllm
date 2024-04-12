@@ -316,7 +316,7 @@ class _AsyncLLMEngine(LLMEngine):
                     "swap_kv_cache",
                     blocks_to_swap_out=cache_blocks_to_swap_out
                 )
-        #         pass
+
         return processed_outputs
 
     async def encode_request_async(
