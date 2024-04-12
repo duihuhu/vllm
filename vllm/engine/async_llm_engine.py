@@ -307,7 +307,7 @@ class _AsyncLLMEngine(LLMEngine):
                 self.scheduler.add_send_transfering(seq_group)
                 
         # num_blocks = self.scheduler.check_hbm_usage()
-        # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_evictor_blocks()
+        # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
         # if num_blocks:
         #     cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
         #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)

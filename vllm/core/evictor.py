@@ -56,6 +56,10 @@ class Evictor(ABC):
     @abstractproperty
     def num_blocks(self) -> int:
         pass
+    
+    @abstractproperty
+    def num_can_evicted_blocks(self) -> int:
+        pass
 
 
 class LRUEvictor(Evictor):
@@ -73,7 +77,7 @@ class LRUEvictor(Evictor):
     def __contains__(self, block_hash: int) -> bool:
         return block_hash in self.free_table or block_hash in self.free_cache_table
 
-    #todo hucc: maybe need process self.free_cache_table
+    #todo hucc: maybe need process self.free_cache_table, if len(self.free_table) == 0, but self.free_table !=0 
     def evict(self) -> PhysicalTokenBlock:
         if len(self.free_table) == 0:
             raise ValueError("No usable cache memory left")
@@ -110,6 +114,8 @@ class LRUEvictor(Evictor):
         return block
     
     def get_can_evicted_block(self) -> PhysicalTokenBlock:
+        if self.free_cache_table:
+            return None
         evicted_block = next(iter(self.free_cache_table.values()))
         for _, block in self.free_cache_table.items():
             if evicted_block.last_accessed < block.last_accessed:
@@ -122,6 +128,11 @@ class LRUEvictor(Evictor):
     @property
     def num_blocks(self) -> int:
         return len(self.free_table) + len(self.free_cache_table)
+
+    @property
+    def num_can_evicted_blocks(self) -> int:
+        return  len(self.free_cache_table)
+
 
 
 def make_evictor(eviction_policy: EvictionPolicy) -> Evictor:
