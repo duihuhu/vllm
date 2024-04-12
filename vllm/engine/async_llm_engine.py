@@ -306,9 +306,11 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
                 
-        num_blocks = self.scheduler.check_hbm_usage()
+        # num_blocks = self.scheduler.check_hbm_usage()
+        num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_evictor_blocks()
         if not num_blocks:
             cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
+            print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
             if cache_blocks_to_swap_out:
                 await self.model_executor._run_workers_async(
                     "swap_kv_cache",
