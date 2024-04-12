@@ -114,8 +114,7 @@ class LRUEvictor(Evictor):
         return block
     
     def get_can_evicted_block(self) -> PhysicalTokenBlock:
-        if self.free_cache_table:
-            return None
+        
         evicted_block = next(iter(self.free_cache_table.values()))
         for _, block in self.free_cache_table.items():
             if evicted_block.last_accessed < block.last_accessed:

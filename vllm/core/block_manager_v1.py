@@ -718,13 +718,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         while self.gpu_allocator.get_num_can_evicted_blocks():
             print(" self.gpu_allocator.get_num_can_evicted_blocks() ",  self.gpu_allocator.get_num_can_evicted_blocks(), num_blocks)
             gpu_evicted_block = self.gpu_allocator.get_can_evicted_block()
-            if gpu_evicted_block:
-                cpu_block = self.cpu_allocator.allocate(gpu_evicted_block.block_hash, gpu_evicted_block.num_hashed_tokens)
-                cpu_block.computed = gpu_evicted_block.computed
-                mapping[gpu_evicted_block] = cpu_block
-                num_blocks = num_blocks - 1
-            else:
-                break
+            cpu_block = self.cpu_allocator.allocate(gpu_evicted_block.block_hash, gpu_evicted_block.num_hashed_tokens)
+            cpu_block.computed = gpu_evicted_block.computed
+            mapping[gpu_evicted_block] = cpu_block
+            num_blocks = num_blocks - 1
             if num_blocks == 0:
                 break
         #todo if num_evicted_blocks of gpu is not enough , need evict from cache blocks ?
