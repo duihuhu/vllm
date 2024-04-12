@@ -88,8 +88,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
     def get_num_evictor_blocks(self) -> int:
         return self.evictor.num_blocks
     
-    def get_evicted_block(self) -> PhysicalTokenBlock:
-        return self.evictor.get_evicted_block()
+    def get_can_evicted_block(self) -> PhysicalTokenBlock:
+        return self.evictor.get_can_evicted_block()
     
     def allocate_block(self, block_hash: int,
                        num_hashed_tokens: int) -> PhysicalTokenBlock:
@@ -713,7 +713,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     def evict_hbm_caches(self, num_blocks):
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         while self.gpu_allocator.get_num_evictor_blocks():
-            gpu_evicted_block = self.gpu_allocator.get_evicted_block()
+            gpu_evicted_block = self.gpu_allocator.get_can_evicted_block()
             cpu_block = self.cpu_allocator.allocate(gpu_evicted_block.block_hash, gpu_evicted_block.num_hashed_tokens)
             cpu_block.computed = gpu_evicted_block.computed
             mapping[gpu_evicted_block] = cpu_block
