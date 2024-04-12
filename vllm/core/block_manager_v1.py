@@ -703,6 +703,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         while self.gpu_allocator.get_num_evictor_blocks():
             gpu_evicted_block = self.gpu_allocator.get_evicted_block()
+            print("gpu_evicted_block ", gpu_evicted_block)
             cpu_block = self.cpu_allocator.allocate(gpu_evicted_block.block_hash, gpu_evicted_block.num_hashed_tokens)
             mapping[gpu_evicted_block] = cpu_block
             num_blocks = num_blocks - 1
@@ -717,7 +718,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for gpu_evicted_block, cpu_block in mapping.items()
         }
         self.block_mapping_tables.update(mapping)
-        
+        print("block_number_mapping ", block_number_mapping)
         return block_number_mapping
 
     def move_kv_blocks_meta(self, seq_group: SequenceGroup):
