@@ -722,6 +722,7 @@ class Scheduler:
 
             #should free 
             block_table = self.block_manager.block_tables[seq.seq_id]
+            print("block_table ", block_table)
             max_full_block = seq.get_len() // self.block_manager.block_size - 1
             for i in range(max_full_block):
                 print("block_table[i] infor ref count ", block_table[i].ref_count)
