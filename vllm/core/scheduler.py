@@ -722,6 +722,8 @@ class Scheduler:
 
             #should free 
             block_table = self.block_manager.block_tables[seq.seq_id]
+            if seq.seq_id in self.block_manager.kv_block_tables:
+                print("send in kv_block_tables ")
             print("block_table ", block_table)
             max_full_block = seq.get_len() // self.block_manager.block_size - 1
             for i in range(max_full_block):
