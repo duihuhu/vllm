@@ -69,8 +69,9 @@ class LRUEvictor(Evictor):
     def __init__(self):
         self.free_table: OrderedDict[int, PhysicalTokenBlock] = OrderedDict()
 
+        self.free_cache_table: OrderedDict[int, PhysicalTokenBlock] = OrderedDict()
     def __contains__(self, block_hash: int) -> bool:
-        return block_hash in self.free_table
+        return block_hash in self.free_table or block_hash in self.free_cache_table
 
     def evict(self) -> PhysicalTokenBlock:
         if len(self.free_table) == 0:
@@ -92,24 +93,29 @@ class LRUEvictor(Evictor):
         return evicted_block
 
     def add(self, block: PhysicalTokenBlock):
-        self.free_table[block.block_hash] = block
+        # self.free_table[block.block_hash] = block
+        self.free_cache_table[block.block_hash] = block
 
     def remove(self, block_hash: int) -> PhysicalTokenBlock:
-        if block_hash not in self.free_table:
+        if block_hash not in self.free_table or block_hash not in self.free_cache_table:
             raise ValueError(
                 "Attempting to remove block that's not in the evictor")
-        block: PhysicalTokenBlock = self.free_table[block_hash]
-        self.free_table.pop(block_hash)
+        if block_hash in self.free_table:
+            block: PhysicalTokenBlock = self.free_table[block_hash]
+            self.free_table.pop(block_hash)
+        else:
+            block: PhysicalTokenBlock = self.free_cache_table[block_hash]
+            self.free_cache_table.pop(block_hash)
         return block
     
     def get_can_evicted_block(self) -> PhysicalTokenBlock:
-        evicted_block = next(iter(self.free_table.values()))
-        for _, block in self.free_table.items():
+        evicted_block = next(iter(self.free_cache_table.values()))
+        for _, block in self.free_cache_table.items():
             if evicted_block.last_accessed < block.last_accessed:
                 break
             if evicted_block.num_hashed_tokens < block.num_hashed_tokens:
                 evicted_block = block
-        # self.free_table.pop(evicted_block.block_hash)
+        self.free_table[evicted_block.block_hash] = self.free_cache_table.pop(evicted_block.block_hash)
         return evicted_block
 
     @property
