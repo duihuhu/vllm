@@ -662,11 +662,18 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return
         if seq.get_len() % self.block_size == 0:
             max_full_block = seq.get_len() // self.block_size - 1
+                        
+            block_table = self.block_tables[seq.seq_id]
+            if max_full_block == -1:
+                return
         else:
-            max_full_block = seq.get_len() // self.block_size
-        block_table = self.block_tables[seq.seq_id]
-        if max_full_block == -1:
-            return
+            max_full_block = seq.get_len() // self.block_size               
+            block_table = self.block_tables[seq.seq_id]
+            if max_full_block == 0:
+                return
+        # block_table = self.block_tables[seq.seq_id]
+        # if max_full_block == -1:
+        #     return
 
         for i in reversed(range(max_full_block)):
             if block_table[i].computed:
