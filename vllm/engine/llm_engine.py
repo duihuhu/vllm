@@ -414,7 +414,7 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
-            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
+            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group)
             
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             

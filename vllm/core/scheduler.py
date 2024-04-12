@@ -291,19 +291,19 @@ class Scheduler:
             return None
         else:
             self._allocate_only_kv_blocks(seq_group)
-            self.block_manager.block_tables[seq.seq_id]
-            block_table = self.block_manager.block_tables[seq.seq_id]
+            # self.block_manager.block_tables[seq.seq_id]
+            block_table = self.block_manager.kv_block_tables[seq.seq_id]
             phy_blocks = [phy_block for phy_block in block_table]
             return phy_blocks
         
-    def allocate_kv_blocks(self, seq_group: SequenceGroup, is_kv: Optional[bool] = False) -> List[int]:
+    def allocate_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
         seq = seq_group.get_seqs()[0]
         if not self.block_manager.can_allocate(seq_group):
             return None
         else:
             self._allocate_kv_blocks(seq_group)
-            self.block_manager.block_tables[seq.seq_id]
-            block_table = self.block_manager.block_tables[seq.seq_id]
+            # self.block_manager.block_tables[seq.seq_id]
+            block_table = self.block_manager.kv_block_tables[seq.seq_id]
             # blocks = [phy_block.block_number for phy_block in block_table]
             # return blocks
             phy_blocks = [phy_block for phy_block in block_table]
