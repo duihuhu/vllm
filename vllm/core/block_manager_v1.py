@@ -701,6 +701,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def evict_hbm_caches(self, num_blocks):
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+        print("self.gpu_allocator.get_num_evictor_blocks() ", self.gpu_allocator.get_num_evictor_blocks())
         while self.gpu_allocator.get_num_evictor_blocks():
             gpu_evicted_block = self.gpu_allocator.get_evicted_block()
             print("gpu_evicted_block ", gpu_evicted_block)
