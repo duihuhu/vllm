@@ -721,7 +721,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def move_kv_blocks_meta(self, seq_group: SequenceGroup):
         for seq in seq_group.get_seqs():
-            block_table = self.block_tables[seq.seq_id]
+            block_table = []
+            if seq.seq_id in self.block_tables:
+                block_table = self.block_tables[seq.seq_id]
             kv_block_table = self.kv_block_tables[seq.seq_id]
             for block in kv_block_table:
                 block_table.append(block)
@@ -730,6 +732,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for logical_idx in range(num_prompt_blocks):
                 kv_hash_block =  seq.hash_of_block(logical_idx)
                 if kv_hash_block in self.gpu_allocator.cached_kv_blocks:
-                    self.gpu_allocator.cached_blocks[seq.seq_id] = self.gpu_allocator.cached_kv_blocks[kv_hash_block]
+                    self.gpu_allocator.cached_blocks[kv_hash_block] = self.gpu_allocator.cached_kv_blocks[kv_hash_block]
                     del self.gpu_allocator.cached_kv_blocks[kv_hash_block]    
             del self.kv_block_tables[seq.seq_id]
