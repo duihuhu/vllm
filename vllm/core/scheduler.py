@@ -722,9 +722,8 @@ class Scheduler:
 
             #should free 
             block_table = self.block_manager.block_tables[seq.seq_id]
-            for b_table in block_table:
-                print("block_table[i] infor ref count ", b_table.ref_count)
-                self.block_manager.gpu_allocator.free(b_table)
+            for bkt in block_table:
+                self.block_manager.gpu_allocator.free(bkt)
             del self.block_manager.block_tables[seq.seq_id]
             
             del self.send_transfering[request_id]
