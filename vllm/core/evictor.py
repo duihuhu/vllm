@@ -98,7 +98,7 @@ class LRUEvictor(Evictor):
         self.free_cache_table[block.block_hash] = block
 
     def remove(self, block_hash: int) -> PhysicalTokenBlock:
-        if block_hash not in self.free_table or block_hash not in self.free_cache_table:
+        if (block_hash not in self.free_table and block_hash not in self.free_cache_table):
             raise ValueError(
                 "Attempting to remove block that's not in the evictor")
         if block_hash in self.free_table:
