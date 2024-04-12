@@ -744,9 +744,9 @@ class Scheduler:
             if self.deploy_config.role == "prompt":
                 self.block_manager.move_kv_blocks_meta(seq_group)
                 for seq in seq_group.get_seqs():
-                    self.block_manager.free(seq)
-                    
-            print("gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
+                    self.block_manager.free(seq)                    
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
+    
+        print("gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())
