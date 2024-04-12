@@ -326,8 +326,7 @@ class Scheduler:
         self._check_tranfer_finished_req()
         
         num_blocks = self.block_manager.gpu_allocator.get_num_evictor_blocks()
-        print("num_blocks ", num_blocks)
-        if not num_blocks:
+        if num_blocks:
             cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
             print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
         
