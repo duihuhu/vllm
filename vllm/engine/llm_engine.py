@@ -280,7 +280,7 @@ class LLMEngine:
                                   arrival_time, lora_request, multi_modal_data)
         
         #there is no use for allocate kv blocks(reference not ++ , because it has not seq use to running)
-        phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group, True)
+        phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group)
         
         blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
 

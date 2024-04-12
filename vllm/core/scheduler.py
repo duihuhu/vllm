@@ -304,8 +304,7 @@ class Scheduler:
             self._allocate_kv_blocks(seq_group)
             # self.block_manager.block_tables[seq.seq_id]
             block_table = self.block_manager.kv_block_tables[seq.seq_id]
-            # blocks = [phy_block.block_number for phy_block in block_table]
-            # return blocks
+
             phy_blocks = [phy_block for phy_block in block_table]
             return phy_blocks
     
