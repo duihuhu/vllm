@@ -290,7 +290,7 @@ class Scheduler:
         if not self.block_manager.can_allocate(seq_group):
             return None
         else:
-            self._only_allocate(seq_group, is_kv)
+            self._allocate_only_kv_blocks(seq_group)
             self.block_manager.block_tables[seq.seq_id]
             block_table = self.block_manager.block_tables[seq.seq_id]
             phy_blocks = [phy_block for phy_block in block_table]
@@ -301,7 +301,7 @@ class Scheduler:
         if not self.block_manager.can_allocate(seq_group):
             return None
         else:
-            self._allocate(seq_group, is_kv)
+            self._allocate_kv_blocks(seq_group)
             self.block_manager.block_tables[seq.seq_id]
             block_table = self.block_manager.block_tables[seq.seq_id]
             # blocks = [phy_block.block_number for phy_block in block_table]
@@ -594,11 +594,16 @@ class Scheduler:
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
 
-    def _only_allocate(self, seq_group: SequenceGroup, is_kv: Optional[bool] = False) -> None:
-        self.block_manager.allocate(seq_group, is_kv)
+    def _allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> None:
+        self.block_manager.allocate_kv_blocks(seq_group)
+        
+    def _allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
+        self.block_manager.allocate_kv_blocks(seq_group)
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            seq.status = SequenceStatus.RUNNING
             
-    def _allocate(self, seq_group: SequenceGroup, is_kv: Optional[bool] = False) -> None:
-        self.block_manager.allocate(seq_group, is_kv)
+    def _allocate(self, seq_group: SequenceGroup) -> None:
+        self.block_manager.allocate(seq_group)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             seq.status = SequenceStatus.RUNNING
 
@@ -714,7 +719,7 @@ class Scheduler:
         for request_id in self.send_finished_req_ids[:]:
             seq_group = self.send_transfering[request_id]
             seq = seq_group.get_seqs()[0]
-            # self.free_seq(seq)
+            self.free_seq(seq)
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
             
@@ -737,30 +742,12 @@ class Scheduler:
                 #end recv, when role is decode
                 #move kv_block_tables to block_table
                 #move cached_kv_blocks to cached_blocks
-                for seq in seq_group.get_seqs():
-                    block_table = self.block_manager.kv_block_tables[seq.seq_id]
-                    self.block_manager.block_tables[seq.seq_id] = block_table
-                    num_prompt_blocks = len(seq.logical_token_blocks)
-                    for logical_idx in range(num_prompt_blocks):
-                        kv_hash_block =  seq.hash_of_block(logical_idx)
-                        if kv_hash_block in self.block_manager.gpu_allocator.cached_kv_blocks:
-                            self.block_manager.gpu_allocator.cached_blocks[seq.seq_id] = self.block_manager.gpu_allocator.cached_kv_blocks[kv_hash_block]
-                            del self.block_manager.gpu_allocator.cached_kv_blocks[kv_hash_block]    
-                    del self.block_manager.kv_block_tables[seq.seq_id]
+                self.block_manager.move_kv_blocks_meta(seq_group)
+
             # recv cache in prompt is only cache, not has reference, so it will in evicted cache
             if self.deploy_config.role == "prompt":
+                self.block_manager.move_kv_blocks_meta(seq_group)
                 for seq in seq_group.get_seqs():
-                    block_table = self.block_manager.kv_block_tables[seq.seq_id]
-                    self.block_manager.block_tables[seq.seq_id] = block_table
-                                 
-                    num_prompt_blocks = len(seq.logical_token_blocks)
-                    for logical_idx in range(num_prompt_blocks):
-                        kv_hash_block =  seq.hash_of_block(logical_idx)
-                        if kv_hash_block in self.block_manager.gpu_allocator.cached_kv_blocks:
-                            self.block_manager.gpu_allocator.cached_blocks[seq.seq_id] =  self.block_manager.gpu_allocator.cached_kv_blocks[kv_hash_block]
-                            del self.block_manager.gpu_allocator.cached_kv_blocks[kv_hash_block]
-                    del self.block_manager.kv_block_tables[seq.seq_id]
-                    
                     self.block_manager.free(seq)
                     
             print("gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_evictor_blocks())

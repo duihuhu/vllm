@@ -309,11 +309,12 @@ class _AsyncLLMEngine(LLMEngine):
         num_blocks = self.scheduler.check_hbm_usage()
         if not num_blocks:
             cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
-            await self.model_executor._run_workers_async(
-                "cache_blocks_to_swap_out",
-                cache_blocks_to_swap_out
-            )
-            pass
+            if cache_blocks_to_swap_out:
+                await self.model_executor._run_workers_async(
+                    "swap_kv_cache",
+                    blocks_to_swap_out=cache_blocks_to_swap_out
+                )
+                pass
         return processed_outputs
 
     async def encode_request_async(

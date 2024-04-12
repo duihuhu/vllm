@@ -31,10 +31,9 @@ class BlockAllocatorBase(ABC):
         pass
 
     @abstractmethod
-    def allocate_hbm(self,
+    def allocate_kv_blocks(self,
                  block_hash: Optional[int] = None,
-                 num_hashed_tokens: int = 0,
-                 is_kv: Optional[bool] = False) -> PhysicalTokenBlock:
+                 num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
         pass
 
 
@@ -107,10 +106,13 @@ class CachedBlockAllocator(BlockAllocatorBase):
         self.current_num_blocks += 1
         return block
 
-    def allocate_hbm(self,
+    def has_cache_block(self, block_hash: int) -> bool:
+        if block_hash in self.evictor or block_hash in self.cached_blocks:
+            return True
+
+    def allocate_kv_blocks(self,
                  block_hash: Optional[int] = None,
-                 num_hashed_tokens: int = 0,
-                 is_kv: Optional[bool] = False) -> PhysicalTokenBlock:
+                 num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
         if block_hash is None:
             block_hash = next(self.default_hash_ctr)
         if block_hash in self.evictor:
@@ -123,16 +125,9 @@ class CachedBlockAllocator(BlockAllocatorBase):
             return block, True
             
         if block_hash not in self.cached_blocks:
-            if is_kv:
-                self.cached_kv_blocks[block_hash] = self.allocate_block(
-                    block_hash, num_hashed_tokens)
-            else:
-                self.cached_blocks[block_hash] = self.allocate_block(
-                    block_hash, num_hashed_tokens)
-        if is_kv:
-            block = self.cached_kv_blocks[block_hash]
-        else:
-            block = self.cached_blocks[block_hash]
+            self.cached_kv_blocks[block_hash] = self.allocate_block(
+                block_hash, num_hashed_tokens)
+        block = self.cached_kv_blocks[block_hash]
         assert block.block_hash == block_hash
         block.ref_count += 1
         return block, False
@@ -145,7 +140,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
         if block_hash in self.evictor:
             assert block_hash not in self.cached_blocks
             block = self.evictor.remove(block_hash)
-            #get mapping from cpu allocate, if exist, free it 
             assert block.ref_count == 0
             self.cached_blocks[block_hash] = block
             block.ref_count += 1
@@ -326,7 +320,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return AllocStatus.LATER
 
-    def allocate(self, seq_group: SequenceGroup, is_kv: Optional[bool] = False) -> None:
+
+    def allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
@@ -342,28 +337,58 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Set the reference counts of the token blocks.
                 block.ref_count = seq_group.num_seqs()
             elif self.enable_caching:
-                block, in_evictor = self.gpu_allocator.allocate_hbm(
-                    seq.hash_of_block(logical_idx),
-                    seq.num_hashed_tokens_of_block(logical_idx),
-                    is_kv)
-                if in_evictor:
-                    if block in self.block_mapping_tables:
-                        cpu_block = self.block_mapping_tables[block]
-                        self.cpu_allocator.free(cpu_block)
-                        del self.block_mapping_tables[block]
+                in_hbm = self.gpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
+                in_mem = self.cpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
+                if in_hbm or in_mem is False:                        
+                    block, in_evictor = self.gpu_allocator.allocate_kv_blocks(
+                        seq.hash_of_block(logical_idx),
+                        seq.num_hashed_tokens_of_block(logical_idx))
+                    #if in evictor, gpu cache is prompt, so cpu cache can delete
+                    if in_evictor:
+                        if block in self.block_mapping_tables:
+                            cpu_block = self.block_mapping_tables[block]
+                            self.cpu_allocator.free(cpu_block)
+                            del self.block_mapping_tables[block]
+                if in_mem:
+                    block = self.cpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                        seq.num_hashed_tokens_of_block(logical_idx))
             else:
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.
                 block.ref_count = seq_group.num_seqs()
             block_table.append(block)
         
-        if is_kv:
-            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-                self.kv_block_tables[seq.seq_id] = block_table.copy()
-        else:
-            # Assign the block table for each sequence.
-            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-                self.block_tables[seq.seq_id] = block_table.copy()
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            self.kv_block_tables[seq.seq_id] = block_table.copy()
+
+    def allocate(self, seq_group: SequenceGroup) -> None:
+        # NOTE: Here we assume that all sequences in the group have the same
+        # prompt.
+        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
+
+        # Allocate new physical token blocks that will store the prompt tokens.
+        num_prompt_blocks = len(seq.logical_token_blocks)
+
+        block_table: BlockTable = []
+        for logical_idx in range(num_prompt_blocks):
+            if (self.block_sliding_window is not None
+                    and logical_idx >= self.block_sliding_window):
+                block = block_table[logical_idx % self.block_sliding_window]
+                # Set the reference counts of the token blocks.
+                block.ref_count = seq_group.num_seqs()
+            elif self.enable_caching:
+                block = self.gpu_allocator.allocate(
+                    seq.hash_of_block(logical_idx),
+                    seq.num_hashed_tokens_of_block(logical_idx))
+            else:
+                block = self.gpu_allocator.allocate()
+                # Set the reference counts of the token blocks.
+                block.ref_count = seq_group.num_seqs()
+            block_table.append(block)
+        
+        # Assign the block table for each sequence.
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            self.block_tables[seq.seq_id] = block_table.copy()
 
     def can_append_slot(self, seq_group: SequenceGroup) -> bool:
         # Simple heuristic: If there is at least one free block
@@ -688,4 +713,18 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self.block_mapping_tables.update(mapping)
         
         return block_number_mapping
-        
+
+    def move_kv_blocks_meta(self, seq_group: SequenceGroup):
+        for seq in seq_group.get_seqs():
+            block_table = self.block_tables[seq.seq_id]
+            kv_block_table = self.kv_block_tables[seq.seq_id]
+            for block in kv_block_table:
+                block_table.append(block)
+            self.block_tables[seq.seq_id] = block_table
+            num_prompt_blocks = len(seq.logical_token_blocks)
+            for logical_idx in range(num_prompt_blocks):
+                kv_hash_block =  seq.hash_of_block(logical_idx)
+                if kv_hash_block in self.gpu_allocator.cached_kv_blocks:
+                    self.gpu_allocator.cached_blocks[seq.seq_id] = self.gpu_allocator.cached_kv_blocks[kv_hash_block]
+                    del self.gpu_allocator.cached_kv_blocks[kv_hash_block]    
+            del self.kv_block_tables[seq.seq_id]

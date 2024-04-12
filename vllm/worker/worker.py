@@ -212,6 +212,7 @@ class Worker:
         # the model initialization and profiling.
         set_random_seed(self.model_config.seed)
 
+    
     def cache_swap(
         self,
         blocks_to_swap_in: Dict[int, int],
@@ -227,6 +228,19 @@ class Worker:
         if blocks_to_copy:
             self.cache_engine.copy(blocks_to_copy)
 
+    def swap_kv_cache(
+        self,
+        blocks_to_swap_in: Optional[Dict[int, int]]=None,
+        blocks_to_swap_out: Optional[Dict[int, int]]=None,
+        blocks_to_copy: Optional[Dict[int, List[int]]]=None
+    ) -> None:
+        if blocks_to_swap_in:
+            self.cache_engine.swap_in(blocks_to_swap_in)
+        if blocks_to_swap_out:
+            self.cache_engine.swap_out(blocks_to_swap_out)
+        if blocks_to_copy:
+            self.cache_engine.copy(blocks_to_copy)
+    
     @torch.inference_mode()
     def execute_model(
         self,
@@ -261,7 +275,8 @@ class Worker:
         #todo hucc
         if wait_for_swap_out:
             self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
-                
+        
+        swap_finished_req_ids = []
         if num_seq_groups == 0:
             swap_finished_req_ids = self.cache_engine.check_finished_events()
     
