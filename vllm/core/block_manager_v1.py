@@ -123,12 +123,12 @@ class CachedBlockAllocator(BlockAllocatorBase):
             block.ref_count += 1
             assert block.block_hash == block_hash
             return block, True
-        print("allocate_kv_blocks after evictor ", block_hash)
         if block_hash not in self.cached_blocks:
-            print("not in cached_blocks  ", block_hash)
             self.cached_kv_blocks[block_hash] = self.allocate_block(
                 block_hash, num_hashed_tokens)
-        block = self.cached_kv_blocks[block_hash]
+            block = self.cached_kv_blocks[block_hash]
+        else:
+            block = self.cached_blocks[block_hash]
         assert block.block_hash == block_hash
         block.ref_count += 1
         return block, False
