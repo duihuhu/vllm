@@ -405,7 +405,8 @@ class Scheduler:
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
-                self._allocate(seq_group)
+                # self._allocate(seq_group)
+                self._allocate_mixed_cache(seq_group, blocks_to_swap_out)
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs
                 scheduled.append(
@@ -603,6 +604,12 @@ class Scheduler:
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             seq.status = SequenceStatus.RUNNING
             
+    def _allocate_mixed_cache(self, seq_group: SequenceGroup,  blocks_to_swap_out: Dict[int, int] = {}) -> None:
+        mapping = self.block_manager.allocate_mixed_cache(seq_group)
+        blocks_to_swap_out.update(mapping)
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            seq.status = SequenceStatus.RUNNING
+            
     def _allocate(self, seq_group: SequenceGroup) -> None:
         self.block_manager.allocate(seq_group)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
@@ -731,12 +738,12 @@ class Scheduler:
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
         
-            print("after send gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
+            # print("after send gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
 
-            num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-            if num_blocks:
-                cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-                print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            # num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
+            # if num_blocks:
+            #     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
+            #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
 
 
         for request_id in self.recv_finished_req_ids[:]:
@@ -757,9 +764,9 @@ class Scheduler:
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
     
-            print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
+            # print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
             
-            num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-            if num_blocks:
-                cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-                print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            # num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
+            # if num_blocks:
+            #     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
+            #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)

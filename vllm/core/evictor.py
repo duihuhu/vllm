@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import OrderedDict
 
 from vllm.block import PhysicalTokenBlock
-
+from vllm.utils import Device
 
 class EvictionPolicy(enum.Enum):
     """Enum for eviction policy used by make_evictor to instantiate the correct
@@ -98,8 +98,10 @@ class LRUEvictor(Evictor):
         return evicted_block
 
     def add(self, block: PhysicalTokenBlock):
-        # self.free_table[block.block_hash] = block
-        self.free_cache_table[block.block_hash] = block
+        if block.device == Device.CPU:
+            self.free_table[block.block_hash] = block
+        else:
+            self.free_cache_table[block.block_hash] = block
 
     def remove(self, block_hash: int) -> PhysicalTokenBlock:
         if (block_hash not in self.free_table and block_hash not in self.free_cache_table):

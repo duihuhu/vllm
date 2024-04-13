@@ -298,7 +298,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Mapping: seq_id -> BlockTable.
         self.block_tables: Dict[int, BlockTable] = {}
         
-        #Mapping: gpu block number to cpu block number for cache 
+        #Mapping: gpu block number to cpu block number for cache, 记录驱逐记录
         self.block_mapping_tables: Dict[int, int] = {}
 
         # Mapping: seq_id -> BlockTable.
@@ -324,7 +324,59 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return AllocStatus.LATER
 
+    def allocate_mixed_cache(self, seq_group: SequenceGroup) -> None:
+        # NOTE: Here we assume that all sequences in the group have the same
+        # prompt.
+        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
 
+        # Allocate new physical token blocks that will store the prompt tokens.
+        num_prompt_blocks = len(seq.logical_token_blocks)
+        
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+
+        block_table: BlockTable = []
+        for logical_idx in range(num_prompt_blocks):
+            if (self.block_sliding_window is not None
+                    and logical_idx >= self.block_sliding_window):
+                block = block_table[logical_idx % self.block_sliding_window]
+                # Set the reference counts of the token blocks.
+                block.ref_count = seq_group.num_seqs()
+            elif self.enable_caching:
+                in_hbm = self.gpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
+                in_mem = self.cpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
+                print("in hbm in_mem ", in_hbm, in_mem)
+                if in_hbm:                        
+                    #todo there also need consider is_evictor
+                    block = self.gpu_allocator.allocate(
+                        seq.hash_of_block(logical_idx),
+                        seq.num_hashed_tokens_of_block(logical_idx))
+                else:
+                    if in_mem:
+                        block = self.cpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                            seq.num_hashed_tokens_of_block(logical_idx))
+                        gpu_block = self.gpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                            seq.num_hashed_tokens_of_block(logical_idx))
+                        mapping[block] = gpu_block
+                        # Free the CPU block swapped in to GPU.
+                        self.cpu_allocator.free(block)
+                    else:
+                        block = self.gpu_allocator.allocate(
+                        seq.hash_of_block(logical_idx),
+                        seq.num_hashed_tokens_of_block(logical_idx))
+            else:
+                block = self.gpu_allocator.allocate()
+                # Set the reference counts of the token blocks.
+                block.ref_count = seq_group.num_seqs()
+            block_table.append(gpu_block)
+        
+        block_number_mapping = {
+            cpu_block.block_number: gpu_block.block_number
+            for cpu_block, gpu_block in mapping.items()
+        }
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            self.block_tables[seq.seq_id] = block_table.copy()
+        return block_number_mapping
+    
     def allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
@@ -348,7 +400,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     block, in_evictor = self.gpu_allocator.allocate_kv_blocks(
                         seq.hash_of_block(logical_idx),
                         seq.num_hashed_tokens_of_block(logical_idx))
-                    #if in evictor, gpu cache is prompt, so cpu cache can delete
+                    #if in evictor, gpu cache is prompt, so cpu cache can delete.如果是从gpu的evictor中拿来的，那么意味着cpu上有的缓存可以不要了。
                     if in_evictor:
                         if block in self.block_mapping_tables:
                             cpu_block = self.block_mapping_tables[block]
@@ -716,7 +768,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     def evict_hbm_caches(self, num_blocks):
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         while self.gpu_allocator.get_num_can_evicted_blocks():
-            print(" self.gpu_allocator.get_num_can_evicted_blocks() ",  self.gpu_allocator.get_num_can_evicted_blocks(), num_blocks)
             gpu_evicted_block = self.gpu_allocator.get_can_evicted_block()
             cpu_block = self.cpu_allocator.allocate(gpu_evicted_block.block_hash, gpu_evicted_block.num_hashed_tokens)
             cpu_block.computed = gpu_evicted_block.computed
@@ -724,14 +775,12 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             num_blocks = num_blocks - 1
             if num_blocks == 0:
                 break
-        #todo if num_evicted_blocks of gpu is not enough , need evict from cache blocks ?
-        # if num_blocks != 0:
-        #     while self.gpu_allocator.cached_blocks.
-        #     pass
+
         block_number_mapping = {
             gpu_evicted_block.block_number: cpu_block.block_number
             for gpu_evicted_block, cpu_block in mapping.items()
         }
+        #记录驱逐到cpu的缓存
         self.block_mapping_tables.update(mapping)
         print("block_number_mapping ", block_number_mapping)
         return block_number_mapping
