@@ -291,11 +291,8 @@ class LLMEngine:
             print("prefill kv, response " , block.device, block.computed) 
             
         #add the last token to seq after allocate blocks
-        print(request_output.outputs[0].token_ids[-1], request_output.outputs[0].logprobs)
-        prefilled_token_ids = request_output.outputs[0].token_ids[-1],
+        prefilled_token_ids = request_output.outputs[0].token_ids[-1]
         output_logprobs = request_output.outputs[0].logprobs[-1]
-        print(prefilled_token_ids, output_logprobs)
-        print(output_logprobs[prefilled_token_ids])
         seq.append_token_id(prefilled_token_ids, output_logprobs)
                 
         
