@@ -355,8 +355,12 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     if in_mem:
                         block = self.cpu_allocator.allocate(seq.hash_of_block(logical_idx),
                             seq.num_hashed_tokens_of_block(logical_idx))
-                        gpu_block = self.gpu_allocator.allocate(seq.hash_of_block(logical_idx),
-                            seq.num_hashed_tokens_of_block(logical_idx))
+                        # gpu_block = self.gpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                        #     seq.num_hashed_tokens_of_block(logical_idx))
+                        gpu_block = self.gpu_allocator.allocate()
+                        gpu_block.computed = block.computed
+                        gpu_block.num_hashed_tokens = block.num_hashed_tokens
+                        gpu_block.block_hash = block.block_hash
                         mapping[block] = gpu_block
                         # Free the CPU block swapped in to GPU.
                         self.cpu_allocator.free(block)
