@@ -287,7 +287,9 @@ class _AsyncLLMEngine(LLMEngine):
                 scheduler_outputs.blocks_to_swap_out,
                 scheduler_outputs.blocks_to_copy)
             
-            self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
+            #todo origin swap_finished_req_ids I think it may not in here 
+            # self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
+            
             # Only the driver worker returns the sampling results.
             output = all_outputs[0][0]
         else:
@@ -379,11 +381,14 @@ class _AsyncLLMEngine(LLMEngine):
         )
         
         for worker_finished_tasks in finished_tasks:
-            real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+            real_send_finished_req_ids, real_recv_finished_req_ids, real_swap_finished_req_ids  = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
             if real_send_finished_req_ids:
                 self.scheduler.add_send_finished(real_send_finished_req_ids)
             if real_recv_finished_req_ids:
                 self.scheduler.add_recv_finished(real_recv_finished_req_ids)
+            if real_swap_finished_req_ids:
+                self.scheduler.add_swap_finished(real_swap_finished_req_ids)
+    
                 
         scheduler_outputs = self.kv_trans_scheduler.schedule()
         if scheduler_outputs.task_for_send_blocks:
@@ -403,6 +408,13 @@ class _AsyncLLMEngine(LLMEngine):
                 "recv_blocks",
                 scheduler_outputs.task_for_recv_blocks
             )
+            
+        if self.deploy_config.role == "decoder":
+            if scheduler_outputs.task_for_swap_blocks:
+                await self.model_executor._run_workers_async(
+                    "swap_in_blocks",
+                    scheduler_outputs.task_for_swap_blocks
+                )
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.

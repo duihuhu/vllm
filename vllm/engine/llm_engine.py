@@ -424,7 +424,7 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
-            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group)
+            phy_blocks, blocks_to_swap_in = self.scheduler.allocate_kv_blocks(seq_group)
             
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             
@@ -437,8 +437,11 @@ class LLMEngine:
             else:
                 kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
                 self.scheduler.add_recv_transfering(seq_group)
+                if blocks_to_swap_in:
+                    self.scheduler.add_swap_in_req_id(request_id)
                 self.kv_trans_scheduler.add_kv_request(request_id,
-                                                            prefill_request_output.global_ranks, blocks, False)
+                                                            prefill_request_output.global_ranks, blocks, False, blocks_to_swap_in)
+                
         return kv_response
     
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
@@ -734,7 +737,7 @@ class LLMEngine:
             # get_all_outputs=True
         )
         for worker_finished_tasks in finished_tasks:
-            real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+            real_send_finished_req_ids, real_recv_finished_req_ids, real_swap_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
             if real_send_finished_req_ids:
                 self.scheduler.add_send_finished(real_send_finished_req_ids)
             if real_recv_finished_req_ids:

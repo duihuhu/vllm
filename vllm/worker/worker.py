@@ -28,7 +28,7 @@ from vllm.logger import init_logger
 import ray
 import json
 import socket
-from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferRequestIdTask, TransferBlocksTask
+from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferRequestIdTask, TransferBlocksTask, TransferTaskSwapBlocks
 
 logger = init_logger(__name__)
 class Worker:
@@ -272,15 +272,16 @@ class Worker:
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
-        #todo hucc
-        if wait_for_swap_out:
-            self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
+        # I think waiting is not need there
+        # todo hucc
+        # if wait_for_swap_out:
+        #     self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
         
         swap_finished_req_ids = []
-        if num_seq_groups == 0:
-            swap_finished_req_ids = self.cache_engine.check_finished_events()
+        # if num_seq_groups == 0:
+            # swap_finished_req_ids = self.cache_engine.check_finished_events()
     
-            return ([[]], swap_finished_req_ids)
+        #     return ([[]], swap_finished_req_ids)
         
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
@@ -289,7 +290,7 @@ class Worker:
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
         
-        swap_finished_req_ids = self.cache_engine.check_finished_events()
+        # swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
@@ -322,11 +323,18 @@ class Worker:
         task_meta = task.meta
         self.cache_engine.recv_blocks(task_meta.channel, task_meta.request_id,
                                       task.blocks, task.opposite_ranks[self.rank])
-        
+    
+    def swap_in_blocks(
+        self,
+        task: TransferTaskSwapBlocks
+    ) -> None:
+        self.cache_engine.swap_in_in_layer(task.blocks_to_swap_in, task.request_id)
+    
     def check_finished_transfer_task(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta], List[TransferTaskMeta]]:
         send_blocks_finished = self.cache_engine.check_send_finished_events()
         recv_request_id_finished, recv_blocks_finished = self.cache_engine.check_recv_finished_events()
-        return send_blocks_finished, recv_request_id_finished, recv_blocks_finished
+        swap_finished_req_ids = self.cache_engine.check_finished_events()
+        return send_blocks_finished, recv_request_id_finished, recv_blocks_finished, swap_finished_req_ids[0]
 
     @property
     def max_model_len(self) -> int:

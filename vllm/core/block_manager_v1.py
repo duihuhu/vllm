@@ -284,7 +284,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self.watermark_blocks = int(watermark * num_gpu_blocks)
 
         self.waterswap_blocks = 0.7
-        
+                
         if self.enable_caching:
             self.gpu_allocator = CachedBlockAllocator(Device.GPU, block_size,
                                                       num_gpu_blocks)
@@ -357,7 +357,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                             seq.num_hashed_tokens_of_block(logical_idx))
                         gpu_block = self.gpu_allocator.allocate(seq.hash_of_block(logical_idx),
                             seq.num_hashed_tokens_of_block(logical_idx))
-                        print("gpu block ", gpu_block.computed)
                         gpu_block.computed = block.computed
                         mapping[block] = gpu_block
                         # Free the CPU block swapped in to GPU.
@@ -382,8 +381,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
         return block_number_mapping
-    
-    def allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
+
+    def allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
@@ -401,7 +400,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             elif self.enable_caching:
                 in_hbm = self.gpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
                 in_mem = self.cpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
-                print("in hbm in_mem ", in_hbm, in_mem)
                 if in_hbm:                        
                     block, in_evictor = self.gpu_allocator.allocate_kv_blocks(
                         seq.hash_of_block(logical_idx),
@@ -416,6 +414,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     if in_mem:
                         block = self.cpu_allocator.allocate(seq.hash_of_block(logical_idx),
                             seq.num_hashed_tokens_of_block(logical_idx))
+                        
                     else:
                         block = self.gpu_allocator.allocate(
                         seq.hash_of_block(logical_idx),
@@ -428,6 +427,72 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.kv_block_tables[seq.seq_id] = block_table.copy()
+
+    
+    def allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
+        # NOTE: Here we assume that all sequences in the group have the same
+        # prompt.
+        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
+
+        # Allocate new physical token blocks that will store the prompt tokens.
+        num_prompt_blocks = len(seq.logical_token_blocks)
+        
+        # for decoder instance store recv kv cache 
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+
+        block_table: BlockTable = []
+        for logical_idx in range(num_prompt_blocks):
+            if (self.block_sliding_window is not None
+                    and logical_idx >= self.block_sliding_window):
+                block = block_table[logical_idx % self.block_sliding_window]
+                # Set the reference counts of the token blocks.
+                block.ref_count = seq_group.num_seqs()
+            elif self.enable_caching:
+                in_hbm = self.gpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
+                in_mem = self.cpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
+                if in_hbm:                        
+                    block, in_evictor = self.gpu_allocator.allocate_kv_blocks(
+                        seq.hash_of_block(logical_idx),
+                        seq.num_hashed_tokens_of_block(logical_idx))
+                    #if in evictor, gpu cache is prompt, so cpu cache can delete.如果是从gpu的evictor中拿来的，那么意味着cpu上有的缓存可以不要了。
+                    if in_evictor:
+                        if block in self.block_mapping_tables:
+                            cpu_block = self.block_mapping_tables[block]
+                            self.cpu_allocator.free(cpu_block)
+                            del self.block_mapping_tables[block]
+                else:
+                    if in_mem:
+                        block = self.cpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                            seq.num_hashed_tokens_of_block(logical_idx))
+                        #allocate kv block for decode instance, so default is waiting for both swap && recv  
+                        gpu_block = self.gpu_allocator.allocate(seq.hash_of_block(logical_idx),
+                            seq.num_hashed_tokens_of_block(logical_idx))
+                        gpu_block.computed = block.computed
+                        mapping[block] = gpu_block
+                        # Free the CPU block swapped in to GPU.
+                        self.cpu_allocator.free(block)
+                        
+                    else:
+                        block = self.gpu_allocator.allocate(
+                        seq.hash_of_block(logical_idx),
+                        seq.num_hashed_tokens_of_block(logical_idx))
+            else:
+                block = self.gpu_allocator.allocate()
+                # Set the reference counts of the token blocks.
+                block.ref_count = seq_group.num_seqs()
+            if (not in_hbm and in_mem):
+                block_table.append(gpu_block)
+            else:
+                block_table.append(block)
+        
+        block_number_mapping = {
+            cpu_block.block_number: gpu_block.block_number
+            for cpu_block, gpu_block in mapping.items()
+        }
+        
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            self.kv_block_tables[seq.seq_id] = block_table.copy()
+        return block_number_mapping
 
     def allocate(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same

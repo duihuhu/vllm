@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from enum import Enum
 import threading
 
@@ -31,16 +31,28 @@ class TransferBlocksTask:
         self.opposite_ranks = opposite_ranks
         self.blocks = blocks
 
+class TransferTaskSwapBlocks:
+    def __init__(
+        self,
+        request_id: str,
+        blocks_to_swap_in: Dict[int, int]
+    ) -> None:
+        self.request_id = request_id
+        self.blocks_to_swap_in = blocks_to_swap_in
+        
+
 class ScheduleOutputs:
     def __init__(
         self,
         task_for_send_blocks: TransferBlocksTask,
         task_for_recv_request_id: TransferRequestIdTask,
-        task_for_recv_blocks: TransferBlocksTask
+        task_for_recv_blocks: TransferBlocksTask,
+        task_for_swap_blocks: TransferTaskSwapBlocks
     ) -> None:
         self.task_for_send_blocks = task_for_send_blocks
         self.task_for_recv_request_id = task_for_recv_request_id
-        self.task_for_recv_blocks = task_for_recv_blocks
+        self.task_for_recv_blocks = task_for_recv_blocks    
+        self.task_for_swap_blocks = task_for_swap_blocks
         
 class KvTransScheduler:
     """Prefill Manages the KV cache sending
@@ -62,6 +74,8 @@ class KvTransScheduler:
         self.recv_block_ids: Dict[str, List[int]] = {}
         self.num_workers = num_workers
         
+        self.swap_block_ids: Dict[str, Dict[int, int]] = {}
+        
         ############
         self.is_channel_recving: Dict[str, bool] = {}
         self.recv_waiting_requests: List[TransferTaskMeta] = []
@@ -72,6 +86,7 @@ class KvTransScheduler:
         global_ranks: List[int],
         blocks: List[int],
         is_send: bool,
+        blocks_to_swap_in: Optional[Dict[int, int]] = {}
     ) -> None:
         if is_send:
             self.send_block_ids[request_id] = blocks
@@ -94,6 +109,9 @@ class KvTransScheduler:
         else:
             self.channel_requests_ids[opp_rank_str][1].append(request_id)
             self.channel_requests_num[opp_rank_str][1] += 1
+        
+        if blocks_to_swap_in:
+            self.swap_block_ids[request_id] = blocks_to_swap_in
             
     def _get_task_for_send_blocks(self) -> TransferBlocksTask:
         #调度最多requests的且可以使用的channel,并且FIFO调度请求
@@ -136,13 +154,24 @@ class KvTransScheduler:
         task_meta = self.recv_waiting_requests.pop(0)
         return TransferBlocksTask(task_meta, self.channel_ranks[task_meta.channel],
                                   self.recv_block_ids[task_meta.request_id])
-       
+    
+    def _get_task_for_swap_blocks(self, request_id: str) -> Dict[int, int]:
+        if not self.swap_block_ids:
+            return None
+        return TransferTaskSwapBlocks(request_id, self.swap_block_ids[request_id])
+    
     def schedule(self) -> ScheduleOutputs:
         #一轮调度每种类型只生成一个请求
         task_for_send_blocks = self._get_task_for_send_blocks()
         task_for_recv_request_id = self._get_task_for_recv_request_id()
         task_for_recv_blocks = self._get_task_for_recv_blocks()
-        return ScheduleOutputs(task_for_send_blocks, task_for_recv_request_id, task_for_recv_blocks)
+        
+        if task_for_recv_blocks:
+            task_for_swap_blocks = self._get_task_for_swap_blocks(task_for_recv_blocks.meta.request_id)
+        else:
+            task_for_swap_blocks = None
+            
+        return ScheduleOutputs(task_for_send_blocks, task_for_recv_request_id, task_for_recv_blocks, task_for_swap_blocks)
     
     def _process_send_blocks_finished(
         self,
@@ -172,6 +201,7 @@ class KvTransScheduler:
                 self.recv_waiting_requests.append(task_meta)
                 self.recv_finished_worker_count[task_meta.request_id] = self.num_workers
 
+
     def _process_recv_blocks_finished(
         self,
         recv_blocks_finished: List[TransferTaskMeta]
@@ -189,13 +219,25 @@ class KvTransScheduler:
                 real_finished_req_ids.append(task_meta.request_id)
         return real_finished_req_ids
 
+    def _process_swap_request_id_finished(
+        self,
+        swap_request_id_finished: List[TransferTaskSwapBlocks] 
+    ) -> List[str]:
+        real_swap_finished_req_ids = []
+        for task_meta in swap_request_id_finished:
+            real_swap_finished_req_ids.append(task_meta.request_id)
+        return real_swap_finished_req_ids
+
     def add_finished_tasks(
         self,
         send_blocks_finished: List[TransferTaskMeta],
         recv_request_id_finished: List[TransferTaskMeta],
-        recv_blocks_finished: List[TransferTaskMeta]
+        recv_blocks_finished: List[TransferTaskMeta],
+        swap_request_id_finished: Optional[List[TransferBlocksTask]]
     ) -> Tuple[List[str], List[str]]:
         real_send_finished_req_ids = self._process_send_blocks_finished(send_blocks_finished)
         self._process_recv_request_id_finished(recv_request_id_finished)
         real_recv_finished_req_ids = self._process_recv_blocks_finished(recv_blocks_finished)
-        return real_send_finished_req_ids, real_recv_finished_req_ids
+        
+        real_swap_finished_req_ids = self._process_swap_request_id_finished(swap_request_id_finished)
+        return real_send_finished_req_ids, real_recv_finished_req_ids, real_swap_finished_req_ids

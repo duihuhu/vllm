@@ -176,6 +176,7 @@ class Scheduler:
         self.send_transfering: Dict[str, SequenceGroup] = {}
         self.recv_transfering: Dict[str, SequenceGroup] = {}
         
+        self.swaping_req_id: List[str] = []
         self.num_workers: int = 0
 
     @property
@@ -211,9 +212,15 @@ class Scheduler:
         print("recv_finished_req_ids ", request_ids)
         self.recv_finished_req_ids.extend(request_ids)
     
+    def add_swap_finished(self, request_ids: List[str]):
+        self.swap_finished_req_ids.extend(request_ids)
+
     def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the recv transfering map
         self.recv_transfering[seq_group.request_id] = seq_group
+
+    def add_swap_in_req_id(self, request_id) -> None:
+        self.swaping_req_id.append(request_id)
 
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a sequence group with the given ID.
@@ -285,7 +292,7 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
     
-    def allocate_only_kv_blocks(self, seq_group: SequenceGroup, is_kv: Optional[bool] = False) -> List[int]:
+    def allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
         seq = seq_group.get_seqs()[0]
         if not self.block_manager.can_allocate(seq_group):
             return None
@@ -301,12 +308,12 @@ class Scheduler:
         if not self.block_manager.can_allocate(seq_group):
             return None
         else:
-            self._allocate_kv_blocks(seq_group)
+            blocks_to_swap_in = self._allocate_kv_blocks(seq_group)
             # self.block_manager.block_tables[seq.seq_id]
             block_table = self.block_manager.kv_block_tables[seq.seq_id]
 
             phy_blocks = [phy_block for phy_block in block_table]
-            return phy_blocks
+            return phy_blocks, blocks_to_swap_in
     
     def fetch_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
         seq = seq_group.get_seqs()[0]
@@ -598,13 +605,14 @@ class Scheduler:
                              if not seq_group.is_finished())
 
     def _allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> None:
-        self.block_manager.allocate_kv_blocks(seq_group)
+        self.block_manager.allocate_only_kv_blocks(seq_group)
         
     def _allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
-        self.block_manager.allocate_kv_blocks(seq_group)
+        blocks_to_swap_in = self.block_manager.allocate_kv_blocks(seq_group)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             seq.status = SequenceStatus.RUNNING
-            
+        return blocks_to_swap_in
+    
     def _allocate_mixed_cache(self, seq_group: SequenceGroup,  blocks_to_swap_in: Dict[int, int] = {}) -> None:
         mapping = self.block_manager.allocate_mixed_cache(seq_group)
         blocks_to_swap_in.update(mapping)
@@ -739,15 +747,17 @@ class Scheduler:
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
         
-            print("after send gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
+            # print("after send gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
 
-            num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-            if num_blocks:
-                cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-                print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            # num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
+            # if num_blocks:
+            #     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
+            #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
 
 
         for request_id in self.recv_finished_req_ids[:]:
+            if request_id in self.swaping_req_id and request_id not in self.swap_finished_req_ids:
+                continue
             seq_group = self.recv_transfering[request_id]
             if self.deploy_config.role == "decoder":
                 self.running.append(seq_group)
@@ -764,10 +774,14 @@ class Scheduler:
                     self.block_manager.free(seq)                    
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
-    
-            print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
-            
-            num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-            if num_blocks:
-                cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-                print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            if request_id in self.swaping_req_id:
+                self.swaping_req_id.remove(request_id)
+            if request_id in self.swap_finished_req_ids:
+                self.swap_finished_req_ids.remove(request_id)
+                
+            # print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
+            # #swap where
+            # num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
+            # if num_blocks:
+            #     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
+            #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
