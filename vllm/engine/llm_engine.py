@@ -286,8 +286,15 @@ class LLMEngine:
 
         computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
         
+        
         for block in phy_blocks:
-            print("prefill kv, response " , block.device, block.computed)    
+            print("prefill kv, response " , block.device, block.computed) 
+            
+        #add the last token to seq after allocate blocks
+        prefilled_token_ids = request_output.outputs[0].token_ids[-1],
+        output_logprobs = request_output.outputs[0].logprobs[0]
+        seq.append_token_id(prefilled_token_ids, output_logprobs)
+                
         
         if not blocks:
             kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
