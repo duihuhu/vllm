@@ -544,11 +544,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # if new_hash is already in the cached table, then free last_block
         # and return the cached version
         if self.gpu_allocator.contains_block(new_hash):
-            print("contains_block ", new_hash)
             self.gpu_allocator.free(last_block)
             return self.gpu_allocator.allocate(new_hash)
         else:
-            print("not contains_block ", new_hash)
             self.gpu_allocator.update_hash(new_hash, last_block)
             return last_block
 
@@ -606,7 +604,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_table = self.block_tables[seq.seq_id]
         # If we need to allocate a new physical block
         if len(block_table) < len(logical_blocks):
-            print("allocate new physical ")
             # Currently this code only supports adding one physical block
             assert len(block_table) == len(logical_blocks) - 1
 

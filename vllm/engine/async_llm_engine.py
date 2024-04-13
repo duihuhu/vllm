@@ -276,7 +276,7 @@ class _AsyncLLMEngine(LLMEngine):
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
                 self.scheduler.send_transfering or self.scheduler.recv_transfering:
                     logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
-                    time.sleep(0.05)
+                    time.sleep(0.001)
             else:
                 return []
             
@@ -308,17 +308,17 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
                 
-        # num_blocks = self.scheduler.check_hbm_usage()
+        num_blocks = self.scheduler.check_hbm_usage()
         # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-        # if num_blocks:
-        #     print("num_blocks ", num_blocks)
-        #     cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
-        #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
-        #     if cache_blocks_to_swap_out:
-        #         await self.model_executor._run_workers_async(
-        #             "swap_kv_cache",
-        #             blocks_to_swap_out=cache_blocks_to_swap_out
-        #         )
+        if num_blocks:
+            # print("num_blocks ", num_blocks)
+            cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
+            # print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            if cache_blocks_to_swap_out:
+                await self.model_executor._run_workers_async(
+                    "swap_kv_cache",
+                    blocks_to_swap_out=cache_blocks_to_swap_out
+                )
 
         return processed_outputs
 
