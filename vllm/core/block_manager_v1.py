@@ -344,8 +344,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             elif self.enable_caching:
                 in_hbm = self.gpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
                 in_mem = self.cpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
-                in_hbm = False
-                print("allocate_mixed_cache in hbm in_mem ", in_hbm, in_mem)
+                # in_hbm = False
+                # print("allocate_mixed_cache in hbm in_mem ", in_hbm, in_mem)
                 if in_hbm:                        
                     #todo there also need consider is_evictor
                     block = self.gpu_allocator.allocate(
@@ -358,8 +358,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                         gpu_block = self.gpu_allocator.allocate(seq.hash_of_block(logical_idx),
                             seq.num_hashed_tokens_of_block(logical_idx))
                         gpu_block.computed = block.computed
-                        gpu_block.num_hashed_tokens = block.num_hashed_tokens
-                        gpu_block.block_hash = block.block_hash
                         mapping[block] = gpu_block
                         # Free the CPU block swapped in to GPU.
                         self.cpu_allocator.free(block)
