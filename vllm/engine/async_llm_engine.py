@@ -309,6 +309,7 @@ class _AsyncLLMEngine(LLMEngine):
         # num_blocks = self.scheduler.check_hbm_usage()
         num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
         if num_blocks:
+            print("num_blocks ", num_blocks)
             cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
             print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
         #     if cache_blocks_to_swap_out:
