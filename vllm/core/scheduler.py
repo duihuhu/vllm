@@ -754,15 +754,15 @@ class Scheduler:
                 #move kv_block_tables to block_table
                 #move cached_kv_blocks to cached_blocks
                 self.block_manager.move_kv_blocks_meta(seq_group)
-
+                self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
             # recv cache in prompt is only cache, not has reference, so it will in evicted cache
             if self.deploy_config.role == "prompt":
                 self.block_manager.move_kv_blocks_meta(seq_group)
+                self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
                 for seq in seq_group.get_seqs():
                     self.block_manager.free(seq)                    
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
-            self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
     
             print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
             
