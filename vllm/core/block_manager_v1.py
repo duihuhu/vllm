@@ -717,8 +717,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def compute_full_blocks_in_seq(self, seq: Sequence):
         if seq.seq_id not in self.block_tables:
+            print("seq.seq_id not in block_tables ")
             return
-        print("seq.get_len() ", seq.get_len())
         if seq.get_len() % self.block_size == 0:
             max_full_block = seq.get_len() // self.block_size - 1
                         
