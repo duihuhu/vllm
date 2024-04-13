@@ -407,6 +407,7 @@ class Scheduler:
                 self.waiting.popleft()
                 # self._allocate(seq_group)
                 self._allocate_mixed_cache(seq_group, blocks_to_swap_out)
+                print("_allocate_mixed_cache blocks_to_swap_out ", blocks_to_swap_out)
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs
                 scheduled.append(
