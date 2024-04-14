@@ -257,7 +257,7 @@ class Scheduler:
             while self.running_stay:
                 seq_group = self.running_stay.pop(0)
                 self.running.append(seq_group)
-            self.running = self.policy.sort_by_priority(now, self.running)
+            self.running.sort(key = lambda x: x.sampling_params.max_tokens, reverse = True)
             '''for seq_group in self.running:
                 seq_group.sg_proirty()
             self.running.sort(key = lambda x: x.proirity, reverse = True)
