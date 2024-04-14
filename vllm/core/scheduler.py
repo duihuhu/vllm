@@ -257,13 +257,14 @@ class Scheduler:
             while self.running_stay:
                 seq_group = self.running_stay.pop(0)
                 self.running.append(seq_group)
-            for seq_group in self.running:
+            self.running = self.policy.sort_by_priority(now, self.running)
+            '''for seq_group in self.running:
                 seq_group.sg_proirty()
             self.running.sort(key = lambda x: x.proirity, reverse = True)
             backup_list = self.running.copy()
             for i in range(1, len(self.running)):
                 self.running[i] = backup_list[i - 1]
-            self.running[0] = backup_list[-1]
+            self.running[0] = backup_list[-1]'''
         
         # NOTE(woosuk): We prioritize the sequence groups in the RUNNING state
         # in order to minimize the preemption overheads.
