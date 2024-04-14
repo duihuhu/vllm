@@ -217,7 +217,7 @@ class SequenceGroup:
     def sg_proirty(self) -> None:
         ite_remain = self.ite_need - self.seqs[0].get_output_len()
         if ite_remain == 0:
-            self.proirity = 0
+            self.proirity = 1 << 30
             self.wait_ite += 1
         else:
             if self.wait_ite == 0:

@@ -263,8 +263,8 @@ class Scheduler:
                 seq_group.sg_proirty()
             self.running.sort(key = lambda x: x.proirity, reverse = True)
             temp_running: List[SequenceGroup] = []
-            if len(self.running) >= 2:
-                for _ in range(2):
+            if len(self.running) >= 4:
+                for _ in range(4):
                     seq_group = self.running.pop(-1)
                     temp_running.append(seq_group)
             while self.running:
