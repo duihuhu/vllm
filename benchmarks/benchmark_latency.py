@@ -100,7 +100,7 @@ def main(args: argparse.Namespace):
                              sampling_params=sampling_params2,
                              prompt_token_ids=dummy_prompt_token_ids)
         
-        llm._run_engine(use_tqdm=False,split_two_phase=1, filepath=args.filepath)
+        llm._run_engine(use_tqdm=False,split_two_phase=1, filepath=args.filepath, num=-1)
 
         end_time = time.time()
         latency = end_time - start_time
