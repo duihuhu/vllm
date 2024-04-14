@@ -251,12 +251,13 @@ class Scheduler:
         #    seq_group.sg_proirty()
 
         if is_decode:
-            if len(self.running) == 0 and len(self.running_stay) == 0 and len(self.prefilled) != 0:
-                self.covert_prefilled_to_running(num=num)
+            #if len(self.running) == 0 and len(self.running_stay) == 0 and len(self.prefilled) != 0:
+            #    self.covert_prefilled_to_running(num=num)
 
             while self.running_stay:
                 seq_group = self.running_stay.pop(0)
                 self.running.append(seq_group)
+            self.running = self.policy.sort_by_priority(now, self.running)
             #self.running.sort(key = lambda x: x.sampling_params.max_tokens, reverse = True)
             '''for seq_group in self.running:
                 seq_group.sg_proirty()

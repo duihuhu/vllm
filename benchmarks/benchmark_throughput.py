@@ -107,7 +107,7 @@ def run_vllm(
 
     #start = time.time()
     # FIXME(woosuk): Do use internal method.
-    outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase, filepath=args.file, num=args.num)
+    outputs = llm._run_engine(use_tqdm=True, split_two_phase=split_two_phase, filepath=args.file, num=args.num)
     #end = time.time()
     '''with open("/workspace/vllm/benchmarks/log_13b.txt", 'a') as file:
         for output in outputs:
