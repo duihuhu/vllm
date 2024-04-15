@@ -61,7 +61,7 @@ def post_request_and_get_response(args, prompt):
     if args.stream:
         num_printed_lines = 0
         for h in get_streaming_response(rsp):
-            if h['finished]'] == True:
+            if h['finished'] == True:
                 print("res", h)
             # clear_line(num_printed_lines)
             # num_printed_lines = 0

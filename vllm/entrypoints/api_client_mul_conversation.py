@@ -98,13 +98,12 @@ def post_request_and_get_response(args, prompts):
         if args.stream:
             num_printed_lines = 0
             for h in get_streaming_response(rsp):
-                print("res", h)
                 # clear_line(num_printed_lines)
                 # num_printed_lines = 0
                 # for _, line in enumerate(h):
                 #     num_printed_lines += 1
                 #     print(f"vllm : {line!r}", flush=True)
-                if h['finished]'] == True:
+                if h['finished'] == True:
                     history_value = history_value + prompt[0] + h['texts']
                 
 def main(args, prompts):
