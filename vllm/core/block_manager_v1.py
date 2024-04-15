@@ -232,6 +232,30 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         block.ref_count = 1
         return block
 
+    def allocate_kv_blocks(self,
+                 block_hash: Optional[int] = None,
+                 num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
+        if block_hash is None:
+            block_hash = next(self.default_hash_ctr)
+        if block_hash in self.evictor:
+            assert block_hash not in self.cached_blocks
+            block = self.evictor.remove(block_hash)
+            assert block.ref_count == 0
+            self.cached_blocks[block_hash] = block
+            block.ref_count += 1
+            assert block.block_hash == block_hash
+            return block, True
+        if block_hash not in self.cached_blocks:
+            self.cached_kv_blocks[block_hash] = self.allocate_block(
+                block_hash, num_hashed_tokens)
+            block = self.cached_kv_blocks[block_hash]
+        else:
+            block = self.cached_blocks[block_hash]
+        assert block.block_hash == block_hash
+        block.ref_count += 1
+        return block, False
+
+
     def free(self, block: PhysicalTokenBlock) -> None:
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")
