@@ -104,7 +104,8 @@ def post_request_and_get_response(args, prompts):
                 #     num_printed_lines += 1
                 #     print(f"vllm : {line!r}", flush=True)
                 if h['finished'] == True:
-                    history_value = history_value + prompt[0] + h['texts']
+                    print("res ", h)
+                    history_value = history_value + prompt[0] + h['texts'][0]
                     waiting_time = output_len * waiting_time_per_token / 1000
                     time.sleep(waiting_time)
                 
