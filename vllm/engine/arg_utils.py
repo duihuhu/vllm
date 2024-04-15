@@ -460,7 +460,7 @@ class EngineArgs:
         else:
             vision_language_config = None
 
-        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache)
+        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, self.enable_mcache)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 
