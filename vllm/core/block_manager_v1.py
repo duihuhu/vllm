@@ -222,6 +222,8 @@ class UncachedBlockAllocator(BlockAllocatorBase):
                                        block_hash=-1,
                                        num_hashed_tokens=0)
             self.free_blocks.append(block)
+        
+        self.cached_kv_blocks: Dict[int, PhysicalTokenBlock] = {}
 
     def allocate(self,
                  block_hash: Optional[int] = None,
