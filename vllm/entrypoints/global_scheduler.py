@@ -136,7 +136,7 @@ async def add_request(request: Request) -> Response:
                 if n == 0:
                     await send_to_prefill_response_kv_prepared(res, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
                 else:
-                    if res['finished'] == True:
+                    if res['finished'] == True and args.enable_dcache:
                         print("res", res, n)
                         # pload = {
                         #         "request_id": res['request_id'], 
@@ -170,7 +170,8 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=9000)
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
-
+    parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
+    
     args = parser.parse_args()
     if args.tokenizer is None:
         args.tokenizer = args.model
