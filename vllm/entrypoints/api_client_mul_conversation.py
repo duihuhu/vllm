@@ -39,6 +39,7 @@ def sample_requests(
             output_value =  conversations[index + 1]['value']
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
+            print("input_value_token_ids output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
             filtered_dataset.append((input_value, output_value, len(output_value_token_ids)))
             index = index + 2
     return filtered_dataset
