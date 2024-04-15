@@ -287,8 +287,8 @@ class LLMEngine:
         computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
         
         
-        for block in phy_blocks:
-            print("prefill kv, response " , block.device, block.computed) 
+        # for block in phy_blocks:
+        #     print("prefill kv, response " , block.device, block.computed) 
             
         #add the last token to seq after allocate blocks
         prefilled_token_ids = request_output.outputs[0].token_ids[-1]
