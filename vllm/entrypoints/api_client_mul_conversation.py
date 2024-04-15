@@ -113,11 +113,11 @@ if __name__ == "__main__":
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    datasets = sample_requests("one_conservation.json", tokenizer)
+    datasets = sample_requests("one_conversation.json", tokenizer)
     
-    prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
+    # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
-    asyncio.run(main(args,prompts))
+    # asyncio.run(main(args,prompts))
     # prompts = ['San Francisco is a']
     # main(args,prompts)
     
