@@ -370,7 +370,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             elif self.enable_caching:
                 in_hbm = self.gpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
                 in_mem = self.cpu_allocator.has_cache_block(seq.hash_of_block(logical_idx))
-                in_hbm = False
+                # in_hbm = False
                 # print("allocate_mixed_cache in hbm in_mem ", in_hbm, in_mem)
                 if in_hbm:                        
                     #todo there also need consider is_evictor
