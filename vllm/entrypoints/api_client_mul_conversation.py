@@ -94,7 +94,7 @@ def post_request_and_get_response(args, prompts):
     for prompt in prompts:
         input_prompt = history_value + prompt[0]
         output_len = prompt[2]
-        rsp = post_http_request(prompt, G_URL, args.n, output_len)
+        rsp = post_http_request(input_prompt, G_URL, args.n, output_len)
         if args.stream:
             num_printed_lines = 0
             for h in get_streaming_response(rsp):
@@ -104,7 +104,8 @@ def post_request_and_get_response(args, prompts):
                 # for _, line in enumerate(h):
                 #     num_printed_lines += 1
                 #     print(f"vllm : {line!r}", flush=True)
-        
+                if h['finished]'] == True:
+                    history_value = history_value + prompt[0] + h['texts']
                 
 def main(args, prompts):
     post_request_and_get_response(args, prompts)
