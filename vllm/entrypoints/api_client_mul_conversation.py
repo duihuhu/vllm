@@ -124,7 +124,7 @@ if __name__ == "__main__":
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    datasets = sample_requests("one_conversation.json", tokenizer)
+    datasets = sample_requests("/home/jovyan/vllm/vllm/entrypoints/one_conversation.json", tokenizer)
     
 
     main(args, datasets)
