@@ -12,11 +12,14 @@ from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
 G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
 
+#when repsone one token, waiting 100ms
+waiting_time_per_token = 100
 def sample_requests(
     dataset_path: str,
     tokenizer: PreTrainedTokenizerBase,
 ) -> List[Tuple[str, int, int]]:
 
+    filtered_dataset = []
     # Load the dataset.
     with open(dataset_path) as f:
         dataset = json.load(f)
@@ -24,11 +27,11 @@ def sample_requests(
     # Filter out the conversations with less than 2 turns.
     for data in dataset:
         conversations = data["conversations"]
-        conver_tokens = 0
-        for conver in conversations:
-            value = conver['value']
-            value_token_ids = tokenizer(value).input_ids
-            conver_tokens  = conver_tokens + len(value_token_ids)
+    #     conver_tokens = 0
+    #     for conver in conversations:
+    #         value = conver['value']
+    #         value_token_ids = tokenizer(value).input_ids
+    #         conver_tokens  = conver_tokens + len(value_token_ids)
         count = len(conversations)
         index = 0 
         while index < count:
@@ -36,9 +39,9 @@ def sample_requests(
             output_value =  conversations[index + 1]['value']
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
-            print(index, "input_value_token_ids, output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
+            filtered_dataset.append((input_value, output_value, len(output_value_token_ids)))
             index = index + 2
-    return dataset
+    return filtered_dataset
 
 
 def random_uuid() -> str:
@@ -53,8 +56,8 @@ def clear_line(n: int = 1) -> None:
 
 def post_http_request(prompt: str,
                       api_url: str,
-                      n: int = 1,
-                      stream: bool = False) -> requests.Response:
+                      n: int = 1, 
+                      output_len: int = 16) -> requests.Response:
     headers = {"User-Agent": "Test Client"}
     pload = {
         "prompt": prompt,
@@ -62,9 +65,9 @@ def post_http_request(prompt: str,
         "n": n,
         "use_beam_search": False,
         "temperature": 0.0,
-        "max_tokens": 16,
+        "max_tokens": output_len,
         "logprobs": 1,
-        "prompt_logprobs": 1
+        # "prompt_logprobs": 1
     }
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
@@ -85,25 +88,26 @@ def get_response(response: requests.Response) -> List[str]:
     output = data["text"]
     return output
 
-async def post_request_and_get_response(args, prompt):
-    rsp = post_http_request(prompt, G_URL, args.n, args.stream)
-    if args.stream:
-        num_printed_lines = 0
-        for h in get_streaming_response(rsp):
-            print("res", h)
-            # clear_line(num_printed_lines)
-            # num_printed_lines = 0
-            # for _, line in enumerate(h):
-            #     num_printed_lines += 1
-            #     print(f"vllm : {line!r}", flush=True)
-                
-async def main(args, prompts):
-    coroutines = []
+def post_request_and_get_response(args, prompts):
+    iteration = 0
+    history_value = ""
     for prompt in prompts:
-        print(f"prompt:", end=' ', flush=True)
-        # post_request_and_get_response(args, prompt)
-        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
-    await asyncio.gather(*coroutines)
+        input_prompt = history_value + prompt[0]
+        output_len = prompt[2]
+        rsp = post_http_request(prompt, G_URL, args.n, output_len)
+        if args.stream:
+            num_printed_lines = 0
+            for h in get_streaming_response(rsp):
+                print("res", h)
+                # clear_line(num_printed_lines)
+                # num_printed_lines = 0
+                # for _, line in enumerate(h):
+                #     num_printed_lines += 1
+                #     print(f"vllm : {line!r}", flush=True)
+        
+                
+def main(args, prompts):
+    post_request_and_get_response(args, prompts)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -120,9 +124,7 @@ if __name__ == "__main__":
 
     datasets = sample_requests("one_conversation.json", tokenizer)
     
-    # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
-    
-    # asyncio.run(main(args,prompts))
-    # prompts = ['San Francisco is a']
-    # main(args,prompts)
+
+    main(args, datasets)
+
     
