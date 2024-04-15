@@ -303,22 +303,23 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in prefilled_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
         
-        if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
-                
-        num_blocks = self.scheduler.check_hbm_usage()
-        # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-        if num_blocks:
-            # print("num_blocks ", num_blocks)
-            cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
-            # print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
-            if cache_blocks_to_swap_out:
-                await self.model_executor._run_workers_async(
-                    "swap_kv_cache",
-                    blocks_to_swap_out=cache_blocks_to_swap_out
-                )
+        
+        if self.deploy_config.enable_mcache:
+            num_blocks = self.scheduler.check_hbm_usage()
+            # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
+            if num_blocks:
+                # print("num_blocks ", num_blocks)
+                cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
+                # print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+                if cache_blocks_to_swap_out:
+                    await self.model_executor._run_workers_async(
+                        "swap_kv_cache",
+                        blocks_to_swap_out=cache_blocks_to_swap_out
+                    )
 
         return processed_outputs
 

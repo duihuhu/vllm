@@ -89,23 +89,6 @@ class Worker:
         self.cache_engine = None
         self.gpu_cache = None
 
-
-    def _get_local_device_info(self, rank_table_file: str):
-        local_server_ip = socket.gethostbyname(socket.gethostname())
-        local_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0])
-        with open(rank_table_file, 'r') as rank_table_reader:
-            rank_table = json.load(rank_table_reader)
-            for server_info in rank_table.get("server_list"):
-                server_ip = server_info.get("server_id")
-                if server_ip != local_server_ip:
-                    continue
-                for device_info in server_info.get("device"):
-                    device_id = int(device_info.get("device_id"))
-                    if device_id == local_rank:
-                        global_rank = int(device_info.get("rank_id"))
-                        return local_rank, global_rank
-
-
     def init_device(self) -> None:
         if self.device_config.device.type == "cuda":
             # torch.distributed.all_reduce does not free the input tensor until

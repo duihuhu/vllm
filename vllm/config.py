@@ -832,11 +832,14 @@ class DeployConfig:
         self,
         enable_separate: bool=False,
         role: str=None,
-        rank_table_file: Optional[str]=None,
+        enable_dcache: bool = False,
+        enable_mcache: bool = False
         ) -> None:
             self.enable_separate = enable_separate
             self.role = role
-            self.rank_table_file = rank_table_file
+            self.enable_dcache = enable_dcache
+            self.enable_mcache = enable_mcache
+
             self.global_ranks = None
             self._verify_args()
     

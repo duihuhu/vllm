@@ -66,8 +66,9 @@ class EngineArgs:
     
     enable_separate: bool = False
     role: str = None
-    rank_table_file: Optional[str] = None
-
+    enable_dcache: bool = False
+    enable_mcache: bool = False
+    
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -378,12 +379,17 @@ class EngineArgs:
             choices=['prompt', 'decoder'],
             default=None,
             help=('instance '))
-    
+
         parser.add_argument(
-            '--rank-table-file',
-            type=str,
-            default="",
-            help=('rank table file '))
+            '--enable-dcache',
+            action="store_true",
+            help=('enable pass decode to prefill cache '))
+
+        parser.add_argument(
+            '--enable-mcache',
+            action="store_true",
+            help=('enable memory cache '))
+        
         return parser
 
     @classmethod
