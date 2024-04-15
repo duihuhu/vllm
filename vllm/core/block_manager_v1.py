@@ -393,8 +393,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.
                 block.ref_count = seq_group.num_seqs()
-            if (not in_hbm and in_mem):    
-                block_table.append(gpu_block)
+            if  self.enable_caching:
+                if (not in_hbm and in_mem):    
+                    block_table.append(gpu_block)
+                else:
+                    block_table.append(block)
             else:
                 block_table.append(block)
         
