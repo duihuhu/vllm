@@ -67,6 +67,7 @@ def post_request_and_get_response(args, prompt):
             # for _, line in enumerate(h):
             #     num_printed_lines += 1
             #     print(f"vllm : {line!r}", flush=True)
+            
                 
 def main(args, prompts):
     coroutines = []
