@@ -319,8 +319,8 @@ class Scheduler:
         seq = seq_group.get_seqs()[0]
         block_table = self.block_manager.block_tables[seq.seq_id]
         blocks = [phy_block.block_number for phy_block in block_table]
-        for bkt in block_table:
-            print("fetch_kv_blocks ", bkt.device, bkt.computed)
+        # for bkt in block_table:
+            # print("fetch_kv_blocks ", bkt.device, bkt.computed)
         return blocks
 
     def _schedule(self) -> SchedulerOutputs:

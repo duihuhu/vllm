@@ -315,7 +315,7 @@ class LLMEngine:
             logger.info("remote recv engine prepare kv fail.")
             return
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
-        print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
+        # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
 
     def add_request(
