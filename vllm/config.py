@@ -832,20 +832,18 @@ class DeployConfig:
         self,
         enable_separate: bool=False,
         role: str=None,
-        rank_table_file: Optional[str]=None,
+        enable_dcache: bool = False,
         ) -> None:
             self.enable_separate = enable_separate
             self.role = role
-            self.rank_table_file = rank_table_file
+            self.enable_dcache = enable_dcache
             self.global_ranks = None
             self._verify_args()
     
     def _verify_args(self) -> None:
         if self.enable_separate and self.role not in ['prompt', 'decoder']:
             raise ValueError(f"role of LLM Engine Instance must be prompt or decoder in separate mode")
-        # if self.enable_separate and not self.rank_table_file:
-        #     raise ValueError(f"the rank_table_file must be specified in separate mode")
-    
+
     def set_global_ranks(self, global_ranks: List[int]) -> None:
         self.global_ranks = global_ranks
         self.global_ranks.sort()

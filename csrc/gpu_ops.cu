@@ -1,9 +1,6 @@
 #include <cassert>
 #include <iostream>
 #include <torch/extension.h>
-// #include <torch_npu/csrc/core/npu/NPUStream.h>
-// #include "acl/acl.h"
-//#include "kernel_entry.h"
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
@@ -11,13 +8,9 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include "nccl.h"
-// #include <ATen/cuda/CUDAStream.h>
 #include <cuda_runtime.h>
 #include <c10/cuda/CUDAStream.h>
-// #include "mpi.h"
 
-//#include "hccl/hccl.h"
-//#include "hccl/hccl_type.h"
 using namespace torch::indexing;
 using namespace at; 
 
@@ -205,52 +198,25 @@ std::map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
 
 void SendRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t destRank)
 {
-    // int deviceId = 0;
-    // aclrtGetDevice(&deviceId);
-    // auto npuStream = c10_npu:getCurrentNPUStream(deviceId);
-    // auto aclStream = npuStream.stream();
 
-    // HcclResult code = HcclSend((void*) requestIdOnDevice, requestIdSize, HCCL_DATA_TYPE_INT8, \
-    //     destRank, g_globalHcclComm, aclStream);
-    
-    // if (HCCL_SUCCESS != code) {
-    //     std::cout << "ERROR HcclSend request id error" << code << std::endl;
-    // }
     int deviceId = 0;
     cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
     NCCLCHECK(ncclSend((void*) requestIdOnDevice, requestIdSize, ncclInt, destRank, g_globalNcclComm, cudaStream));
-    // std::cout << "send request id success " << std::endl;
-    // Synchronize stream
-    // CUDACHECK(cudaStreamSynchronize(cudaStream));
 
     return;
 }
 
 void RecvRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t srcRank)
 {
-    // int deviceId = 0;
-    // aclrtGetDevice(&deviceId);
-    // auto npuStream = c10_npu:getCurrentNPUStream(deviceId);
-    // auto aclStream = npuStream.stream();
 
-    // HcclResult code = HcclRecv((void*) requestIdOnDevice, requestIdSize, HCCL_DATA_TYPE_INT8, \
-    //     srcRank, g_globalHcclComm, aclStream);
-    
-    // if (HCCL_SUCCESS != code) {
-    //     std::cout << "ERROR HcclSend request id error" << code << std::endl;
-    // }
     int deviceId = 0;
     cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
 
     NCCLCHECK(ncclRecv((void*) requestIdOnDevice, requestIdSize, ncclInt, srcRank, g_globalNcclComm, cudaStream));
-
-    // std::cout << "recv request id success " << std::endl;
-    // Synchronize stream
-    // CUDACHECK(cudaStreamSynchronize(cudaStream));
 
     return;
 }
@@ -259,11 +225,6 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
     int layerNum = srcCaches.size();
-
-    // int deviceId = 0;
-    // aclrtGetDevice(&deviceId);
-    // auto npuStream = c10_npu:getCurrentNPUStream(deviceId);
-    // auto aclStream = npuStream.stream();
 
     int deviceId = 0;
     cudaGetDevice(&deviceId);
@@ -299,11 +260,6 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank)
 {
     int layerNum = dstCaches.size();
-
-    // int deviceId = 0;
-    // aclrtGetDevice(&deviceId);
-    // auto npuStream = c10_npu:getCurrentNPUStream(deviceId);
-    // auto aclStream = npuStream.stream();
 
     int deviceId = 0;
     cudaGetDevice(&deviceId);

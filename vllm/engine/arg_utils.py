@@ -66,7 +66,7 @@ class EngineArgs:
     
     enable_separate: bool = False
     role: str = None
-    rank_table_file: Optional[str] = None
+    enable_dcache: bool = False
 
     def __post_init__(self):
         if self.tokenizer is None:
@@ -378,12 +378,11 @@ class EngineArgs:
             choices=['prompt', 'decoder'],
             default=None,
             help=('instance '))
-    
+        
         parser.add_argument(
-            '--rank-table-file',
-            type=str,
-            default="",
-            help=('rank table file '))
+            '--enable-dcache',
+            action="store_true",
+            help=('d cache passing to p or not '))
         return parser
 
     @classmethod
@@ -454,7 +453,7 @@ class EngineArgs:
         else:
             vision_language_config = None
 
-        deploy_config = DeployConfig(self.enable_separate, self.role)
+        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 

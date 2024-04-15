@@ -301,7 +301,7 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in prefilled_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
         
-        if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder':
+        if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
