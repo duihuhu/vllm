@@ -29,13 +29,13 @@ def sample_requests(
             value = conver['value']
             value_token_ids = tokenizer(value).input_ids
             conver_tokens  = conver_tokens + len(value_token_ids)
-
+        print(len(conversations))
         for index in range(len(conversations)):
             input_value =  conversations[index]['value']
             output_value =  conversations[index + 1]['value']
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
-            print("input_value_token_ids, output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
+            print(index, "input_value_token_ids, output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
             index = index + 2
     return dataset
 
