@@ -257,9 +257,9 @@ class Scheduler:
             while self.running_stay:
                 seq_group = self.running_stay.pop(0)
                 self.running.append(seq_group)
-            #self.running = self.policy.sort_by_priority(now, self.running)
+            self.running = self.policy.sort_by_priority(now, self.running)
             #self.running.sort(key = lambda x: x.sampling_params.max_tokens, reverse = True)
-            for seq_group in self.running:
+            '''for seq_group in self.running:
                 seq_group.sg_proirty()
             self.running.sort(key = lambda x: x.proirity, reverse = True)
             temp_running: List[SequenceGroup] = []
@@ -271,7 +271,8 @@ class Scheduler:
                 seq_group = self.running.pop(0)
                 temp_running.append(seq_group)
             self.running = temp_running.copy()
-            temp_running.clear()
+            temp_running.clear()'''
+            
             '''backup_list = self.running.copy()
             for i in range(1, len(self.running)):
                 self.running[i] = backup_list[i - 1]
