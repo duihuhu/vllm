@@ -23,7 +23,7 @@ def clear_line(n: int = 1) -> None:
         print(LINE_UP, end=LINE_CLEAR, flush=True)
 
 
-def post_http_request(prompt: str,
+def post_http_request(prompt_token_ids: str,
                       api_url: str,
                       n: int = 1,
                       stream: bool = False) -> requests.Response:
