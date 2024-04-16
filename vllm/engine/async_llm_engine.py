@@ -272,6 +272,13 @@ class _AsyncLLMEngine(LLMEngine):
         """
         seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out = self.scheduler.schedule()
 
+        if self.deploy_config.enable_mcache:
+            if cache_blocks_to_swap_out:
+                await self.model_executor._run_workers_async(
+                    "swap_kv_cache",
+                    blocks_to_swap_out=cache_blocks_to_swap_out
+            )
+            
         if scheduler_outputs.is_empty():
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
                 self.scheduler.send_transfering or self.scheduler.recv_transfering:
@@ -308,7 +315,7 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
         
-        if self.deploy_config.enable_mcache:
+        # if self.deploy_config.enable_mcache:
             # num_blocks = self.scheduler.check_hbm_usage()
             # # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
             # if num_blocks:
@@ -320,11 +327,7 @@ class _AsyncLLMEngine(LLMEngine):
             #             "swap_kv_cache",
             #             blocks_to_swap_out=cache_blocks_to_swap_out
             #         )
-            if cache_blocks_to_swap_out:
-                await self.model_executor._run_workers_async(
-                    "swap_kv_cache",
-                    blocks_to_swap_out=cache_blocks_to_swap_out
-            )
+
             
 
         return processed_outputs
