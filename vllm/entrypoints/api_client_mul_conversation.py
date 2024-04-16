@@ -106,7 +106,7 @@ def post_request_and_get_response(args, prompts):
                 #     print(f"vllm : {line!r}", flush=True)
                 if h['finished'] == True:
                     print("res ", h)
-                    history_value = history_value.extend(h['prefilled_token_id'])
+                    history_value.extend(h['prefilled_token_id'])
                     waiting_time = output_len * waiting_time_per_token / 1000
                     time.sleep(waiting_time)
                 
