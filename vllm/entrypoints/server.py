@@ -205,7 +205,7 @@ async def generate_prefill(request: Request) -> Response:
                 finished = request_output.finished
             )
             print("generate res 1", infer_results.texts)
-            res = json.dumps(infer_results.__json__(), ensure_ascii=False)
+            res = (json.dumps(infer_results.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
             print("generate res dumps ", res['texts'])
             print("is equals ", res['texts'] == infer_results.texts)
             yield (json.dumps(infer_results.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
