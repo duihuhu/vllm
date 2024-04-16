@@ -8,6 +8,7 @@ import requests
 import asyncio
 import time
 import uuid
+from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
 G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
 
@@ -28,7 +29,7 @@ def post_http_request(prompt: str,
                       stream: bool = False) -> requests.Response:
     headers = {"User-Agent": "Test Client"}
     pload = {
-        "prompt": prompt,
+        "prompt_token_ids": prompt_token_ids,
         "request_id": random_uuid(), 
         "n": n,
         "use_beam_search": False,
@@ -71,10 +72,10 @@ def post_request_and_get_response(args, prompt):
             
                 
 def main(args, prompts):
-    coroutines = []
-    for prompt in prompts:
-        print(f"prompt:", end=' ', flush=True)
-        post_request_and_get_response(args, prompt)
+    # coroutines = []
+    # for prompt in prompts:
+    #     print(f"prompt:", end=' ', flush=True)
+    post_request_and_get_response(args, prompt)
     #     coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
     # await asyncio.gather(*coroutines)
 
@@ -91,9 +92,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
-    
+    tokenizer_path = "/home/jovyan/models/Llama-2-13b-hf/"
+
+    # Sample the requests.
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     # asyncio.run(main(args,prompts))
     # prompts = ['San Francisco is a San Francisco is a San Francisco is a']
     prompts = ['San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a']
-    main(args,prompts)
+    
+    input_value_token_ids = tokenizer(prompts).input_ids
+
+    main(args,input_value_token_ids)
     
