@@ -75,7 +75,7 @@ def main(args, prompts):
     # coroutines = []
     # for prompt in prompts:
     #     print(f"prompt:", end=' ', flush=True)
-    post_request_and_get_response(args, prompt)
+    post_request_and_get_response(args, prompts)
     #     coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
     # await asyncio.gather(*coroutines)
 
