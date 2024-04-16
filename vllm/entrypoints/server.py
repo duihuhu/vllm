@@ -186,7 +186,8 @@ async def generate_prefill(request: Request) -> Response:
 
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
-    results_generator = server.engine.generate(prompt=None, sampling_params=sampling_params, request_id=request_id, prompt_token_ids=prompt_token_ids)
+    results_generator = server.engine.generate(prompt=None, sampling_params=sampling_params, request_id=request_id,\
+        prompt_token_ids=prompt_token_ids)
     
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
