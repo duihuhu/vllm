@@ -882,7 +882,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         }
         #记录驱逐到cpu的缓存
         self.block_mapping_tables.update(mapping)
-        print("block_number_mapping ", block_number_mapping)
+        # print("block_number_mapping ", block_number_mapping)
         return block_number_mapping
 
     def move_kv_blocks_meta(self, seq_group: SequenceGroup):

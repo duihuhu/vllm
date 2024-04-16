@@ -423,7 +423,7 @@ class Scheduler:
                         seq_group=seq_group,
                         token_chunk_size=num_prefill_tokens))
             self.waiting.extendleft(leftover_waiting_sequences)
-
+            print("waiting seq  blocks_to_swap_in ", blocks_to_swap_in)
             if scheduled or ignored_seq_groups:
                 self.prev_prompt = True
                 scheduler_outputs = SchedulerOutputs(
@@ -786,6 +786,6 @@ class Scheduler:
                 num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
                 if num_blocks:
                     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-                    print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+                    print("prompt kv cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
                     return cache_blocks_to_swap_out
         return None
