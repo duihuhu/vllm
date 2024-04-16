@@ -782,7 +782,7 @@ class Scheduler:
                 
             # print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
             # #swap where
-            if self.deploy_config.role == "prompt":
+            if self.deploy_config.role == "prompt" and self.deploy_config.enable_mcache:
                 num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
                 if num_blocks:
                     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
