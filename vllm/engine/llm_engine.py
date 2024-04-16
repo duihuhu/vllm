@@ -606,6 +606,7 @@ class LLMEngine:
             seq_group.maybe_set_first_token_time(now)
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
+            print("seq_group request id prefill end time ", seq_group.request_id, time.time())
         for seq_group in scheduler_outputs.ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)

@@ -230,6 +230,7 @@ class Scheduler:
             leftover_waiting_sequences = deque()
             num_batched_tokens = 0
             while self._passed_delay(now) and self.waiting:
+                print("seq_group request id prefill start time ", seq_group.request_id, time.time())
                 seq_group = self.waiting[0]
                 waiting_seqs = seq_group.get_seqs(
                     status=SequenceStatus.WAITING)
