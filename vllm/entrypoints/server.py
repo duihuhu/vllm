@@ -71,7 +71,7 @@ async def prepare_kv_result(request: Request) -> None:
     async def stream_results() -> AsyncGenerator[bytes, None]:
         #response to d
         async for kv_result in results_generator:
-            yield (json.dumps(kv_result.__json__()) + "\0").encode("utf-8")
+            yield (json.dumps(kv_result.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
             break
     return StreamingResponse(stream_results())
 
@@ -146,7 +146,7 @@ async def generate_decode(request: Request) -> Response:
     async def stream_results() -> AsyncGenerator[bytes, None]:
         #response to p
         async for kv_response in results_generator:
-            yield (json.dumps(kv_response.__json__()) + "\0").encode("utf-8")
+            yield (json.dumps(kv_response.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
             break
         
         #response to decode
@@ -164,7 +164,7 @@ async def generate_decode(request: Request) -> Response:
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
-            yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")
+            yield (json.dumps(infer_result.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
     
     return StreamingResponse(stream_results())
     
@@ -204,7 +204,7 @@ async def generate_prefill(request: Request) -> Response:
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
-            yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
+            yield (json.dumps(infer_results.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
 

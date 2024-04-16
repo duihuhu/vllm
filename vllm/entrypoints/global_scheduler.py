@@ -128,7 +128,7 @@ async def add_request(request: Request) -> Response:
         async def stream_results() -> AsyncGenerator[bytes, None]:
             # prefill' response, return to client
             n = 0
-            yield (json.dumps(prefill_res) + "\0").encode("utf-8")
+            yield (json.dumps(prefill_res) + "\0", ensure_ascii=False).encode("utf-8")
 
             for res in get_streaming_response(decode_response):
                 # print("res", res, n)
@@ -146,7 +146,7 @@ async def add_request(request: Request) -> Response:
                         for pkv_res in get_streaming_response(pkv_response):
                             await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % (cfg.edecode_host, cfg.edecode_port))
                     
-                    yield (json.dumps(res) + "\0").encode("utf-8")
+                    yield (json.dumps(res) + "\0", ensure_ascii=False).encode("utf-8")
                 n = n + 1
         return StreamingResponse(stream_results())
         
