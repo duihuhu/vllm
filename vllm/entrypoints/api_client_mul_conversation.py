@@ -40,7 +40,7 @@ def sample_requests(
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
             print("input_value_token_ids output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
-            filtered_dataset.append((input_value, output_value, len(output_value_token_ids)))
+            filtered_dataset.append((input_value_token_ids, output_value, len(output_value_token_ids)))
             index = index + 2
     return filtered_dataset
 
@@ -55,13 +55,13 @@ def clear_line(n: int = 1) -> None:
         print(LINE_UP, end=LINE_CLEAR, flush=True)
 
 
-def post_http_request(prompt: str,
+def post_http_request(prompt_token_ids: str,
                       api_url: str,
                       n: int = 1, 
                       output_len: int = 16) -> requests.Response:
     headers = {"User-Agent": "Test Client"}
     pload = {
-        "prompt": prompt,
+        "prompt_token_ids": prompt_token_ids,
         "request_id": random_uuid(), 
         "n": n,
         "use_beam_search": False,
@@ -106,7 +106,7 @@ def post_request_and_get_response(args, prompts):
                 #     print(f"vllm : {line!r}", flush=True)
                 if h['finished'] == True:
                     print("res ", h)
-                    history_value = history_value + prompt[0] + h['texts'][0]
+                    history_value = history_value + prompt[0] + h['prefilled_token_id']
                     waiting_time = output_len * waiting_time_per_token / 1000
                     time.sleep(waiting_time)
                 

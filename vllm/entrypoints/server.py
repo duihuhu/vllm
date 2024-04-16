@@ -180,12 +180,13 @@ async def generate_prefill(request: Request) -> Response:
         Response: _description_
     """
     payload = await request.json()
-    prompt = payload.pop("prompt")
+    # prompt = payload.pop("prompt")
+    prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
 
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
-    results_generator = server.engine.generate(prompt, sampling_params, request_id)
+    results_generator = server.engine.generate(sampling_params=sampling_params, request_id=request_id, prompt_token_ids=prompt_token_ids)
     
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
@@ -204,10 +205,6 @@ async def generate_prefill(request: Request) -> Response:
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished
             )
-            print("generate res 1", infer_results.texts)
-            res = (json.dumps(infer_results.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
-            print("generate res dumps ", res['texts'])
-            print("is equals ", res['texts'] == infer_results.texts)
             yield (json.dumps(infer_results.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
