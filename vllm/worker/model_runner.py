@@ -253,6 +253,7 @@ class ModelRunner:
         num_prompt_tokens = len(input_tokens)
         assert max_subquery_len > 0
         
+        print("prefix block tables ", len(prefix_block_tables), prefix_block_tables, subquery_lens)
 
         input_tokens = torch.tensor(input_tokens,
                                     dtype=torch.long,
@@ -279,7 +280,6 @@ class ModelRunner:
             multi_modal_input = None
 
         # Prepare prefix block tables
-        print("prefix block tables ", len(prefix_block_tables))
         max_prompt_block_table_len = max(len(t) for t in prefix_block_tables)
         block_tables = make_tensor_with_pad(
             prefix_block_tables,
