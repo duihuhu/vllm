@@ -91,11 +91,11 @@ def get_response(response: requests.Response) -> List[str]:
 
 def post_request_and_get_response(args, prompts):
     iteration = 0
-    history_value = ""
+    history_value = []
     for prompt in prompts:
-        input_prompt = history_value + prompt[0]
+        history_value.extend(prompt[0])
         output_len = prompt[2]
-        rsp = post_http_request(input_prompt, G_URL, args.n, output_len)
+        rsp = post_http_request(history_value, G_URL, args.n, output_len)
         if args.stream:
             num_printed_lines = 0
             for h in get_streaming_response(rsp):
@@ -106,7 +106,7 @@ def post_request_and_get_response(args, prompts):
                 #     print(f"vllm : {line!r}", flush=True)
                 if h['finished'] == True:
                     print("res ", h)
-                    history_value = history_value + prompt[0] + h['prefilled_token_id']
+                    history_value = history_value.extend(h['prefilled_token_id'])
                     waiting_time = output_len * waiting_time_per_token / 1000
                     time.sleep(waiting_time)
                 
