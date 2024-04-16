@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # prompts = ['San Francisco is a San Francisco is a San Francisco is a']
     prompts = ['San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a']
     
-    input_value_token_ids = tokenizer(prompts).input_ids
+    input_value_token_ids = tokenizer(prompts[0]).input_ids
 
     main(args,input_value_token_ids)
     
