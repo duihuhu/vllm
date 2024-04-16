@@ -123,7 +123,8 @@ class LRUEvictor(Evictor):
                 break
             if evicted_block.num_hashed_tokens < block.num_hashed_tokens:
                 evicted_block = block
-        self.free_table[evicted_block.block_hash] = self.free_cache_table.pop(evicted_block.block_hash)
+        # self.free_table[evicted_block.block_hash] = self.free_cache_table.pop(evicted_block.block_hash)
+        self.free_cache_table.pop(evicted_block.block_hash)
         return evicted_block
 
     @property
