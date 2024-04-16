@@ -270,7 +270,7 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+        seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out = self.scheduler.schedule()
 
         if scheduler_outputs.is_empty():
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
@@ -309,17 +309,23 @@ class _AsyncLLMEngine(LLMEngine):
                 self.scheduler.add_send_transfering(seq_group)
         
         if self.deploy_config.enable_mcache:
-            num_blocks = self.scheduler.check_hbm_usage()
-            # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-            if num_blocks:
-                # print("num_blocks ", num_blocks)
-                cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
-                # print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
-                if cache_blocks_to_swap_out:
-                    await self.model_executor._run_workers_async(
-                        "swap_kv_cache",
-                        blocks_to_swap_out=cache_blocks_to_swap_out
-                    )
+            # num_blocks = self.scheduler.check_hbm_usage()
+            # # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
+            # if num_blocks:
+            #     # print("num_blocks ", num_blocks)
+            #     cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
+            #     # print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            #     if cache_blocks_to_swap_out:
+            #         await self.model_executor._run_workers_async(
+            #             "swap_kv_cache",
+            #             blocks_to_swap_out=cache_blocks_to_swap_out
+            #         )
+            if cache_blocks_to_swap_out:
+                await self.model_executor._run_workers_async(
+                    "swap_kv_cache",
+                    blocks_to_swap_out=cache_blocks_to_swap_out
+            )
+            
 
         return processed_outputs
 

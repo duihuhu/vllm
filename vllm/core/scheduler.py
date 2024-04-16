@@ -332,7 +332,7 @@ class Scheduler:
         # Fix the current time.
         now = time.time()
         
-        self._check_tranfer_finished_req()
+        cache_blocks_to_swap_out = self._check_tranfer_finished_req()
         
         # Join waiting sequences if possible.
         if not self.swapped:
@@ -435,7 +435,7 @@ class Scheduler:
                     blocks_to_copy=blocks_to_copy,
                     ignored_seq_groups=ignored_seq_groups,
                 )
-                return scheduler_outputs
+                return scheduler_outputs, cache_blocks_to_swap_out
 
         # NOTE(woosuk): Preemption happens only when there is no available slot
         # to keep all the sequence groups in the RUNNING state.
@@ -531,13 +531,13 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
             ignored_seq_groups=[],
         )
-        return scheduler_outputs
+        return scheduler_outputs, cache_blocks_to_swap_out
 
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
-        scheduler_outputs = self._schedule()
+        scheduler_outputs, cache_blocks_to_swap_out = self._schedule()
         now = time.time()
 
         # Create input data structures.
@@ -589,7 +589,7 @@ class Scheduler:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
 
-        return seq_group_metadata_list, scheduler_outputs
+        return seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
         self.block_manager.fork(parent_seq, child_seq)
@@ -782,7 +782,10 @@ class Scheduler:
                 
             # print("after recv gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())
             # #swap where
-            # num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
-            # if num_blocks:
-            #     cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
-            #     print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+            if self.deploy_config.role == "prompt":
+                num_blocks = self.block_manager.gpu_allocator.get_num_can_evicted_blocks()
+                if num_blocks:
+                    cache_blocks_to_swap_out = self.evict_hbm_caches(num_blocks)
+                    print("cache_blocks_to_swap_out ", cache_blocks_to_swap_out)
+                    return cache_blocks_to_swap_out
+        return None
