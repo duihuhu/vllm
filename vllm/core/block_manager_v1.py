@@ -553,6 +553,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if seq.seq_id not in self.block_tables:
             return
         max_full_block = seq.get_len() // self.block_size - 1
+        print("max_full_block ", max_full_block)
         block_table = self.block_tables[seq.seq_id]
         if max_full_block == -1:
             return

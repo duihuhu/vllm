@@ -632,7 +632,7 @@ if triton.__version__ >= "2.1.0":
                               alibi_slopes=None):
 
         print("b_loc ", b_loc)
-        print("b_loc ", b_start_loc)
+        print("b_start_loc ", b_start_loc)
         print("b_seq_len ", b_seq_len)
         print("b_ctx_len ", b_ctx_len)
 
