@@ -649,7 +649,7 @@ if triton.__version__ >= "2.1.0":
         batch, head = b_seq_len.shape[0], q.shape[1]
         num_queries_per_kv = q.shape[1] // k.shape[1]
         
-        print("b_loc.stride(1) ", num_queries_per_kv)
+        print("num_queries_per_kv ", num_queries_per_kv)
 
         grid = (batch, head, triton.cdiv(max_input_len, BLOCK))  # batch, head,
 
