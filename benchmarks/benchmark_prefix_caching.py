@@ -7,8 +7,6 @@ PROMPT = "You are a helpful assistant in recognizes the content of tables in mar
 
 PROMPT1 = 'San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a'
 
-PROMPT2 = 'San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a San Francisco is a'
-
 def test_prefix(llm=None, sampling_params=None, prompts=None):
     start_time = time.time()
 

@@ -312,7 +312,7 @@ class LLMEngine:
             prompt=prompt,
             prompt_token_ids=prompt_token_ids,
             lora_request=lora_request)
-
+        print("len prompt_token_ids ", len(prompt_token_ids))
         # Create the sequences.
         block_size = self.cache_config.block_size
         seq_id = next(self.seq_counter)
