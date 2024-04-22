@@ -231,7 +231,6 @@ class Scheduler:
             num_batched_tokens = 0
             while self._passed_delay(now) and self.waiting:
                 seq_group = self.waiting[0]
-                print("seq_group request id prefill start time ", seq_group.request_id, time.time())
                 waiting_seqs = seq_group.get_seqs(
                     status=SequenceStatus.WAITING)
                 assert len(waiting_seqs) == 1, (
