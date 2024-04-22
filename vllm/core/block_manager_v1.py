@@ -564,7 +564,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for i in reversed(range(max_full_block)):
             if block_table[i].computed:
                 break
-            print("mark true ", i , max_full_block, seq.get_len(), self.block_size, seq.get_len() // self.block_size,"\n")
+            # print("mark true ", i , max_full_block, seq.get_len(), self.block_size, seq.get_len() // self.block_size,"\n")
             block_table[i].computed = True
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:

@@ -79,7 +79,6 @@ if triton.__version__ >= "2.1.0":
         m_i = tl.zeros([BLOCK_M], dtype=tl.float32) - float("inf")
         l_i = tl.zeros([BLOCK_M], dtype=tl.float32)
         acc = tl.zeros([BLOCK_M, BLOCK_DMODEL], dtype=tl.float32)
-
         for start_n in range(0, cur_batch_ctx_len, BLOCK_N):
             start_n = tl.multiple_of(start_n, BLOCK_N)
             # -- compute qk ----
@@ -635,6 +634,9 @@ if triton.__version__ >= "2.1.0":
         print("b_start_loc ", b_start_loc)
         print("b_seq_len ", b_seq_len)
         print("b_ctx_len ", b_ctx_len)
+        print("max_input_len ", max_input_len)
+        print("b_loc.stride(0) ", b_loc.stride(0))
+        print("b_loc.stride(1) ", b_loc.stride(1))
 
         cap = torch.cuda.get_device_capability()
         BLOCK = 128 if cap[0] >= 8 else 64
@@ -646,6 +648,8 @@ if triton.__version__ >= "2.1.0":
         sm_scale = 1.0 / (Lq**0.5)
         batch, head = b_seq_len.shape[0], q.shape[1]
         num_queries_per_kv = q.shape[1] // k.shape[1]
+        
+        print("b_loc.stride(1) ", num_queries_per_kv)
 
         grid = (batch, head, triton.cdiv(max_input_len, BLOCK))  # batch, head,
 
