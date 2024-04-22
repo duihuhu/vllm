@@ -52,8 +52,8 @@ if __name__ == "__main__":
     parser.add_argument('--enable-prefix-caching',
                         action='store_true',
                         help='enable prefix caching')
-    parser.add_argument('--input-len', type=int, default=1)
-    parser.add_argument('--output-len', type=int, default=32)
+    parser.add_argument('--input-len', type=int, default=1024)
+    parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--block-size', type=int, default=1)
 
     args = parser.parse_args()
