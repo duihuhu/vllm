@@ -662,6 +662,10 @@ class ModelRunner:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         hidden_states = model_executable(**execute_model_kwargs)
 
+        # Only perform sampling in the driver worker.
+        if sampling_metadata.perform_sampling:
+            print("seq_group request id prefill end time " , time.time())
+
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
