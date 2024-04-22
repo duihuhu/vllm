@@ -21,7 +21,8 @@ def main(args):
               tokenizer_mode='auto',
               trust_remote_code=True,
               enforce_eager=True,
-              enable_prefix_caching=args.enable_prefix_caching)
+              enable_prefix_caching=args.enable_prefix_caching,
+              block_size=args.block_size)
 
     # num_prompts = 100
     # prompts = [PROMPT] * num_prompts
@@ -53,6 +54,7 @@ if __name__ == "__main__":
                         help='enable prefix caching')
     parser.add_argument('--input-len', type=int, default=1)
     parser.add_argument('--output-len', type=int, default=32)
-    
+    parser.add_argument('--block-size', type=int, default=1)
+
     args = parser.parse_args()
     main(args)
