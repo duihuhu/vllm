@@ -62,7 +62,6 @@ if triton.__version__ >= "2.1.0":
 
         block_start_loc = BLOCK_M * start_m
 
-        print("cur_batch_seq_len ", cur_batch_seq_len)
         # initialize offsets
         offs_n = tl.arange(0, BLOCK_N)
         offs_d = tl.arange(0, BLOCK_DMODEL)
