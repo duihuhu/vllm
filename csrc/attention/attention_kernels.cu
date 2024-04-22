@@ -693,7 +693,10 @@ void paged_attention_v1_launcher(
 // NOTE(woosuk): To reduce the compilation time, we omitted block sizes
 // 1, 2, 4, 64, 128, 256.
 #define CALL_V1_LAUNCHER_BLOCK_SIZE(T, CACHE_T, IS_FP8_E5M2_KV_CACHE) \
-  switch (block_size) {                                               \
+  switch (block_size) {
+    case 1:                                                           \
+      CALL_V1_LAUNCHER(T, CACHE_T, 1, IS_FP8_E5M2_KV_CACHE);          \
+      break;                                                                                                         \
     case 8:                                                           \
       CALL_V1_LAUNCHER(T, CACHE_T, 8, IS_FP8_E5M2_KV_CACHE);          \
       break;                                                          \
