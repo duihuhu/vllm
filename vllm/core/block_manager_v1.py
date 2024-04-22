@@ -290,6 +290,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         # Assign the block table for each sequence.
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            print("seq.seq_id block_table ", block_table)
             self.block_tables[seq.seq_id] = block_table.copy()
 
     def can_append_slot(self, seq_group: SequenceGroup) -> bool:
