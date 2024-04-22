@@ -16,7 +16,7 @@ def test_prefix(llm=None, sampling_params=None, prompts=None):
 
 
 def main(args):
-    llm = LLM(model="baichuan-inc/Baichuan2-13B-Chat",
+    llm = LLM(model="/home/jovyan/models/Llama-2-13b-hf/",
               tokenizer_mode='auto',
               trust_remote_code=True,
               enforce_eager=True,
@@ -36,7 +36,7 @@ def main(args):
     print("------start generating------")
     test_prefix(
         llm=llm,
-        prompts=prompts,
+        prompts=prompts[:1],
         sampling_params=sampling_params,
     )
 
