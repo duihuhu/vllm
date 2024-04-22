@@ -652,6 +652,8 @@ if triton.__version__ >= "2.1.0":
         print("num_queries_per_kv ", num_queries_per_kv)
         print("batch ", batch)
         print("head ", head)
+        print("triton.cdiv(max_input_len, BLOCK) ", triton.cdiv(max_input_len, BLOCK))      
+        print("BLOCK ", BLOCK)
 
         grid = (batch, head, triton.cdiv(max_input_len, BLOCK))  # batch, head,
 
