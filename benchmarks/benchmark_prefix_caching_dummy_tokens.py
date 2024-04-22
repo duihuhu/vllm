@@ -27,10 +27,7 @@ def main(args):
     # prompts = [PROMPT] * num_prompts
     sampling_params = SamplingParams(temperature=0, max_tokens=args.output_len)
 
-    dummy_prompt_token_ids = np.random.randint(0,
-                                               size=(args.batch_size,
-                                                     args.input_len))
-    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
+    dummy_prompt_token_ids = [0 * args.input_len]
 
     print("------warm up------")
     test_prefix(
@@ -56,7 +53,6 @@ if __name__ == "__main__":
                         help='enable prefix caching')
     parser.add_argument('--input-len', type=int, default=1)
     parser.add_argument('--output-len', type=int, default=32)
-    parser.add_argument('--batch-size', type=int, default=1)
-
+    
     args = parser.parse_args()
     main(args)
