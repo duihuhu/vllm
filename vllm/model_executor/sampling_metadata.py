@@ -191,7 +191,7 @@ class SamplingTensors:
                 sampling_seeds.append(seq_seeds)
                 sample_indices.append(sample_indices_start_idx)
                 sample_indices_start_idx += 1
-        print("temperatures ", temperatures)
+        # print("temperatures ", temperatures)
         sampling_tensors = SamplingTensors.from_lists(
             temperatures, top_ps, top_ks, min_ps, presence_penalties,
             frequency_penalties, repetition_penalties, sampling_seeds,
