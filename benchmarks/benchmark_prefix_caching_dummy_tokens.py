@@ -27,7 +27,7 @@ def main(args):
     # prompts = [PROMPT] * num_prompts
     sampling_params = SamplingParams(temperature=0, max_tokens=args.output_len)
 
-    dummy_prompt_token_ids = [0 * args.input_len]
+    dummy_prompt_token_ids = [[0 * args.input_len]]
 
     print("------warm up------")
     test_prefix(
