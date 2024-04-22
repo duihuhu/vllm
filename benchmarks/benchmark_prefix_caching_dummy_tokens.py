@@ -28,7 +28,7 @@ def main(args):
     # prompts = [PROMPT] * num_prompts
     sampling_params = SamplingParams(temperature=0, max_tokens=args.output_len)
 
-    dummy_prompt_token_ids = np.random.randint(0,1,
+    dummy_prompt_token_ids = np.random.randint(0, 1,
                                                size=(args.batch_size,
                                                      args.input_len))
     dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()

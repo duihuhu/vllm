@@ -887,6 +887,9 @@ void paged_attention_v2_launcher(
 // 1, 2, 4, 64, 128, 256.
 #define CALL_V2_LAUNCHER_BLOCK_SIZE(T, CACHE_T, IS_FP8_E5M2_KV_CACHE)       \
   switch (block_size) {                                                     \
+    case 1:                                                                 \
+      CALL_V2_LAUNCHER(T, CACHE_T, 8, IS_FP8_E5M2_KV_CACHE);                \
+      break;                                                                \
     case 8:                                                                 \
       CALL_V2_LAUNCHER(T, CACHE_T, 8, IS_FP8_E5M2_KV_CACHE);                \
       break;                                                                \
