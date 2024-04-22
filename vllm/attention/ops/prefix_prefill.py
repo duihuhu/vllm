@@ -61,15 +61,6 @@ if triton.__version__ >= "2.1.0":
         cur_batch_in_all_start_index = tl.load(B_Start_Loc + cur_batch)
 
         block_start_loc = BLOCK_M * start_m
-        
-        print("cur_batch ", cur_batch)
-        print("cur_batch ", cur_batch)
-        print("start_m ", start_m)
-        print("cur_kv_head ", cur_kv_head)
-        print("cur_batch_ctx_len ", cur_batch_ctx_len)
-        print("cur_batch_seq_len ", cur_batch_seq_len)
-        print("cur_batch_in_all_start_index ", cur_batch_in_all_start_index)
-        print("block_start_loc ", block_start_loc)
 
         # initialize offsets
         offs_n = tl.arange(0, BLOCK_N)
@@ -659,6 +650,8 @@ if triton.__version__ >= "2.1.0":
         num_queries_per_kv = q.shape[1] // k.shape[1]
         
         print("num_queries_per_kv ", num_queries_per_kv)
+        print("batch ", batch)
+        print("head ", head)
 
         grid = (batch, head, triton.cdiv(max_input_len, BLOCK))  # batch, head,
 
