@@ -58,6 +58,7 @@ if __name__ == "__main__":
     parser.add_argument('--input-len', type=int, default=1024)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--block-size', type=int, default=1)
+    parser.add_argument('--batch-size', type=int, default=1)
 
     args = parser.parse_args()
     main(args)
