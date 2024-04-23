@@ -208,8 +208,6 @@ class XFormersImpl(AttentionImpl):
                                                 attn_metadata.kv_cache_dtype)
 
         if attn_metadata.is_prompt:
-            import time
-            start = time.time()
             # Prompt run.
             if kv_cache is None or attn_metadata.block_tables.numel() == 0:
                 # normal attention.
@@ -275,8 +273,7 @@ class XFormersImpl(AttentionImpl):
                     attn_metadata.max_subquery_len,
                     self.alibi_slopes,
                 )
-            end = time.time()
-            print("forward prefx ", end-start)
+
         else:
             # Decoding run.
             output = PagedAttention.forward_decode(
