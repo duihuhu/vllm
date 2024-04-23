@@ -219,11 +219,10 @@ class Worker:
             return {}
         import time
         start = time.time()
-        print("model execute start time ", )
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
         end = time.time()
-        print("model execute end time ", end - start )
+        print("model execute end time ", (end - start) * 1000 )
         return output
 
     def add_lora(self, lora_request: LoRARequest) -> bool:

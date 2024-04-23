@@ -13,7 +13,7 @@ def test_prefix(llm=None, sampling_params=None, prompts=None):
     llm.generate(prompt_token_ids=prompts, sampling_params=sampling_params)
 
     end_time = time.time()
-    print(f"cost time {end_time - start_time}")
+    print(f"cost time {end_time - start_time} * 1000")
 
 
 def main(args):
