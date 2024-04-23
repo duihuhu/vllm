@@ -660,10 +660,9 @@ class ModelRunner:
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        start = time.time()
+
         hidden_states = model_executable(**execute_model_kwargs)
-        end = time.time()
-        print("model execute end time ", end - start )
+
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 

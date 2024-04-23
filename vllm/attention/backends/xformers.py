@@ -259,6 +259,8 @@ class XFormersImpl(AttentionImpl):
                     query, key, value, attn_metadata)
             else:
                 # prefix-enabled attention
+                import time
+                start = time.time()
                 output = PagedAttention.forward_prefix(
                     query,
                     key,
@@ -272,6 +274,8 @@ class XFormersImpl(AttentionImpl):
                     attn_metadata.max_subquery_len,
                     self.alibi_slopes,
                 )
+                end = time.time()
+                print("forward prefx ", end-start)
         else:
             # Decoding run.
             output = PagedAttention.forward_decode(
