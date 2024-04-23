@@ -217,9 +217,12 @@ class Worker:
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
-
+        import time
+        print("model execute start time ", time.time())
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
+        print("model execute end time ", time.time())
+
         return output
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
