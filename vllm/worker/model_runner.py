@@ -277,7 +277,6 @@ class ModelRunner:
         else:
             multi_modal_input = None
 
-        print("prefix_block_tables ", prefix_block_tables)
         # Prepare prefix block tables
         max_prompt_block_table_len = max(len(t) for t in prefix_block_tables)
         block_tables = make_tensor_with_pad(
