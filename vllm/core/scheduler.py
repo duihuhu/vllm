@@ -230,8 +230,6 @@ class Scheduler:
             leftover_waiting_sequences = deque()
             num_batched_tokens = 0
             while self._passed_delay(now) and self.waiting:
-                start = time.time()
-                print("seq group schedue time " , start)
                 seq_group = self.waiting[0]
                 waiting_seqs = seq_group.get_seqs(
                     status=SequenceStatus.WAITING)
@@ -292,11 +290,14 @@ class Scheduler:
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
+                start = time.time()
+                print("seq group schedue time " , start)
                 self._allocate(seq_group)
-                self.running.append(seq_group)
-                num_curr_seqs += num_new_seqs
                 end = time.time()
                 print("sche ", end-start)
+                self.running.append(seq_group)
+                num_curr_seqs += num_new_seqs
+
                 scheduled.append(
                     ScheduledSequenceGroup(
                         seq_group=seq_group,
