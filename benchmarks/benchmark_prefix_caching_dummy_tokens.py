@@ -46,6 +46,13 @@ def main(args):
         prompts=dummy_prompt_token_ids,
         sampling_params=sampling_params,
     )
+    
+    print("------start generating------")
+    test_prefix(
+        llm=llm,
+        prompts=dummy_prompt_token_ids,
+        sampling_params=sampling_params,
+    )
 
 
 if __name__ == "__main__":
