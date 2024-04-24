@@ -290,7 +290,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             s_prefix_len = len(value[0])
         else:
             s_prefix_len = 0
-        print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node.parent, last_node.value)
+        print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node.parent, len(last_node.value))
         
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],
@@ -313,9 +313,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, tensor_token_ids[s_prefix_len:], block_table[s_prefix_len:num_prompt_blocks])
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
-        
-        end = time.time()
-        print("insert radix sche ms ", (end-start) * 1000)
                 # Assign the block table for each sequence.
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
