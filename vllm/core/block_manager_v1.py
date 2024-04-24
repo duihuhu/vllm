@@ -281,7 +281,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         import time
         start = time.time()
         value = []
-        value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
+        value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids,value)
         end = time.time()
         print("match radix sche ms ", (end-start) * 1000)
         seq.last_node = last_node
