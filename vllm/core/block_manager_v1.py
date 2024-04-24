@@ -128,11 +128,11 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
         if block.ref_count == 0:
-            # assert block.block_hash not in self.evictor
+            assert block.block_hash not in self.evictor
             self.evictor.add(block)
 
             # Remove the block from the cached_blocks
-            # del self.cached_blocks[block.block_hash]
+            del self.cached_blocks[block.block_hash]
 
     def get_num_free_blocks(self) -> int:
         return (self.num_blocks - self.current_num_blocks +
@@ -281,9 +281,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
         seq.last_node = last_node
         block_table: BlockTable  = []
+        print("match " , value)
         if value: 
             for phy_block in value[0]:
-                phy_block.ref_count = phy_block.ref_count + 1
+                phy_block.ref_count = phy_block.ref_count + 1 
             block_table.extend(value[0])
             s_prefix_len = len(value[0])
         else:
