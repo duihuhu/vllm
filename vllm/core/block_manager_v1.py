@@ -277,10 +277,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)     
-        tensor_token_ids = seq.data.get_tensor_token_ids()
-        # import time
+        radix_token_ids = seq.data.get_radix_token_ids()
+        import time
         # start = time.time()
-        value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
+        value, last_node = self.gpu_allocator.radix_cache.match_prefix(radix_token_ids)
         # end = time.time()
         # print("match radix sche ms ", (end-start) * 1000)
         seq.last_node = last_node
@@ -293,22 +293,22 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node.parent, len(last_node.value))
         
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
-            block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],
+            block = self.gpu_allocator.allocate_radix_cache(radix_token_ids[logical_idx],
                             seq.num_hashed_tokens_of_block(logical_idx))
             block.ref_count += 1
             block_table.append(block)
 
         if seq.last_node.parent == None:
-            prefix_len, last_node = self.gpu_allocator.insert_radix_cache(tensor_token_ids,
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache(radix_token_ids,
                                                                           block_table[:num_prompt_blocks])
             seq.prefix_len = prefix_len
             seq.last_node = last_node
         else:
             # print("seq.last_node ", seq.last_node)
-            # print("seq.last_node data ",  seq.data.get_tensor_token_ids()[seq.prefix_len:])
+            # print("seq.last_node data ",  seq.data.get_radix_token_ids()[seq.prefix_len:])
             # print("seq.last_node block_table ",  block_table[seq.prefix_len:num_prompt_blocks])
             if s_prefix_len < num_prompt_blocks:
-                prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, tensor_token_ids[s_prefix_len:], block_table[s_prefix_len:num_prompt_blocks])
+                prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[s_prefix_len:], block_table[s_prefix_len:num_prompt_blocks])
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
                 # Assign the block table for each sequence.
@@ -384,7 +384,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     #     # Compute a new hash for the block so that it can be shared by other
     #     # Sequences
-    #     last_token = seq.data.get_tensor_token_ids()[-1]
+    #     last_token = seq.data.get_radix_token_ids()[-1]
     #     last_node = seq.last_node
     #     if last_token in last_node.children.key.items():
     #         self.gpu_allocator.free(last_block)
