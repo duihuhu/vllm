@@ -282,6 +282,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
+            for phy_block in value[0]:
+                phy_block.ref_count = phy_block.ref_count + 1
             block_table.extend(value[0])
             s_prefix_len = len(value[0])
         else:
