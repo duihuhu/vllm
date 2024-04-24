@@ -314,6 +314,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
                 # Assign the block table for each sequence.
+        end = time.time()
+        print("match_prefix sche ms ", (end-start) * 1000)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
         
