@@ -42,7 +42,7 @@ class RadixCache:
         self.root_node.ref_counter = 1
         self.evictable_size_ = 0
 
-    def match_prefix(self, key, value):
+    def match_prefix(self, key):
         if self.disable:
             return [], self.root_node
 
