@@ -128,6 +128,7 @@ class RadixCache:
                     value.append(new_node.value)
                     last_node[0] = new_node
                 else:
+                    child.value.ref_count += 1
                     value.append(child.value)
                     last_node[0] = child
                     self._match_prefix_helper(child, key[prefix_len:], value, last_node)
