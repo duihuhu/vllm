@@ -297,8 +297,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                             seq.num_hashed_tokens_of_block(logical_idx))
             block.ref_count += 1
             block_table.append(block)
-        
-        start = time.time()
+
         if seq.last_node.parent == None:
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(tensor_token_ids,
                                                                           block_table[:num_prompt_blocks])
@@ -313,8 +312,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
                 # Assign the block table for each sequence.
-        end = time.time()
-        print("insert radix sche ms ", (end-start) * 1000)
+
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
         

@@ -43,6 +43,7 @@ class RadixCache:
         self.evictable_size_ = 0
 
     def match_prefix(self, key):
+        start = time.time()
         if self.disable:
             return [], self.root_node
 
@@ -54,6 +55,8 @@ class RadixCache:
             # value = torch.concat(value)
             # value.append(value)
         print("type " ,type(value), type(last_node[0]))
+        end = time.time()
+        print("in match radix sche ms ", (end-start) * 1000)
         return value, last_node[0]
 
     def insert(self, key, value=None):
