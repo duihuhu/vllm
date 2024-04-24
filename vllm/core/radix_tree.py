@@ -50,7 +50,9 @@ class RadixCache:
         last_node = [self.root_node]
         self._match_prefix_helper(self.root_node, key, value, last_node)
         if value:
-            value = torch.concat(value)
+            print(value)
+            # value = torch.concat(value)
+            # value.append(value)
         return value, last_node[0]
 
     def insert(self, key, value=None):
