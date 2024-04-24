@@ -281,6 +281,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         import time
         start = time.time()
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
+        end = time.time()
+        print("match_prefix sche ms ", (end-start) * 1000)
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
@@ -294,7 +296,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                             seq.num_hashed_tokens_of_block(logical_idx))
             block.ref_count += 1
             block_table.append(block)
-            
+        
+        import time
+        start = time.time()
         if seq.last_node.parent == None:
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
                                                                           block_table[:num_prompt_blocks])
@@ -306,6 +310,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq.prefix_len = seq.prefix_len + prefix_len
         seq.last_node = last_node
         
+        end = time.time()
+        print("insert radix sche ms ", (end-start) * 1000)
                 # Assign the block table for each sequence.
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
