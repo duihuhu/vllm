@@ -48,7 +48,10 @@ class RadixCache:
 
         value = []
         last_node = [self.root_node]
+        start = time.time()
         self._match_prefix_helper(self.root_node, key, value, last_node)
+        end = time.time()
+        print("math time ", end-start)
         # if value:
         #     print(value)
             # value = torch.concat(value)
@@ -119,7 +122,6 @@ class RadixCache:
     def _match_prefix_helper(self, node, key, value, last_node):
         node.last_access_time = time.time()
         for c_key, child in node.children.items():
-
             prefix_len = match(c_key, key)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
@@ -135,10 +137,7 @@ class RadixCache:
 
                     value.append(child.value)
                     last_node[0] = child
-                    start = time.time()
                     self._match_prefix_helper(child, key[prefix_len:], value, last_node)
-                    end = time.time()
-                    print("match time ", end-start)
                 break
 
     def _split_node(self, key, child, split_len):
