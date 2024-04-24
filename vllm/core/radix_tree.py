@@ -45,9 +45,10 @@ class RadixCache:
     def match_prefix(self, key):
         if self.disable:
             return [], self.root_node
-        start = time.time()
+
         value = []
         last_node = [self.root_node]
+        start = time.time()
         self._match_prefix_helper(self.root_node, key, value, last_node)
         # if value:
         #     print(value)
