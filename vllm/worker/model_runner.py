@@ -168,7 +168,6 @@ class ModelRunner:
             token_chunk_size = seq_group_metadata.token_chunk_size
             seq_data = seq_group_metadata.seq_data[seq_id]
             computed_len = seq_data.get_num_computed_tokens()
-            print("computed_len ", computed_len)
             # We should use get_len here because in case of preemption
             # it contains output tokens.
             prefill_end = min(seq_data.get_len(),
@@ -248,7 +247,7 @@ class ModelRunner:
                 block_offset = i % self.block_size
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
-
+        print("subquery_lens ", prompt_lens , subquery_lens)
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
