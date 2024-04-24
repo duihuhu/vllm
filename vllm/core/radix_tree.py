@@ -43,10 +43,9 @@ class RadixCache:
         self.evictable_size_ = 0
 
     def match_prefix(self, key):
-        start = time.time()
         if self.disable:
             return [], self.root_node
-
+        start = time.time()
         value = []
         last_node = [self.root_node]
         self._match_prefix_helper(self.root_node, key, value, last_node)
