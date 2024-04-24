@@ -122,7 +122,10 @@ class RadixCache:
 
         for c_key, child in node.children.items():
             print("bbb")
+            start = time.time()
             prefix_len = match(c_key, key)
+            end = time.time()
+            print("match time ", end-start)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
                     new_node = self._split_node(c_key, child, prefix_len)
