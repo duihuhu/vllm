@@ -158,6 +158,7 @@ class ModelRunner:
             seq_id = seq_ids[0]
 
             computed_block_nums = seq_group_metadata.computed_block_nums
+            print("computed_block_nums ", computed_block_nums)
             if (self.scheduler_config is not None
                     and self.scheduler_config.chunked_prefill_enabled
                     and computed_block_nums is not None):
@@ -247,7 +248,7 @@ class ModelRunner:
                 block_offset = i % self.block_size
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
-        print("subquery_lens ", prompt_lens , subquery_lens)
+
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
