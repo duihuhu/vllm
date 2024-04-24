@@ -290,7 +290,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             s_prefix_len = len(value[0])
         else:
             s_prefix_len = 0
-        print("s_prefix_len ", s_prefix_len, len(value[0], num_prompt_blocks), last_node)
+        print("s_prefix_len ", s_prefix_len, len(value[0]), num_prompt_blocks, last_node)
         
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],
