@@ -298,7 +298,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block.ref_count += 1
             block_table.append(block)
         
-        import time
         start = time.time()
         if seq.last_node.parent == None:
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(tensor_token_ids,
