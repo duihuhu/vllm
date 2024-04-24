@@ -53,7 +53,8 @@ class RadixCache:
         #     print(value)
             # value = torch.concat(value)
             # value.append(value)
-        return value, last_node
+        print("type " ,type(value), type(last_node[0]))
+        return value, last_node[0]
 
     def insert(self, key, value=None):
         if self.disable:

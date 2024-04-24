@@ -283,14 +283,14 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
         end = time.time()
         print("match radix sche ms ", (end-start) * 1000)
-        seq.last_node = last_node[0]
+        seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
             block_table = value[0].copy()
             s_prefix_len = len(value[0])
         else:
             s_prefix_len = 0
-        print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node[0].parent, len(last_node[0].value))
+        print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node.parent, len(last_node.value))
         
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],
