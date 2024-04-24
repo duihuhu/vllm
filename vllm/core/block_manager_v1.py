@@ -297,6 +297,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_table: BlockTable = []
         
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(seq.data.get_tensor_token_ids())
+        seq.last_node = last_node
+        
         print("vale last_node ", value, last_node, last_node.parent)
         
         for logical_idx in range(num_prompt_blocks):
@@ -592,9 +594,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 break
             block_table[i].computed = True
 
-        if seq.last_node == None:
+        if seq.last_node.parent == None:
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
-                                                                          block_table[seq.prefix_len:max_full_block])
+                                                                          block_table[:max_full_block])
         else:
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, seq.data.get_tensor_token_ids()[seq.prefix_len:], block_table[seq.prefix_len:max_full_block])
         seq.prefix_len = seq.prefix_len + prefix_len
