@@ -153,7 +153,7 @@ class RadixCache:
 
             if prefix_len == len(c_key):
                 if prefix_len == len(key):
-                    return prefix_len
+                    return prefix_len, child
                 else:
                     key = key[prefix_len:]
                     value = value[prefix_len:]
