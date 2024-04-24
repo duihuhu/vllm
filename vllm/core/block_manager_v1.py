@@ -308,7 +308,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # print("seq.last_node ", seq.last_node)
             # print("seq.last_node data ",  seq.data.get_tensor_token_ids()[seq.prefix_len:])
             # print("seq.last_node block_table ",  block_table[seq.prefix_len:num_prompt_blocks])
-            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, tensor_token_ids[seq.prefix_len:], block_table[seq.prefix_len:num_prompt_blocks])
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, tensor_token_ids[seq.prefix_len:], block_table[s_prefix_len:num_prompt_blocks])
             seq.prefix_len = seq.prefix_len + prefix_len
         seq.last_node = last_node
         
