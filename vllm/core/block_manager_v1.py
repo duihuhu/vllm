@@ -280,11 +280,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         tensor_token_ids = seq.data.get_tensor_token_ids()
         import time
         start = time.time()
-        value = []
-        value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids,value)
+        value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
         end = time.time()
         print("match radix sche ms ", (end-start) * 1000)
-        seq.last_node = last_node
+        seq.last_node = last_node[0]
         block_table: BlockTable  = []
         if value: 
             block_table = value[0].copy()

@@ -46,14 +46,14 @@ class RadixCache:
         if self.disable:
             return [], self.root_node
 
-        # value = []
+        value = []
         last_node = [self.root_node]
         self._match_prefix_helper(self.root_node, key, value, last_node)
         # if value:
         #     print(value)
             # value = torch.concat(value)
             # value.append(value)
-        return value, last_node[0]
+        return value, last_node
 
     def insert(self, key, value=None):
         if self.disable:
