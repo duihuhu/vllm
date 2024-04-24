@@ -285,7 +285,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         print("sche ms ", (end-start) * 1000)
         seq.last_node = last_node
         block_table: BlockTable  = []
-        print("match " , value)
         if value: 
             for phy_block in value[0]:
                 phy_block.ref_count = phy_block.ref_count + 1 
