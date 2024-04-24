@@ -126,7 +126,7 @@ class RadixCache:
             start = time.time()
             prefix_len = match(c_key, key)
             end = time.time()
-            print("in match _match_prefix_helper sche ms ", (end-start) * 1000, node, len(c_key), len(key), prefix_len)
+            print("in match _match_prefix_helper sche ms ", (end-start) * 1000, node, type(c_key), type(key), prefix_len)
 
             if prefix_len != 0:
                 if prefix_len < len(c_key):
