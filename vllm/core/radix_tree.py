@@ -54,7 +54,6 @@ class RadixCache:
         #     print(value)
             # value = torch.concat(value)
             # value.append(value)
-        print("type " ,type(value), type(last_node[0]))
         end = time.time()
         print("in match radix sche ms ", (end-start) * 1000)
         return value, last_node[0]
