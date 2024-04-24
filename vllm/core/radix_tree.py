@@ -124,13 +124,13 @@ class RadixCache:
             if prefix_len != 0:
                 if prefix_len < len(c_key):
                     new_node = self._split_node(c_key, child, prefix_len)
-                    for value in new_node.value:
-                        value.ref_count += 1
+                    for val in new_node.value:
+                        val.ref_count += 1
                     value.append(new_node.value)
                     last_node[0] = new_node
                 else:
-                    for value in child.value:
-                        value.ref_count += 1
+                    for val in child.value:
+                        val.ref_count += 1
                     value.append(child.value)
                     last_node[0] = child
                     self._match_prefix_helper(child, key[prefix_len:], value, last_node)
