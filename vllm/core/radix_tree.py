@@ -126,14 +126,20 @@ class RadixCache:
             prefix_len = match(c_key, key)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
+                    start1 = time.time()
                     new_node = self._split_node(c_key, child, prefix_len)
                     for val in new_node.value:
                         val.ref_count += 1
                     value.append(new_node.value)
                     last_node[0] = new_node
+                    end1 = time.time()
+                    print("third in match radix sche ms ", (end1-start1) * 1000)
                 else:
+                    start1 = time.time()
                     for val in child.value:
                         val.ref_count += 1
+                    end1 = time.time()
+                    print("fourth in match radix sche ms ", (end1-start1) * 1000)
                     value.append(child.value)
                     last_node[0] = child
                     self._match_prefix_helper(child, key[prefix_len:], value, last_node)
