@@ -279,10 +279,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         tensor_token_ids = seq.data.get_tensor_token_ids()
         import time
-        start = time.time()
+        # start = time.time()
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
-        end = time.time()
-        print("match radix sche ms ", (end-start) * 1000)
+        # end = time.time()
+        # print("match radix sche ms ", (end-start) * 1000)
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
@@ -290,7 +290,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             s_prefix_len = len(value[0])
         else:
             s_prefix_len = 0
-        print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node.parent, len(last_node.value))
+        # print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node.parent, len(last_node.value))
         
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],

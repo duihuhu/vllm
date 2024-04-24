@@ -48,14 +48,14 @@ class RadixCache:
 
         value = []
         last_node = [self.root_node]
-        start = time.time()
+        # start = time.time()
         self._match_prefix_helper(self.root_node, key, value, last_node)
         # if value:
         #     print(value)
             # value = torch.concat(value)
             # value.append(value)
-        end = time.time()
-        print("in match radix sche ms ", (end-start) * 1000)
+        # end = time.time()
+        # print("in match radix sche ms ", (end-start) * 1000)
         return value, last_node[0]
 
     def insert(self, key, value=None):
