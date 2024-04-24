@@ -143,7 +143,7 @@ class RadixCache:
                     print("first in match _match_prefix_helper sche ms ", (end1-start1) * 1000)
                 break
         end = time.time()
-        print("second in match _match_prefix_helper sche ms ", (end-start) * 1000)
+        print("second in match _match_prefix_helper sche ms ", (end-start) * 1000, node)
 
     def _split_node(self, key, child, split_len):
         # new_node -> child
