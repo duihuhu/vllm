@@ -292,6 +292,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],
                             seq.num_hashed_tokens_of_block(logical_idx))
+            block.ref_count += 1
             block_table.append(block)
             
         if seq.last_node.parent == None:
