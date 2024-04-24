@@ -278,7 +278,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)     
         tensor_token_ids = seq.data.get_tensor_token_ids()
+        import time
+        start = time.time()
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
+        end = time.time()
+        print("sche ms ", (end-start) * 1000)
         seq.last_node = last_node
         block_table: BlockTable  = []
         print("match " , value)
