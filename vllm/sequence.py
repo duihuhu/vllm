@@ -121,7 +121,9 @@ class SequenceData:
     def append_token_id(self, token_id: int, logprob: float) -> None:
         self.output_token_ids.append(token_id)
         self.cumulative_logprob += logprob
-        self.tensor_token_id = torch.cat(self.tensor_token_id, torch.tensor([token_id]))
+        print("before ", self.tensor_token_id)
+        self.tensor_token_id = torch.cat((self.tensor_token_id, torch.tensor([token_id])))
+        print("after ", self.tensor_token_id)
 
     def get_len(self) -> int:
         return len(self.output_token_ids) + len(self.prompt_token_ids)
