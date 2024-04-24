@@ -124,6 +124,7 @@ class RadixCache:
             if prefix_len != 0:
                 if prefix_len < len(c_key):
                     new_node = self._split_node(c_key, child, prefix_len)
+                    new_node.value.ref_count += 1
                     value.append(new_node.value)
                     last_node[0] = new_node
                 else:
