@@ -118,9 +118,10 @@ class RadixCache:
     ##### Internal Helper Functions #####
     def _match_prefix_helper(self, node, key, value, last_node):
         node.last_access_time = time.time()
+        print("aaaa")
 
         for c_key, child in node.children.items():
-            start = time.time()
+            print("bbb")
             prefix_len = match(c_key, key)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
@@ -134,8 +135,6 @@ class RadixCache:
                         val.ref_count += 1
                     value.append(child.value)
                     last_node[0] = child
-                    end = time.time()
-                    print("match time ", end-start)
                     self._match_prefix_helper(child, key[prefix_len:], value, last_node)
                 break
 
