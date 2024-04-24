@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union
 from vllm.block import LogicalTokenBlock
 from vllm.lora.request import LoRARequest
 from vllm.sampling_params import SamplingParams
+import torch
 
 if TYPE_CHECKING:
-    import torch
 
     from vllm.spec_decode.metrics import SpecDecodeWorkerMetrics
 
@@ -135,7 +135,7 @@ class SequenceData:
     def get_token_ids(self) -> List[int]:
         return self.prompt_token_ids + self.output_token_ids
 
-    def get_tensor_token_ids(self) -> torch.tensor:
+    def get_tensor_token_ids(self):
         return self.tensor_token_id
     
     def get_num_computed_tokens(self) -> int:
