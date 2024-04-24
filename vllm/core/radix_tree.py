@@ -120,9 +120,10 @@ class RadixCache:
 
     ##### Internal Helper Functions #####
     def _match_prefix_helper(self, node, key, value, last_node):
-        start = time.time()
+
         node.last_access_time = time.time()
         for c_key, child in node.children.items():
+            start = time.time()
             prefix_len = match(c_key, key)
             end = time.time()
             print("in match _match_prefix_helper sche ms ", (end-start) * 1000, node)
