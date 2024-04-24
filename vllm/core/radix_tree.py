@@ -11,7 +11,7 @@ class TreeNode:
     def __init__(self):
         self.children = defaultdict(TreeNode)
         self.parent = None
-        self.value = PhysicalTokenBlock
+        self.value = None
         self.block = None
         self.ref_counter = 0
         self.last_access_time = time.time()
