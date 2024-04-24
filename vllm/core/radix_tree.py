@@ -55,7 +55,7 @@ class RadixCache:
             # value = torch.concat(value)
             # value.append(value)
         end = time.time()
-        print("first in match radix sche ms ", (end-start) * 1000)
+        print("match_prefix sche ms ", (end-start) * 1000)
         return value, last_node[0]
 
     def insert(self, key, value=None):
@@ -132,20 +132,18 @@ class RadixCache:
                         val.ref_count += 1
                     value.append(new_node.value)
                     last_node[0] = new_node
-                    end1 = time.time()
-                    print("third in match radix sche ms ", (end1-start1) * 1000)
                 else:
                     start1 = time.time()
                     for val in child.value:
                         val.ref_count += 1
-                    end1 = time.time()
-                    print("fourth in match radix sche ms ", (end1-start1) * 1000)
                     value.append(child.value)
                     last_node[0] = child
                     self._match_prefix_helper(child, key[prefix_len:], value, last_node)
+                    end1 = time.time()
+                    print("first in match _match_prefix_helper sche ms ", (end1-start1) * 1000)
                 break
         end = time.time()
-        print("second in match radix sche ms ", (end-start) * 1000)
+        print("second in match _match_prefix_helper sche ms ", (end-start) * 1000)
 
     def _split_node(self, key, child, split_len):
         # new_node -> child
