@@ -116,9 +116,12 @@ class SequenceData:
         # The number of tokens that are computed (that run against the model).
         self._num_computed_tokens = 0
 
+        self.tensor_token_id = torch.tensor(prompt_token_ids)
+
     def append_token_id(self, token_id: int, logprob: float) -> None:
         self.output_token_ids.append(token_id)
         self.cumulative_logprob += logprob
+        self.tensor_token_id = torch.cat(self.tensor_token_id, torch.tensor([token_id]))
 
     def get_len(self) -> int:
         return len(self.output_token_ids) + len(self.prompt_token_ids)
@@ -132,6 +135,9 @@ class SequenceData:
     def get_token_ids(self) -> List[int]:
         return self.prompt_token_ids + self.output_token_ids
 
+    def get_tensor_token_ids(self) -> torch.tensor:
+        return self.tensor_token_id
+    
     def get_num_computed_tokens(self) -> int:
         """Return the number of prefill tokens that are already computed."""
         return self._num_computed_tokens
@@ -214,7 +220,11 @@ class Sequence:
         self.read_offset = 0
         # Input + output tokens
         self.tokens: Optional[List[str]] = None
-
+        
+        # to record last node in prefix cache tree
+        self.last_node = None
+        self.prefix_len = 0
+    
     @property
     def lora_int_id(self) -> int:
         return self.lora_request.lora_int_id if self.lora_request else 0

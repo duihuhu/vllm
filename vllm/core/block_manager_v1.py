@@ -10,7 +10,7 @@ from vllm.core.interfaces import AllocStatus, BlockSpaceManager
 from vllm.logger import init_logger
 from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device
-
+from vllm.core.radix_tree import RadixCache
 logger = init_logger(__name__)
 
 
@@ -73,6 +73,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
         self.current_num_blocks = 0
         self.cached_blocks: Dict[int, PhysicalTokenBlock] = {}
 
+        self.radix_cache: RadixCache = RadixCache()
         self.evictor: Evictor = make_evictor(eviction_policy)
 
         self.default_hash_ctr = count()
@@ -91,6 +92,18 @@ class CachedBlockAllocator(BlockAllocatorBase):
                                    num_hashed_tokens=num_hashed_tokens)
         self.current_num_blocks += 1
         return block
+    
+    def insert_radix_cache(self, key, value):
+        return self.radix_cache.insert(key, value)
+    
+    def insert_radix_cache_on_node(self, node, key, value):
+        return self.radix_cache._insert_helper(node, key, value)
+
+    def allocate_radix_cache(self, tensor_token_ids) -> List[PhysicalTokenBlock]:
+        
+        self.radix_cache.match_prefix(tensor_token_ids)
+
+        return 
 
     def allocate(self,
                  block_hash: Optional[int] = None,
@@ -263,6 +276,16 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return AllocStatus.LATER
 
+    # def allocate_radix_cache(self, seq_group: SequenceGroup) -> None:
+    #     if self.enable_caching:
+    #         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
+    #         block_table: BlockTable = []
+    #         tensor_token_ids = seq.data.get_tensor_token_ids()
+    #         self.gpu_allocator.allocate_radix_cache(tensor_token_ids)
+
+    #     else:
+    #         self.allocate(seq_group)
+            
     def allocate(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
@@ -272,6 +295,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)
 
         block_table: BlockTable = []
+        
+        value, last_node = self.gpu_allocator.radix_cache.match_prefix(seq.data.get_tensor_token_ids())
+        print("vale last_node ", value, last_node)
+        
         for logical_idx in range(num_prompt_blocks):
             if (self.block_sliding_window is not None
                     and logical_idx >= self.block_sliding_window):
@@ -552,7 +579,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     def compute_full_blocks_in_seq(self, seq: Sequence):
         if seq.seq_id not in self.block_tables:
             return
-        max_full_block = seq.get_len() // self.block_size - 1
+        if seq.get_len() % self.block_size == 0:        
+            max_full_block = seq.get_len() // self.block_size - 1
+        else:
+            max_full_block = seq.get_len() // self.block_size
+            
         block_table = self.block_tables[seq.seq_id]
         if max_full_block == -1:
             return
@@ -560,6 +591,14 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             if block_table[i].computed:
                 break
             block_table[i].computed = True
+
+        if seq.last_node == None:
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
+                                                                          block_table[seq.prefix_len:max_full_block])
+        else:
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, seq.data.get_tensor_token_ids()[seq.prefix_len:], block_table[seq.prefix_len:max_full_block])
+        seq.prefix_len = seq.prefix_len + prefix_len
+        seq.last_node = last_node
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:
         if seq.seq_id not in self.block_tables:
