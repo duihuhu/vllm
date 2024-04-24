@@ -302,12 +302,17 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if seq.last_node.parent == None:
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(tensor_token_ids,
                                                                           block_table[:num_prompt_blocks])
+            seq.prefix_len = prefix_len
         else:
             # print("seq.last_node ", seq.last_node)
             # print("seq.last_node data ",  seq.data.get_tensor_token_ids()[seq.prefix_len:])
             # print("seq.last_node block_table ",  block_table[seq.prefix_len:num_prompt_blocks])
-            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, tensor_token_ids[seq.prefix_len:], block_table[seq.prefix_len:num_prompt_blocks])
-        seq.prefix_len = seq.prefix_len + prefix_len
+            start1 = time.time()
+            tensor_token_id = tensor_token_ids[seq.prefix_len:]
+            end1 = time.time()
+            print("tensor_token_id ", (end1-start1) * 1000)
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, tensor_token_id, block_table[seq.prefix_len:num_prompt_blocks])
+            seq.prefix_len = seq.prefix_len + prefix_len
         seq.last_node = last_node
         
         end = time.time()
