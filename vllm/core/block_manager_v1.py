@@ -281,13 +281,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         import time
         start = time.time()
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
-        end = time.time()
-        print("sche ms ", (end-start) * 1000)
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
-            # for phy_block in value[0]:
-            #     phy_block.ref_count = phy_block.ref_count + 1 
             block_table = value[0].copy()
             s_prefix_len = len(value[0])
         else:
