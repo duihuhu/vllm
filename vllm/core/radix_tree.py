@@ -124,8 +124,6 @@ class RadixCache:
             print("bbb")
             start = time.time()
             prefix_len = match(c_key, key)
-            end = time.time()
-            print("match time ", end-start)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
                     new_node = self._split_node(c_key, child, prefix_len)
@@ -136,6 +134,8 @@ class RadixCache:
                 else:
                     for val in child.value:
                         val.ref_count += 1
+                    end = time.time()
+                    print("match time ", end-start)
                     value.append(child.value)
                     last_node[0] = child
                     self._match_prefix_helper(child, key[prefix_len:], value, last_node)
