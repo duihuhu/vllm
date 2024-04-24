@@ -279,20 +279,28 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         tensor_token_ids = seq.data.get_tensor_token_ids()
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(tensor_token_ids)
-        prefix_len = len(value[0])
         seq.last_node = last_node
+        block_table: BlockTable  = []
+        block_table.extend(value[0])
             
-        block_table: BlockTable  = value[0]
-            
-        for logical_idx in range(prefix_len, num_prompt_blocks):
+        for logical_idx in range(len(value[0]), num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],
                             seq.num_hashed_tokens_of_block(logical_idx))
             block_table.append(block)
             
-        # Assign the block table for each sequence.
+        if seq.last_node.parent == None:
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
+                                                                          block_table[:num_prompt_blocks])
+        else:
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, seq.data.get_tensor_token_ids()[seq.prefix_len:], block_table[seq.prefix_len:num_prompt_blocks])
+        seq.prefix_len = seq.prefix_len + prefix_len
+        seq.last_node = last_node
+        
+                # Assign the block table for each sequence.
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
-            
+        
+        
     def allocate(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
@@ -350,6 +358,27 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             self.gpu_allocator.update_hash(new_hash, last_block)
             return last_block
+
+    # def _promote_last_block_radix_cache(
+    #     self,
+    #     seq: Sequence,
+    #     last_block: PhysicalTokenBlock,
+    # ) -> PhysicalTokenBlock:
+    #     assert self.enable_caching
+
+    #     # Compute a new hash for the block so that it can be shared by other
+    #     # Sequences
+    #     last_token = seq.data.get_tensor_token_ids()[-1]
+    #     last_node = seq.last_node
+    #     if last_token in last_node.children.key.items():
+    #         self.gpu_allocator.free(last_block)
+    #         seq.last_node = last_node.children
+    #         return last_node.children[last_token]
+    #     else:
+    #         prefix_len , last_node = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, last_block)
+    #         seq.prefix_len = prefix_len
+    #         seq.last_node = last_node
+    #         return last_block
 
     def _is_last_block_full(
         self,
@@ -596,18 +625,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             if block_table[i].computed:
                 break
             block_table[i].computed = True
-            print("block matched ", id(block_table[i]), block_table[i])
-
-        # if seq.last_node == None:
-        #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
-        #                                                                   block_table[:max_full_block])
-        # else:
-        #     if seq.last_node.parent == None:
-        #         prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
-        #                                                         block_table[:max_full_block])
-        #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, seq.data.get_tensor_token_ids()[seq.prefix_len:], block_table[seq.prefix_len:max_full_block])
-        # seq.prefix_len = seq.prefix_len + prefix_len
-        # seq.last_node = last_node
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:
         if seq.seq_id not in self.block_tables:
