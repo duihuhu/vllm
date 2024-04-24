@@ -297,7 +297,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_table: BlockTable = []
         
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(seq.data.get_tensor_token_ids())
-        print("vale last_node ", value, last_node)
+        print("vale last_node ", value, last_node, last_node.parent)
         
         for logical_idx in range(num_prompt_blocks):
             if (self.block_sliding_window is not None
