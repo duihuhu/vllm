@@ -158,7 +158,6 @@ class ModelRunner:
             seq_id = seq_ids[0]
 
             computed_block_nums = seq_group_metadata.computed_block_nums
-            print("computed_block_nums ", computed_block_nums)
             if (self.scheduler_config is not None
                     and self.scheduler_config.chunked_prefill_enabled
                     and computed_block_nums is not None):

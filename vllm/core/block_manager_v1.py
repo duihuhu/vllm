@@ -282,12 +282,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         prefix_len = len(value[0])
         seq.last_node = last_node
             
-        block_table: BlockTable = []
-        if prefix_len == num_prompt_blocks:
-            block_table = value[0][:-1]
-            prefix_len = prefix_len - 1
-        else:
-            block_table = value[0]
+        block_table: BlockTable  = value[0]
             
         for logical_idx in range(prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(tensor_token_ids[logical_idx],
@@ -318,7 +313,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
-                print("block matched ", seq.hash_of_block(logical_idx), block.computed)
+                print("block matched ", id(block), seq.hash_of_block(logical_idx), block.computed)
             else:
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.
@@ -601,6 +596,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             if block_table[i].computed:
                 break
             block_table[i].computed = True
+            print("block matched ", id(block_table[i]), block_table[i])
 
         # if seq.last_node == None:
         #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
