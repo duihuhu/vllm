@@ -602,13 +602,16 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 break
             block_table[i].computed = True
 
-        if seq.last_node.parent == None:
-            prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
-                                                                          block_table[:max_full_block])
-        else:
-            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, seq.data.get_tensor_token_ids()[seq.prefix_len:], block_table[seq.prefix_len:max_full_block])
-        seq.prefix_len = seq.prefix_len + prefix_len
-        seq.last_node = last_node
+        # if seq.last_node == None:
+        #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
+        #                                                                   block_table[:max_full_block])
+        # else:
+        #     if seq.last_node.parent == None:
+        #         prefix_len, last_node = self.gpu_allocator.insert_radix_cache(seq.data.get_tensor_token_ids(),
+        #                                                         block_table[:max_full_block])
+        #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, seq.data.get_tensor_token_ids()[seq.prefix_len:], block_table[seq.prefix_len:max_full_block])
+        # seq.prefix_len = seq.prefix_len + prefix_len
+        # seq.last_node = last_node
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:
         if seq.seq_id not in self.block_tables:
