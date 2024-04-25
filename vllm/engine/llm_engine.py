@@ -587,7 +587,6 @@ class LLMEngine:
             self, output: SamplerOutput,
             scheduler_outputs: SchedulerOutputs) -> List[RequestOutput]:
         now = time.time()
-        t4 = time.time()
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
@@ -613,8 +612,6 @@ class LLMEngine:
         # Log stats.
         if self.log_stats:
             self.stat_logger.log(self._get_stats(scheduler_outputs))
-        t5 = time.time()
-        print("process output end time ", t5-t4)
         return request_outputs
 
     def step(self) -> List[RequestOutput]:
@@ -680,7 +677,11 @@ class LLMEngine:
             output = []
         t3 = time.time()
         print("model execute end time ", (t3 - t2) * 1000, (t2 - t1) * 1000 )
-        return self._process_model_outputs(output, scheduler_outputs)
+        request_output = self._process_model_outputs(output, scheduler_outputs)
+        t4 = time.time()
+        print("process output ", t4-t3)
+        return request_output
+        # return self._process_model_outputs(output, scheduler_outputs)
 
     def do_log_stats(self) -> None:
         """Forced log when no requests active."""
