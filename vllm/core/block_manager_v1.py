@@ -208,6 +208,9 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             self.free_blocks.append(block)
 
+    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
+        pass
+    
     def get_num_free_blocks(self) -> int:
         return len(self.free_blocks)
 
