@@ -3,7 +3,6 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Tuple
-from vllm.block import PhysicalTokenBlock
 import torch
 
 
@@ -12,7 +11,6 @@ class TreeNode:
         self.children = defaultdict(TreeNode)
         self.parent = None
         self.value = None
-        self.block = None
         self.ref_counter = 0
         self.last_access_time = time.time()
 
