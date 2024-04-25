@@ -189,9 +189,13 @@ class LLM:
                     data=multi_modal_data.data[i].unsqueeze(0))
                 if multi_modal_data else None,
             )
+        
         t2 = time.time()
         print("add request ", t2-t1)
-        return self._run_engine(use_tqdm)
+        outputs = self._run_engine(use_tqdm)
+        t3 = time.time()
+        print("add request, run_engine ", t2-t1, t3-t2)
+        return outputs
 
     def _add_request(
         self,
