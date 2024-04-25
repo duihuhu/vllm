@@ -214,8 +214,6 @@ class LLM:
 
     def _run_engine(self, use_tqdm: bool) -> List[RequestOutput]:
         # Initialize tqdm.
-        import time
-        t1 = time.time()
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
             pbar = tqdm(total=num_requests,
@@ -230,7 +228,6 @@ class LLM:
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
-        t2 = time.time()
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
@@ -238,6 +235,4 @@ class LLM:
         # its previous requests.
 
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        t3 = time.time()
-        print("_run_engine ", (t3-t2)*1000, (t2-t1)*1000)
         return outputs
