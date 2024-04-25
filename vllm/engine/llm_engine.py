@@ -676,9 +676,10 @@ class LLMEngine:
         else:
             output = []
         t3 = time.time()
-        print("schedule and model exec ",  (t2 - t1) * 1000, (t3 - t2) * 1000 )
-
-        return self._process_model_outputs(output, scheduler_outputs)
+        outputs = self._process_model_outputs(output, scheduler_outputs)
+        t4 = time.time()
+        print("schedule, model exec, process output ",  (t2 - t1) * 1000, (t3 - t2) * 1000, (t4 - t3) * 1000 )
+        return outputs
 
     def do_log_stats(self) -> None:
         """Forced log when no requests active."""
