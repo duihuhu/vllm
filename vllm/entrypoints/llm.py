@@ -239,5 +239,5 @@ class LLM:
 
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
         t3 = time.time()
-        print("_run_engine ", t3-t2, t2-t1)
+        print("_run_engine ", (t3-t2)*1000, (t2-t1)*1000)
         return outputs

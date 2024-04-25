@@ -679,7 +679,7 @@ class LLMEngine:
         print("model execute end time ", (t3 - t2) * 1000, (t2 - t1) * 1000 )
         request_output = self._process_model_outputs(output, scheduler_outputs)
         t4 = time.time()
-        print("process output ", t4-t3)
+        print("process output ", (t4-t3)*1000)
         return request_output
         # return self._process_model_outputs(output, scheduler_outputs)
 
