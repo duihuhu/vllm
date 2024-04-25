@@ -640,7 +640,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                           block_table)
         for block in set(blocks_to_free):
             if block.device == Device.GPU:
-                self.gpu_allocator.free(block)
+                if self.enable_radix_caching:
+                    self.gpu_allocator.free_radix_cache(block)
+                else:
+                    self.gpu_allocator.free(block)
             else:
                 self.cpu_allocator.free(block)
 
