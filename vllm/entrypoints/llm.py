@@ -227,13 +227,14 @@ class LLM:
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
+        t2 = time.time()
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
-        t2 = time.time()
+
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
         t3 = time.time()
-        print("_run_engine ", t3-t2, t3-t1)
+        print("_run_engine ", t3-t2, t2-t1)
         return outputs
