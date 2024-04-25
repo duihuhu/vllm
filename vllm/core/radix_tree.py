@@ -118,11 +118,7 @@ class RadixCache:
 
         node.last_access_time = time.time()
         for c_key, child in node.children.items():
-            start = time.time()
             prefix_len = match(c_key, key)
-            end = time.time()
-            print("in match _match_prefix_helper sche ms ", (end-start) * 1000, node, type(c_key), type(key), prefix_len)
-
             if prefix_len != 0:
                 if prefix_len < len(c_key):
                     start1 = time.time()
