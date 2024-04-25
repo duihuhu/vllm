@@ -299,7 +299,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         radix_token_ids = seq.data.get_radix_token_ids()
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(radix_token_ids)
-        print("again again ")
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
@@ -337,7 +336,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
-        print("again again ")
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)
 
