@@ -191,7 +191,6 @@ class LLM:
             )
         
         t2 = time.time()
-        print("add request ", t2-t1)
         outputs = self._run_engine(use_tqdm)
         t3 = time.time()
         print("add request, run_engine ", t2-t1, t3-t2)
