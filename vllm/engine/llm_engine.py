@@ -666,8 +666,9 @@ class LLMEngine:
             >>>     if not (engine.has_unfinished_requests() or example_inputs):
             >>>         break
         """
+        t1 = time.time()
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
-
+        t2 = time.time()
         if not scheduler_outputs.is_empty():
             output = self.model_executor.execute_model(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
@@ -675,7 +676,8 @@ class LLMEngine:
                 scheduler_outputs.blocks_to_copy)
         else:
             output = []
-
+        t3 = time.time()
+        print("model execute end time ", (t3 - t2) * 1000, (t2 - t1) * 1000 )
         return self._process_model_outputs(output, scheduler_outputs)
 
     def do_log_stats(self) -> None:
