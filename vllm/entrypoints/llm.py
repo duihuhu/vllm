@@ -152,6 +152,8 @@ class LLM:
             A list of `RequestOutput` objects containing the generated
             completions in the same order as the input prompts.
         """
+        import time
+        t1 = time.time()
         if prompts is None and prompt_token_ids is None:
             raise ValueError("Either prompts or prompt_token_ids must be "
                              "provided.")
@@ -187,6 +189,8 @@ class LLM:
                     data=multi_modal_data.data[i].unsqueeze(0))
                 if multi_modal_data else None,
             )
+        t2 = time.time()
+        print("add request ", t2-t1)
         return self._run_engine(use_tqdm)
 
     def _add_request(
