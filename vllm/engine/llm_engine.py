@@ -587,6 +587,7 @@ class LLMEngine:
             self, output: SamplerOutput,
             scheduler_outputs: SchedulerOutputs) -> List[RequestOutput]:
         now = time.time()
+        t4 = time.time()
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
@@ -598,6 +599,7 @@ class LLMEngine:
 
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
+        t5 = time.time()
 
         # Create the outputs.
         request_outputs: List[RequestOutput] = []
@@ -609,7 +611,8 @@ class LLMEngine:
         for seq_group in scheduler_outputs.ignored_seq_groups:
             request_output = RequestOutput.from_seq_group(seq_group)
             request_outputs.append(request_output)
-
+        t6 = time.time()
+        print("process output end time ", t6-t5, t5-t4)
         # Log stats.
         if self.log_stats:
             self.stat_logger.log(self._get_stats(scheduler_outputs))
