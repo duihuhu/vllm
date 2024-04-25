@@ -137,7 +137,8 @@ class Scheduler:
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
             sliding_window=self.cache_config.sliding_window,
-            enable_caching=self.cache_config.enable_prefix_caching)
+            enable_caching=self.cache_config.enable_prefix_caching,
+            enable_radix_caching=self.cache_config.enable_radix_caching)
 
         # Sequence groups in the WAITING state.
         self.waiting: Deque[SequenceGroup] = deque()
@@ -479,8 +480,9 @@ class Scheduler:
                              if not seq_group.is_finished())
 
     def _allocate(self, seq_group: SequenceGroup) -> None:
-        if self.block_manager.enable_caching:
-            # self.block_manager.allocate_radix_cache(seq_group)
+        if self.block_manager.enable_radix_caching:
+            self.block_manager.allocate_radix_cache(seq_group)
+        elif self.block_manager.enable_caching:
             self.block_manager.allocate(seq_group)
         else:
             self.block_manager.allocate(seq_group)

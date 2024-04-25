@@ -41,6 +41,10 @@ class BlockAllocatorBase(ABC):
         pass
 
     @abstractmethod
+    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
+        pass
+
+    @abstractmethod
     def get_num_free_blocks(self) -> int:
         pass
 
@@ -100,8 +104,10 @@ class CachedBlockAllocator(BlockAllocatorBase):
         return self.radix_cache._insert_helper(node, key, value)
 
     def allocate_radix_cache(self, token, num_tokens: int = 0) -> PhysicalTokenBlock:
-        return self.allocate_block(token, num_tokens)
-
+        block = self.allocate_block(token, num_tokens)
+        block.ref_count += 1
+        return block
+    
     def allocate(self,
                  block_hash: Optional[int] = None,
                  num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
@@ -133,6 +139,14 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
             # Remove the block from the cached_blocks
             del self.cached_blocks[block.block_hash]
+
+    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
+        if block.ref_count == 0:
+            raise ValueError(f"Double free! {block} is already freed.")
+        block.ref_count -= 1
+        if block.ref_count == 0:
+            assert block.block_hash not in self.evictor
+            self.evictor.add(block)
 
     def get_num_free_blocks(self) -> int:
         return (self.num_blocks - self.current_num_blocks +
@@ -217,6 +231,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         watermark: float = 0.01,
         sliding_window: Optional[int] = None,
         enable_caching: bool = False,
+        enable_radix_caching: bool = False,
     ) -> None:
         self.block_size = block_size
         self.num_total_gpu_blocks = num_gpu_blocks
@@ -237,6 +252,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         self.enable_caching = enable_caching
 
+        self.enable_radix_caching = enable_radix_caching
+        
         self.watermark_blocks = int(watermark * num_gpu_blocks)
 
         if self.enable_caching:
@@ -279,23 +296,19 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         radix_token_ids = seq.data.get_radix_token_ids()
         import time
-        # start = time.time()
         value, last_node = self.gpu_allocator.radix_cache.match_prefix(radix_token_ids)
-        # end = time.time()
-        # print("match radix sche ms ", (end-start) * 1000)
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
             block_table = value[0].copy()
             s_prefix_len = len(value[0])
+            seq.prefix_len = s_prefix_len
         else:
             s_prefix_len = 0
-        # print("s_prefix_len ", s_prefix_len, num_prompt_blocks, last_node.parent, len(last_node.value))
         
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(radix_token_ids[logical_idx],
                             seq.num_hashed_tokens_of_block(logical_idx))
-            block.ref_count += 1
             block_table.append(block)
 
         if seq.last_node.parent == None:
@@ -375,26 +388,26 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             self.gpu_allocator.update_hash(new_hash, last_block)
             return last_block
 
-    # def _promote_last_block_radix_cache(
-    #     self,
-    #     seq: Sequence,
-    #     last_block: PhysicalTokenBlock,
-    # ) -> PhysicalTokenBlock:
-    #     assert self.enable_caching
+    def _promote_last_block_radix_cache(
+        self,
+        seq: Sequence,
+        last_block: PhysicalTokenBlock,
+    ) -> PhysicalTokenBlock:
+        assert self.enable_caching
 
-    #     # Compute a new hash for the block so that it can be shared by other
-    #     # Sequences
-    #     last_token = seq.data.get_radix_token_ids()[-1]
-    #     last_node = seq.last_node
-    #     if last_token in last_node.children.key.items():
-    #         self.gpu_allocator.free(last_block)
-    #         seq.last_node = last_node.children
-    #         return last_node.children[last_token]
-    #     else:
-    #         prefix_len , last_node = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, last_block)
-    #         seq.prefix_len = prefix_len
-    #         seq.last_node = last_node
-    #         return last_block
+        # Compute a new hash for the block so that it can be shared by other
+        # Sequences
+        last_token = seq.data.get_radix_token_ids()[-1]
+        last_node = seq.last_node
+        if last_token in last_node.children.key.items():
+            self.gpu_allocator.free_radix_cache(last_block)
+            seq.last_node = last_node.children
+            return last_node.children[last_token]
+        else:
+            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, last_block)
+            seq.prefix_len = prefix_len
+            seq.last_node = last_node
+            return last_block
 
     def _is_last_block_full(
         self,
@@ -413,6 +426,35 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return last_block
 
+    def _maybe_promote_last_block_radix_cache(
+        self,
+        seq: Sequence,
+        last_block: PhysicalTokenBlock,
+    )-> PhysicalTokenBlock:
+        if self._is_last_block_full(seq):
+            return self._promote_last_block_radix_cache(seq, last_block)
+        else:
+            return last_block
+
+    def _allocate_last_physical_block_radix_cache(
+        self,
+        seq: Sequence,
+    ) -> PhysicalTokenBlock:
+        if not self.enable_caching:
+            return self.gpu_allocator.allocate()
+        
+        last_token = seq.data.get_radix_token_ids()[-1]
+        last_node = seq.last_node
+        if last_token in seq.last_node.key.items():
+            block = seq.last_node[last_token]
+        num_hashed_tokens = seq.num_hashed_tokens_of_block(
+            len(seq.logical_token_blocks) - 1)
+        new_block = self.gpu_allocator.allocate_radix_cache(last_token, num_hashed_tokens)
+        prefix_len, child = self.gpu_allocator.insert_radix_cache_on_node(last_node, new_block)
+        seq.prefix_len = prefix_len
+        seq.last_node = child
+        return new_block
+    
     def _allocate_last_physical_block(
         self,
         seq: Sequence,
@@ -461,7 +503,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             else:
                 # The sequence has a new logical block.
                 # Allocate a new physical block.
-                new_block = self._allocate_last_physical_block(seq)
+                if self.enable_radix_caching:
+                    new_block = self._allocate_last_physical_block_radix_cache(seq)
+                else:
+                    new_block = self._allocate_last_physical_block(seq)
+                    
                 block_table.append(new_block)
                 return None
 
@@ -470,7 +516,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         assert last_block.device == Device.GPU
         if last_block.ref_count == 1:
             # Not shared with other sequences. Appendable.
-            if self.enable_caching:
+            if self.enable_radix_caching:
+                maybe_new_block = self._maybe_promote_last_block_radix_cache(
+                    seq, last_block)
+                block_table[-1] = maybe_new_block
+            elif self.enable_caching:
                 # If the last block is now complete, we may reuse an old block
                 # to save memory.
                 maybe_new_block = self._maybe_promote_last_block(
@@ -480,7 +530,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             # The last block is shared with other sequences.
             # Copy on Write: Allocate a new block and copy the tokens.
-            new_block = self._allocate_last_physical_block(seq)
+            if self.enable_radix_caching:
+                 new_block = self._allocate_last_physical_block_radix_cache(seq)
+            else:
+                new_block = self._allocate_last_physical_block(seq)
 
             block_table[-1] = new_block
             self.gpu_allocator.free(last_block)

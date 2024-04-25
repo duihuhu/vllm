@@ -22,6 +22,7 @@ def main(args):
               trust_remote_code=True,
               enforce_eager=True,
               enable_prefix_caching=args.enable_prefix_caching,
+              enable_radix_caching=args.enable_radix_caching,
               block_size=args.block_size)
 
     # num_prompts = 100
@@ -60,6 +61,9 @@ if __name__ == "__main__":
         description='Benchmark the performance with or without automatic '
         'prefix caching.')
     parser.add_argument('--enable-prefix-caching',
+                        action='store_true',
+                        help='enable prefix caching')
+    parser.add_argument('--enable-radix-caching',
                         action='store_true',
                         help='enable prefix caching')
     parser.add_argument('--input-len', type=int, default=1024)

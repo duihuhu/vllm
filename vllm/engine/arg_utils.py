@@ -28,6 +28,7 @@ class EngineArgs:
     max_parallel_loading_workers: Optional[int] = None
     block_size: int = 16
     enable_prefix_caching: bool = False
+    enable_radix_caching: bool = False
     use_v2_block_manager: bool = False
     swap_space: int = 4  # GiB
     gpu_memory_utilization: float = 0.90
@@ -197,6 +198,9 @@ class EngineArgs:
                             help='token block size')
 
         parser.add_argument('--enable-prefix-caching',
+                            action='store_true',
+                            help='Enables automatic prefix caching')
+        parser.add_argument('--enable-radix-caching',
                             action='store_true',
                             help='Enables automatic prefix caching')
         parser.add_argument('--use-v2-block-manager',
@@ -391,7 +395,8 @@ class EngineArgs:
                                    self.swap_space, self.kv_cache_dtype,
                                    self.forced_num_gpu_blocks,
                                    model_config.get_sliding_window(),
-                                   self.enable_prefix_caching)
+                                   self.enable_prefix_caching,
+                                   self.enable_radix_caching)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size, self.tensor_parallel_size,
             self.worker_use_ray, self.max_parallel_loading_workers,
