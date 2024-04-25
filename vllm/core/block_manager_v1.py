@@ -445,8 +445,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         last_token = seq.data.get_radix_token_ids()[-1]
         last_node = seq.last_node
-        if last_token in seq.last_node.key.items():
-            block = seq.last_node[last_token]
+        print(last_token, seq.last_node.children.items())
+        
+        if last_token in seq.last_node.children.items():
+            new_block = seq.last_node[last_token]
         num_hashed_tokens = seq.num_hashed_tokens_of_block(
             len(seq.logical_token_blocks) - 1)
         new_block = self.gpu_allocator.allocate_radix_cache(last_token, num_hashed_tokens)
