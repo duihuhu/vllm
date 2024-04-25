@@ -153,7 +153,7 @@ class LLM:
             completions in the same order as the input prompts.
         """
         import time
-        t1 = time.time()
+        t_start1 = time.time()
         if prompts is None and prompt_token_ids is None:
             raise ValueError("Either prompts or prompt_token_ids must be "
                              "provided.")
@@ -190,10 +190,10 @@ class LLM:
                 if multi_modal_data else None,
             )
         
-        t2 = time.time()
+        t_start2 = time.time()
         outputs = self._run_engine(use_tqdm)
-        t3 = time.time()
-        print("add request, run_engine ", t2-t1, t3-t2)
+        t_end = time.time()
+        print("add request, run_engine ", t_start2-t_start1, t_end-t_start2)
         return outputs
 
     def _add_request(
