@@ -480,7 +480,8 @@ class Scheduler:
 
     def _allocate(self, seq_group: SequenceGroup) -> None:
         if self.block_manager.enable_caching:
-            self.block_manager.allocate_radix_cache(seq_group)
+            # self.block_manager.allocate_radix_cache(seq_group)
+            self.block_manager.allocate(seq_group)
         else:
             self.block_manager.allocate(seq_group)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
