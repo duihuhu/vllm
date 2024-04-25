@@ -193,7 +193,7 @@ class LLM:
         t_start2 = time.time()
         outputs = self._run_engine(use_tqdm)
         t_end = time.time()
-        print("add request, run_engine ", t_start2-t_start1, t_end-t_start2)
+        print("add request, run_engine ", (t_start2-t_start1)*1000, (t_end-t_start2)*1000)
         return outputs
 
     def _add_request(
