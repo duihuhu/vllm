@@ -45,7 +45,6 @@ def main(args):
                                                size=(args.batch_size,
                                                      cache_len))
     dummy_prompt_no_cache_token_ids = dummy_prompt_no_cache_token_ids.tolist()
-    print("dummy_prompt_cache_token_ids ", type(dummy_prompt_cache_token_ids))
     print("------warm up------")
     test_prefix(
         llm=llm,
@@ -56,16 +55,18 @@ def main(args):
     print("------start generating------")
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_cache_token_ids*2,
+        prompts=dummy_prompt_cache_token_ids,
         sampling_params=sampling_params,
     )
     
     # print("------start generating------")
-    # test_prefix(
-    #     llm=llm,
-    #     prompts=[dummy_prompt_token_ids, dummy_prompt_no_cache_token_ids],
-    #     sampling_params=sampling_params,
-    # )
+    print("dummy_prompt_cache_token_ids ", type(dummy_prompt_cache_token_ids))
+    print("dummy_prompt_no_cache_token_ids ", dummy_prompt_no_cache_token_ids)
+    test_prefix(
+        llm=llm,
+        prompts=dummy_prompt_token_ids,
+        sampling_params=sampling_params,
+    )
 
 
 if __name__ == "__main__":
