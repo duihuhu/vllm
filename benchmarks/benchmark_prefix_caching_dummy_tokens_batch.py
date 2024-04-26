@@ -31,7 +31,7 @@ def main(args):
 
     
     cache_len = int(args.input_len * args.cache_ratio)
-    cached_len =  int(cache_len * args.cache_ratio)
+    cached_len =  int(cache_len * args.cached_pre_ratio)
     dummy_prompt_cache_token_ids = np.random.randint(0, 1,
                                                size=(args.batch_size,
                                                      cache_len))
@@ -113,6 +113,8 @@ if __name__ == "__main__":
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--block-size', type=int, default=1)
     parser.add_argument('--batch-size', type=int, default=1)
+
+    parser.add_argument('--cached-pre-ratio', type=float, default=1)
 
 
 
