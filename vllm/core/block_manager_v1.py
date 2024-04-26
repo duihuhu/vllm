@@ -315,6 +315,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block_table.append(block)
 
         if seq.last_node.parent == None:
+            print("radix_token_ids " , radix_token_ids)
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(radix_token_ids,
                                                                           block_table[:num_prompt_blocks])
             seq.prefix_len = prefix_len
