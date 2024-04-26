@@ -45,7 +45,7 @@ def main(args):
                                                size=(args.batch_size,
                                                      cache_len))
     dummy_prompt_no_cache_token_ids = dummy_prompt_no_cache_token_ids.tolist()
-
+    print("dummy_prompt_cache_token_ids ", type(dummy_prompt_cache_token_ids))
     print("------warm up------")
     test_prefix(
         llm=llm,
