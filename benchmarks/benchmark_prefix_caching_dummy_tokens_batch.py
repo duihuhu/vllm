@@ -29,7 +29,9 @@ def main(args):
     # prompts = [PROMPT] * num_prompts
     sampling_params = SamplingParams(temperature=0, max_tokens=args.output_len)
 
+    
     cache_len = int(args.input_len * args.cache_ratio)
+    cached_len =  int(cache_len * args.cache_ratio)
     dummy_prompt_cache_token_ids = np.random.randint(0, 1,
                                                size=(args.batch_size,
                                                      cache_len))
@@ -59,26 +61,26 @@ def main(args):
     print("------warm up------")
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_cache_token_ids,
+        prompts=[dummy_prompt_cache_token_ids[0][:cached_len]],
         sampling_params=sampling_params,
     )
 
     print("------start generating------")
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_token_ids,
+        prompts=[dummy_prompt_token_ids[0][:cached_len]],
         sampling_params=sampling_params,
     )
     
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_no_cache_token_ids1,
+        prompts=[dummy_prompt_no_cache_token_ids1[0][:cached_len]],
         sampling_params=sampling_params,
     )
     
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_no_cache_token_ids2,
+        prompts=[dummy_prompt_no_cache_token_ids2[0][:cached_len]],
         sampling_params=sampling_params,
     )
     
