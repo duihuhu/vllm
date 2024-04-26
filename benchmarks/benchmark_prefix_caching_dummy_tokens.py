@@ -41,7 +41,7 @@ def main(args):
     print("------warm up------")
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_cache_token_ids,
+        prompts=dummy_prompt_token_ids,
         sampling_params=sampling_params,
     )
 
