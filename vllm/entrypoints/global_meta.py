@@ -38,6 +38,7 @@ class InstanceInfo:
                  remained_gpu_blocks,
                  remained_cpu_blocks,
                  engine_type,
+                 global_ranks,
                  timestamp) -> None:
         self.host = host
         self.service_port = service_port
@@ -47,6 +48,7 @@ class InstanceInfo:
         self.remained_gpu_blocks = remained_gpu_blocks
         self.remained_cpu_blocks = remained_cpu_blocks
         self.engine_type = engine_type
+        self.global_ranks = global_ranks
         self.timestamp = timestamp
         
 class TransDataType(Enum):

@@ -179,6 +179,7 @@ class VLLMLoadInfo:
         remained_gpu_blocks: int,
         remained_cpu_blocks: int,
         num_unfinished_requests: int,
+        global_ranks: List[int], 
         timestamp: float
     ) -> None:
         self.used_gpu_blocks = used_gpu_blocks
@@ -186,6 +187,7 @@ class VLLMLoadInfo:
         self.remained_gpu_blocks = remained_gpu_blocks
         self.remained_cpu_blocks = remained_cpu_blocks
         self.num_unfinished_requests = num_unfinished_requests
+        self.global_ranks = global_ranks
         self.timestamp = timestamp
         
     def __json__(self):
@@ -195,5 +197,6 @@ class VLLMLoadInfo:
             "remained_gpu_blocks": self.remained_gpu_blocks,
             "remained_cpu_blocks": self.remained_cpu_blocks,
             "num_unfinished_requests": self.num_unfinished_requests,
+            "global_ranks": self.global_ranks,
             "timestamp": self.timestamp
         }

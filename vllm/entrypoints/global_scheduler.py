@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
 import httpx
 import random
-from vllm.entrypoints.global_trie_tree import Trie
+from vllm.entrypoints.global_trie_tree import RadixCache
 from vllm.entrypoints.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
@@ -15,6 +15,7 @@ from typing import Dict, Set, List, Iterable, AsyncGenerator
 import asyncio
 import time
 import requests
+
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
@@ -48,6 +49,7 @@ async def monitor_report(request: Request) -> Response:
     used_cpu_blocks = request_dict.pop("used_cpu_blocks")
     remained_gpu_blocks = request_dict.pop("remained_gpu_blocks")
     remained_cpu_blocks = request_dict.pop("remained_cpu_blocks") 
+    global_ranks =  request_dict.pop("global_ranks") 
     timestamp = request_dict.pop("timestamp")
     
     key = host + "_" + str(port) + "_" + engine_type
@@ -60,18 +62,25 @@ async def monitor_report(request: Request) -> Response:
         instance.used_cpu_blocks = used_cpu_blocks
         instance.remained_gpu_blocks = remained_gpu_blocks
         instance.remained_cpu_blocks = remained_cpu_blocks
+        instance.global_ranks = global_ranks
         instance.timestamp = timestamp
     else:
       instance = InstanceInfo(host, port, num_unfinished_requests, used_gpu_blocks,
-                              used_cpu_blocks, remained_gpu_blocks, remained_cpu_blocks, EngineType[engine_type], timestamp)
+                              used_cpu_blocks, remained_gpu_blocks, remained_cpu_blocks, EngineType[engine_type], global_ranks, timestamp)
       instance_table[key] = instance
 
     ret = {"result": 'monitor_report succ'}
     return ret
 
-async def forward_request_to_prefill(request_dict, api_url):
+async def forward_request_to_prefill(request_dict, api_url, cdecode_host, cdecode_port, cdecode_ranks):
     headers = {"User-Agent": "Test Client"}
-    response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
+    if cdecode_host:
+        request_dict['cdecode_host'] = cdecode_host
+        request_dict['cdecode_port'] = cdecode_port
+        request_dict['cdecode_ranks'] = cdecode_ranks
+        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
+    else:
+        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
     return response
 
 async def forward_request_to_decode(prefill_res, api_url):
@@ -86,7 +95,6 @@ async def send_to_prefill_response_kv_prepared(d_res, api_url):
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
-
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
     for chunk in response.iter_lines(chunk_size=8192,
                                      decode_unicode=False,
@@ -96,73 +104,95 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
             # output = data["text"]
             yield data
 
+def search_prefix(radix_tree, token_ids):
+    value, node = radix_tree.only_match_prefix(tuple(token_ids))
+    if value:
+        return True, value[0], node.node_addr[0]
+    else:
+        return False, [], []
+
+def get_epd_cached_meta(ptree, dtree, token_ids):
+    ep_host = None
+    ep_port = None
+    cd_host = None
+    cd_port = None
+    cd_ranks = None
+    ed_host = None
+    ed_port = None
+    p_matched, p_tokens, p_node = search_prefix(ptree, token_ids)
+    if p_matched:
+        ep_host, ep_port = p_node.split("_")
+    else:
+        ep_host, ep_port = cfg.eprefill_host, cfg.eprefill_port
+    d_matched, d_tokens, d_node = search_prefix(dtree, token_ids)
+    if d_matched:
+        cd_host, ed_port = d_node.split("_")
+        instance = instance_table.get(d_node + "_" + "ed")
+        cd_ranks = instance.global_ranks
+    else:
+        cd_host, ed_port = cfg.edecode_host, cfg.edecode_port
+    ed_host = cfg.edecode_host
+    ed_host = cfg.edecode_port
+    return ep_host, ep_port, cd_host, cd_port, cd_ranks, ed_host, ed_port
+
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
-    request_dict = await request.json()
-    # request_id = request_dict.get("request_id")
-    # stream = request_dict.get("stream", True)
-    # prompt = request_dict.get("prompt")
-    # prompt_token = tokenizer(prompt).input_ids
-    # matched_req_ids, matched_len = trie.search(prompt_token)
-    matched_req_ids = None
+    request_dict = await request.json()    
+    prompt_token_ids = request_dict["prompt_token_ids"]   
     #no matched other req
-    if not matched_req_ids:
-        #提出 prefill repsonse内容text
-        #forward_request_to_decode
-        prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % (cfg.eprefill_host, cfg.eprefill_port))
-        #提出 prefill repsonse内容text
-        for res in get_streaming_response(prefill_response):
-            prefill_res = res
-            print("gs prefill_res ", prefill_res)
-            
-        #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
-        
-        decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port))
-        # decode_port = cfg.edecode_port if random.choice([True, False]) else cfg.edecode_port1
-        # decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, decode_port))
-        
-        #decode_response
+    eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
+        edecode_host, edecode_port = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
 
-        print("stream_results stream_results ")
-        #return results to global scheduler
-        async def stream_results() -> AsyncGenerator[bytes, None]:
-            # prefill' response, return to client
-            n = 0
-            yield (json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8")
-
-            for res in get_streaming_response(decode_response):
-                # print("res", res, n)
-                #first send to prefll: add_response_kv_prepared
-                if n == 0:
-                    await send_to_prefill_response_kv_prepared(res, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
-                else:
-                    if res['finished'] == True and args.enable_dcache:
-                        print("res", res, n)
-                        # pload = {
-                        #         "request_id": res['request_id'], 
-                        #         "token_ids": res['prompt_token_ids'] + res['prefilled_token_id'],
-                        #     }
-                        pkv_response = await forward_request_to_prefill(res, cfg.forward_eprefill_res_kv_url % (cfg.eprefill_host, cfg.eprefill_port))
-                        for pkv_res in get_streaming_response(pkv_response):
-                            await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % (cfg.edecode_host, cfg.edecode_port))
-                    
-                    yield (json.dumps(res, ensure_ascii=False) + "\0").encode("utf-8")
-                n = n + 1
-        return StreamingResponse(stream_results())
+    #提出 prefill repsonse内容text
+    #forward_request_to_decode
+    prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % 
+                                                        (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks)
+    #提出 prefill repsonse内容text
+    for res in get_streaming_response(prefill_response):
+        prefill_res = res
+        print("gs prefill_res ", prefill_res)
         
-        #prefill_response to send to d
-        #generate decode
-        
-        #response to p
-        
-        #response token to client
-        
-        #update trie tree by token or by seqs
-        
-        request_table[request_id] = req_cache
-        infight_req.add(request_id)
+    #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
     
+    decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % 
+                                                        (edecode_host, edecode_port))
+    #decode_response
+    print("stream_results stream_results ")
+    #return results to global scheduler
+    async def stream_results() -> AsyncGenerator[bytes, None]:
+        # prefill' response, return to client
+        n = 0
+        prefilled_tokens = tuple(prefill_res["prompt_token_ids"] + prefill_res["prefilled_token_id"])
+        gs_ptoken_tree.insert(prefilled_tokens, None, str(eprefill_host + "_" + eprefill_port))
+        
+        yield (json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8")
 
+        for res in get_streaming_response(decode_response):
+            #first send to prefll: add_response_kv_prepared
+            if n == 0:
+                await send_to_prefill_response_kv_prepared(res, cfg.forward_eprefill_res_url % 
+                                                            (eprefill_host, eprefill_port))
+            else:
+                if res['finished'] == True:
+                    decoded_tokens = tuple(res["prompt_token_ids"] + res["prefilled_token_id"])
+                    gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + edecode_port))
+                
+                if res['finished'] == True and args.enable_dcache:
+                    print("res", res, n)
+                    pkv_response = await forward_request_to_prefill(res, cfg.forward_eprefill_res_kv_url % 
+                                                                    (eprefill_host, eprefill_port))
+                    for pkv_res in get_streaming_response(pkv_response):
+                        await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % 
+                                                        (edecode_host, edecode_port))
+                    #how to know data pass??
+                    # gs_ptoken_tree.insert(decoded_tokens, None, str(cfg.edecode_host + ":" + cfg.edecode_port))
+
+                yield (json.dumps(res, ensure_ascii=False) + "\0").encode("utf-8")
+            n = n + 1
+    return StreamingResponse(stream_results())
+
+
+        
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -176,7 +206,8 @@ if __name__ == "__main__":
     if args.tokenizer is None:
         args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
-    trie = Trie()
+    gs_ptoken_tree = RadixCache()
+    gs_dtoken_tree = RadixCache()
     uvicorn.run(app,
                 host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,

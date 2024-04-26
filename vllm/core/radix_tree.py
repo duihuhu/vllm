@@ -12,7 +12,6 @@ class TreeNode:
         self.value = None
         self.ref_counter = 0
         self.last_access_time = time.time()
-        self.node_addr = [] 
 
     def __lt__(self, other):
         return self.last_access_time < other.last_access_time
@@ -53,26 +52,13 @@ class RadixCache:
             # value.append(value)
         return value, last_node[0]
 
-    def only_match_prefix(self, key):
-        if self.disable:
-            return [], self.root_node
-
-        value = []
-        last_node = [self.root_node]
-        self._match_prefix_helper(self.root_node, key, value, last_node)
-        # if value:
-        #     print(value)
-            # value = torch.concat(value)
-            # value.append(value)
-        return value, last_node[0]
-      
-    def insert(self, key, value=None, addr=None):
+    def insert(self, key, value=None):
         if self.disable:
             return len(key)
 
         if value is None:
             value = [x for x in key]
-        return self._insert_helper(self.root_node, key, value, addr)
+        return self._insert_helper(self.root_node, key, value)
 
     def pretty_print(self):
         self._print_helper(self.root_node, 0)
@@ -126,21 +112,6 @@ class RadixCache:
     def evictable_size(self):
         return self.evictable_size_
 
-    def _only_match_prefix_helper(self, node, key, value, last_node):
-        node.last_access_time = time.time()
-
-        for c_key, child in node.children.items():
-            prefix_len = match(c_key, key)
-            if prefix_len != 0:
-                if prefix_len < len(c_key):
-                    value.append(child.value[:prefix_len])
-                    last_node[0] = child
-                else:
-                    value.append(child.value)
-                    last_node[0] = child
-                    self._match_prefix_helper(child, key[prefix_len:], value, last_node)
-                break
-          
     ##### Internal Helper Functions #####
     def _match_prefix_helper(self, node, key, value, last_node):
 
@@ -176,7 +147,7 @@ class RadixCache:
         del new_node.parent.children[key]
         return new_node
 
-    def _insert_helper(self, node, key, value, addr):
+    def _insert_helper(self, node, key, value):
         node.last_access_time = time.time()
 
         for c_key, child in node.children.items():
@@ -184,26 +155,24 @@ class RadixCache:
 
             if prefix_len == len(c_key):
                 if prefix_len == len(key):
-                    child.node_ip.append(addr)
                     return prefix_len, child
                 else:
                     key = key[prefix_len:]
                     value = value[prefix_len:]
-                    pre_len, last_node = self._insert_helper(child, key, value, addr)
+                    pre_len, last_node = self._insert_helper(child, key, value)
                     return prefix_len + pre_len, last_node
 
             if prefix_len:
                 new_node = self._split_node(c_key, child, prefix_len)
                 pre_len, last_node =  self._insert_helper(
-                    new_node, key[prefix_len:], value[prefix_len:], addr)
+                    new_node, key[prefix_len:], value[prefix_len:]
+                )
                 return prefix_len + pre_len, last_node
 
         if len(key):
             new_node = TreeNode()
             new_node.parent = node
             new_node.value = value
-            new_node.node_ip.append(addr)
-            node.node_ip.append(addr)
             node.children[key] = new_node
             self.evictable_size_ += len(value)
         return 0, new_node
@@ -238,3 +207,24 @@ class RadixCache:
 
         dfs_(self.root_node)
         return ret_list
+
+
+if __name__ == "__main__":
+    tree = RadixCache(disable=False)
+
+    tree.insert("Hello")
+    tree.insert("Hello")
+    tree.insert("Hello_L.A.!")
+    # tree.insert("Hello_world! Happy")
+    # tree.insert("I love you!")
+    tree.pretty_print()
+
+    # print(tree.match_prefix("I love you! aha"))
+
+    # def evict_callback(x):
+    #    print("evict", x)
+    #    return len(x)
+
+    # tree.evict(5, evict_callback)
+    # tree.evict(10, evict_callback)
+    # tree.pretty_print()
