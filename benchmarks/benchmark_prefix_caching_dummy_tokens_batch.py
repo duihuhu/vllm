@@ -88,7 +88,25 @@ def main(args):
         prompts=[dummy_prompt_no_cache_token_ids3[0][:cached_len]],
         sampling_params=sampling_params,
     )
+
+    test_prefix(
+        llm=llm,
+        prompts=[dummy_prompt_no_cache_token_ids1[0][:cached_len]],
+        sampling_params=sampling_params,
+    )
     
+    test_prefix(
+        llm=llm,
+        prompts=[dummy_prompt_no_cache_token_ids2[0][:cached_len]],
+        sampling_params=sampling_params,
+    )
+    test_prefix(
+        llm=llm,
+        prompts=[dummy_prompt_no_cache_token_ids3[0][:cached_len]],
+        sampling_params=sampling_params,
+    )
+    
+
     # print("------start generating------")
     test_prefix(
         llm=llm,
