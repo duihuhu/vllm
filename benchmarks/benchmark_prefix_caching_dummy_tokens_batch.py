@@ -78,21 +78,22 @@ def main(args):
         sampling_params=sampling_params,
     )
     
-    test_prefix(
-        llm=llm,
-        prompts=[dummy_prompt_no_cache_token_ids2[0][:cached_len]],
-        sampling_params=sampling_params,
-    )
-    test_prefix(
-        llm=llm,
-        prompts=[dummy_prompt_no_cache_token_ids3[0][:cached_len]],
-        sampling_params=sampling_params,
-    )
+    # test_prefix(
+    #     llm=llm,
+    #     prompts=[dummy_prompt_no_cache_token_ids2[0][:cached_len]],
+    #     sampling_params=sampling_params,
+    # )
+    # test_prefix(
+    #     llm=llm,
+    #     prompts=[dummy_prompt_no_cache_token_ids3[0][:cached_len]],
+    #     sampling_params=sampling_params,
+    # )
     
     # print("------start generating------")
     test_prefix(
         llm=llm,
-        prompts=[dummy_prompt_token_ids[0], dummy_prompt_no_cache_token_ids1[0], dummy_prompt_no_cache_token_ids2[0], dummy_prompt_no_cache_token_ids3[0]],
+        # prompts=[dummy_prompt_token_ids[0], dummy_prompt_no_cache_token_ids1[0], dummy_prompt_no_cache_token_ids2[0], dummy_prompt_no_cache_token_ids3[0]],
+        prompts=[dummy_prompt_token_ids[0], dummy_prompt_no_cache_token_ids1[0]],
         sampling_params=sampling_params,
     )
 
