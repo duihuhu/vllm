@@ -38,22 +38,22 @@ def main(args):
     dummy_prompt_cache_token_ids = dummy_prompt_cache_token_ids.tolist()
     
     input_len = args.input_len - cache_len
-    dummy_prompt_token_ids = np.random.randint(0, 1,
+    dummy_prompt_token_ids = np.random.randint(0, 10000,
                                                size=(args.batch_size,
                                                      cache_len))
     dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
     
-    dummy_prompt_no_cache_token_ids1 = np.random.randint(1, 2,
+    dummy_prompt_no_cache_token_ids1 = np.random.randint(0, 10000,
                                                size=(args.batch_size,
                                                      cache_len))
     dummy_prompt_no_cache_token_ids1 = dummy_prompt_no_cache_token_ids1.tolist()
     
-    dummy_prompt_no_cache_token_ids2 = np.random.randint(2, 3,
+    dummy_prompt_no_cache_token_ids2 = np.random.randint(0, 10000,
                                                size=(args.batch_size,
                                                      cache_len))
     dummy_prompt_no_cache_token_ids2 = dummy_prompt_no_cache_token_ids2.tolist()
     
-    dummy_prompt_no_cache_token_ids3 = np.random.randint(3, 4,
+    dummy_prompt_no_cache_token_ids3 = np.random.randint(0, 10000,
                                                size=(args.batch_size,
                                                      cache_len))
     dummy_prompt_no_cache_token_ids3 = dummy_prompt_no_cache_token_ids3.tolist()
