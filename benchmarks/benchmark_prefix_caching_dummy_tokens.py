@@ -33,6 +33,7 @@ def main(args):
                                                size=(args.batch_size,
                                                      args.cache_len))
 
+    dummy_prompt_cache_token_ids = dummy_prompt_cache_token_ids.tolist()
     dummy_prompt_token_ids = np.random.randint(0, 1,
                                                size=(args.batch_size,
                                                      args.input_len))
@@ -41,7 +42,7 @@ def main(args):
     print("------warm up------")
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_token_ids,
+        prompts=dummy_prompt_cache_token_ids,
         sampling_params=sampling_params,
     )
 
