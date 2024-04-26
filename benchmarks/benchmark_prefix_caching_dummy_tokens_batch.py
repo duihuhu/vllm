@@ -38,12 +38,12 @@ def main(args):
     input_len = args.input_len - cache_len
     dummy_prompt_token_ids = np.random.randint(0, 1,
                                                size=(args.batch_size,
-                                                     input_len))
+                                                     cache_len))
     dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
     
     dummy_prompt_no_cache_token_ids = np.random.randint(1, 2,
                                                size=(args.batch_size,
-                                                     cache_len))
+                                                     input_len))
     dummy_prompt_no_cache_token_ids = dummy_prompt_no_cache_token_ids.tolist()
     print("------warm up------")
     test_prefix(
@@ -60,9 +60,6 @@ def main(args):
     )
     
     # print("------start generating------")
-    print("dummy_prompt_cache_token_ids ", len(dummy_prompt_cache_token_ids[0]))
-    print("dummy_prompt_token_ids ", len(dummy_prompt_token_ids[0]))
-    print("dummy_prompt_no_cache_token_ids ", len(dummy_prompt_no_cache_token_ids[0]))
     test_prefix(
         llm=llm,
         prompts=[dummy_prompt_token_ids[0], dummy_prompt_no_cache_token_ids[0]],
