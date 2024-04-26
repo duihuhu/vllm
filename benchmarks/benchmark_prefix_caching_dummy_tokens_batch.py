@@ -60,7 +60,7 @@ def main(args):
     )
     
     # print("------start generating------")
-    print("dummy_prompt_cache_token_ids ", type(dummy_prompt_cache_token_ids))
+    print("dummy_prompt_cache_token_ids ", dummy_prompt_cache_token_ids)
     print("dummy_prompt_no_cache_token_ids ", dummy_prompt_no_cache_token_ids)
     test_prefix(
         llm=llm,
