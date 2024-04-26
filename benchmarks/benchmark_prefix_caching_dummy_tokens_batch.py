@@ -70,6 +70,12 @@ def main(args):
         sampling_params=sampling_params,
     )
     
+    test_prefix(
+        llm=llm,
+        prompts=dummy_prompt_no_cache_token_ids1,
+        sampling_params=sampling_params,
+    )
+    
     # print("------start generating------")
     test_prefix(
         llm=llm,
