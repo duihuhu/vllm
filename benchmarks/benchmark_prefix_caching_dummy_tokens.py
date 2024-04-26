@@ -29,6 +29,10 @@ def main(args):
     # prompts = [PROMPT] * num_prompts
     sampling_params = SamplingParams(temperature=0, max_tokens=args.output_len)
 
+    dummy_prompt_cache_token_ids = np.random.randint(0, 1,
+                                               size=(args.batch_size,
+                                                     args.cache_len))
+
     dummy_prompt_token_ids = np.random.randint(0, 1,
                                                size=(args.batch_size,
                                                      args.input_len))
@@ -37,7 +41,7 @@ def main(args):
     print("------warm up------")
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_token_ids,
+        prompts=dummy_prompt_cache_token_ids,
         sampling_params=sampling_params,
     )
 
@@ -66,10 +70,13 @@ if __name__ == "__main__":
     parser.add_argument('--enable-radix-caching',
                         action='store_true',
                         help='enable prefix caching')
+    parser.add_argument('--cache-len', type=int, default=1024)
     parser.add_argument('--input-len', type=int, default=1024)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--block-size', type=int, default=1)
     parser.add_argument('--batch-size', type=int, default=1)
+
+
 
     args = parser.parse_args()
     main(args)
