@@ -60,11 +60,12 @@ def main(args):
     )
     
     # print("------start generating------")
-    print("dummy_prompt_cache_token_ids ", dummy_prompt_cache_token_ids)
-    print("dummy_prompt_no_cache_token_ids ", dummy_prompt_no_cache_token_ids)
+    print("dummy_prompt_cache_token_ids ", len(dummy_prompt_cache_token_ids[0]))
+    print("dummy_prompt_token_ids ", len(dummy_prompt_token_ids[0]))
+    print("dummy_prompt_no_cache_token_ids ", len(dummy_prompt_no_cache_token_ids[0]))
     test_prefix(
         llm=llm,
-        prompts=dummy_prompt_token_ids,
+        prompts=[dummy_prompt_token_ids[0], dummy_prompt_no_cache_token_ids[0]],
         sampling_params=sampling_params,
     )
 
