@@ -29,9 +29,10 @@ def main(args):
     # prompts = [PROMPT] * num_prompts
     sampling_params = SamplingParams(temperature=0, max_tokens=args.output_len)
 
+    cache_len = int(args.input_len * args.cache_ratio)
     dummy_prompt_cache_token_ids = np.random.randint(0, 1,
                                                size=(args.batch_size,
-                                                     args.cache_len))
+                                                     cache_len))
 
     dummy_prompt_cache_token_ids = dummy_prompt_cache_token_ids.tolist()
     dummy_prompt_token_ids = np.random.randint(0, 1,
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument('--enable-radix-caching',
                         action='store_true',
                         help='enable prefix caching')
-    parser.add_argument('--cache-len', type=int, default=1024)
+    parser.add_argument('--cache-ratio', type=float, default=1)
     parser.add_argument('--input-len', type=int, default=1024)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--block-size', type=int, default=1)
