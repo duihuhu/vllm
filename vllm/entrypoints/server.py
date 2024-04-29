@@ -221,7 +221,7 @@ class ServerArgs:
         engine_args: AsyncEngineArgs,
         local_host: str,
         local_port: int,
-        report_interval_time = 0.5
+        report_interval_time = 1
     ) -> None:
         self.engine_args = engine_args
         self.local_host = local_host
@@ -251,8 +251,8 @@ class Server:
         self.engine = AsyncLLMEngine.from_engine_args(engine_args=engine_args)
         self.global_ranks = self.engine.engine.get_global_ranks()
         
-        # self.reporter = threading.Thread(target=self.report_local_info, args=(server_args.report_interval_time,))
-        # self.reporter.start()
+        self.reporter = threading.Thread(target=self.report_local_info, args=(server_args.report_interval_time,))
+        self.reporter.start()
     
     def report_local_info(self, report_interval_time: float):
         #todo 从engine中获得相关负载信息，目前手动构造
