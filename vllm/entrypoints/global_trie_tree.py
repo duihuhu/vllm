@@ -184,7 +184,7 @@ class RadixCache:
 
             if prefix_len == len(c_key):
                 if prefix_len == len(key):
-                    child.node_ip.append(addr)
+                    child.node_addr.append(addr)
                     return prefix_len, child
                 else:
                     key = key[prefix_len:]
@@ -202,8 +202,8 @@ class RadixCache:
             new_node = TreeNode()
             new_node.parent = node
             new_node.value = value
-            new_node.node_ip.append(addr)
-            node.node_ip.append(addr)
+            new_node.node_addr.append(addr)
+            node.node_addr.append(addr)
             node.children[key] = new_node
             self.evictable_size_ += len(value)
         return 0, new_node
