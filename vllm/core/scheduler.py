@@ -413,8 +413,8 @@ class Scheduler:
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
-                # self._allocate(seq_group)
-                self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
+                self._allocate(seq_group)
+                # self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
                 # print("_allocate_mixed_cache blocks_to_swap_in ", blocks_to_swap_in)
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs
