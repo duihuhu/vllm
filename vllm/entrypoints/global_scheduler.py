@@ -52,7 +52,7 @@ async def monitor_report(request: Request) -> Response:
     global_ranks =  request_dict.pop("global_ranks") 
     timestamp = request_dict.pop("timestamp")
     key = host + "_" + str(port) + "_" + engine_type
-    print(key, "global_ranks")
+    print("key global_ranks", key, global_ranks)
     # print(key, unfinished_req, unfinished_tokens)
     if instance_table.get(key):
         instance = instance_table[key]
