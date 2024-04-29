@@ -126,11 +126,11 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
         ep_host, ep_port = cfg.eprefill_host, cfg.eprefill_port
     d_matched, d_tokens, d_node = search_prefix(dtree, token_ids)
     if d_matched:
-        cd_host, ed_port = d_node.split("_")
+        cd_host, cd_port = d_node.split("_")
         instance = instance_table.get(d_node + "_" + "ed")
         cd_ranks = instance.global_ranks
     else:
-        cd_host, ed_port = cfg.edecode_host, cfg.edecode_port
+        cd_host, cd_port = None, None
     ed_host = cfg.edecode_host
     ed_host = cfg.edecode_port
     return ep_host, ep_port, cd_host, cd_port, cd_ranks, ed_host, ed_port
