@@ -39,6 +39,6 @@ class CommData:
 class CommEngine:
     @staticmethod
     def send_to(entry_point: Tuple[str, int], func_name: str, data: CommData):
-        api_url = f"http//{entry_point[0]}:{entry_point[1]}/{func_name}"
+        api_url = f"http://{entry_point[0]}:{entry_point[1]}/{func_name}"
         response = requests.post(api_url, headers=data.headers, json=data.payload, stream=True)
         return response
