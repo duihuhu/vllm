@@ -163,7 +163,7 @@ async def add_request(request: Request) -> Response:
         # prefill' response, return to client
         n = 0
         prefilled_tokens = tuple(prefill_res["prompt_token_ids"] + prefill_res["prefilled_token_id"])
-        gs_ptoken_tree.insert(prefilled_tokens, None, str(eprefill_host + "_" + eprefill_port))
+        gs_ptoken_tree.insert(prefilled_tokens, None, str(eprefill_host + "_" + str(eprefill_port)))
         
         yield (json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8")
 
