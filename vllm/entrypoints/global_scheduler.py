@@ -175,7 +175,7 @@ async def add_request(request: Request) -> Response:
             else:
                 if res['finished'] == True:
                     decoded_tokens = tuple(res["prompt_token_ids"] + res["prefilled_token_id"])
-                    gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + edecode_port))
+                    gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
                 
                 if res['finished'] == True and args.enable_dcache:
                     print("res", res, n)
