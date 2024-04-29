@@ -132,7 +132,7 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
     else:
         cd_host, cd_port = None, None
     ed_host = cfg.edecode_host
-    ed_host = cfg.edecode_port
+    ed_port = cfg.edecode_port
     return ep_host, ep_port, cd_host, cd_port, cd_ranks, ed_host, ed_port
 
 @app.post("/add_request")
