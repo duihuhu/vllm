@@ -127,7 +127,8 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
     d_matched, d_tokens, d_node = search_prefix(dtree, token_ids)
     if d_matched:
         cd_host, cd_port = d_node.split("_")
-        instance = instance_table.get(d_node + "_" + "ed")
+        print(d_node)
+        instance = instance_table.get(d_node + "_" + cfg.edecode_label)
         cd_ranks = instance.global_ranks
     else:
         cd_host, cd_port = None, None
