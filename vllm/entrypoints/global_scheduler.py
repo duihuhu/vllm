@@ -143,6 +143,7 @@ async def add_request(request: Request) -> Response:
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
         edecode_host, edecode_port = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
 
+    print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
     #提出 prefill repsonse内容text
     #forward_request_to_decode
     prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % 
