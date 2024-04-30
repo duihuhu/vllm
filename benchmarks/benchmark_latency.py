@@ -68,9 +68,9 @@ def main(args: argparse.Namespace):
             break'''
 
     #andom.seed(0)
-    #inputs = []
+    inputs = []
     dummy_prompt_token_ids = [1] * args.input_len
-    #dummy_prompt_token_ids2 = [1] * args.long_len
+    dummy_prompt_token_ids2 = [1] * 48
     #for _ in range(10 - args.ratio):
     #    inputs.append(dummy_prompt_token_ids)
     #for _ in range(args.ratio):
@@ -91,14 +91,20 @@ def main(args: argparse.Namespace):
                      sampling_params=sampling_params,
                      use_tqdm=False,
                      filepath=args.filepath)'''
-        for _ in range(10 - args.ratio):
+        '''for _ in range(2 - args.ratio):
             llm._add_request(prompt=None,
                              sampling_params=sampling_params,
                              prompt_token_ids=dummy_prompt_token_ids)
         for _ in range(args.ratio):
             llm._add_request(prompt=None,
                              sampling_params=sampling_params2,
-                             prompt_token_ids=dummy_prompt_token_ids)
+                             prompt_token_ids=dummy_prompt_token_ids)'''
+        llm._add_request(prompt=None,
+                         sampling_params=sampling_params,
+                         prompt_token_ids=dummy_prompt_token_ids)
+        llm._add_request(prompt=None,
+                         sampling_params=sampling_params,
+                         prompt_token_ids=dummy_prompt_token_ids2)
         
         llm._run_engine(use_tqdm=False,split_two_phase=1, filepath=args.filepath, num=-1)
 
@@ -126,9 +132,9 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='/workspace/opt-13b/model/snapshots/e515202d1e7750da62d245fbccb2723b9c1790f5/')
     parser.add_argument('--tokenizer', type=str, default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=57)
-    parser.add_argument('--output-len', type=int, default=105)
-    parser.add_argument('--batch-size', type=int, default=12)
+    parser.add_argument('--input-len', type=int, default=512)
+    parser.add_argument('--output-len', type=int, default=1)
+    parser.add_argument('--batch-size', type=int, default=2)
     parser.add_argument('--n', type=int, default=1,
                         help='Number of generated sequences per prompt.')
     parser.add_argument('--use-beam-search', action='store_true')

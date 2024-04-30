@@ -78,6 +78,8 @@ class LLMEngine:
         self.log_stats = log_stats
         self._verify_args()
 
+        self.first_decode = set()
+
         self.tokenizer = get_tokenizer(
             model_config.tokenizer,
             tokenizer_mode=model_config.tokenizer_mode,
@@ -330,6 +332,16 @@ class LLMEngine:
             # Nothing to do.
             return []
         
+        itertime = time.time()
+        for seq_group_metadata in seq_group_metadata_list:
+            if seq_group_metadata.request_id not in self.first_decode:
+                for _, value in seq_group_metadata.seq_data.items():
+                    if value.get_output_len() == 1:
+                        self.first_decode.add(seq_group_metadata.request_id)
+                        with open('/workspace/vllm/benchmarks/lab10.txt', 'a') as file:
+                            file.write(f"{itertime}\n")
+
+
         # with open('/workspace/vllm/benchmarks/prefill.txt', 'a') as file:
         #     for seq_group_metadata in seq_group_metadata_list:
         #         s = "req " + seq_group_metadata.request_id + "starts at " + str(time.time()) + "\n"

@@ -202,9 +202,9 @@ class LLM:
                         # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
                         #with open("/workspace/vllm/benchmarks/decode_req.txt", 'a') as file:
                         #    file.write(f"req {output.request_id} ends at {iteed} costs {iteed - st2} seconds\n")
-                        with open(filepath, 'a') as file:
+                        #with open(filepath, 'a') as file:
                             #file.write(f"req {output.request_id}, prompts {len(output.prompt_token_ids)} tokens, outpus {len(output.outputs[0].token_ids)} tokens, finishes at {itee}, costs {itee - st2} seconds\n")
-                            file.write(f"{itee - st2}\n")
+                        #    file.write(f"{itee - st2}\n")
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
