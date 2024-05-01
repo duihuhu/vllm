@@ -17,6 +17,7 @@ from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
 from vllm.sequence import MultiModalData
 from vllm.usage.usage_lib import UsageContext
+from vllm.entrypoints.comm import CacheMeta
 
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
@@ -259,7 +260,7 @@ class RequestTracker:
 
 class _AsyncLLMEngine(LLMEngine):
     """Extension of LLMEngine to add async methods."""
-
+        
     async def step_async(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.
@@ -270,8 +271,18 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out = self.scheduler.schedule()
+        seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self.scheduler.schedule()
 
+        if cached_seq_groups:
+            request_ids = []
+            prompt_token_ids = []
+            for seq_group in cached_seq_groups:
+                request_id = seq_group.request_id
+                request_ids.append(request_id)
+                prompt_token_ids.append(seq_group.get_seqs()[0].prompt_token_ids)
+            query_response = await self._query_cache_meta(request_ids, prompt_token_ids)
+            pass
+        
         if self.deploy_config.enable_mcache:
             if cache_blocks_to_swap_out:
                 await self.model_executor._run_workers_async(
@@ -332,6 +343,9 @@ class _AsyncLLMEngine(LLMEngine):
 
         return processed_outputs
 
+    async def _query_cache_meta(self, request_ids, prompt_token_ids):
+        pass
+
     async def encode_request_async(
         self,
         request_id: str,  # pylint: disable=unused-argument
@@ -356,7 +370,8 @@ class _AsyncLLMEngine(LLMEngine):
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        prefill_request_output: Optional[RequestOutput] = None
+        prefill_request_output: Optional[RequestOutput] = None,
+        cache_meta: Optional[CacheMeta] = None,
     ) -> None:
         if lora_request is not None and not self.lora_config:
             raise ValueError(f"Got lora_request {lora_request} but LoRA is "
@@ -376,7 +391,8 @@ class _AsyncLLMEngine(LLMEngine):
                                 arrival_time=arrival_time,
                                 lora_request=lora_request,
                                 multi_modal_data=multi_modal_data,
-                                prefill_request_output=prefill_request_output)
+                                prefill_request_output=prefill_request_output,
+                                cache_meta=cache_meta)
 
     async def check_health_async(self) -> None:
         self.model_executor.check_health()
@@ -702,7 +718,8 @@ class AsyncLLMEngine:
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        prefill_request_output: Optional[RequestOutput] = None
+        prefill_request_output: Optional[RequestOutput] = None,
+        cache_meta: Optional[CacheMeta] = None
     ) -> AsyncStream:
         if self.log_requests:
             shortened_prompt = prompt
@@ -753,7 +770,8 @@ class AsyncLLMEngine:
             arrival_time=arrival_time,
             lora_request=lora_request,
             multi_modal_data=multi_modal_data,
-            prefill_request_output=prefill_request_output
+            prefill_request_output=prefill_request_output,
+            cache_meta = cache_meta
         )
 
         return stream
@@ -772,7 +790,8 @@ class AsyncLLMEngine:
         prompt_token_ids: Optional[List[int]] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        prefill_request_output: Optional[RequestOutput] = None
+        prefill_request_output: Optional[RequestOutput] = None,
+        cache_meta: Optional[CacheMeta] = None
     ) -> AsyncIterator[RequestOutput]:
         """Generate outputs for a request.
 
@@ -849,7 +868,8 @@ class AsyncLLMEngine:
                 arrival_time=arrival_time,
                 lora_request=lora_request,
                 multi_modal_data=multi_modal_data,
-                prefill_request_output=prefill_request_output
+                prefill_request_output=prefill_request_output,
+                cache_meta = cache_meta
             )
 
             async for request_output in stream:

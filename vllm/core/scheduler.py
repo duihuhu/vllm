@@ -325,6 +325,7 @@ class Scheduler:
 
     def _schedule(self) -> SchedulerOutputs:
         # Blocks that need to be swapped or copied before model execution.
+        cached_seq_groups = List[SequenceGroup] = []
         blocks_to_swap_in: Dict[int, int] = {}
         blocks_to_swap_out: Dict[int, int] = {}
         blocks_to_copy: Dict[int, List[int]] = {}
@@ -353,6 +354,24 @@ class Scheduler:
             num_batched_tokens = 0
             while self._passed_delay(now) and self.waiting:
                 seq_group = self.waiting[0]
+                if seq_group.cache_meta:
+                    # # If the sequence group cannot be allocated, stop.
+                    # can_allocate = self.block_manager.can_allocate(seq_group)
+                    # if can_allocate == AllocStatus.LATER:
+                    #     break
+                    # elif can_allocate == AllocStatus.NEVER:
+                    #     logger.warning(
+                    #         f"Input prompt ({num_prefill_tokens} tokens) is too "
+                    #         f"long and exceeds the capacity of block_manager")
+                    #     for seq in waiting_seqs:
+                    #         seq.status = SequenceStatus.FINISHED_IGNORED
+                    #     ignored_seq_groups.append(seq_group)
+                    #     self.waiting.popleft()
+                    #     continue
+                    # self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
+                    cached_seq_groups.append(seq_group)
+                    self.waiting.popleft()
+                    continue
                 print("seq_group request id prefill start time ", seq_group.request_id, time.time())
                 waiting_seqs = seq_group.get_seqs(
                     status=SequenceStatus.WAITING)
@@ -435,7 +454,7 @@ class Scheduler:
                     blocks_to_copy=blocks_to_copy,
                     ignored_seq_groups=ignored_seq_groups,
                 )
-                return scheduler_outputs, cache_blocks_to_swap_out
+                return scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups
 
         # NOTE(woosuk): Preemption happens only when there is no available slot
         # to keep all the sequence groups in the RUNNING state.
@@ -531,13 +550,13 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
             ignored_seq_groups=[],
         )
-        return scheduler_outputs, cache_blocks_to_swap_out
+        return scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups
 
-    def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
+    def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs, List[SequenceGroup]]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
-        scheduler_outputs, cache_blocks_to_swap_out = self._schedule()
+        scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self._schedule()
         now = time.time()
 
         # Create input data structures.
@@ -589,7 +608,7 @@ class Scheduler:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
 
-        return seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out
+        return seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
         self.block_manager.fork(parent_seq, child_seq)

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
-from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader
+from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta
 from vllm.entrypoints.server_meta import InferResults
 import entrypoints_config as cfg
 import uvicorn
@@ -184,15 +184,17 @@ async def generate_prefill(request: Request) -> Response:
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
 
-    if "cdecode_host" in payload:
-        cdecode_host =  payload.pop("cdecode_host")
-        cdecode_port =  payload.pop("cdecode_port")
-        cdecode_ranks =  payload.pop("cdecode_ranks")
-        print("matched decode instance " ,cdecode_host, cdecode_port, cdecode_ranks)
+    cache_meta = None
+    if "cmeta_host" in payload:
+        cmeta_host =  payload.pop("cmeta_host")
+        cmeta_port =  payload.pop("cmeta_port")
+        cmeta_ranks =  payload.pop("cmeta_ranks")
+        cache_meta = CacheMeta(cmeta_host, cmeta_port, cmeta_ranks)
+        print("matched decode instance " ,cmeta_host, cmeta_port, cmeta_ranks)
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
     results_generator = server.engine.generate(prompt=None, sampling_params=sampling_params, request_id=request_id,\
-        prompt_token_ids=prompt_token_ids)
+        prompt_token_ids=prompt_token_ids, cache_meta=cache_meta)
     
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:

@@ -855,4 +855,4 @@ class DeployConfig:
         
     def get_global_ranks(self) -> List[int]:
         return self.global_ranks
-        
+

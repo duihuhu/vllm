@@ -75,9 +75,9 @@ async def monitor_report(request: Request) -> Response:
 async def forward_request_to_prefill(request_dict, api_url, cdecode_host, cdecode_port, cdecode_ranks):
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
-        request_dict['cdecode_host'] = cdecode_host
-        request_dict['cdecode_port'] = cdecode_port
-        request_dict['cdecode_ranks'] = cdecode_ranks
+        request_dict['cmeta_host'] = cdecode_host
+        request_dict['cmeta_port'] = cdecode_port
+        request_dict['cmeta_ranks'] = cdecode_ranks
         response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
     else:
         response = requests.post(api_url, headers=headers, json=request_dict, stream=True)

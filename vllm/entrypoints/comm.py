@@ -42,3 +42,14 @@ class CommEngine:
         api_url = f"http://{entry_point[0]}:{entry_point[1]}/{func_name}"
         response = requests.post(api_url, headers=data.headers, json=data.payload, stream=True)
         return response
+    
+class CacheMeta:
+    def __init__(
+        self,
+        cmeta_host: str = None,
+        cmeta_port: str = None,
+        cmeta_ranks: list = [],
+        ) -> None:
+        self.cmeta_host = cmeta_host
+        self.cmeta_port = cmeta_port
+        self.cmeta_ranks = cmeta_ranks
