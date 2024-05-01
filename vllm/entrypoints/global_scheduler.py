@@ -95,6 +95,7 @@ async def send_to_prefill_response_kv_prepared(d_res, api_url):
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
 
+
 def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
     for chunk in response.iter_lines(chunk_size=8192,
                                      decode_unicode=False,
