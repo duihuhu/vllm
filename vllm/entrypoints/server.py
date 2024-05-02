@@ -27,6 +27,7 @@ async def pull_dcache(response: Request) -> None:
     payload = payload[0]
     query_meta = QueryMeta(**payload)
     server.engine.engine.pull_kv_blocks(query_meta)
+    server.engine._request_tracker.new_requests_event.set()
     ret = {"success ": 1}
     return 
 
