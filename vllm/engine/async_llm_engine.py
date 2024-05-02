@@ -310,7 +310,7 @@ class _AsyncLLMEngine(LLMEngine):
             
         if scheduler_outputs.is_empty():
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
-                self.scheduler.send_transfering or self.scheduler.recv_transfering:
+                self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_send_transfering:
                     logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
                     time.sleep(0.001)
             else:
@@ -719,7 +719,8 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.swapping_in and
                 not self.engine.scheduler.swapping_out and
                 not self.engine.scheduler.recv_transfering and
-                not self.engine.scheduler.send_transfering and not self.engine.scheduler.req_send_transfering):
+                not self.engine.scheduler.send_transfering and 
+                not self.engine.scheduler.req_send_transfering):
                 
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
