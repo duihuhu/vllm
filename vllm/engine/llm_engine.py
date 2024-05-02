@@ -404,16 +404,7 @@ class LLMEngine:
         # inject the eos token id into the sampling_params to support min_tokens
         # processing
         sampling_params.eos_token_id = seq.eos_token_id
-
-        #reconstruct sequence
-        if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
-            prefilled_token_ids = prefill_request_output.outputs[0].token_ids
-            output_logprobs = prefill_request_output.outputs[0].logprobs
-            for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
-                seq.append_token_id(token_id, output_logprob)
-                
-                # print("add decode request ", seq.data.get_len(), seq.data.get_token_ids())        
-        
+         
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data, cache_meta=cache_meta)
@@ -423,17 +414,21 @@ class LLMEngine:
         kv_response = None
         # Add the sequence group to the scheduler.
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
-            # if cache_meta:
-                # self.scheduler.add_recv_transfering(seq_group)
-            #     pass
-            # else:
             self.scheduler.add_seq_group(seq_group)
         else:
             phy_blocks, blocks_to_swap_in = self.scheduler.allocate_kv_blocks(seq_group)
-            
+                            
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+            
+            #reconstruct sequence
+            if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+                seq = seq_group.get_seqs()[0]
+                prefilled_token_ids = prefill_request_output.outputs[0].token_ids
+                output_logprobs = prefill_request_output.outputs[0].logprobs
+                for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                    seq.append_token_id(token_id, output_logprob)
             
             for block in phy_blocks:
                 print("decode kv, response " , block.device, block.computed)
