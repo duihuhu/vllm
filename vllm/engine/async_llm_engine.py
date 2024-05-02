@@ -286,6 +286,7 @@ class _AsyncLLMEngine(LLMEngine):
                 prompt_token_ids.append(seq.data.prompt_token_ids)
                 
             query_response = self._query_cache_meta(cache_meta, request_ids, prompt_token_ids)
+            
             dcached_len = query_response["dcached_len"]
             for seq_group in cached_seq_groups:
                 seq = seq_group.get_seqs()[0]
@@ -371,7 +372,7 @@ class _AsyncLLMEngine(LLMEngine):
             headers=CommonHeader(self.deploy_config.local_host, self.deploy_config.local_port).__json__(),
             payload=query_data
         )
-        CommEngine.send_to(decode_entry_point, "pull_dcache", data) 
+        return CommEngine.send_to(decode_entry_point, "pull_dcache", data) 
 
     def _query_cache_meta(self, cache_meta, request_ids, prompt_token_ids):
         query_data = []
@@ -385,7 +386,7 @@ class _AsyncLLMEngine(LLMEngine):
             headers=CommonHeader(self.deploy_config.local_host, self.deploy_config.local_port).__json__(),
             payload=query_data
         )
-        CommEngine.send_to(decode_entry_point, "query_dcache", data)
+        return CommEngine.send_to(decode_entry_point, "query_dcache", data)
         
 
     async def encode_request_async(

@@ -471,7 +471,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 block = self.gpu_allocator.cached_blocks[hash((tuple(query_meta.prompt_token_ids[0:num_tokens]), 0))]
                 block.ref_count = block.ref_count + 1
                 blocks.append(block)
-        print("decode mathch cache, ", dcached_len, query_meta.cached_len, query_meta.cmeta_kv_len)
+        print("decode mathch cache, ", dcached_len, query_meta.cached_len, query_meta.cmeta_kv_len, query_meta.request_id)
         self.req_block_tables[query_meta.request_id] = blocks
         return dcached_len
     
