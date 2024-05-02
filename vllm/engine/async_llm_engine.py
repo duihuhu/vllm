@@ -285,7 +285,7 @@ class _AsyncLLMEngine(LLMEngine):
                 request_ids.append(request_id)
                 prompt_token_ids.append(seq.data.prompt_token_ids)
                 
-            query_response = self._query_cache_meta(cache_meta, request_ids, prompt_token_ids)
+            query_response = self._query_cache_meta(cache_meta, request_ids, prompt_token_ids).json()
             print("query_response " , query_response)
             dcached_len = query_response["dcached_len"]
             for seq_group in cached_seq_groups:
