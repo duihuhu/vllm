@@ -439,7 +439,7 @@ class Scheduler:
                         seq_group=seq_group,
                         token_chunk_size=num_prefill_tokens))
             self.waiting.extendleft(leftover_waiting_sequences)
-            print("waiting seq  blocks_to_swap_in ", blocks_to_swap_in)
+            # print("waiting seq  blocks_to_swap_in ", blocks_to_swap_in)
             if scheduled or ignored_seq_groups:
                 self.prev_prompt = True
                 scheduler_outputs = SchedulerOutputs(

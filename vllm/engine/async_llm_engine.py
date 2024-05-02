@@ -647,6 +647,8 @@ class AsyncLLMEngine:
         """Kick the engine to process the waiting requests.
 
         Returns True if there are in-progress requests."""
+        
+        print("engine_step engine_step ")
 
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
