@@ -272,6 +272,7 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
+        print("step_async step_async step_async step_async")
         seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self.scheduler.schedule()
 
         if cached_seq_groups:
@@ -312,6 +313,8 @@ class _AsyncLLMEngine(LLMEngine):
             if self.scheduler.swapping_in or self.scheduler.swapping_out or \
                 self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_send_transfering:
                     logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+                    print(self.scheduler.swapping_in, self.scheduler.swapping_out ,  self.scheduler.send_transfering ,
+                          self.scheduler.recv_transfering,  self.scheduler.req_send_transfering)
                     time.sleep(0.001)
             else:
                 return []
