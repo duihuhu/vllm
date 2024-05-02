@@ -72,12 +72,13 @@ async def monitor_report(request: Request) -> Response:
     ret = {"result": 'monitor_report succ'}
     return ret
 
-async def forward_request_to_prefill(request_dict, api_url, cdecode_host, cdecode_port, cdecode_ranks):
+async def forward_request_to_prefill(request_dict, api_url, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks):
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
         request_dict['cmeta_host'] = cdecode_host
         request_dict['cmeta_port'] = cdecode_port
         request_dict['cmeta_ranks'] = cdecode_ranks
+        request_dict['cmeta_kv_len'] = cdecode_blocks
         response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
     else:
         response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
@@ -118,6 +119,7 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
     cd_host = None
     cd_port = None
     cd_ranks = None
+    cd_blocks = 0
     ed_host = None
     ed_port = None
     p_matched, p_tokens, p_node = search_prefix(ptree, token_ids)
@@ -132,11 +134,12 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
         print("d_tokens ", d_tokens)
         instance = instance_table.get(d_node + "_" + cfg.edecode_label)
         cd_ranks = instance.global_ranks
+        cd_blocks = len(d_tokens)
     else:
         cd_host, cd_port = None, None
     ed_host = cfg.edecode_host
     ed_port = cfg.edecode_port
-    return ep_host, ep_port, cd_host, cd_port, cd_ranks, ed_host, ed_port
+    return ep_host, ep_port, cd_host, cd_port, cd_ranks, ed_host, ed_port, cd_blocks
 
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
@@ -144,13 +147,13 @@ async def add_request(request: Request) -> Response:
     prompt_token_ids = request_dict["prompt_token_ids"]   
     #no matched other req
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
-        edecode_host, edecode_port = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
+        edecode_host, edecode_port, cdecode_blocks = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
 
     print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
     #提出 prefill repsonse内容text
     #forward_request_to_decode
     prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % 
-                                                        (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks)
+                                                        (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks)
     #提出 prefill repsonse内容text
     for res in get_streaming_response(prefill_response):
         prefill_res = res
