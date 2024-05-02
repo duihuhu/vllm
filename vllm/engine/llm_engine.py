@@ -991,3 +991,7 @@ class LLMEngine:
 
     def check_health(self) -> None:
         self.model_executor.check_health()
+        
+    def query_kv_blocks(self, prompt_token_ids, cached_len, cmeta_kv_len):
+        self.scheduler.block_manager.query_kv_blocks(prompt_token_ids, cached_len, cmeta_kv_len)        
+        return 

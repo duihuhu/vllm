@@ -17,7 +17,9 @@ from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
 from vllm.sequence import MultiModalData
 from vllm.usage.usage_lib import UsageContext
-from vllm.entrypoints.comm import CacheMeta
+from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta
+import requests
+
 
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
@@ -257,7 +259,6 @@ class RequestTracker:
     def has_new_requests(self):
         return not self._new_requests.empty()
 
-
 class _AsyncLLMEngine(LLMEngine):
     """Extension of LLMEngine to add async methods."""
         
@@ -274,13 +275,17 @@ class _AsyncLLMEngine(LLMEngine):
         seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self.scheduler.schedule()
 
         if cached_seq_groups:
+            cache_meta = []
             request_ids = []
             prompt_token_ids = []
             for seq_group in cached_seq_groups:
+                seq = seq_group.get_seqs()[0]
                 request_id = seq_group.request_id
+                cache_meta.append(seq_group.cache_meta)
                 request_ids.append(request_id)
-                prompt_token_ids.append(seq_group.get_seqs()[0].prompt_token_ids)
-            query_response = await self._query_cache_meta(request_ids, prompt_token_ids)
+                prompt_token_ids.append(seq.prompt_token_ids)
+                
+            query_response = await self._query_cache_meta(cache_meta, request_ids, prompt_token_ids)
             pass
         
         if self.deploy_config.enable_mcache:
@@ -343,7 +348,19 @@ class _AsyncLLMEngine(LLMEngine):
 
         return processed_outputs
 
-    async def _query_cache_meta(self, request_ids, prompt_token_ids):
+    def _query_cache_meta(self, cache_meta, request_ids, prompt_token_ids):
+        query_data = []
+        for meta, request_id , prompt_token_id in zip(cache_meta, request_ids, prompt_token_ids):
+            decode_entry_point = (meta.cmeta_host, meta.cmeta_port)
+            query_meta = QueryMeta(meta, self.deploy_config.local_host, self.deploy_config.local_port, self.deploy_config.get_global_ranks(), 
+                                   request_id, prompt_token_id).__json__()
+            
+            query_data.append(query_meta)
+        data = CommData(
+            headers=CommonHeader(self.deploy_config.local_host, self.deploy_config.local_port).__json__(),
+            payload=query_data
+        )
+        CommEngine.send_to(decode_entry_point, "query_dcache", data)
         pass
 
     async def encode_request_async(

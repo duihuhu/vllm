@@ -68,6 +68,8 @@ class EngineArgs:
     role: str = None
     enable_dcache: bool = False
     enable_mcache: bool = False
+    local_host: bool = str
+    local_port: bool = str
     
     def __post_init__(self):
         if self.tokenizer is None:
@@ -390,6 +392,20 @@ class EngineArgs:
             action="store_true",
             help=('enable memory cache '))
         
+
+        parser.add_argument(
+            '--local-host',
+            type=str,
+            default=None,
+            help=('host send to pull kv data '))
+        
+        parser.add_argument(
+            '--local-port',
+            type=str,
+            default=None,
+            help=('port send to pull kv data'))
+
+        
         return parser
 
     @classmethod
@@ -460,7 +476,7 @@ class EngineArgs:
         else:
             vision_language_config = None
 
-        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, self.enable_mcache)
+        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, self.enable_mcache, self.local_host, self.local_port)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 

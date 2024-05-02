@@ -354,24 +354,6 @@ class Scheduler:
             num_batched_tokens = 0
             while self._passed_delay(now) and self.waiting:
                 seq_group = self.waiting[0]
-                if seq_group.cache_meta:
-                    # # If the sequence group cannot be allocated, stop.
-                    # can_allocate = self.block_manager.can_allocate(seq_group)
-                    # if can_allocate == AllocStatus.LATER:
-                    #     break
-                    # elif can_allocate == AllocStatus.NEVER:
-                    #     logger.warning(
-                    #         f"Input prompt ({num_prefill_tokens} tokens) is too "
-                    #         f"long and exceeds the capacity of block_manager")
-                    #     for seq in waiting_seqs:
-                    #         seq.status = SequenceStatus.FINISHED_IGNORED
-                    #     ignored_seq_groups.append(seq_group)
-                    #     self.waiting.popleft()
-                    #     continue
-                    # self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
-                    cached_seq_groups.append(seq_group)
-                    self.waiting.popleft()
-                    continue
                 print("seq_group request id prefill start time ", seq_group.request_id, time.time())
                 waiting_seqs = seq_group.get_seqs(
                     status=SequenceStatus.WAITING)
@@ -416,6 +398,17 @@ class Scheduler:
                         self.waiting.popleft()
                         continue
 
+                if seq_group.cache_meta:
+                    self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
+                    block_table = self.block_manager.block_tables[seq.seq_id]
+                    phy_blocks = [phy_block for phy_block in block_table]
+                    computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+                    if computed_blocks < seq_group.cache_meta.cmeta_kv_len:
+                        seq_group.cache_meta.cached_len = len(computed_blocks)
+                        cached_seq_groups.append(seq_group)
+                        self.waiting.popleft()
+                        continue    
+
                 # If the number of batched tokens exceeds the limit, stop.
                 num_batched_tokens += num_prefill_tokens
                 if (num_batched_tokens >
@@ -433,7 +426,8 @@ class Scheduler:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
                 # self._allocate(seq_group)
-                self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
+                if not seq_group.cache_meta:
+                    self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
                 # print("_allocate_mixed_cache blocks_to_swap_in ", blocks_to_swap_in)
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs

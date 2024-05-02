@@ -21,6 +21,18 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+
+@app.post("/query_dcache")
+async def query_dcache(response: Request) -> None:
+    payload = await response.json()
+    request_id = payload.pop("request_id")
+    prompt_token_ids = payload.pop("prompt_token_ids")
+    cache_meta =  payload.pop("cache_meta")
+    cached_len = cache_meta["cached_len"]
+    cmeta_kv_len = cache_meta["cmeta_kv_len"],
+
+    server.engine.engine.query_kv_blocks(prompt_token_ids, cached_len, cmeta_kv_len)
+    
 @app.post("/response_kv_result")
 async def response_kv_result(response: Request) -> None:
     payload = await response.json()

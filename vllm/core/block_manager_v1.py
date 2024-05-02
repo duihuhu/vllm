@@ -457,6 +457,15 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.kv_block_tables[seq.seq_id] = block_table.copy()
 
+    def query_kv_blocks(self, prompt_token_ids, cached_len, cmeta_kv_len):
+        dcached_len = 0 
+        for logical_idx in range(len(prompt_token_ids)):
+            num_tokens = logical_idx * self.block_size + self.block_size
+            in_hbm = self.gpu_allocator.has_cache_block(hash((tuple(prompt_token_ids[0:num_tokens]), 0)))
+            if in_hbm:
+                dcached_len = dcached_len + 1
+        print("decode mathch cache, ", dcached_len, cached_len, cmeta_kv_len)
+        return 0
     
     def allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
