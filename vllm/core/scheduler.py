@@ -786,6 +786,7 @@ class Scheduler:
             if request_id in self.swaping_req_id and request_id not in self.swap_finished_req_ids:
                 continue
             seq_group = self.recv_transfering[request_id]
+
             if self.deploy_config.role == "decoder":
                 self.running.append(seq_group)
                 #end recv, when role is decode
@@ -793,6 +794,13 @@ class Scheduler:
                 #move cached_kv_blocks to cached_blocks
                 self.block_manager.move_kv_blocks_meta(seq_group)
                 self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
+                
+            if seq_group.cache_meta:
+                self.waiting.append(seq_group)
+                del self.recv_transfering[request_id]
+                self.recv_finished_req_ids.remove(request_id)
+                continue
+            
             # recv cache in prompt is only cache, not has reference, so it will in evicted cache
             if self.deploy_config.role == "prompt":
                 self.block_manager.move_kv_blocks_meta(seq_group)
