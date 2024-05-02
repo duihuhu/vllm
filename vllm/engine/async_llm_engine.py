@@ -285,8 +285,8 @@ class _AsyncLLMEngine(LLMEngine):
                 request_ids.append(request_id)
                 prompt_token_ids.append(seq.data.prompt_token_ids)
                 
-            query_response = await self._query_cache_meta(cache_meta, request_ids, prompt_token_ids)
-            pass
+            query_response = self._query_cache_meta(cache_meta, request_ids, prompt_token_ids)
+
         
         if self.deploy_config.enable_mcache:
             if cache_blocks_to_swap_out:
@@ -361,7 +361,7 @@ class _AsyncLLMEngine(LLMEngine):
             payload=query_data
         )
         CommEngine.send_to(decode_entry_point, "query_dcache", data)
-        pass
+        
 
     async def encode_request_async(
         self,
