@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
-from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta
+from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta, QueryMeta
 from vllm.entrypoints.server_meta import InferResults
 import entrypoints_config as cfg
 import uvicorn
@@ -21,19 +21,29 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+@app.post("/query_dcache")
+async def pull_dcache(response: Request) -> None:
+    payload = await response.json()
+    payload = payload[0]
+    query_meta = QueryMeta(**payload)
+    server.engine.engine.pull_kv_blocks(query_meta)
+    ret = {"success ": 1}
+    return 
 
 @app.post("/query_dcache")
 async def query_dcache(response: Request) -> None:
     payload = await response.json()
     payload = payload[0]
-    print("query_dcache payload ", payload)
-    request_id = payload.pop("request_id")
-    prompt_token_ids = payload.pop("prompt_token_ids")
-    cache_meta =  payload.pop("cache_meta")
-    cached_len = cache_meta["cached_len"]
-    cmeta_kv_len = cache_meta["cmeta_kv_len"],
-
-    server.engine.engine.query_kv_blocks(prompt_token_ids, cached_len, cmeta_kv_len)
+    # print("query_dcache payload ", payload)
+    # request_id = payload.pop("request_id")
+    # prompt_token_ids = payload.pop("prompt_token_ids")
+    # cache_meta =  payload.pop("cache_meta")
+    # cached_len = cache_meta["cached_len"]
+    # cmeta_kv_len = cache_meta["cmeta_kv_len"]
+    query_meta = QueryMeta(**payload)
+    dcached_len = server.engine.engine.query_kv_blocks(query_meta)
+    ret = {"dcached_len": dcached_len}
+    return ret
     
 @app.post("/response_kv_result")
 async def response_kv_result(response: Request) -> None:

@@ -330,6 +330,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Mapping: seq_id -> BlockTable.
         self.kv_block_tables: Dict[int, BlockTable] = {}
 
+        #recording pull request_id -> BlockTable
+        self.req_block_tables: Dict[str, BlockTable] = {}
+        
     def can_allocate(self, seq_group: SequenceGroup) -> AllocStatus:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
@@ -457,15 +460,20 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.kv_block_tables[seq.seq_id] = block_table.copy()
 
-    def query_kv_blocks(self, prompt_token_ids, cached_len, cmeta_kv_len):
+    def query_kv_blocks(self, query_meta):
+        blocks = []
         dcached_len = 0 
-        for logical_idx in range(len(prompt_token_ids)):
+        for logical_idx in range(len(query_meta.prompt_token_ids)):
             num_tokens = logical_idx * self.block_size + self.block_size
-            in_hbm = self.gpu_allocator.has_cache_block(hash((tuple(prompt_token_ids[0:num_tokens]), 0)))
+            in_hbm = self.gpu_allocator.has_cache_block(hash((tuple(query_meta.prompt_token_ids[0:num_tokens]), 0)))
             if in_hbm:
                 dcached_len = dcached_len + 1
-        print("decode mathch cache, ", dcached_len, cached_len, cmeta_kv_len)
-        return 0
+                block = self.gpu_allocator.cached_blocks[hash((tuple(query_meta.prompt_token_ids[0:num_tokens]), 0))]
+                block.ref_count = block.ref_count + 1
+                blocks.append(block)
+        print("decode mathch cache, ", dcached_len, query_meta.cached_len, query_meta.cmeta_kv_len)
+        self.req_block_tables[query_meta.request_id] = blocks
+        return dcached_len
     
     def allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same

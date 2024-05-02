@@ -176,6 +176,8 @@ class Scheduler:
         self.send_transfering: Dict[str, SequenceGroup] = {}
         self.recv_transfering: Dict[str, SequenceGroup] = {}
         
+        self.req_send_transfering: Dict[str, int] = {}
+        
         self.swaping_req_id: List[str] = []
         self.num_workers: int = 0
 
@@ -759,8 +761,15 @@ class Scheduler:
             for bkt in block_table:
                 self.block_manager.gpu_allocator.free(bkt)
             del self.block_manager.block_tables[seq.seq_id]
-            
-            del self.send_transfering[request_id]
+            if request_id in self.send_transfering:
+                del self.send_transfering[request_id]
+            elif request_id in self.req_send_transfering:
+                del self.req_send_transfering[request_id]
+                blocks = self.block_manager.req_block_tables[request_id]
+                for block in blocks:
+                    block.ref_count = block.ref_count - 1
+                del self.block_manager.req_block_tables[request_id]
+                
             self.send_finished_req_ids.remove(request_id)
         
             # print("after send gpu can evicted blocks ", self.block_manager.gpu_allocator.get_num_can_evicted_blocks())

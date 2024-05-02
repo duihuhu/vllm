@@ -987,6 +987,13 @@ class LLMEngine:
     def check_health(self) -> None:
         self.model_executor.check_health()
         
-    def query_kv_blocks(self, prompt_token_ids, cached_len, cmeta_kv_len):
-        self.scheduler.block_manager.query_kv_blocks(prompt_token_ids, cached_len, cmeta_kv_len)        
-        return 
+    def query_kv_blocks(self, query_meta):
+        dcached_len = self.scheduler.block_manager.query_kv_blocks(query_meta)
+        self.scheduler.req_send_transfering[query_meta.request_id] = dcached_len
+        return dcached_len
+    
+    def pull_kv_blocks(self, query_meta):
+        blocks = self.scheduler.block_manager.req_block_tables[query_meta.request_id]
+        dcached_len = self.scheduler.req_send_transfering[query_meta.request_id]
+        self.kv_trans_scheduler.add_kv_request(
+            query_meta.request_id, query_meta.opp_ranks, blocks[query_meta.cached_len: dcached_len], True)

@@ -71,26 +71,25 @@ class QueryMeta:
     def __init__(
         self,
         cache_meta: CacheMeta,
-        local_host: str = None,
-        local_port: int = 0,
-        local_ranks: list = [],
+        opp_host: str = None,
+        opp_port: int = 0,
+        opp_ranks: list = [],
         request_id: str =None,
         prompt_token_ids: list = [],
     ) -> None:
         self.cache_meta = cache_meta
-        self.local_host = local_host
-        self.local_port = local_port
-        self.local_ranks = local_ranks
+        self.opp_host = opp_host
+        self.opp_port = opp_port
+        self.opp_ranks = opp_ranks
         self.request_id = request_id
         self.prompt_token_ids = prompt_token_ids
               
     def __json__(self):
         return {
             "cache_meta": self.cache_meta.__json__(),
-            "local_host": self.local_host,
-            "local_port": self.local_port,
-            "local_ranks": self.local_ranks,
-            "local_ranks": self.local_ranks,
+            "opp_host": self.opp_host,
+            "opp_port": self.opp_port,
+            "opp_ranks": self.opp_ranks,
             "request_id": self.request_id,
             "prompt_token_ids": self.prompt_token_ids
         }
