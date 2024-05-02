@@ -286,7 +286,6 @@ class _AsyncLLMEngine(LLMEngine):
                 prompt_token_ids.append(seq.data.prompt_token_ids)
                 
             query_response = self._query_cache_meta(cache_meta, request_ids, prompt_token_ids).json()
-            print("query_response " , query_response)
             dcached_len = query_response["dcached_len"]
             for seq_group in cached_seq_groups:
                 seq = seq_group.get_seqs()[0]
@@ -294,7 +293,8 @@ class _AsyncLLMEngine(LLMEngine):
                 block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
                 phy_blocks = [phy_block for phy_block in block_table]              
                 computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-            
+                print("add_recv_transfering  " , len(phy_blocks))
+                
                 self.scheduler.add_recv_transfering(seq_group)
                 self.kv_trans_scheduler.add_kv_request(request_id, seq_group.cache_meta.cmeta_ranks, 
                                                        phy_blocks[len(computed_blocks):dcached_len], False)
