@@ -406,7 +406,6 @@ class Scheduler:
                     block_table = self.block_manager.block_tables[seq.seq_id]
                     phy_blocks = [phy_block for phy_block in block_table]
                     computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-                    print("computed_blocks,  phy_blocks", len(computed_blocks), len(phy_blocks))
                     if len(computed_blocks) < seq_group.cache_meta.cmeta_kv_len:
                         seq_group.cache_meta.cached_len = len(computed_blocks)
                         cached_seq_groups.append(seq_group)

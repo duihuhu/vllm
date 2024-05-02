@@ -995,5 +995,6 @@ class LLMEngine:
     def pull_kv_blocks(self, query_meta):
         blocks = self.scheduler.block_manager.req_block_tables[query_meta.request_id]
         dcached_len = self.scheduler.req_send_transfering[query_meta.request_id]
+        print("pull kv blocks ", query_meta.cache_meta["cached_len"],  dcached_len)
         self.kv_trans_scheduler.add_kv_request(
             query_meta.request_id, query_meta.opp_ranks, blocks[query_meta.cache_meta["cached_len"]: dcached_len], True)
