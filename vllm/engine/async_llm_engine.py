@@ -298,8 +298,11 @@ class _AsyncLLMEngine(LLMEngine):
                       len(computed_blocks), len(phy_blocks), dcached_len, seq_group.cache_meta.cached_len)
                 
                 self.scheduler.add_recv_transfering(seq_group)
+                
+                phy_blocks_num = [phy_block.block_number for phy_block in phy_blocks]
+
                 self.kv_trans_scheduler.add_kv_request(request_id, seq_group.cache_meta.cmeta_ranks, 
-                                                       phy_blocks[len(computed_blocks): dcached_len], False)
+                                                       phy_blocks_num[len(computed_blocks): dcached_len], False)
                 self._pull_cache_signal(cache_meta, request_ids, prompt_token_ids)
         
         if self.deploy_config.enable_mcache:
