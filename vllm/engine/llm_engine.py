@@ -422,7 +422,7 @@ class LLMEngine:
             
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
             
-            #reconstruct sequence
+            #reconstruct last token in sequence
             if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
                 seq = seq_group.get_seqs()[0]
                 prefilled_token_ids = prefill_request_output.outputs[0].token_ids

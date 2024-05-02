@@ -131,7 +131,7 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
     if d_matched:
         cd_host, cd_port = d_node.split("_")
         print("d_node ", d_node)
-        print("d_tokens ", d_tokens)
+        print("d_tokens ", d_tokens, len(d_tokens), len(p_tokens))
         instance = instance_table.get(d_node + "_" + cfg.edecode_label)
         cd_ranks = instance.global_ranks
         cd_blocks = len(d_tokens)

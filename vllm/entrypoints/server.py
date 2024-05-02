@@ -201,7 +201,8 @@ async def generate_prefill(request: Request) -> Response:
         cmeta_host =  payload.pop("cmeta_host")
         cmeta_port =  payload.pop("cmeta_port")
         cmeta_ranks =  payload.pop("cmeta_ranks")
-        cache_meta = CacheMeta(cmeta_host, cmeta_port, cmeta_ranks)
+        cmeta_kv_len = payload.pop("cmeta_kv_len")
+        cache_meta = CacheMeta(cmeta_host, cmeta_port, cmeta_ranks, cmeta_kv_len)
         print("matched decode instance " ,cmeta_host, cmeta_port, cmeta_ranks)
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
