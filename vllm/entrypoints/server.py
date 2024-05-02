@@ -21,7 +21,7 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
-@app.post("/query_dcache")
+@app.post("/pull_dcache")
 async def pull_dcache(response: Request) -> None:
     payload = await response.json()
     payload = payload[0]
