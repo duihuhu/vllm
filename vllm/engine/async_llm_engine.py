@@ -694,7 +694,8 @@ class AsyncLLMEngine:
             if kv_response:
                 self._request_tracker.process_kv_results(
                     self.engine.get_global_ranks(), kv_response)
-    
+        print("median engine_step engine_step ")
+
         if self.engine_use_ray:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
@@ -708,6 +709,7 @@ class AsyncLLMEngine:
                 self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
                 self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
+        print("end engine_step engine_step ")
 
         return len(request_outputs) > 0
 
