@@ -878,6 +878,15 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         ids_list = [self.get_all_computed_blocks(seq) for seq in seqs]
         return commonprefix([ids for ids in ids_list if ids != []])
 
+    def mark_trans_blocks_as_computed(self, seq_group: SequenceGroup):
+        if self.enable_caching:
+            seq = seq_group.get_seqs()[0]
+            if seq.seq_id not in self.block_tables:
+                return
+            block_table = self.block_tables[seq.seq_id]
+            for i in range(seq_group.cache_meta.cached_len, seq_group.cache_meta.cmeta_kv_len-1):
+                block_table[i].computed = True
+                
     def mark_blocks_as_computed(self, seq_group: SequenceGroup):
         if self.enable_caching:
             for seq in seq_group.seqs_dict.values():

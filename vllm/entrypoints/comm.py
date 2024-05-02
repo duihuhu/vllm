@@ -56,6 +56,7 @@ class CacheMeta:
         self.cmeta_ranks = cmeta_ranks
         self.cmeta_kv_len = cmeta_kv_len
         self.cached_len = 0 
+        self.ready = False
         
     def __json__(self):
         return {

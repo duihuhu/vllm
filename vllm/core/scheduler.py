@@ -400,7 +400,7 @@ class Scheduler:
                         self.waiting.popleft()
                         continue
 
-                if seq_group.cache_meta:
+                if seq_group.cache_meta and not seq_group.cache_meta.ready:
                     self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
                     seq = seq_group.get_seqs()[0]
                     block_table = self.block_manager.block_tables[seq.seq_id]
@@ -796,11 +796,11 @@ class Scheduler:
                 self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
                 
             if seq_group.cache_meta:
-                for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-                    seq.status = SequenceStatus.WAITING
+                seq_group.cache_meta.ready = True
                 self.waiting.append(seq_group)
                 del self.recv_transfering[request_id]
                 self.recv_finished_req_ids.remove(request_id)
+                self.block_manager.mark_trans_blocks_as_computed(seq_group=seq_group)
                 continue
             
             # recv cache in prompt is only cache, not has reference, so it will in evicted cache

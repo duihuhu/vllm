@@ -290,7 +290,7 @@ class _AsyncLLMEngine(LLMEngine):
             dcached_len = query_response["dcached_len"]
             for seq_group in cached_seq_groups:
                 seq = seq_group.get_seqs()[0]
-                
+                seq_group.cache_meta.cmeta_kv_len = dcached_len
                 block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
                 phy_blocks = [phy_block for phy_block in block_table]              
                 computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
