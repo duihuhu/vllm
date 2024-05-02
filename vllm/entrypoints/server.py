@@ -25,6 +25,7 @@ server=None
 @app.post("/query_dcache")
 async def query_dcache(response: Request) -> None:
     payload = await response.json()
+    payload = payload[0]
     print("query_dcache payload ", payload)
     request_id = payload.pop("request_id")
     prompt_token_ids = payload.pop("prompt_token_ids")
