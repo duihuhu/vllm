@@ -325,7 +325,7 @@ class Scheduler:
 
     def _schedule(self) -> SchedulerOutputs:
         # Blocks that need to be swapped or copied before model execution.
-        cached_seq_groups = List[SequenceGroup] = []
+        cached_seq_groups: List[SequenceGroup] = []
         blocks_to_swap_in: Dict[int, int] = {}
         blocks_to_swap_out: Dict[int, int] = {}
         blocks_to_copy: Dict[int, List[int]] = {}
