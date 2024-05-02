@@ -283,7 +283,7 @@ class _AsyncLLMEngine(LLMEngine):
                 request_id = seq_group.request_id
                 cache_meta.append(seq_group.cache_meta)
                 request_ids.append(request_id)
-                prompt_token_ids.append(seq.prompt_token_ids)
+                prompt_token_ids.append(seq.data.prompt_token_ids)
                 
             query_response = await self._query_cache_meta(cache_meta, request_ids, prompt_token_ids)
             pass
