@@ -796,6 +796,8 @@ class Scheduler:
                 self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
                 
             if seq_group.cache_meta:
+                for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                    seq.status = SequenceStatus.WAITING
                 self.waiting.append(seq_group)
                 del self.recv_transfering[request_id]
                 self.recv_finished_req_ids.remove(request_id)
