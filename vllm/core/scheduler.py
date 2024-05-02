@@ -751,6 +751,14 @@ class Scheduler:
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
         for request_id in self.send_finished_req_ids[:]:
+            if request_id in self.req_send_transfering:
+                del self.req_send_transfering[request_id]
+                blocks = self.block_manager.req_block_tables[request_id]
+                for block in blocks:
+                    block.ref_count = block.ref_count - 1
+                del self.block_manager.req_block_tables[request_id]
+                continue
+            
             seq_group = self.send_transfering[request_id]
             seq = seq_group.get_seqs()[0]
             # self.free_seq(seq)
@@ -760,14 +768,9 @@ class Scheduler:
             for bkt in block_table:
                 self.block_manager.gpu_allocator.free(bkt)
             del self.block_manager.block_tables[seq.seq_id]
+            
             if request_id in self.send_transfering:
                 del self.send_transfering[request_id]
-            elif request_id in self.req_send_transfering:
-                del self.req_send_transfering[request_id]
-                blocks = self.block_manager.req_block_tables[request_id]
-                for block in blocks:
-                    block.ref_count = block.ref_count - 1
-                del self.block_manager.req_block_tables[request_id]
                 
             self.send_finished_req_ids.remove(request_id)
         
