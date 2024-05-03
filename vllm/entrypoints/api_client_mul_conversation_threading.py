@@ -112,8 +112,8 @@ async def async_post_http_request(
 
 def post_http_request(prompt_token_ids: str,
                       api_url: str,
-                      n: int = 1, 
                       request_id: str,
+                      n: int = 1, 
                       output_len: int = 16) -> requests.Response:
     headers = {"User-Agent": "Test Client"}
     pload = {
@@ -161,7 +161,7 @@ def post_request_and_get_response(args, prompts, interval):
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
         request_id = random_uuid()
-        rsp = post_http_request(history_value, G_URL, args.n, request_id, output_len)
+        rsp = post_http_request(history_value, G_URL, request_id, args.n , output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
                 if h['n'] == 0:
