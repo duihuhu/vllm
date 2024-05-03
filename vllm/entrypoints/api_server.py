@@ -56,11 +56,11 @@ async def generate(request: Request) -> Response:
     # Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
-            prompt = request_output.prompt
+            prompt_token_ids = request_output.prompt_token_ids
             text_outputs = [
-                prompt + output.text for output in request_output.outputs
+                prompt_token_ids + output.token_ids for output in request_output.outputs
             ]
-            ret = {"text": text_outputs}
+            ret = {"text token ids ": text_outputs}
             yield (json.dumps(ret) + "\0").encode("utf-8")
 
     if stream:
