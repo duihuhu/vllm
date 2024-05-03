@@ -93,6 +93,7 @@ async def async_post_http_request(
                     print("chunk ", chunk)
                     if not chunk:
                         continue
+                    yield chunk
                     # if chunk:
                     #     data = json.loads(chunk.decode("utf-8"))
                     #     yield data
