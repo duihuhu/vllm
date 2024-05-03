@@ -60,13 +60,18 @@ async def generate(request: Request) -> Response:
             if n == 0:
                 last_time = time.time()
                 ttft = last_time-start_time
-                ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
-                   "finished": request_output.finished, "n": n, "ttft": ttft}
+                if request_output.finished != True:
+                    ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                           "finished": request_output.finished, "n": n, "ttft": ttft}
+                else:
+                    ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                           "finished": request_output.finished, "n": n, "jct": jct}
             elif request_output.finished == True:
                 last_time = time.time()
                 jct = last_time-start_time
                 ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                     "finished": request_output.finished, "n": n, "jct": jct}
+                print(request_id, jct)
             else:
                 end_time = time.time()
                 tbt = end_time-last_time
