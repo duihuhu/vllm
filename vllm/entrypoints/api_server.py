@@ -60,7 +60,7 @@ async def generate(request: Request) -> Response:
             text_outputs = [
                 prompt_token_ids + output.token_ids for output in request_output.outputs
             ]
-            ret = {"text token ids ": text_outputs}
+            ret = {"text token ids ": text_outputs, "finished": request_output.finished}
             yield (json.dumps(ret) + "\0").encode("utf-8")
 
     if stream:
