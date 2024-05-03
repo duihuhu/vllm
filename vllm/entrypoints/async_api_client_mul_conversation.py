@@ -84,13 +84,24 @@ async def async_post_http_request(
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
+                # async for chunk in response.content.iter_any():
+                #     chunk = chunk.decode('utf-8')
+                #     print("chunk ", chunk)
+                #     chunk = chunk.strip()
+                #     if not chunk:
+                #         continue
+                #     yield chunk
+                delimiter=b"\0"
+                buffer = b''  # 用于缓存数据块中的部分消息
                 async for chunk in response.content.iter_any():
-                    chunk = chunk.decode('utf-8')
-                    chunk = chunk.strip()
-                    print("chunk ", chunk)
-                    if not chunk:
-                        continue
-                    yield chunk
+                    buffer += chunk  # 将新的数据块添加到缓冲区中
+                    while delimiter in buffer:
+                        index = buffer.index(delimiter)  # 查找分隔符在缓冲区中的位置
+                        message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
+                        print("message ", message)
+                        yield message.strip()  # 返回提取的消息
+                        buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
+
 
 
 async def post_request_and_get_response(args, prompts, interval):
