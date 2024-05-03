@@ -84,8 +84,7 @@ async def async_post_http_request(
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
-                async for chunk in response.content.read(chunk_size=8192,decode_unicode=False,
-                            delimiter=b"\0"):
+                async for chunk in response.content.iter_any():
                     chunk = chunk.strip()
                     print("chunk ", chunk)
                     if not chunk:
