@@ -50,6 +50,10 @@ async def add_request(request: Request) -> Response:
             
     return StreamingResponse(stream_results())
 
+@app.post("/post")
+async def test_time() -> Response:
+    print(" recv req time ", time.time())
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
