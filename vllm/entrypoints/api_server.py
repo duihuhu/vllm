@@ -46,6 +46,7 @@ async def generate(request: Request) -> Response:
     request_id = request_dict.pop("request_id")
     stream = request_dict.pop("stream", False)
     sampling_params = SamplingParams(**request_dict)
+    print("max_tokens ", request_id, sampling_params.max_tokens)
     # request_id = random_uuid()
     start_time = time.time()
     results_generator = engine.generate(prompt=None,
