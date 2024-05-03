@@ -153,6 +153,7 @@ def post_request_and_get_response(args, prompts, interval):
     ttft = [] 
     jct = []
     tbt = []
+    request_ids = []
     for prompt in prompts:
         if iteration == 0:
             time.sleep(interval)
@@ -161,6 +162,7 @@ def post_request_and_get_response(args, prompts, interval):
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
         request_id = random_uuid()
+        request_ids.append(request_id)
         rsp = post_http_request(history_value, G_URL, request_id, args.n , output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
@@ -171,8 +173,8 @@ def post_request_and_get_response(args, prompts, interval):
                     jct.append(h['jct'])
                 else:
                     tbt.append(h['tbt'])
-        print("request, ttft ", request_id, ttft)
-        print("request, ttft ", request_id, jct)
+    print("request, ttft ", request_id, ttft)
+    print("request, ttft ", request_id, jct)
 
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
