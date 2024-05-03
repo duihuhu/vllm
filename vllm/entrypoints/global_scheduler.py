@@ -56,10 +56,9 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=9000)
     
     args = parser.parse_args()
-    uvicorn.run(app,
+    uvicorn.run(app='global_scheduler:app',
                 host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,
                 log_level="debug",
                 timeout_keep_alive=TIMEOUT_KEEP_ALIVE,
-                workers=10,
-                reload=True)
+                workers=10)
