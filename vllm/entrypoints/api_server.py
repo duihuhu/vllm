@@ -67,7 +67,7 @@ async def generate(request: Request) -> Response:
                 else:
                     ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                            "finished": request_output.finished, "n": n, "jct": ttft}
-                    print("jct ", request_id, len(request_output.outputs[0].token_ids), ttft)
+                    print("jct ", request_id, n, len(request_output.outputs[0].token_ids), ttft)
             elif request_output.finished == True:
                 end_time = time.time()
                 jct = end_time-start_time
