@@ -122,7 +122,7 @@ def post_request_and_get_response(args, prompts, interval):
 
 async def main(args, prompts, reqs_interval):
     coroutines = []
-    for prompt,interval in prompts, reqs_interval:
+    for prompt,interval in zip(prompts, reqs_interval):
         coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt, interval)))
     await asyncio.gather(*coroutines)
 
