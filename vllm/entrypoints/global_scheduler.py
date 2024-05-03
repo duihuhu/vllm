@@ -41,13 +41,12 @@ async def add_request(request: Request) -> Response:
 
     #提出 prefill repsonse内容text
     #forward_request_to_decode
-    response = forward_request_to_server(request_dict, cfg.forward_generate_url % 
+    response = await forward_request_to_server(request_dict, cfg.forward_generate_url % 
                                                         (generate_host, generate_port))
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
-        async for res in response:
-            for resp in get_streaming_response(res):
-                yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
+        for res in get_streaming_response(response):
+            yield (json.dumps(res, ensure_ascii=False) + "\0").encode("utf-8")
             
     return StreamingResponse(stream_results())
 
@@ -61,4 +60,5 @@ if __name__ == "__main__":
                 host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,
                 log_level="debug",
-                timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
+                timeout_keep_alive=TIMEOUT_KEEP_ALIVE,
+                workers=10)
