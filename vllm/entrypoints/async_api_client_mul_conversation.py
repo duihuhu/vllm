@@ -84,7 +84,7 @@ async def async_post_http_request(
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
-                yield response
+                return response
                 # async for chunk in response.iter_lines(chunk_size=8192,
                 #             decode_unicode=False,
                 #             delimiter=b"\0"):
