@@ -100,7 +100,7 @@ def get_response(response: requests.Response) -> List[str]:
     output = data["text"]
     return output
 
-def post_request_and_get_response(args, prompts, interval):
+async def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
     for prompt in prompts:
@@ -126,8 +126,7 @@ async def main(args, prompts, reqs_interval):
     for prompt, interval in zip(prompts, reqs_interval):
         print("interval ", interval)
         task = asyncio.create_task(post_request_and_get_response(args, prompt, interval))
-        coroutines.append(task)
-        
+        coroutines.append(task)   
     await asyncio.gather(*coroutines)
 
 
