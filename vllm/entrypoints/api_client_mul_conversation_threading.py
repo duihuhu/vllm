@@ -38,7 +38,6 @@ def sample_requests(
     # Filter out the conversations with less than 2 turns.
     for data in dataset:
         session_info = []
-        mul_turn = []
         conversations = data["conversations"]
         count = len(conversations)
         index = 0 
@@ -49,8 +48,7 @@ def sample_requests(
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
             # print("input_value_token_ids output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
-            mul_turn.append((input_value_token_ids, len(output_value_token_ids)))
-            session_info.append(mul_turn)
+            session_info.append((input_value_token_ids, len(output_value_token_ids)))
             session_len =  session_len + len(input_value_token_ids) +  len(output_value_token_ids)  
             index = index + 2
         if session_len < 4096:
@@ -160,10 +158,9 @@ def post_request_and_get_response(args, prompts, interval):
     end_time = []
     for prompt in prompts:
         if iteration == 0:
-            history_value.extend(prompt[0][0])
+            history_value.extend(prompt[0])
             time.sleep(interval)
-        print(prompt)
-        output_len = prompt[0][1]
+        output_len = prompt[1]
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
         request_id = random_uuid()
@@ -227,7 +224,7 @@ if __name__ == "__main__":
         interval = np.random.exponential(1.0 / args.request_rate)
         pre_time = pre_time + interval
         reqs_interval.append(pre_time)
-    print(datasets[:args.session])
+
     # print("reqs_interval ", reqs_interval)
     main(args, datasets[:args.session], reqs_interval)
     # asyncio.run(main(args, datasets[:args.session], reqs_interval))
