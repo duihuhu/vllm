@@ -87,6 +87,7 @@ async def async_post_http_request(
                 # async for chunk in response.iter_lines(chunk_size=8192,
                 #             decode_unicode=False,
                 #             delimiter=b"\0"):
+                print("response content ", response.content)
                 async for chunk in response.content:
                     chunk = chunk.strip()
                     print("chunk ", chunk)
