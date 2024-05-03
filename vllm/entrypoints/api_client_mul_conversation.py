@@ -9,10 +9,13 @@ import asyncio
 import time
 import uuid
 import numpy as np
-
+import aiohttp
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
 G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
+
+AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
+
 
 #when repsone one token, waiting 100ms
 waiting_time_per_token = 100
@@ -65,6 +68,39 @@ def clear_line(n: int = 1) -> None:
         print(LINE_UP, end=LINE_CLEAR, flush=True)
 
 
+
+async def async_post_http_request(
+    prompt_token_ids: str,
+    api_url: str,
+    n: int = 1, 
+    output_len: int = 16
+):
+    api_url = api_url
+
+    async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
+        headers = {"User-Agent": "Test Client"}
+        payload = {
+            "prompt_token_ids": prompt_token_ids,
+            "request_id": random_uuid(), 
+            "n": n,
+            "use_beam_search": False,
+            "temperature": 0.0,
+            "max_tokens": output_len,
+            "logprobs": 1,
+            "stream": True
+            # "prompt_logprobs": 1
+        }
+
+        async with session.post(url=api_url, json=payload,
+                                headers=headers) as response:
+            if response.status == 200:
+                print(response.content)
+                async for chunk in response.content:
+                    chunk = chunk.strip()
+                    if not chunk:
+                        continue
+
+
 def post_http_request(prompt_token_ids: str,
                       api_url: str,
                       n: int = 1, 
@@ -100,6 +136,7 @@ def get_response(response: requests.Response) -> List[str]:
     output = data["text"]
     return output
 
+
 async def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
@@ -109,11 +146,12 @@ async def post_request_and_get_response(args, prompts, interval):
             time.sleep(interval)
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
-        rsp = post_http_request(history_value, G_URL, args.n, output_len)
-        if args.stream:
-            for h in get_streaming_response(rsp):
-                if h['finished'] == True:
-                    history_value.extend(h['prefilled_token_id'])
+        async_post_http_request(history_value, G_URL, args.n, output_len)
+        # rsp = post_http_request(history_value, G_URL, args.n, output_len)
+        # if args.stream:
+        #     for h in get_streaming_response(rsp):
+        #         if h['finished'] == True:
+        #             history_value.extend(h['prefilled_token_id'])
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
     # return True    
