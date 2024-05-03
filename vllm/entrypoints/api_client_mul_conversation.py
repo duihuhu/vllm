@@ -125,7 +125,9 @@ async def main(args, prompts, reqs_interval):
     coroutines = []
     for prompt, interval in zip(prompts, reqs_interval):
         print("interval ", interval)
-        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt, interval)))
+        task = asyncio.create_task(post_request_and_get_response(args, prompt, interval))
+        coroutines.append(task)
+        
     await asyncio.gather(*coroutines)
 
 
