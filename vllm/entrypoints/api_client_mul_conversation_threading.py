@@ -87,10 +87,10 @@ async def async_post_http_request(
             "temperature": 0.0,
             "max_tokens": output_len,
             "logprobs": 1,
-            "stream": True
+            "stream": True,
+            "ignore_eos":True,
             # "prompt_logprobs": 1
         }
-
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
