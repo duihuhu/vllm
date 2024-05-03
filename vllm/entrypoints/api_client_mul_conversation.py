@@ -116,14 +116,15 @@ def post_request_and_get_response(args, prompts, interval):
                     history_value.extend(h['prefilled_token_id'])
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
-                
+    return True    
 # def main(args, prompts, reqs_interval):
 #     post_request_and_get_response(args, prompts, reqs_interval)
 
 
 async def main(args, prompts, reqs_interval):
+    print("main ", len(prompts), len(reqs_interval))
     coroutines = []
-    for prompt,interval in zip(prompts, reqs_interval):
+    for prompt, interval in zip(prompts, reqs_interval):
         coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt, interval)))
     await asyncio.gather(*coroutines)
 
