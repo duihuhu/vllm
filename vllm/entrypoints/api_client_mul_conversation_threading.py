@@ -88,7 +88,7 @@ async def async_post_http_request(
             "max_tokens": output_len,
             "logprobs": 1,
             "stream": True,
-            "ignore_eos":True,
+            "ignore_eos": True,
             # "prompt_logprobs": 1
         }
         async with session.post(url=api_url, json=payload,
@@ -139,6 +139,8 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
             data = json.loads(chunk.decode("utf-8"))
             # output = data["text"]
             yield data
+        else:
+            print("chunk is none ", chunk)
 
 
 def get_response(response: requests.Response) -> List[str]:
