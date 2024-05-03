@@ -48,7 +48,8 @@ async def generate(request: Request) -> Response:
     sampling_params = SamplingParams(**request_dict)
     # request_id = random_uuid()
 
-    results_generator = engine.generate(prompt_token_ids=prompt_token_ids, 
+    results_generator = engine.generate(prompt=None,
+                                        prompt_token_ids=prompt_token_ids, 
                                         sampling_params=sampling_params, 
                                         request_id=request_id)
 
