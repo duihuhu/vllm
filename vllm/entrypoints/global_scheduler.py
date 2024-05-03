@@ -45,8 +45,9 @@ async def add_request(request: Request) -> Response:
                                                         (generate_host, generate_port))
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
-        for res in get_streaming_response(response):
-            yield (json.dumps(res, ensure_ascii=False) + "\0").encode("utf-8")
+        async for res in response:
+            for resp in get_streaming_response(res):
+                yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
             
     return StreamingResponse(stream_results())
 
