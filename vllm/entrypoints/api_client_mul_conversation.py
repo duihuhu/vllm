@@ -76,7 +76,6 @@ async def async_post_http_request(
     output_len: int = 16
 ):
     api_url = api_url
-
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         headers = {"User-Agent": "Test Client"}
         payload = {
@@ -94,7 +93,6 @@ async def async_post_http_request(
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
-                print(response.content)
                 async for chunk in response.content:
                     chunk = chunk.strip()
                     if not chunk:
@@ -140,13 +138,14 @@ def get_response(response: requests.Response) -> List[str]:
 async def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
-    print("post time ", time.time(), interval)
     for prompt in prompts:
         if iteration == 0:
             time.sleep(interval)
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
+        print("post time ", time.time(), interval)
         async_post_http_request(history_value, G_URL, args.n, output_len)
+        iteration = iteration + 1
         # rsp = post_http_request(history_value, G_URL, args.n, output_len)
         # if args.stream:
         #     for h in get_streaming_response(rsp):
@@ -155,15 +154,11 @@ async def post_request_and_get_response(args, prompts, interval):
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
     # return True    
-# def main(args, prompts, reqs_interval):
-#     post_request_and_get_response(args, prompts, reqs_interval)
-
 
 async def main(args, prompts, reqs_interval):
     coroutines = []
     for prompt, interval in zip(prompts, reqs_interval):
-        task = asyncio.create_task(post_request_and_get_response(args, prompt, interval))
-        coroutines.append(task)   
+        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt, interval)))   
     await asyncio.gather(*coroutines)
 
 
