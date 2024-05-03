@@ -146,7 +146,7 @@ def get_response(response: requests.Response) -> List[str]:
     return output
 
 
-async def post_request_and_get_response(args, prompts, interval):
+def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
     for prompt in prompts:
