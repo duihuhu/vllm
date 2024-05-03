@@ -21,6 +21,7 @@ AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 #when repsone one token, waiting 100ms
 waiting_time_per_token = 100
 def sample_requests(
+    turns: int,
     dataset_path: str,
     tokenizer: PreTrainedTokenizerBase,
 ) -> List[Tuple[str, int, int]]:
@@ -29,7 +30,7 @@ def sample_requests(
     with open(dataset_path) as f:
         dataset = json.load(f)
     # Filter out the conversations with less than 2 turns.
-    turn_conversations = 4
+    turn_conversations = turns
     dataset = [data for data in dataset if len(data["conversations"]) == turn_conversations]
     dataset = [data for data in dataset if len(data["conversations"]) % 2 == 0 ]
     dataset = [data for data in dataset if data["conversations"][0]["from"]=='human']
@@ -215,6 +216,7 @@ if __name__ == "__main__":
     parser.add_argument("--stream", action="store_true")
     parser.add_argument("--session",  type=int, default=10)
     parser.add_argument("--request-rate",  type=int, default=10)
+    parser.add_argument("--turns",  type=int, default=4)
 
     args = parser.parse_args()
     tokenizer_path = "/home/jovyan/models/Llama-2-13b-hf/"
@@ -222,7 +224,7 @@ if __name__ == "__main__":
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    datasets = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
+    datasets = sample_requests(args.turns, "/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
                                tokenizer)
 
     reqs_interval = []
