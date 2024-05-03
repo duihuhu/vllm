@@ -38,17 +38,19 @@ def sample_requests(
         conversations = data["conversations"]
         count = len(conversations)
         index = 0 
+        session_len = 0
         while index < count:
             input_value =  conversations[index]['value']
             output_value =  conversations[index + 1]['value']
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
-            print("input_value_token_ids output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
+            # print("input_value_token_ids output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
             mul_turn.append((input_value_token_ids, len(output_value_token_ids)))
             session_info.append(mul_turn)
+            session_len =  session_len + len(input_value_token_ids) +  len(output_value_token_ids)  
             index = index + 2
-            
-        filtered_dataset.append(session_info)
+        if session_len < 4096:
+            filtered_dataset.append(session_info)
 
     return filtered_dataset
 
@@ -97,10 +99,10 @@ def get_response(response: requests.Response) -> List[str]:
     output = data["text"]
     return output
 
-def post_request_and_get_response(args, prompts, reqs_interval):
+def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
-    for prompt, interval in zip(prompts, reqs_interval):
+    for prompt in prompts:
         if iteration == 0:
             time.sleep(interval)
         history_value.extend(prompt[0])
@@ -114,14 +116,14 @@ def post_request_and_get_response(args, prompts, reqs_interval):
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
                 
-def main(args, prompts, reqs_interval):
-    post_request_and_get_response(args, prompts, reqs_interval)
+# def main(args, prompts, reqs_interval):
+#     post_request_and_get_response(args, prompts, reqs_interval)
 
 
-async def main(args, prompts):
+async def main(args, prompts, reqs_interval):
     coroutines = []
-    for prompt in prompts:
-        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
+    for prompt,interval in prompts, reqs_interval:
+        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt, interval)))
     await asyncio.gather(*coroutines)
 
 
@@ -143,7 +145,6 @@ if __name__ == "__main__":
 
     datasets = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
                                tokenizer)
-
 
     reqs_interval = []
     pre_time = 0
