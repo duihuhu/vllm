@@ -173,8 +173,8 @@ def post_request_and_get_response(args, prompts, interval):
                     jct.append(h['jct'])
                 else:
                     tbt.append(h['tbt'])
-    print("request, ttft ", request_id, ttft)
-    print("request, ttft ", request_id, jct)
+    print("request, ttft ", request_ids, ttft)
+    print("request, ttft ", request_ids, jct)
 
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
