@@ -68,29 +68,22 @@ async def async_post_http_request(
     output_len: int = 16
 ):
     api_url = api_url
+    headers = {"User-Agent": "Test Client"}
+    payload = {
+        "prompt_token_ids": prompt_token_ids,
+        "request_id": random_uuid(), 
+        "n": n,
+        "use_beam_search": False,
+        "temperature": 0.0,
+        "max_tokens": output_len,
+        "logprobs": 1,
+        "stream": True
+    }
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
-        headers = {"User-Agent": "Test Client"}
-        payload = {
-            "prompt_token_ids": prompt_token_ids,
-            "request_id": random_uuid(), 
-            "n": n,
-            "use_beam_search": False,
-            "temperature": 0.0,
-            "max_tokens": output_len,
-            "logprobs": 1,
-            "stream": True
-        }
-
+        print("post time ", time.time(), len(prompt_token_ids),  output_len)
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
-                # async for chunk in response.content.iter_any():
-                #     chunk = chunk.decode('utf-8')
-                #     print("chunk ", chunk)
-                #     chunk = chunk.strip()
-                #     if not chunk:
-                #         continue
-                #     yield chunk
                 delimiter=b"\0"
                 buffer = b''  # 用于缓存数据块中的部分消息
                 async for chunk in response.content.iter_any():
@@ -98,7 +91,6 @@ async def async_post_http_request(
                     while delimiter in buffer:
                         index = buffer.index(delimiter)  # 查找分隔符在缓冲区中的位置
                         message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
-                        # print("message ", message)
                         yield message.strip()  # 返回提取的消息
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
 
@@ -112,26 +104,15 @@ async def post_request_and_get_response(args, prompts, interval):
             time.sleep(interval)
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
-        # response = async_post_http_request(history_value, G_URL, args.n, output_len)
-        # print("response " , response)
         print("post time ", time.time(), len(history_value),  output_len)
         response = async_post_http_request(history_value, G_URL, args.n, output_len)
         print("end post time ", time.time(), len(history_value),  output_len)
         async for resp in response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
-            # print("resp ", resp['finished'], type(resp['finished']))
             if resp['finished'] == True:
                 history_value.extend(resp['prefilled_token_id'])
-        iteration = iteration + 1
-        # rsp = post_http_request(history_value, G_URL, args.n, output_len)
-        # if args.stream:
-        #     for h in get_streaming_response(rsp):
-        #         if h['finished'] == True:
-        #             history_value.extend(h['prefilled_token_id'])
-                    # waiting_time = output_len * waiting_time_per_token / 1000
-                    # time.sleep(waiting_time)
-    # return True    
+        iteration = iteration + 1 
 
 async def main(args, prompts, reqs_interval):
     coroutines = []
