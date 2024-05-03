@@ -104,7 +104,7 @@ async def post_request_and_get_response(args, prompts, interval):
         output_len = prompt[0][1]
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         # print("response " , response)
-        item = await async_post_http_request(history_value, G_URL, args.n, output_len)
+        item = async_post_http_request(history_value, G_URL, args.n, output_len)
 
 
         iteration = iteration + 1
