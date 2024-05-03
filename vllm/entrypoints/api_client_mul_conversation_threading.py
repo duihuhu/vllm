@@ -160,9 +160,9 @@ def post_request_and_get_response(args, prompts, interval):
     end_time = []
     for prompt in prompts:
         if iteration == 0:
+            history_value.extend(prompt[0][0])
             time.sleep(interval)
         print(prompt)
-        history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
@@ -227,7 +227,7 @@ if __name__ == "__main__":
         interval = np.random.exponential(1.0 / args.request_rate)
         pre_time = pre_time + interval
         reqs_interval.append(pre_time)
-        
+    print(datasets[:args.session])
     # print("reqs_interval ", reqs_interval)
     main(args, datasets[:args.session], reqs_interval)
     # asyncio.run(main(args, datasets[:args.session], reqs_interval))
