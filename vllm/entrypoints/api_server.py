@@ -58,21 +58,21 @@ async def generate(request: Request) -> Response:
         n = 0
         async for request_output in results_generator:
             if n == 0:
-                last_time = time.time()
-                ttft = last_time-start_time
+                end_time = time.time()
+                ttft = end_time-start_time
                 if request_output.finished != True:
                     ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                            "finished": request_output.finished, "n": n, "ttft": ttft}
                 else:
                     ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                            "finished": request_output.finished, "n": n, "jct": ttft}
-                    print(request_id, ttft)
+                    print("jct ", request_id, len(request_output.outputs[0].token_ids), ttft)
             elif request_output.finished == True:
-                last_time = time.time()
-                jct = last_time-start_time
+                end_time = time.time()
+                jct = end_time-start_time
                 ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                     "finished": request_output.finished, "n": n, "jct": jct}
-                print(request_id, jct)
+                print("jct ",request_id, len(request_output.outputs[0].token_ids), jct)
             else:
                 end_time = time.time()
                 tbt = end_time-last_time
