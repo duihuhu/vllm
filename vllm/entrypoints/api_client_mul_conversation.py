@@ -94,7 +94,9 @@ async def async_post_http_request(
                                 headers=headers) as response:
             if response.status == 200:
                 async for chunk in response.content:
+                    print("response " , response.content)
                     chunk = chunk.strip()
+                    print("chunk " , response.content)
                     if not chunk:
                         continue
 
@@ -144,7 +146,7 @@ async def post_request_and_get_response(args, prompts, interval):
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
         print("post time ", time.time(), interval)
-        async_post_http_request(history_value, G_URL, args.n, output_len)
+        response = await async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
         # rsp = post_http_request(history_value, G_URL, args.n, output_len)
         # if args.stream:
