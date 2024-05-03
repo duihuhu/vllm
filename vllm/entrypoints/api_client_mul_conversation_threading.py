@@ -156,6 +156,8 @@ def post_request_and_get_response(args, prompts, interval):
     jct = []
     tbt = []
     request_ids = []
+    start_time = []
+    end_time = []
     for prompt in prompts:
         if iteration == 0:
             time.sleep(interval)
@@ -172,13 +174,16 @@ def post_request_and_get_response(args, prompts, interval):
             for h in get_streaming_response(rsp):
                 if h['n'] == 0:
                     if h['finished'] == True:
+                        start_time.append(h['start_time'])
+                        end_time.append(h['end_time'])
                         jct.append(h['jct'])
                         ttft.append(h['jct'])
                     else:
                         ttft.append(h['ttft'])
-                        
+                        start_time.append(h['start_time'])
                 elif h['finished'] == True:
                     history_value.extend(h['prefilled_token_id'])
+                    end_time.append(h['end_time'])
                     jct.append(h['jct'])
                 else:
                     tbt.append(h['tbt'])
