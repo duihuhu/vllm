@@ -61,4 +61,5 @@ if __name__ == "__main__":
                 port=cfg.global_scheduler_port,
                 log_level="debug",
                 timeout_keep_alive=TIMEOUT_KEEP_ALIVE,
-                workers=10)
+                workers=10,
+                reload=True)
