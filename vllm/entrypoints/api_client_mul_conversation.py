@@ -105,8 +105,9 @@ def post_request_and_get_response(args, prompts, interval):
     for prompt in prompts:
         if iteration == 0:
             time.sleep(interval)
-        history_value.extend(prompt[0])
-        output_len = prompt[1]
+        history_value.extend(prompt[0][0])
+        output_len = prompt[1][0]
+        print(prompt[0], output_len)
         rsp = post_http_request(history_value, G_URL, args.n, output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
