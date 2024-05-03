@@ -96,28 +96,29 @@ def get_response(response: requests.Response) -> List[str]:
     return output
 
 def post_request_and_get_response(args, prompts):
-    iteration = 0
     history_value = []
     for prompt in prompts:
         history_value.extend(prompt[0])
-        output_len = prompt[2]
+        output_len = prompt[1]
         rsp = post_http_request(history_value, G_URL, args.n, output_len)
         if args.stream:
-            num_printed_lines = 0
             for h in get_streaming_response(rsp):
-                # clear_line(num_printed_lines)
-                # num_printed_lines = 0
-                # for _, line in enumerate(h):
-                #     num_printed_lines += 1
-                #     print(f"vllm : {line!r}", flush=True)
                 if h['finished'] == True:
                     print("res ", h)
                     history_value.extend(h['prefilled_token_id'])
-                    waiting_time = output_len * waiting_time_per_token / 1000
-                    time.sleep(waiting_time)
+                    # waiting_time = output_len * waiting_time_per_token / 1000
+                    # time.sleep(waiting_time)
                 
 def main(args, prompts):
     post_request_and_get_response(args, prompts)
+
+
+async def main(args, prompts):
+    coroutines = []
+    for prompt in prompts:
+        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
+    await asyncio.gather(*coroutines)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -136,7 +137,5 @@ if __name__ == "__main__":
 
     datasets = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
                                tokenizer)
-    
-    main(args, datasets[:args.session])
 
-    
+    asyncio.run(main(args, datasets[:args.session]))
