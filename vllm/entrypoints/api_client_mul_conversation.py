@@ -94,11 +94,19 @@ async def async_post_http_request(
                                 headers=headers) as response:
             if response.status == 200:
                 print("response " , response.content)
-                async for chunk in response.content:
-                    chunk = chunk.strip()
-                    print("chunk " , response.content)
-                    if not chunk:
-                        continue
+                # async for chunk in response.content:
+                #     chunk = chunk.strip()
+                #     print("chunk " , response.content)
+                #     if not chunk:
+                #         continue
+                async for chunk in response.iter_lines(chunk_size=8192,
+                            decode_unicode=False,
+                            delimiter=b"\0"):
+                    if chunk:
+                        data = json.loads(chunk.decode("utf-8"))
+                        # output = data["text"]
+                        print(data)
+                        yield data
 
 
 def post_http_request(prompt_token_ids: str,
