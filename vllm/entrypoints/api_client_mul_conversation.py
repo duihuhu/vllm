@@ -154,15 +154,15 @@ async def post_request_and_get_response(args, prompts, interval):
             time.sleep(interval)
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
-        response = async_post_http_request(history_value, G_URL, args.n, output_len)
+        # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
-        # rsp = post_http_request(history_value, G_URL, args.n, output_len)
-        # if args.stream:
-        #     for h in get_streaming_response(rsp):
-        #         if h['finished'] == True:
-        #             history_value.extend(h['prefilled_token_id'])
-                    # waiting_time = output_len * waiting_time_per_token / 1000
-                    # time.sleep(waiting_time)
+        rsp = post_http_request(history_value, G_URL, args.n, output_len)
+        if args.stream:
+            for h in get_streaming_response(rsp):
+                if h['finished'] == True:
+                    history_value.extend(h['prefilled_token_id'])
+                    waiting_time = output_len * waiting_time_per_token / 1000
+                    time.sleep(waiting_time)
     # return True    
 
 async def main(args, prompts, reqs_interval):
