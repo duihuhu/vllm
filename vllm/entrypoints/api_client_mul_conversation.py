@@ -112,6 +112,7 @@ def post_request_and_get_response(args, prompts, interval):
         rsp = post_http_request(history_value, G_URL, args.n, output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
+                print("res ", h)
                 if h['finished'] == True:
                     print("res ", h)
                     history_value.extend(h['prefilled_token_id'])
