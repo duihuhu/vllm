@@ -41,7 +41,7 @@ async def add_request(request: Request) -> Response:
 
     #提出 prefill repsonse内容text
     #forward_request_to_decode
-    response = await forward_request_to_server(request_dict, cfg.forward_generate_url % 
+    response = forward_request_to_server(request_dict, cfg.forward_generate_url % 
                                                         (generate_host, generate_port))
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
