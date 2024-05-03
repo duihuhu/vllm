@@ -56,11 +56,8 @@ async def generate(request: Request) -> Response:
     # Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
-            prompt_token_ids = request_output.prompt_token_ids
-            text_outputs = [
-                prompt_token_ids + output.token_ids for output in request_output.outputs
-            ]
-            ret = {"text token ids ": text_outputs, "finished": request_output.finished}
+            ret = {"text token ids ": request_output.outputs[0].token_ids, 
+                   "finished": request_output.finished}
             yield (json.dumps(ret) + "\0").encode("utf-8")
 
     if stream:
