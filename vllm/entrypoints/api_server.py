@@ -10,7 +10,7 @@ import argparse
 import json
 import ssl
 from typing import AsyncGenerator
-
+import time
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
@@ -47,18 +47,34 @@ async def generate(request: Request) -> Response:
     stream = request_dict.pop("stream", False)
     sampling_params = SamplingParams(**request_dict)
     # request_id = random_uuid()
-
+    start_time = time.time()
     results_generator = engine.generate(prompt=None,
                                         prompt_token_ids=prompt_token_ids, 
                                         sampling_params=sampling_params, 
                                         request_id=request_id)
-
     # Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
+        last_time = 0
+        n = 0
         async for request_output in results_generator:
-            ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
-                   "finished": request_output.finished}
+            if n == 0:
+                last_time = time.time()
+                ttft = last_time-start_time
+                ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                   "finished": request_output.finished, "n": n, "ttft": ttft}
+            elif request_output.finished == True:
+                last_time = time.time()
+                jct = last_time-start_time
+                ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                    "finished": request_output.finished, "n": n, "jct": jct}
+            else:
+                end_time = time.time()
+                tbt = end_time-last_time
+                last_time = end_time
+                ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                    "finished": request_output.finished, "n": n, "tbt": tbt}
             yield (json.dumps(ret) + "\0").encode("utf-8")
+            n = n + 1
 
     if stream:
         return StreamingResponse(stream_results())

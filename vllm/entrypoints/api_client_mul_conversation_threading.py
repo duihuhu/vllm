@@ -113,11 +113,12 @@ async def async_post_http_request(
 def post_http_request(prompt_token_ids: str,
                       api_url: str,
                       n: int = 1, 
+                      request_id: str,
                       output_len: int = 16) -> requests.Response:
     headers = {"User-Agent": "Test Client"}
     pload = {
         "prompt_token_ids": prompt_token_ids,
-        "request_id": random_uuid(), 
+        "request_id": request_id, 
         "n": n,
         "use_beam_search": False,
         "temperature": 0.0,
@@ -149,6 +150,9 @@ def get_response(response: requests.Response) -> List[str]:
 def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
+    ttft = [] 
+    jct = []
+    tbt = []
     for prompt in prompts:
         if iteration == 0:
             time.sleep(interval)
@@ -156,12 +160,20 @@ def post_request_and_get_response(args, prompts, interval):
         output_len = prompt[0][1]
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
-        print("post time ", time.time(), len(history_value), output_len)
-        rsp = post_http_request(history_value, G_URL, args.n, output_len)
+        request_id = random_uuid()
+        rsp = post_http_request(history_value, G_URL, args.n, request_id, output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
-                if h['finished'] == True:
+                if h['n'] == 0:
+                    ttft.append(h['ttft'])
+                elif h['finished'] == True:
                     history_value.extend(h['prefilled_token_id'])
+                    jct.append(h['jct'])
+                else:
+                    tbt.append(h['tbt'])
+        print("request, ttft ", request_id, ttft)
+        print("request, ttft ", request_id, jct)
+
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
     # return True    
