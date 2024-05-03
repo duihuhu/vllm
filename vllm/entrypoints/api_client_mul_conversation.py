@@ -26,7 +26,7 @@ def sample_requests(
         dataset = json.load(f)
     # Filter out the conversations with less than 2 turns.
     turn_conversations = 4
-    dataset = [data for data in dataset if len(data["conversations"]) > turn_conversations]
+    dataset = [data for data in dataset if len(data["conversations"]) == turn_conversations]
     dataset = [data for data in dataset if len(data["conversations"]) % 2 == 0 ]
     dataset = [data for data in dataset if data["conversations"][0]["from"]=='human']
 
