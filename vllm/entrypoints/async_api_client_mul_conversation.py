@@ -61,14 +61,6 @@ def sample_requests(
 def random_uuid() -> str:
     return str(uuid.uuid4().hex)
 
-def clear_line(n: int = 1) -> None:
-    LINE_UP = '\033[1A'
-    LINE_CLEAR = '\x1b[2K'
-    for _ in range(n):
-        print(LINE_UP, end=LINE_CLEAR, flush=True)
-
-
-
 async def async_post_http_request(
     prompt_token_ids: str,
     api_url: str,
@@ -87,62 +79,18 @@ async def async_post_http_request(
             "max_tokens": output_len,
             "logprobs": 1,
             "stream": True
-            # "prompt_logprobs": 1
         }
 
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
-                print("response " , response.content)
-                # async for chunk in response.content:
-                #     chunk = chunk.strip()
-                #     print("chunk " , response.content)
-                #     if not chunk:
-                #         continue
                 async for chunk in response.iter_lines(chunk_size=8192,
                             decode_unicode=False,
                             delimiter=b"\0"):
                     if chunk:
                         data = json.loads(chunk.decode("utf-8"))
-                        # output = data["text"]
                         print(data)
                         yield data
-
-
-def post_http_request(prompt_token_ids: str,
-                      api_url: str,
-                      n: int = 1, 
-                      output_len: int = 16) -> requests.Response:
-    headers = {"User-Agent": "Test Client"}
-    pload = {
-        "prompt_token_ids": prompt_token_ids,
-        "request_id": random_uuid(), 
-        "n": n,
-        "use_beam_search": False,
-        "temperature": 0.0,
-        "max_tokens": output_len,
-        "logprobs": 1,
-        "stream": True
-        # "prompt_logprobs": 1
-    }
-    response = requests.post(api_url, headers=headers, json=pload, stream=True)
-    return response
-
-
-def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
-    for chunk in response.iter_lines(chunk_size=8192,
-                                     decode_unicode=False,
-                                     delimiter=b"\0"):
-        if chunk:
-            data = json.loads(chunk.decode("utf-8"))
-            # output = data["text"]
-            yield data
-
-
-def get_response(response: requests.Response) -> List[str]:
-    data = json.loads(response.content)
-    output = data["text"]
-    return output
 
 
 async def post_request_and_get_response(args, prompts, interval):
@@ -155,6 +103,7 @@ async def post_request_and_get_response(args, prompts, interval):
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
         response = async_post_http_request(history_value, G_URL, args.n, output_len)
+        print("response " , response)
         iteration = iteration + 1
         # rsp = post_http_request(history_value, G_URL, args.n, output_len)
         # if args.stream:
