@@ -168,7 +168,7 @@ def post_request_and_get_response(args, prompts, interval):
         request_id = random_uuid()
         request_ids.append(request_id)
         inputs_len.append(len(history_value))
-        outputs_len.appen(output_len)
+        outputs_len.append(output_len)
         rsp = post_http_request(history_value, G_URL, request_id, args.n , output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
