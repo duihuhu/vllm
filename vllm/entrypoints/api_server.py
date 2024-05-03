@@ -46,7 +46,7 @@ async def generate(request: Request) -> Response:
     request_id = request_dict.pop("request_id")
     stream = request_dict.pop("stream", False)
     sampling_params = SamplingParams(**request_dict)
-    print("max_tokens ", request_id, sampling_params.max_tokens)
+    # print("max_tokens ", request_id, sampling_params.max_tokens)
     # request_id = random_uuid()
     start_time = time.time()
     results_generator = engine.generate(prompt=None,
@@ -67,13 +67,13 @@ async def generate(request: Request) -> Response:
                 else:
                     ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                            "finished": request_output.finished, "n": n, "jct": ttft}
-                    print("jct ", request_id, n, len(request_output.outputs[0].token_ids), ttft)
+                    # print("jct ", request_id, n, len(request_output.outputs[0].token_ids), ttft)
             elif request_output.finished == True:
                 end_time = time.time()
                 jct = end_time-start_time
                 ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                     "finished": request_output.finished, "n": n, "jct": jct}
-                print("jct ",request_id, len(request_output.outputs[0].token_ids), jct)
+                # print("jct ",request_id, len(request_output.outputs[0].token_ids), jct)
             else:
                 end_time = time.time()
                 tbt = end_time-last_time
