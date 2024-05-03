@@ -98,7 +98,7 @@ async def async_post_http_request(
                     while delimiter in buffer:
                         index = buffer.index(delimiter)  # 查找分隔符在缓冲区中的位置
                         message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
-                        print("message ", message)
+                        # print("message ", message)
                         yield message.strip()  # 返回提取的消息
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
 
@@ -116,9 +116,11 @@ async def post_request_and_get_response(args, prompts, interval):
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         # print("response " , response)
         response = async_post_http_request(history_value, G_URL, args.n, output_len)
-        async for item in response:
-            print("item ", item)
-
+        async for resp in response:
+            resp = resp.decode('utf-8')
+            print("resp ", resp['finished'], type('finished'))
+            if resp['finished'] == "true":
+                history_value.extend(resp['prefilled_token_id'])
         iteration = iteration + 1
         # rsp = post_http_request(history_value, G_URL, args.n, output_len)
         # if args.stream:
