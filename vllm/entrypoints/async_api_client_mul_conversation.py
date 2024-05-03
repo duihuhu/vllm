@@ -118,7 +118,8 @@ async def post_request_and_get_response(args, prompts, interval):
         response = async_post_http_request(history_value, G_URL, args.n, output_len)
         async for resp in response:
             resp = resp.decode('utf-8')
-            print("resp ", resp['finished'], type('finished'))
+            print("resp content ", resp)
+            print("resp ", resp['finished'], type(resp['finished']))
             if resp['finished'] == "true":
                 history_value.extend(resp['prefilled_token_id'])
         iteration = iteration + 1
