@@ -139,8 +139,6 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
             data = json.loads(chunk.decode("utf-8"))
             # output = data["text"]
             yield data
-        else:
-            print("chunk is none ", chunk)
 
 
 def get_response(response: requests.Response) -> List[str]:
@@ -170,9 +168,12 @@ def post_request_and_get_response(args, prompts, interval):
         if args.stream:
             for h in get_streaming_response(rsp):
                 if h['n'] == 0:
-                    ttft.append(h['ttft'])
                     if h['finished'] == True:
-                        jct.append(h['ttft'])
+                        jct.append(h['jct'])
+                        ttft.append(h['jct'])
+                    else:
+                        ttft.append(h['ttft'])
+                        
                 elif h['finished'] == True:
                     history_value.extend(h['prefilled_token_id'])
                     jct.append(h['jct'])
