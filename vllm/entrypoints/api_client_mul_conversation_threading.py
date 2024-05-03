@@ -150,13 +150,14 @@ def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
     for prompt in prompts:
+        print("len prompts ", len(prompts))
         if iteration == 0:
-            print("post time ", time.time(), interval)
             time.sleep(interval)
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         iteration = iteration + 1
+        print("post time ", time.time(), len(history_value), output_len)
         rsp = post_http_request(history_value, G_URL, args.n, output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
