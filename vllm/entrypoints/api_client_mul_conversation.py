@@ -108,6 +108,7 @@ async def post_request_and_get_response(args, prompts, interval):
             time.sleep(interval)
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
+        print("post time ", time.time())
         rsp = post_http_request(history_value, G_URL, args.n, output_len)
         if args.stream:
             for h in get_streaming_response(rsp):
@@ -115,7 +116,7 @@ async def post_request_and_get_response(args, prompts, interval):
                     history_value.extend(h['prefilled_token_id'])
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
-    return True    
+    # return True    
 # def main(args, prompts, reqs_interval):
 #     post_request_and_get_response(args, prompts, reqs_interval)
 
@@ -123,7 +124,6 @@ async def post_request_and_get_response(args, prompts, interval):
 async def main(args, prompts, reqs_interval):
     coroutines = []
     for prompt, interval in zip(prompts, reqs_interval):
-        print("interval ", interval, len(prompt))
         task = asyncio.create_task(post_request_and_get_response(args, prompt, interval))
         coroutines.append(task)   
     await asyncio.gather(*coroutines)
