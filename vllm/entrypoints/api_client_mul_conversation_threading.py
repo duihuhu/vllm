@@ -150,7 +150,6 @@ def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
     for prompt in prompts:
-        print("len prompts ", len(prompts))
         if iteration == 0:
             time.sleep(interval)
         history_value.extend(prompt[0][0])
