@@ -112,7 +112,6 @@ async def post_request_and_get_response(args, prompts, interval):
         if args.stream:
             for h in get_streaming_response(rsp):
                 if h['finished'] == True:
-                    print("res ", h)
                     history_value.extend(h['prefilled_token_id'])
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
@@ -124,7 +123,7 @@ async def post_request_and_get_response(args, prompts, interval):
 async def main(args, prompts, reqs_interval):
     coroutines = []
     for prompt, interval in zip(prompts, reqs_interval):
-        print("interval ", interval)
+        print("interval ", interval, len(prompt))
         task = asyncio.create_task(post_request_and_get_response(args, prompt, interval))
         coroutines.append(task)   
     await asyncio.gather(*coroutines)

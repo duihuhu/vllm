@@ -34,6 +34,7 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
 
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
+    print(" recv req time ", time.time())
     request_dict = await request.json()    
     #no matched other req
     generate_host, generate_port = cfg.generate_host, cfg.generate_port
