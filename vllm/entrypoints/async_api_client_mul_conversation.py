@@ -104,9 +104,7 @@ async def post_request_and_get_response(args, prompts, interval):
             time.sleep(interval)
         history_value.extend(prompt[0][0])
         output_len = prompt[0][1]
-        print("post time ", time.time(), len(history_value),  output_len)
         response = async_post_http_request(history_value, G_URL, args.n, output_len)
-        print("end post time ", time.time(), len(history_value),  output_len)
         async for resp in response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
