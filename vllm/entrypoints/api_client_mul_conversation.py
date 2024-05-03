@@ -8,6 +8,8 @@ import requests
 import asyncio
 import time
 import uuid
+import numpy as np
+
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
 G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
@@ -95,12 +97,12 @@ def get_response(response: requests.Response) -> List[str]:
     output = data["text"]
     return output
 
-def post_request_and_get_response(args, prompts):
+def post_request_and_get_response(args, prompts, reqs_interval):
     iteration = 0 
     history_value = []
-    for prompt in prompts:
+    for prompt, interval in zip(prompts, reqs_interval):
         if iteration == 0:
-            time.sleep()
+            time.sleep(interval)
         history_value.extend(prompt[0])
         output_len = prompt[1]
         rsp = post_http_request(history_value, G_URL, args.n, output_len)
@@ -112,8 +114,8 @@ def post_request_and_get_response(args, prompts):
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
                 
-def main(args, prompts):
-    post_request_and_get_response(args, prompts)
+def main(args, prompts, reqs_interval):
+    post_request_and_get_response(args, prompts, reqs_interval)
 
 
 async def main(args, prompts):
@@ -131,6 +133,7 @@ if __name__ == "__main__":
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
     parser.add_argument("--session",  type=int, default=10)
+    parser.add_argument("--request-rate",  type=int, default=10)
 
     args = parser.parse_args()
     tokenizer_path = "/home/jovyan/models/Llama-2-13b-hf/"
@@ -141,5 +144,12 @@ if __name__ == "__main__":
     datasets = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
                                tokenizer)
 
-    
-    asyncio.run(main(args, datasets[:args.session]))
+
+    reqs_interval = []
+    pre_time = 0
+    for i in range(args.session):
+        interval = np.random.exponential(1.0 / args.request_rate)
+        pre_time = pre_time + interval
+        reqs_interval.append(pre_time)
+
+    asyncio.run(main(args, datasets[:args.session], reqs_interval))
