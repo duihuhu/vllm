@@ -86,7 +86,6 @@ async def async_post_http_request(
             if response.status == 200:
                 async for chunk in response.content.iter_any():
                     chunk = chunk.strip()
-                    print("chunk ", chunk)
                     if not chunk:
                         continue
                     yield chunk
@@ -104,7 +103,8 @@ async def post_request_and_get_response(args, prompts, interval):
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
         # print("response " , response)
         async for item in async_post_http_request(history_value, G_URL, args.n, output_len):
-            print("item ", item)
+            print("item ", json.loads(item.decode("utf-8")))
+
 
         iteration = iteration + 1
         # rsp = post_http_request(history_value, G_URL, args.n, output_len)
