@@ -93,8 +93,8 @@ async def async_post_http_request(
         async with session.post(url=api_url, json=payload,
                                 headers=headers) as response:
             if response.status == 200:
+                print("response " , response.content)
                 async for chunk in response.content:
-                    print("response " , response.content)
                     chunk = chunk.strip()
                     print("chunk " , response.content)
                     if not chunk:
@@ -190,6 +190,6 @@ if __name__ == "__main__":
         pre_time = pre_time + interval
         reqs_interval.append(pre_time)
         
-    print("reqs_interval ", reqs_interval)
+    # print("reqs_interval ", reqs_interval)
 
     asyncio.run(main(args, datasets[:args.session], reqs_interval))
