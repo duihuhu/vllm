@@ -93,9 +93,7 @@ async def async_post_http_request(
                         message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
                         yield message.strip()  # 返回提取的消息
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
-
-
-
+                        
 async def post_request_and_get_response(args, prompts, interval):
     iteration = 0 
     history_value = []
