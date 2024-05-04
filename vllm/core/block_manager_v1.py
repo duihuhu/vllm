@@ -316,8 +316,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block = self.gpu_allocator.allocate_radix_cache(radix_token_ids[logical_idx],
                             seq.num_hashed_tokens_of_block(logical_idx))
             block_table.append(block)
-
-        if seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
+        print("seq last node ", seq.last_node, seq.last_node.parent)
+        
+        if seq.last_node == self.gpu_allocator.radix_cache.root_node or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
             # print("radix_token_ids " , radix_token_ids)
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(radix_token_ids,
                                                                           block_table[:num_prompt_blocks])
