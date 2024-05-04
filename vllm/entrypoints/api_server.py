@@ -10,7 +10,7 @@ import argparse
 import json
 import ssl
 from typing import AsyncGenerator
-
+import time
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
@@ -41,23 +41,45 @@ async def generate(request: Request) -> Response:
     - stream: whether to stream the results or not.
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
+    start_time = time.time()
     request_dict = await request.json()
-    prompt = request_dict.pop("prompt")
+    prompt_token_ids = request_dict.pop("prompt_token_ids") 
     stream = request_dict.pop("stream", False)
+    request_id = request_dict.pop("request_id")
     sampling_params = SamplingParams(**request_dict)
-    request_id = random_uuid()
 
-    results_generator = engine.generate(prompt, sampling_params, request_id)
+    results_generator = engine.generate(prompt=None, prompt_token_ids=prompt_token_ids,
+                                        sampling_params=sampling_params, request_id=request_id)
 
     # Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
+        last_time = 0
+        n = 0
         async for request_output in results_generator:
-            prompt = request_output.prompt
-            text_outputs = [
-                prompt + output.text for output in request_output.outputs
-            ]
-            ret = {"text": text_outputs}
+            if n == 0:
+                end_time = time.time()
+                ttft = end_time-start_time
+                if request_output.finished != True:
+                    ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                           "finished": request_output.finished, "n": n, "ttft": ttft, "start_time": start_time, "end_time":end_time}
+                else:
+                    ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                           "finished": request_output.finished, "n": n, "jct": ttft, "start_time": start_time, "end_time":end_time}
+                    # print("jct ", request_id, n, len(request_output.outputs[0].token_ids), ttft)
+            elif request_output.finished == True:
+                end_time = time.time()
+                jct = end_time-start_time
+                ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                    "finished": request_output.finished, "n": n, "jct": jct, "start_time": start_time, "end_time":end_time}
+                # print("jct ",request_id, len(request_output.outputs[0].token_ids), jct)
+            else:
+                end_time = time.time()
+                tbt = end_time - last_time
+                last_time = end_time
+                ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
+                    "finished": request_output.finished, "n": n, "tbt": tbt, "start_time": start_time, "end_time": end_time}
             yield (json.dumps(ret) + "\0").encode("utf-8")
+            n = n + 1
 
     if stream:
         return StreamingResponse(stream_results())
