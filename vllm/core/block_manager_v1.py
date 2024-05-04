@@ -299,13 +299,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         radix_token_ids = seq.data.get_radix_token_ids()
         # value, last_node = self.gpu_allocator.radix_cache.match_prefix(radix_token_ids)
-        print("match radix_token_ids ", radix_token_ids)
+        # print("match radix_token_ids ", radix_token_ids)
         value, last_node = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value:
-            self.gpu_allocator.radix_cache.pretty_print()
-            print("matched " , value)
             block_table = value.copy()
             s_prefix_len = len(value)
             seq.prefix_len = s_prefix_len
