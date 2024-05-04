@@ -316,7 +316,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         for block in blocks:
             if block.block_hash in self.gpu_allocator.evictor:
-                self.gpu_allocator.evictor.pop(block.block_hash)
+                self.gpu_allocator.evictor.free_table.pop(block.block_hash)
 
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(hash(str(radix_token_ids[logical_idx])+ random_uuid()),
