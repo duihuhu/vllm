@@ -86,6 +86,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
     def allocate_block(self, block_hash: int,
                        num_hashed_tokens: int) -> PhysicalTokenBlock:
         if self.current_num_blocks == self.num_blocks:
+            print("in evictor ")
             block = self.evictor.evict()
             block.block_hash = block_hash
             block.num_hashed_tokens = num_hashed_tokens
@@ -107,6 +108,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
     def allocate_radix_cache(self, token, num_tokens: int = 0) -> PhysicalTokenBlock:
         block = self.allocate_block(token, num_tokens)
         block.ref_count += 1
+        print("block ", block.block_number)
         return block
     
     def allocate(self,
@@ -146,8 +148,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
         if block.ref_count == 0:
-            print("block.block_hash ", block.block_hash)
-            print("block.block_num ", block.block_number)
+            # print("block.block_hash ", block.block_hash)
+            # print("block.block_num ", block.block_number)
             assert block.block_hash not in self.evictor
             self.evictor.add(block)
 
