@@ -162,6 +162,7 @@ def post_request_and_get_response(args, prompts, interval):
             time.sleep(interval)
         output_len = prompt[1]
         # response = async_post_http_request(history_value, G_URL, args.n, output_len)
+        print("prompt " , len(history_value), history_value, output_len)
         iteration = iteration + 1
         request_id = random_uuid()
         request_ids.append(request_id)
