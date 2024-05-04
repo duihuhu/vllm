@@ -137,8 +137,7 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
         if chunk:
             data = json.loads(chunk.decode("utf-8"))
             # output = data["text"]
-            yield data
-
+            yield data 
 
 def get_response(response: requests.Response) -> List[str]:
     data = json.loads(response.content)
@@ -206,7 +205,11 @@ def main(args, prompts, reqs_interval):
         for prompt, interval in zip(prompts, reqs_interval):
             executor.submit(post_request_and_get_response, args, prompt, interval)
 
-
+def warmup(args, prompts):
+    for prompt in prompts:
+        post_request_and_get_response(args, prompt, 0)
+    print("the end of warm up \n")
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
@@ -234,6 +237,7 @@ if __name__ == "__main__":
         pre_time = pre_time + interval
         reqs_interval.append(pre_time)
 
+    warmup(args, datasets[args.session:(args.session+1)])
     # print("reqs_interval ", reqs_interval)
     main(args, datasets[:args.session], reqs_interval)
     # asyncio.run(main(args, datasets[:args.session], reqs_interval))
