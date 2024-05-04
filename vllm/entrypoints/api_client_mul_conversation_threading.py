@@ -238,7 +238,7 @@ if __name__ == "__main__":
 
     reqs_interval = []
     pre_time = 0
-    for i in range(args.session):
+    for i in range(2):
         interval = np.random.exponential(1.0 / args.request_rate)
         pre_time = pre_time + interval
         reqs_interval.append(pre_time)
