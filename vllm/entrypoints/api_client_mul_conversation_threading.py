@@ -250,7 +250,7 @@ if __name__ == "__main__":
     # warmup(args, datasets[args.session:(args.session+1)])
     # print("reqs_interval ", reqs_interval)
     
-    # main(args, datasets[:args.session], reqs_interval)
+    main(args, datasets[:2], reqs_interval)
     
     # no use 
-    asyncio.run(main(args, datasets[:2], reqs_interval))
+    # asyncio.run(main(args, datasets[:2], reqs_interval))
