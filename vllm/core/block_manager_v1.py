@@ -309,10 +309,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block_table = value.copy()
             s_prefix_len = len(value)
             seq.prefix_len = s_prefix_len
-            print("s_prefix_len ", seq_group.request_id, s_prefix_len, num_prompt_blocks, value, seq.last_node.parent)
         else:
             s_prefix_len = 0
-            print("s_prefix_len ", seq_group.request_id, s_prefix_len, num_prompt_blocks, value, seq.last_node.parent)
 
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(radix_token_ids[logical_idx],
@@ -330,6 +328,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # print("seq.last_node data ",  seq.data.get_radix_token_ids()[seq.prefix_len:])
             # print("seq.last_node block_table ",  block_table[seq.prefix_len:num_prompt_blocks])
             if s_prefix_len < num_prompt_blocks:
+                print("seq.last_node ", seq.last_node.value)
                 prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[s_prefix_len:], block_table[s_prefix_len:num_prompt_blocks])
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
