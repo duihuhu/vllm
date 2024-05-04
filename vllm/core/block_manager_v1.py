@@ -303,7 +303,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         value, last_node = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
         seq.last_node = last_node
         block_table: BlockTable  = []
-        if value: 
+        if value:
+            self.gpu_allocator.radix_cache.pretty_print()
             block_table = value[0].copy()
             s_prefix_len = len(value[0])
             seq.prefix_len = s_prefix_len

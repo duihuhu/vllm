@@ -243,7 +243,7 @@ if __name__ == "__main__":
     #     pre_time = pre_time + interval
     #     reqs_interval.append(pre_time)
 
-    test(args, [([0,0,0,0,0,0], 10), ([1,1,1,1,1], 8)])
+    test(args, [[([0,0,0,0,0,0], 10), ([1,1,1,1,1], 8)]])
     # warmup(args, datasets[args.session:(args.session+1)])
     # # print("reqs_interval ", reqs_interval)
     
