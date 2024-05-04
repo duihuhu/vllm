@@ -233,21 +233,22 @@ if __name__ == "__main__":
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    # datasets = sample_requests(args.turns, "/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
-    #                            tokenizer)
+    datasets = sample_requests(args.turns, "/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
+                               tokenizer)
 
-    # reqs_interval = []
-    # pre_time = 0
-    # for i in range(args.session):
-    #     interval = np.random.exponential(1.0 / args.request_rate)
-    #     pre_time = pre_time + interval
-    #     reqs_interval.append(pre_time)
+    reqs_interval = []
+    pre_time = 0
+    for i in range(args.session):
+        interval = np.random.exponential(1.0 / args.request_rate)
+        pre_time = pre_time + interval
+        reqs_interval.append(pre_time)
 
-    test(args, [[([0,0,0,0,0,0], 10), ([1,1,1,1,1], 8)]])
-    # warmup(args, datasets[args.session:(args.session+1)])
-    # # print("reqs_interval ", reqs_interval)
+    # test(args, [[([0,0,0,0,0,0], 10), ([1,1,1,1,1], 8)]])
     
-    # main(args, datasets[:args.session], reqs_interval)
+    warmup(args, datasets[args.session:(args.session+1)])
+    # print("reqs_interval ", reqs_interval)
     
-    #no use 
+    main(args, datasets[:args.session], reqs_interval)
+    
+    # no use 
     # asyncio.run(main(args, datasets[:args.session], reqs_interval))
