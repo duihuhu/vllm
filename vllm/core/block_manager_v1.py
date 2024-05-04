@@ -11,6 +11,8 @@ from vllm.logger import init_logger
 from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device, random_uuid
 from vllm.core.radix_tree import RadixCache
+import sys
+sys.setrecursionlimit(10000)
 
 logger = init_logger(__name__)
 
