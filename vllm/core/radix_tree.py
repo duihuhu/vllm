@@ -13,6 +13,7 @@ class TreeNode:
         self.value = None
         self.ref_counter = 0
         self.last_access_time = time.time()
+        self.matched_len = 0
 
     def __lt__(self, other):
         return self.last_access_time < other.last_access_time
@@ -76,6 +77,7 @@ class RadixCache:
                     for val in child.value[:prefix_len]:
                         val.ref_count += 1
                     value.extend(child.value[:prefix_len])
+                    child.matched_len = prefix_len
                     last_node[0] = child
                 else:
                     for val in child.value:
