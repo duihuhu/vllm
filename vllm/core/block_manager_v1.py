@@ -298,7 +298,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)     
         radix_token_ids = seq.data.get_radix_token_ids()
-        value, last_node = self.gpu_allocator.radix_cache.match_prefix(radix_token_ids)
+        # value, last_node = self.gpu_allocator.radix_cache.match_prefix(radix_token_ids)
+        value, last_node = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
         seq.last_node = last_node
         block_table: BlockTable  = []
         if value: 
