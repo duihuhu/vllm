@@ -309,10 +309,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block_table = value.copy()
             s_prefix_len = len(value)
             seq.prefix_len = s_prefix_len
-            print("s_prefix_len ", seq_group.request_id, s_prefix_len, num_prompt_blocks, seq.last_node.parent)
+            print("s_prefix_len ", seq_group.request_id, s_prefix_len, num_prompt_blocks, value, seq.last_node.parent)
         else:
             s_prefix_len = 0
-        
+            print("s_prefix_len ", seq_group.request_id, s_prefix_len, num_prompt_blocks, value, seq.last_node.parent)
+
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(radix_token_ids[logical_idx],
                             seq.num_hashed_tokens_of_block(logical_idx))
