@@ -448,7 +448,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         last_token = seq.data.get_radix_token_ids()[-1:]
         last_node = seq.last_node
-        print(last_token, seq.last_node.parent, seq.last_node.children.items())
+        # print(last_token, seq.last_node.parent, seq.last_node.children.items())
         
         if last_token in seq.last_node.children.items():
             new_block = seq.last_node.children[last_token]
