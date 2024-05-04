@@ -194,7 +194,7 @@ class EngineArgs:
         parser.add_argument('--block-size',
                             type=int,
                             default=EngineArgs.block_size,
-                            choices=[8, 16, 32, 128],
+                            choices=[1, 8, 16, 32, 128],
                             help='token block size')
 
         parser.add_argument('--enable-prefix-caching',
