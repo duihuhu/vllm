@@ -525,7 +525,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Allocate a new physical block.
                 if self.enable_radix_caching:
                     new_block = self._allocate_last_physical_block_radix_cache(seq)
-                    print("append_slot new block" , new_block.block_number)
                 else:
                     new_block = self._allocate_last_physical_block(seq)
                     
@@ -541,7 +540,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 maybe_new_block = self._maybe_promote_last_block_radix_cache(
                     seq, last_block)
                 block_table[-1] = maybe_new_block
-                print("maybe_new_block block" , maybe_new_block.block_number)
             elif self.enable_caching:
                 # If the last block is now complete, we may reuse an old block
                 # to save memory.
@@ -554,7 +552,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # Copy on Write: Allocate a new block and copy the tokens.
             if self.enable_radix_caching:
                 new_block = self._allocate_last_physical_block_radix_cache(seq)
-                print("append_slot new block" , new_block.block_number)
             else:
                 new_block = self._allocate_last_physical_block(seq)
 
