@@ -49,8 +49,8 @@ def sample_requests(
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
             # print("input_value_token_ids output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
-            session_info.append((input_value_token_ids[1:], len(output_value_token_ids)))
-            session_len =  session_len + len(input_value_token_ids[1:]) +  len(output_value_token_ids)  
+            session_info.append((input_value_token_ids, len(output_value_token_ids)))
+            session_len =  session_len + len(input_value_token_ids) +  len(output_value_token_ids)  
             index = index + 2
         if session_len < 4096:
             filtered_dataset.append(session_info)
@@ -247,8 +247,8 @@ if __name__ == "__main__":
 
     # test(args, [[([0,0,0,0,0,0], 10), ([1,1,1,1,1], 8)]])
     
-    warmup(args, datasets[args.session:(args.session+1)])
-    print("reqs_interval ", reqs_interval)
+    # warmup(args, datasets[args.session:(args.session+1)])
+    # print("reqs_interval ", reqs_interval)
     
     main(args, datasets[:args.session], reqs_interval)
     
