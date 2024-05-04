@@ -305,6 +305,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_table: BlockTable  = []
         if value:
             self.gpu_allocator.radix_cache.pretty_print()
+            print("matched " , value)
             block_table = value[0].copy()
             s_prefix_len = len(value[0])
             seq.prefix_len = s_prefix_len
