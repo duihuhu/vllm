@@ -224,6 +224,7 @@ class Sequence:
         # to record last node in prefix cache tree
         self.last_node = None
         self.prefix_len = 0
+        self.last_matched_len = 0
     
     @property
     def lora_int_id(self) -> int:
