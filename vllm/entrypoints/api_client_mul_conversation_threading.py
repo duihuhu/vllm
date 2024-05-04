@@ -245,10 +245,10 @@ if __name__ == "__main__":
 
     # test(args, [[([0,0,0,0,0,0], 10), ([1,1,1,1,1], 8)]])
     
-    warmup(args, datasets[args.session:(args.session+1)])
+    # warmup(args, datasets[args.session:(args.session+1)])
     # print("reqs_interval ", reqs_interval)
     
     # main(args, datasets[:args.session], reqs_interval)
     
     # no use 
-    # asyncio.run(main(args, datasets[:args.session], reqs_interval))
+    asyncio.run(main(args, datasets[:2], reqs_interval))
