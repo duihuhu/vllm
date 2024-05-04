@@ -147,6 +147,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
         block.ref_count -= 1
         if block.ref_count == 0:
             print("block.block_hash ", block.block_hash)
+            print("block.block_num ", block.block_number)
             assert block.block_hash not in self.evictor
             self.evictor.add(block)
 
