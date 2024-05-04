@@ -162,9 +162,9 @@ def post_request_and_get_response(args, prompts, interval):
             time.sleep(interval)
         # else:
         #     history_value.extend(prompt[0])
-        # output_len = prompt[1]
-        output_len = 16
-        print("prompt " , len(history_value), history_value, output_len)
+        output_len = prompt[1]
+        # output_len = 16
+        # print("prompt " , len(history_value), history_value, output_len)
         iteration = iteration + 1
         request_id = random_uuid()
         request_ids.append(request_id)
