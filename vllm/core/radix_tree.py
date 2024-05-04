@@ -153,7 +153,6 @@ class RadixCache:
             prefix_len = match(c_key, key)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
-                    start1 = time.time()
                     new_node = self._split_node(c_key, child, prefix_len)
                     for val in new_node.value:
                         val.ref_count += 1
@@ -210,6 +209,10 @@ class RadixCache:
             self.evictable_size_ += len(value)
         return 0, new_node
 
+    def _print_root_node(self):
+        for c_key, child in self.root_node.children.items():
+            print("c_key ", c_key)
+            
     def _print_helper(self, node, indent):
         for key, child in node.children.items():
             print(" " * indent, len(key), key[:10], f"r={child.ref_counter}")

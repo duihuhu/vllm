@@ -160,6 +160,8 @@ def post_request_and_get_response(args, prompts, interval):
         if iteration == 0:
             history_value.extend(prompt[0])
             time.sleep(interval)
+        # else:
+        #     history_value.extend(prompt[0])
         # output_len = prompt[1]
         output_len = 16
         print("prompt " , len(history_value), history_value, output_len)
