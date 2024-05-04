@@ -42,7 +42,7 @@ class BlockAllocatorBase(ABC):
         pass
 
     @abstractmethod
-    def free_radix_cache(self, block: PhysicalTokenBlock, lable=None) -> None:
+    def free_radix_cache(self, block: PhysicalTokenBlock, lable=None, seq_id=None) -> None:
         pass
 
     @abstractmethod
@@ -142,11 +142,11 @@ class CachedBlockAllocator(BlockAllocatorBase):
             # Remove the block from the cached_blocks
             del self.cached_blocks[block.block_hash]
 
-    def free_radix_cache(self, block: PhysicalTokenBlock, label=None) -> None:
+    def free_radix_cache(self, block: PhysicalTokenBlock, label=None, seq_id=None) -> None:
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
-        print("block.block_hash ", block.block_hash, block.block_number, label)
+        print("block.block_hash ", block.block_hash, block.block_number, block.ref_count, label, seq_id)
         if block.ref_count == 0:
             assert block.block_hash not in self.evictor
             self.evictor.add(block)
@@ -211,7 +211,7 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             self.free_blocks.append(block)
 
-    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
+    def free_radix_cache(self, block: PhysicalTokenBlock, label=None, seq_id=None) -> None:
         pass
     
     def get_num_free_blocks(self) -> int:
@@ -411,7 +411,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         last_token = seq.data.get_radix_token_ids()[-1]
         last_node = seq.last_node
         if last_token in last_node.children.key.items():
-            self.gpu_allocator.free_radix_cache(last_block, "label1")
+            self.gpu_allocator.free_radix_cache(last_block, "label1", seq.seq_id)
             seq.last_node = last_node.children
             return last_node.children[last_token]
         else:
@@ -650,7 +650,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         }
         return block_number_mapping
 
-    def _free_block_table(self, block_table: BlockTable) -> None:
+    def _free_block_table(self, block_table: BlockTable, seq_id=None) -> None:
         # when using a sliding window, each seq will only use up
         # to `self.block_sliding_window` blocks. When freeing
         # the block table, we must make sure to not free blocks more
@@ -662,7 +662,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in set(blocks_to_free):
             if block.device == Device.GPU:
                 if self.enable_radix_caching:
-                    self.gpu_allocator.free_radix_cache(block, "label2")
+                    self.gpu_allocator.free_radix_cache(block, "label2", seq_id)
                 else:
                     self.gpu_allocator.free(block)
             else:
@@ -673,7 +673,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # Already freed or haven't been scheduled yet.
             return
         block_table = self.block_tables[seq.seq_id]
-        self._free_block_table(block_table)
+        self._free_block_table(block_table, seq.seq_id)
         del self.block_tables[seq.seq_id]
 
     def reset(self) -> None:
