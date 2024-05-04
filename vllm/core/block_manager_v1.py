@@ -42,7 +42,7 @@ class BlockAllocatorBase(ABC):
         pass
 
     @abstractmethod
-    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
+    def free_radix_cache(self, block: PhysicalTokenBlock, lable=None) -> None:
         pass
 
     @abstractmethod
@@ -142,13 +142,12 @@ class CachedBlockAllocator(BlockAllocatorBase):
             # Remove the block from the cached_blocks
             del self.cached_blocks[block.block_hash]
 
-    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
+    def free_radix_cache(self, block: PhysicalTokenBlock, label=None) -> None:
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
+        print("block.block_hash ", block.block_hash, block.block_number, label)
         if block.ref_count == 0:
-            # print("block.block_hash ", block.block_hash)
-            # print("block.block_num ", block.block_number)
             assert block.block_hash not in self.evictor
             self.evictor.add(block)
 
@@ -412,7 +411,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         last_token = seq.data.get_radix_token_ids()[-1]
         last_node = seq.last_node
         if last_token in last_node.children.key.items():
-            self.gpu_allocator.free_radix_cache(last_block)
+            self.gpu_allocator.free_radix_cache(last_block, "label1")
             seq.last_node = last_node.children
             return last_node.children[last_token]
         else:
@@ -663,7 +662,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in set(blocks_to_free):
             if block.device == Device.GPU:
                 if self.enable_radix_caching:
-                    self.gpu_allocator.free_radix_cache(block)
+                    self.gpu_allocator.free_radix_cache(block, "label2")
                 else:
                     self.gpu_allocator.free(block)
             else:
