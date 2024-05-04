@@ -146,6 +146,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
         if block.ref_count == 0:
+            print("block.block_hash ", block.block_hash)
             assert block.block_hash not in self.evictor
             self.evictor.add(block)
 
