@@ -9,8 +9,9 @@ from vllm.core.evictor import EvictionPolicy, Evictor, make_evictor
 from vllm.core.interfaces import AllocStatus, BlockSpaceManager
 from vllm.logger import init_logger
 from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
-from vllm.utils import Device
+from vllm.utils import Device, random_uuid
 from vllm.core.radix_tree import RadixCache
+
 logger = init_logger(__name__)
 
 
@@ -145,7 +146,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
         if block.ref_count == 0:
-            # assert block.block_hash not in self.evictor
+            assert block.block_hash not in self.evictor
             self.evictor.add(block)
 
     def get_num_free_blocks(self) -> int:
@@ -314,7 +315,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             s_prefix_len = 0
 
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
-            block = self.gpu_allocator.allocate_radix_cache(radix_token_ids[logical_idx],
+            block = self.gpu_allocator.allocate_radix_cache(hash(str(radix_token_ids[logical_idx])+ random_uuid()),
                             seq.num_hashed_tokens_of_block(logical_idx))
             block_table.append(block)
 
@@ -462,7 +463,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             num_hashed_tokens = seq.num_hashed_tokens_of_block(
                 len(seq.logical_token_blocks) - 1)
-            new_block = self.gpu_allocator.allocate_radix_cache(last_token, num_hashed_tokens)
+            
+            # new_block = self.gpu_allocator.allocate_radix_cache(last_token, num_hashed_tokens)
+            new_block = self.gpu_allocator.allocate_radix_cache(hash(str(last_token)+ random_uuid()), num_hashed_tokens)
             prefix_len, child = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, [new_block])
             seq.prefix_len = prefix_len
             seq.last_node = child

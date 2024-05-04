@@ -474,6 +474,8 @@ class Scheduler:
     def free_seq(self, seq: Sequence) -> None:
         """Free a sequence from a block table."""
         self.block_manager.free(seq)
+        # if self.block_manager.enable_radix_caching:
+            # self.block_manager.gpu_allocator.()
 
     def free_finished_seq_groups(self) -> None:
         self.running = deque(seq_group for seq_group in self.running
