@@ -139,11 +139,11 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
         perror("close");
         exit(1);
     }
-    // 删除共享内存对象
-    if (shm_unlink(shmName) == -1) {
-        perror("shm_unlink");
-        exit(1);
-    }
+    // // 删除共享内存对象
+    // if (shm_unlink(shmName) == -1) {
+    //     perror("shm_unlink");
+    //     exit(1);
+    // }
 
 
     return 0;
