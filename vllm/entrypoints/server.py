@@ -26,23 +26,16 @@ async def pull_dcache(response: Request) -> None:
     payload = await response.json()
     payload = payload[0]
     query_meta = QueryMeta(**payload)
-    server.engine.engine.pull_kv_blocks(query_meta)
+    await server.engine.pull_kv_blocks(query_meta)
     server.engine._request_tracker.new_requests_event.set()
-    ret = {"success ": 1}
     return 
 
 @app.post("/query_dcache")
 async def query_dcache(response: Request) -> None:
     payload = await response.json()
     payload = payload[0]
-    # print("query_dcache payload ", payload)
-    # request_id = payload.pop("request_id")
-    # prompt_token_ids = payload.pop("prompt_token_ids")
-    # cache_meta =  payload.pop("cache_meta")
-    # cached_len = cache_meta["cached_len"]
-    # cmeta_kv_len = cache_meta["cmeta_kv_len"]
     query_meta = QueryMeta(**payload)
-    dcached_len = server.engine.engine.query_kv_blocks(query_meta)
+    dcached_len = await server.engine.query_kv_blocks(query_meta)
     ret = {"dcached_len": dcached_len}
     return ret
     

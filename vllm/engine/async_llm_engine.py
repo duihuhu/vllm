@@ -261,7 +261,38 @@ class RequestTracker:
 
 class _AsyncLLMEngine(LLMEngine):
     """Extension of LLMEngine to add async methods."""
-        
+    
+    async def _query_cache(self, cached_seq_groups):
+        cache_meta = []
+        request_ids = []
+        prompt_token_ids = []
+        for seq_group in cached_seq_groups:
+            seq = seq_group.get_seqs()[0]
+            request_id = seq_group.request_id
+            cache_meta.append(seq_group.cache_meta)
+            request_ids.append(request_id)
+            prompt_token_ids.append(seq.data.prompt_token_ids)
+            
+        query_response = self._query_cache_meta(cache_meta, request_ids, prompt_token_ids).json()
+        dcached_len = query_response["dcached_len"]
+        for seq_group in cached_seq_groups:
+            seq = seq_group.get_seqs()[0]
+            seq_group.cache_meta.cmeta_kv_len = dcached_len
+            block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+            phy_blocks = [phy_block for phy_block in block_table]              
+            computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+            print("add_recv_transfering, computed_blocks, phy_blocks, dcached_len " , 
+                    len(computed_blocks), len(phy_blocks), dcached_len, seq_group.cache_meta.cached_len)
+            
+            self.scheduler.add_recv_transfering(seq_group)
+            
+            phy_blocks_num = [phy_block.block_number for phy_block in phy_blocks]
+
+            self.kv_trans_scheduler.add_kv_request(request_id, seq_group.cache_meta.cmeta_ranks, 
+                                                    phy_blocks_num[len(computed_blocks): dcached_len], False)
+            self._pull_cache_signal(cache_meta, request_ids, prompt_token_ids)
+        return 
+    
     async def step_async(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.
@@ -275,34 +306,7 @@ class _AsyncLLMEngine(LLMEngine):
         seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self.scheduler.schedule()
 
         if cached_seq_groups:
-            cache_meta = []
-            request_ids = []
-            prompt_token_ids = []
-            for seq_group in cached_seq_groups:
-                seq = seq_group.get_seqs()[0]
-                request_id = seq_group.request_id
-                cache_meta.append(seq_group.cache_meta)
-                request_ids.append(request_id)
-                prompt_token_ids.append(seq.data.prompt_token_ids)
-                
-            query_response = self._query_cache_meta(cache_meta, request_ids, prompt_token_ids).json()
-            dcached_len = query_response["dcached_len"]
-            for seq_group in cached_seq_groups:
-                seq = seq_group.get_seqs()[0]
-                seq_group.cache_meta.cmeta_kv_len = dcached_len
-                block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-                phy_blocks = [phy_block for phy_block in block_table]              
-                computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-                print("add_recv_transfering, computed_blocks, phy_blocks, dcached_len " , 
-                      len(computed_blocks), len(phy_blocks), dcached_len, seq_group.cache_meta.cached_len)
-                
-                self.scheduler.add_recv_transfering(seq_group)
-                
-                phy_blocks_num = [phy_block.block_number for phy_block in phy_blocks]
-
-                self.kv_trans_scheduler.add_kv_request(request_id, seq_group.cache_meta.cmeta_ranks, 
-                                                       phy_blocks_num[len(computed_blocks): dcached_len], False)
-                self._pull_cache_signal(cache_meta, request_ids, prompt_token_ids)
+            asyncio.create_task(self._query_cache(cached_seq_groups))
         
         if self.deploy_config.enable_mcache:
             if cache_blocks_to_swap_out:
@@ -826,6 +830,12 @@ class AsyncLLMEngine:
 
         return stream
 
+    async def pull_kv_blocks(self, query_meta):
+        self.engine.pull_kv_blocks(query_meta)
+
+    async def query_kv_blocks(self, query_meta):
+        return self.engine.query_kv_blocks(query_meta)
+    
     async def add_kv_response(
         self,
         response: KvPreparedResponse,
