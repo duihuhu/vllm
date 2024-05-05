@@ -48,10 +48,8 @@ def sample_requests(
             output_value =  conversations[index + 1]['value']
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
-            print("input_value_token_ids output_value_token_ids ", len(input_value_token_ids), len(output_value_token_ids))
-            print("input_value_token_ids ", input_value_token_ids)
-            session_info.append((input_value_token_ids[1:], len(output_value_token_ids)))
-            session_len =  session_len + len(input_value_token_ids[1:]) +  len(output_value_token_ids)  
+            session_info.append((input_value_token_ids[1:], len(output_value_token_ids[1:])))
+            session_len =  session_len + len(input_value_token_ids[1:]) +  len(output_value_token_ids[1:])  
             index = index + 2
         if session_len < 4096:
             filtered_dataset.append(session_info)
@@ -231,14 +229,14 @@ if __name__ == "__main__":
     datasets = sample_requests(args.turns, "/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
                                tokenizer)
 
-    # reqs_interval = []
-    # pre_time = 0
-    # for i in range(args.session):
-    #     interval = np.random.exponential(1.0 / args.request_rate)
-    #     pre_time = pre_time + interval
-    #     reqs_interval.append(pre_time)
+    reqs_interval = []
+    pre_time = 0
+    for i in range(args.session):
+        interval = np.random.exponential(1.0 / args.request_rate)
+        pre_time = pre_time + interval
+        reqs_interval.append(pre_time)
 
-    # warmup(args, datasets[args.session:(args.session+1)])
-    # # print("reqs_interval ", reqs_interval)
-    # main(args, datasets[:args.session], reqs_interval)
-    # # asyncio.run(main(args, datasets[:args.session], reqs_interval))
+    warmup(args, datasets[args.session:(args.session+1)])
+    # print("reqs_interval ", reqs_interval)
+    main(args, datasets[:args.session], reqs_interval)
+    # asyncio.run(main(args, datasets[:args.session], reqs_interval))
