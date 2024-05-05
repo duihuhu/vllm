@@ -761,7 +761,7 @@ class Scheduler:
                 for block in blocks:
                     block.ref_count = block.ref_count - 1
                 del self.block_manager.req_block_tables[request_id]
-                del self.send_finished_req_ids.remove(request_id)
+                self.send_finished_req_ids.remove(request_id)
                 continue
             
             seq_group = self.send_transfering[request_id]
