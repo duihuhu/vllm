@@ -797,6 +797,8 @@ class Scheduler:
                 
             if seq_group.cache_meta:
                 seq_group.cache_meta.ready = True
+                for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                    seq.status = SequenceStatus.WAITING
                 self.waiting.append(seq_group)
                 del self.recv_transfering[request_id]
                 self.recv_finished_req_ids.remove(request_id)
