@@ -272,7 +272,6 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        print("step_async step_async step_async step_async")
         seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self.scheduler.schedule()
 
         if cached_seq_groups:
@@ -651,8 +650,6 @@ class AsyncLLMEngine:
 
         Returns True if there are in-progress requests."""
         
-        print("engine_step engine_step ")
-
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
 
@@ -697,7 +694,6 @@ class AsyncLLMEngine:
             if kv_response:
                 self._request_tracker.process_kv_results(
                     self.engine.get_global_ranks(), kv_response)
-        print("median engine_step engine_step ")
 
         if self.engine_use_ray:
             await self.engine.trans_kv_step.remote()
@@ -712,7 +708,6 @@ class AsyncLLMEngine:
                 self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
                 self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
-        print("end engine_step engine_step ")
 
         return len(request_outputs) > 0
 

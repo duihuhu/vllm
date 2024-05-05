@@ -401,6 +401,16 @@ class Scheduler:
                             self.waiting.popleft()
                             continue
                 else:
+                    num_prefill_tokens = waiting_seqs[0].get_len()
+                    if num_prefill_tokens > self.prompt_limit:
+                        logger.warning(
+                            f"Input prompt ({num_prefill_tokens} tokens) is too "
+                            f"long and exceeds limit of {self.prompt_limit}")
+                        for seq in waiting_seqs:
+                            seq.status = SequenceStatus.FINISHED_IGNORED
+                        ignored_seq_groups.append(seq_group)
+                        self.waiting.popleft()
+                        continue
                     self.waiting.popleft()
 
                 if seq_group.cache_meta and not seq_group.cache_meta.ready:
