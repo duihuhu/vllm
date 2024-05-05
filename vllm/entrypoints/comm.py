@@ -67,7 +67,21 @@ class CacheMeta:
             "cached_len": self.cached_len,
         }
         
-    
+class QueryCacheMeta():
+    def __init__(
+        self,
+        request_id: str =None,
+        prompt_token_ids: list = [],
+    ) -> None:
+        self.request_id = request_id
+        self.prompt_token_ids = prompt_token_ids
+    def __json__(self):
+        return {
+            "request_id": self.request_id,
+            "prompt_token_ids": self.prompt_token_ids
+        }
+
+
 class QueryMeta:
     def __init__(
         self,

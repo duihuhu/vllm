@@ -460,20 +460,19 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.kv_block_tables[seq.seq_id] = block_table.copy()
 
-    def query_kv_blocks(self, query_meta):
+    def query_kv_blocks(self, query_cache_meta):
         blocks = []
         dcached_len = 0 
-        for logical_idx in range(len(query_meta.prompt_token_ids)):
+        for logical_idx in range(len(query_cache_meta.prompt_token_ids)):
             num_tokens = logical_idx * self.block_size + self.block_size
-            in_hbm = self.gpu_allocator.has_cache_block(hash((tuple(query_meta.prompt_token_ids[0:num_tokens]), 0)))
+            in_hbm = self.gpu_allocator.has_cache_block(hash((tuple(query_cache_meta.prompt_token_ids[0:num_tokens]), 0)))
             if in_hbm:
                 dcached_len = dcached_len + 1
-                block = self.gpu_allocator.cached_blocks[hash((tuple(query_meta.prompt_token_ids[0:num_tokens]), 0))]
+                block = self.gpu_allocator.cached_blocks[hash((tuple(query_cache_meta.prompt_token_ids[0:num_tokens]), 0))]
                 block.ref_count = block.ref_count + 1
                 blocks.append(block)
-        print("decode mathch cache, ", dcached_len, query_meta.cache_meta["cached_len"],
-              query_meta.cache_meta["cmeta_kv_len"], query_meta.request_id)
-        self.req_block_tables[query_meta.request_id] = blocks
+        print("decode mathch cache, ", dcached_len, query_cache_meta.request_id)
+        self.req_block_tables[query_cache_meta.request_id] = blocks
         return dcached_len
     
     def allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
-from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta, QueryMeta
+from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta, QueryMeta, QueryCacheMeta
 from vllm.entrypoints.server_meta import InferResults
 import entrypoints_config as cfg
 import uvicorn
@@ -24,7 +24,6 @@ server=None
 @app.post("/pull_dcache")
 async def pull_dcache(response: Request) -> None:
     payload = await response.json()
-    payload = payload[0]
     query_meta = QueryMeta(**payload)
     await server.engine.pull_kv_blocks(query_meta)
     server.engine._request_tracker.new_requests_event.set()
@@ -33,9 +32,8 @@ async def pull_dcache(response: Request) -> None:
 @app.post("/query_dcache")
 async def query_dcache(response: Request) -> None:
     payload = await response.json()
-    payload = payload[0]
-    query_meta = QueryMeta(**payload)
-    dcached_len = await server.engine.query_kv_blocks(query_meta)
+    query_cache_meta = QueryCacheMeta(**payload)
+    dcached_len = await server.engine.query_kv_blocks(query_cache_meta)
     ret = {"dcached_len": dcached_len}
     return ret
     
