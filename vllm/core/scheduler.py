@@ -356,26 +356,25 @@ class Scheduler:
             num_batched_tokens = 0
             while self._passed_delay(now) and self.waiting:
                 seq_group = self.waiting[0]
+                print("seq_group request id prefill start time ", seq_group.request_id, time.time())
+                waiting_seqs = seq_group.get_seqs(
+                    status=SequenceStatus.WAITING)
+                assert len(waiting_seqs) == 1, (
+                    "Waiting sequence group should have only one prompt "
+                    "sequence.")
+                # get_len includes output tokens if the request has been
+                # preempted.
+                num_prefill_tokens = waiting_seqs[0].get_len()
+                if num_prefill_tokens > self.prompt_limit:
+                    logger.warning(
+                        f"Input prompt ({num_prefill_tokens} tokens) is too "
+                        f"long and exceeds limit of {self.prompt_limit}")
+                    for seq in waiting_seqs:
+                        seq.status = SequenceStatus.FINISHED_IGNORED
+                    ignored_seq_groups.append(seq_group)
+                    self.waiting.popleft()
+                    continue
                 if not seq_group.cache_meta or not seq_group.cache_meta.ready:
-                    print("seq_group request id prefill start time ", seq_group.request_id, time.time())
-                    waiting_seqs = seq_group.get_seqs(
-                        status=SequenceStatus.WAITING)
-                    assert len(waiting_seqs) == 1, (
-                        "Waiting sequence group should have only one prompt "
-                        "sequence.")
-                    # get_len includes output tokens if the request has been
-                    # preempted.
-                    num_prefill_tokens = waiting_seqs[0].get_len()
-                    if num_prefill_tokens > self.prompt_limit:
-                        logger.warning(
-                            f"Input prompt ({num_prefill_tokens} tokens) is too "
-                            f"long and exceeds limit of {self.prompt_limit}")
-                        for seq in waiting_seqs:
-                            seq.status = SequenceStatus.FINISHED_IGNORED
-                        ignored_seq_groups.append(seq_group)
-                        self.waiting.popleft()
-                        continue
-
                     # If the sequence group cannot be allocated, stop.
                     can_allocate = self.block_manager.can_allocate(seq_group)
                     if can_allocate == AllocStatus.LATER:
@@ -401,21 +400,6 @@ class Scheduler:
                             self.waiting.popleft()
                             continue
                 else:
-                    waiting_seqs = seq_group.get_seqs(
-                        status=SequenceStatus.WAITING)
-                    assert len(waiting_seqs) == 1, (
-                        "Waiting sequence group should have only one prompt "
-                        "sequence.")
-                    num_prefill_tokens = waiting_seqs[0].get_len()
-                    if num_prefill_tokens > self.prompt_limit:
-                        logger.warning(
-                            f"Input prompt ({num_prefill_tokens} tokens) is too "
-                            f"long and exceeds limit of {self.prompt_limit}")
-                        for seq in waiting_seqs:
-                            seq.status = SequenceStatus.FINISHED_IGNORED
-                        ignored_seq_groups.append(seq_group)
-                        self.waiting.popleft()
-                        continue
                     self.waiting.popleft()
 
                 if seq_group.cache_meta and not seq_group.cache_meta.ready:
