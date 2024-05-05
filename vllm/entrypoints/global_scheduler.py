@@ -72,7 +72,7 @@ async def monitor_report(request: Request) -> Response:
     ret = {"result": 'monitor_report succ'}
     return ret
 
-async def forward_request_to_prefill(request_dict, api_url, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks):
+async def forward_request_to_prefill(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
         request_dict['cmeta_host'] = cdecode_host
