@@ -401,6 +401,11 @@ class Scheduler:
                             self.waiting.popleft()
                             continue
                 else:
+                    waiting_seqs = seq_group.get_seqs(
+                        status=SequenceStatus.WAITING)
+                    assert len(waiting_seqs) == 1, (
+                        "Waiting sequence group should have only one prompt "
+                        "sequence.")
                     num_prefill_tokens = waiting_seqs[0].get_len()
                     if num_prefill_tokens > self.prompt_limit:
                         logger.warning(
