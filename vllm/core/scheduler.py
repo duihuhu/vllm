@@ -388,19 +388,20 @@ class Scheduler:
                         ignored_seq_groups.append(seq_group)
                         self.waiting.popleft()
                         continue
-
-                    lora_int_id = 0
-                    if self.lora_enabled:
-                        lora_int_id = seq_group.lora_int_id
-                        if (lora_int_id > 0 and lora_int_id not in curr_loras
-                                and len(curr_loras) >= self.lora_config.max_loras):
-                            # We don't have a space for another LoRA, so
-                            # we ignore this request for now.
-                            leftover_waiting_sequences.appendleft(seq_group)
-                            self.waiting.popleft()
-                            continue
                 else:
                     self.waiting.popleft()
+                    
+                lora_int_id = 0
+                if self.lora_enabled:
+                    lora_int_id = seq_group.lora_int_id
+                    if (lora_int_id > 0 and lora_int_id not in curr_loras
+                            and len(curr_loras) >= self.lora_config.max_loras):
+                        # We don't have a space for another LoRA, so
+                        # we ignore this request for now.
+                        leftover_waiting_sequences.appendleft(seq_group)
+                        self.waiting.popleft()
+                        continue
+
 
                 if seq_group.cache_meta and not seq_group.cache_meta.ready:
                     self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
