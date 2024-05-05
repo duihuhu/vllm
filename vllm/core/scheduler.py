@@ -356,49 +356,52 @@ class Scheduler:
             num_batched_tokens = 0
             while self._passed_delay(now) and self.waiting:
                 seq_group = self.waiting[0]
-                print("seq_group request id prefill start time ", seq_group.request_id, time.time())
-                waiting_seqs = seq_group.get_seqs(
-                    status=SequenceStatus.WAITING)
-                assert len(waiting_seqs) == 1, (
-                    "Waiting sequence group should have only one prompt "
-                    "sequence.")
-                # get_len includes output tokens if the request has been
-                # preempted.
-                num_prefill_tokens = waiting_seqs[0].get_len()
-                if num_prefill_tokens > self.prompt_limit:
-                    logger.warning(
-                        f"Input prompt ({num_prefill_tokens} tokens) is too "
-                        f"long and exceeds limit of {self.prompt_limit}")
-                    for seq in waiting_seqs:
-                        seq.status = SequenceStatus.FINISHED_IGNORED
-                    ignored_seq_groups.append(seq_group)
-                    self.waiting.popleft()
-                    continue
-
-                # If the sequence group cannot be allocated, stop.
-                can_allocate = self.block_manager.can_allocate(seq_group)
-                if can_allocate == AllocStatus.LATER:
-                    break
-                elif can_allocate == AllocStatus.NEVER:
-                    logger.warning(
-                        f"Input prompt ({num_prefill_tokens} tokens) is too "
-                        f"long and exceeds the capacity of block_manager")
-                    for seq in waiting_seqs:
-                        seq.status = SequenceStatus.FINISHED_IGNORED
-                    ignored_seq_groups.append(seq_group)
-                    self.waiting.popleft()
-                    continue
-
-                lora_int_id = 0
-                if self.lora_enabled:
-                    lora_int_id = seq_group.lora_int_id
-                    if (lora_int_id > 0 and lora_int_id not in curr_loras
-                            and len(curr_loras) >= self.lora_config.max_loras):
-                        # We don't have a space for another LoRA, so
-                        # we ignore this request for now.
-                        leftover_waiting_sequences.appendleft(seq_group)
+                if not seq_group.cache_meta or not seq_group.cache_meta.ready:
+                    print("seq_group request id prefill start time ", seq_group.request_id, time.time())
+                    waiting_seqs = seq_group.get_seqs(
+                        status=SequenceStatus.WAITING)
+                    assert len(waiting_seqs) == 1, (
+                        "Waiting sequence group should have only one prompt "
+                        "sequence.")
+                    # get_len includes output tokens if the request has been
+                    # preempted.
+                    num_prefill_tokens = waiting_seqs[0].get_len()
+                    if num_prefill_tokens > self.prompt_limit:
+                        logger.warning(
+                            f"Input prompt ({num_prefill_tokens} tokens) is too "
+                            f"long and exceeds limit of {self.prompt_limit}")
+                        for seq in waiting_seqs:
+                            seq.status = SequenceStatus.FINISHED_IGNORED
+                        ignored_seq_groups.append(seq_group)
                         self.waiting.popleft()
                         continue
+
+                    # If the sequence group cannot be allocated, stop.
+                    can_allocate = self.block_manager.can_allocate(seq_group)
+                    if can_allocate == AllocStatus.LATER:
+                        break
+                    elif can_allocate == AllocStatus.NEVER:
+                        logger.warning(
+                            f"Input prompt ({num_prefill_tokens} tokens) is too "
+                            f"long and exceeds the capacity of block_manager")
+                        for seq in waiting_seqs:
+                            seq.status = SequenceStatus.FINISHED_IGNORED
+                        ignored_seq_groups.append(seq_group)
+                        self.waiting.popleft()
+                        continue
+
+                    lora_int_id = 0
+                    if self.lora_enabled:
+                        lora_int_id = seq_group.lora_int_id
+                        if (lora_int_id > 0 and lora_int_id not in curr_loras
+                                and len(curr_loras) >= self.lora_config.max_loras):
+                            # We don't have a space for another LoRA, so
+                            # we ignore this request for now.
+                            leftover_waiting_sequences.appendleft(seq_group)
+                            self.waiting.popleft()
+                            continue
+                else:
+                    self.waiting.popleft()
 
                 if seq_group.cache_meta and not seq_group.cache_meta.ready:
                     self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
