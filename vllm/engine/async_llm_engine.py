@@ -15,7 +15,7 @@ from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
 from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
-from vllm.sequence import MultiModalData, SequenceStatus
+from vllm.sequence import MultiModalData, SequenceStatus, SequenceGroup, Sequence
 from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 import requests
@@ -264,11 +264,9 @@ class _AsyncLLMEngine(LLMEngine):
     """Extension of LLMEngine to add async methods."""
     
     async def _query_cache(self, seq_group):
-            
+        seq = seq_group.get_seqs()[0] 
         query_response = self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids).json()
         resp_cached_len = query_response["dcached_len"]
-
-        seq = seq_group.get_seqs()[0]
         seq_group.cache_meta.cmeta_kv_len = resp_cached_len
         block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
         phy_blocks = [phy_block for phy_block in block_table]              
