@@ -431,6 +431,10 @@ class Scheduler:
                 # self._allocate(seq_group)
                 if not seq_group.cache_meta:
                     self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
+                elif seq_group.cache_meta and seq_group.cache_meta.ready:
+                    for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                        seq.status = SequenceStatus.RUNNING
+                    
                 # print("_allocate_mixed_cache blocks_to_swap_in ", blocks_to_swap_in)
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs

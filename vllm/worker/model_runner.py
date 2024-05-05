@@ -154,7 +154,7 @@ class ModelRunner:
         for seq_group_metadata in seq_group_metadata_list:
             assert seq_group_metadata.is_prompt
             seq_ids = list(seq_group_metadata.seq_data.keys())
-            logger.info("_prepare_prompt seq id ", seq_ids, len(seq_ids))
+            print("_prepare_prompt seq id ", seq_ids, len(seq_ids))
             assert len(seq_ids) == 1
             seq_id = seq_ids[0]
 
