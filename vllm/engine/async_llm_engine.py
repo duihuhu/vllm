@@ -283,7 +283,8 @@ class _AsyncLLMEngine(LLMEngine):
             self.scheduler.add_recv_transfering(seq_group)
             phy_blocks_num = [phy_block.block_number for phy_block in phy_blocks]
             self.kv_trans_scheduler.add_kv_request(seq_group.request_id, seq_group.cache_meta.cmeta_ranks, 
-                                                    phy_blocks_num[len(computed_blocks): resp_cached_len], False)
+                                                    phy_blocks_num[len(computed_blocks
+                                                                       ): resp_cached_len], False)
             self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
         return 
     

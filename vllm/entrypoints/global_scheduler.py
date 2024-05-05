@@ -186,11 +186,14 @@ async def add_request(request: Request) -> Response:
                 
                 if res['finished'] == True and args.enable_dcache:
                     print("res", res, n)
+                    decoded_tokens = tuple(res["prompt_token_ids"] + res["prefilled_token_id"])
+                    gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
                     pkv_response = await forward_request_to_prefill(res, cfg.forward_eprefill_res_kv_url % 
                                                                     (eprefill_host, eprefill_port))
                     for pkv_res in get_streaming_response(pkv_response):
                         await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % 
                                                         (edecode_host, edecode_port))
+
                     #how to know data pass??
                     # gs_ptoken_tree.insert(decoded_tokens, None, str(cfg.edecode_host + ":" + cfg.edecode_port))
 
