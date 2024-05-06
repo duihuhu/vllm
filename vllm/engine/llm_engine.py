@@ -592,7 +592,7 @@ class LLMEngine:
 
             # print("before update radix tree ", radix_token_ids[(seq.prefix_len-seq.last_matched_len):-1], seq.prefix_len, seq.last_matched_len, seq.last_node.parent)
             
-            self.scheduler.block_manager.gpu_allocator.radix_cache.pretty_print()
+            # self.scheduler.block_manager.gpu_allocator.radix_cache.pretty_print()
             # if seq.last_node == self.scheduler.block_manager.gpu_allocator.radix_cache.root_node:
             #     prefix_info, last_matched_len = \
             #         self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, \
