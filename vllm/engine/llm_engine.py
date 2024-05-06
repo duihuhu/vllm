@@ -589,11 +589,12 @@ class LLMEngine:
             seq = seq_group.get_seqs()[0]
             radix_token_ids = seq.data.get_radix_token_ids()
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-            print("radix_token_ids ", radix_token_ids[seq.prefix_len:], seq.prefix_len)
+            # print("radix_token_ids ", radix_token_ids[seq.prefix_len:], seq.prefix_len)
             
             prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len:], block_table[seq.prefix_len:])
             seq.prefix_len = seq.prefix_len + prefix_len
             seq.last_node = last_node 
+            del self.scheduler.block_manager.block_tables[seq.seq_id]
             
     def _process_model_outputs(
             self, output: SamplerOutput,
@@ -613,8 +614,12 @@ class LLMEngine:
             seq_group = scheduled_seq_group.seq_group
             if seq_group.is_finished():
                 finished_seq_groups.append(seq_group)
+        
         if finished_seq_groups:
+            start_time = time.time()
             self.update_radix_tree(finished_seq_groups)
+            end_time = time.time()
+            print("update_radix_tree ", end_time - start_time)
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 
