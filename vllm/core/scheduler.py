@@ -278,7 +278,7 @@ class Scheduler:
                 num_batched_tokens += num_prefill_tokens
                 if (num_batched_tokens >
                         self.scheduler_config.max_num_batched_tokens):
-                    print("exceed max_num_batched_tokens")
+                    # print("exceed max_num_batched_tokens")
                     break
 
                 # The total number of sequences in the RUNNING state should not
@@ -286,10 +286,10 @@ class Scheduler:
                 num_new_seqs = seq_group.get_max_num_running_seqs()
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
-                    print("exceed max_num_seqs ", num_curr_seqs, num_new_seqs, self.scheduler_config.max_num_seqs)
+                    # print("exceed max_num_seqs ", num_curr_seqs, num_new_seqs, self.scheduler_config.max_num_seqs)
                     break
                 
-                print("max_num_seqs ", num_curr_seqs, num_new_seqs, self.scheduler_config.max_num_seqs)
+                # print("max_num_seqs ", num_curr_seqs, num_new_seqs, self.scheduler_config.max_num_seqs)
 
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
@@ -305,7 +305,7 @@ class Scheduler:
                     ScheduledSequenceGroup(
                         seq_group=seq_group,
                         token_chunk_size=num_prefill_tokens))
-                print("len schedule ", len(scheduled), len(self.waiting))
+                # print("len schedule ", len(scheduled), len(self.waiting))
             self.waiting.extendleft(leftover_waiting_sequences)
 
             if scheduled or ignored_seq_groups:
