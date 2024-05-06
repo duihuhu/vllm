@@ -248,7 +248,8 @@ class ModelRunner:
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
 
-        print("_prepare_prompt prompt_lens, subquery_lens ",sum(prompt_lens) , sum(subquery_lens))
+        print("_prepare_prompt prompt_lens, subquery_lens ",sum(prompt_lens) , sum(subquery_lens), 
+              len(seq_group_metadata_list), len(prompt_lens))
         
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)

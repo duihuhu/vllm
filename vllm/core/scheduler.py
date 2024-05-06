@@ -291,7 +291,10 @@ class Scheduler:
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
+                start_time = time.time()
                 self._allocate(seq_group)
+                end_time = time.time()
+                print("sche allocate ms ", (end_time-start_time)*1000) 
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs
 
