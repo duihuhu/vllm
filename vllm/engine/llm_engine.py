@@ -628,10 +628,10 @@ class LLMEngine:
                 finished_seq_groups.append(seq_group)
         
         if finished_seq_groups:
-            start_time = time.time()
+            # start_time = time.time()
             self.update_radix_tree(finished_seq_groups)
-            end_time = time.time()
-            print("update_radix_tree ", end_time - start_time)
+            # end_time = time.time()
+            # print("update_radix_tree ", end_time - start_time)
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 

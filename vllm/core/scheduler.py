@@ -291,10 +291,10 @@ class Scheduler:
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
-                # start_time = time.time()
+                start_time = time.time()
                 self._allocate(seq_group)
-                # end_time = time.time()
-                # print("sche allocate ms ", (end_time-start_time)*1000) 
+                end_time = time.time()
+                print("sche allocate ms ", (end_time-start_time)*1000) 
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs
 
@@ -342,10 +342,10 @@ class Scheduler:
                     break
             else:
                 # Append new slots to the sequence group.
-                # start_time = time.time()
+                start_time = time.time()
                 self._append_slot(seq_group, blocks_to_copy)
-                # end_time = time.time()
-                # print("_append_slot ", end_time-start_time)
+                end_time = time.time()
+                print("_append_slot ", end_time-start_time)
                 running.append(seq_group)
         self.running = running
 
