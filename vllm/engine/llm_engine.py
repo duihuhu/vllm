@@ -588,7 +588,8 @@ class LLMEngine:
             seq = seq_group.get_seqs()[0]
             radix_token_ids = seq.data.get_radix_token_ids()
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-        
+            print("radix_token_ids[seq.prefix_len-seq.last_matched_len:] ", radix_token_ids[seq.prefix_len-seq.last_matched_len:])
+            print("last_node " , seq.last_node.children.items())
             prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len-seq.last_matched_len:], block_table[seq.prefix_len-seq.last_matched_len:])
             seq.prefix_len = seq.prefix_len + prefix_len
             seq.last_node = last_node 
