@@ -192,38 +192,40 @@ def post_request_and_get_response(args, prompts_set):
                         jct.append(h['jct'])
                     else:
                         tbt.append(h['tbt'])
-        i = 0
-        for prompts in prompts_set:
-            iteration = 0 
-            for prompt in prompts:
-                if iteration == 0:
-                    continue
-                output_len = prompt[1]
-                iteration = iteration + 1
-                request_id = random_uuid()
-                request_ids.append(request_id)
-                inputs_len.append(len(history_value_list[i]))
-                outputs_len.append(output_len)
-                rsp = post_http_request(history_value_list[i], G_URL, request_id, args.n , output_len)
-                if args.stream:
-                    for h in get_streaming_response(rsp):
-                        if h['n'] == 0:
-                            if h['finished'] == True:
-                                start_time.append(h['start_time'])
-                                end_time.append(h['end_time'])
-                                jct.append(h['jct'])
-                                ttft.append(h['jct'])
-                            else:
-                                ttft.append(h['ttft'])
-                                start_time.append(h['start_time'])
-                        elif h['finished'] == True:
-                            history_value.extend(h['prefilled_token_id'])
-                            history.append(h['prefilled_token_id'])
+    i = 0
+    for prompts in prompts_set:
+        iteration = 0 
+        for prompt in prompts:
+            if iteration == 0:
+                continue
+            output_len = prompt[1]
+            iteration = iteration + 1
+            request_id = random_uuid()
+            request_ids.append(request_id)
+            inputs_len.append(len(history_value_list[i]))
+            outputs_len.append(output_len)
+            rsp = post_http_request(history_value_list[i], G_URL, request_id, args.n , output_len)
+            if args.stream:
+                for h in get_streaming_response(rsp):
+                    if h['n'] == 0:
+                        if h['finished'] == True:
+                            start_time.append(h['start_time'])
                             end_time.append(h['end_time'])
                             jct.append(h['jct'])
+                            ttft.append(h['jct'])
                         else:
-                            tbt.append(h['tbt'])
-            i = i + 1
+                            ttft.append(h['ttft'])
+                            start_time.append(h['start_time'])
+                    elif h['finished'] == True:
+                        history_value.extend(h['prefilled_token_id'])
+                        history.append(h['prefilled_token_id'])
+                        end_time.append(h['end_time'])
+                        jct.append(h['jct'])
+                    else:
+                        tbt.append(h['tbt'])
+        i = i + 1
+        print("ttft " , ttft)
+        print("jct " , jct)
         # print("request, ttft ", request_ids, ttft)
         # print("request, jct, ttft, input_len, output_len, start_time, end_time, " +
         #     str(request_ids[0]) + ", " + str(request_ids[1]) + ", " + 
