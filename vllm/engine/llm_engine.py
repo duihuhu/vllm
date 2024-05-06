@@ -590,15 +590,15 @@ class LLMEngine:
             radix_token_ids = seq.data.get_radix_token_ids()
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
 
-            print("before update radix tree ", radix_token_ids[(seq.prefix_len-seq.last_matched_len):], seq.prefix_len, seq.last_matched_len, seq.last_node.parent)
+            print("before update radix tree ", radix_token_ids[(seq.prefix_len-seq.last_matched_len):-1], seq.prefix_len, seq.last_matched_len, seq.last_node.parent)
             
             self.scheduler.block_manager.gpu_allocator.radix_cache.pretty_print()
-            if seq.last_node == self.scheduler.block_manager.gpu_allocator.radix_cache.root_node:
-                prefix_info, last_matched_len = \
-                    self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, \
-                        radix_token_ids[(seq.prefix_len-seq.last_matched_len):], block_table[(seq.prefix_len-seq.last_matched_len):])
-            else:
-                prefix_info, last_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(seq.prefix_len-seq.last_matched_len):], block_table[(seq.prefix_len-seq.last_matched_len):])
+            # if seq.last_node == self.scheduler.block_manager.gpu_allocator.radix_cache.root_node:
+            #     prefix_info, last_matched_len = \
+            #         self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, \
+            #             radix_token_ids[(seq.prefix_len-seq.last_matched_len):-1], block_table[(seq.prefix_len-seq.last_matched_len):-1])
+            # else:
+            prefix_info, last_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(seq.prefix_len-seq.last_matched_len):-1], block_table[(seq.prefix_len-seq.last_matched_len):])
             print("after update radix tree ", radix_token_ids)
             self.scheduler.block_manager.gpu_allocator.radix_cache.pretty_print()
             seq.prefix_len = seq.prefix_len + prefix_info[0]

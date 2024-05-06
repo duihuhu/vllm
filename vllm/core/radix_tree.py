@@ -76,15 +76,15 @@ class RadixCache:
             prefix_len = match(c_key, key)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
-                    # for val in child.value[:prefix_len]:
-                    #     val.ref_count += 1
+                    for val in child.value[:prefix_len]:
+                        val.ref_count += 1
                     value.extend(child.value[:prefix_len])
                     last_node[0] = child
                     last_matched_len[0] = prefix_len
                 else:
                     last_matched_len[0] = prefix_len
-                    # for val in child.value:
-                    #     val.ref_count += 1
+                    for val in child.value:
+                        val.ref_count += 1
                     value.extend(child.value)
                     last_node[0] = child
                     self._only_match_prefix_helper(child, key[prefix_len:], value, last_node, last_matched_len)
@@ -237,6 +237,7 @@ class RadixCache:
     def _total_size_helper(self, node):
         x = len(node.value)
         for child in node.children.values():
+            print("node.value ", node.value)
             x += self._total_size_helper(child)
         return x
 
@@ -271,7 +272,7 @@ if __name__ == "__main__":
     last_len = [0]
     matched_len, last_node = tree._insert_helper(tree.root_node, a, a, last_len)
     
-    tree._insert_helper(last_node.parent, b, b, last_len)
+    tree._insert_helper(last_node.parent, b, b[:-1], last_len)
     tree.pretty_print()
     blocks, last_node, last_matched_len = tree.only_match_prefix(c)
     
