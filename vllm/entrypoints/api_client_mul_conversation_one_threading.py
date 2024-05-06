@@ -148,6 +148,7 @@ def post_request_and_get_response(args, prompts_set):
     i = 0 
     for prompts in prompts_set:
         iteration = 0 
+        history = [] 
         history_value = []
         inputs_len = []
         outputs_len = []
@@ -160,6 +161,7 @@ def post_request_and_get_response(args, prompts_set):
         for prompt in prompts:
             if iteration == 0:
                 history_value.extend(prompt[0])
+                history.append(prompt[0])
             output_len = prompt[1]
             # response = async_post_http_request(history_value, G_URL, args.n, output_len)
             iteration = iteration + 1
@@ -181,6 +183,7 @@ def post_request_and_get_response(args, prompts_set):
                             start_time.append(h['start_time'])
                     elif h['finished'] == True:
                         history_value.extend(h['prefilled_token_id'])
+                        history.append(h['prefilled_token_id'])
                         end_time.append(h['end_time'])
                         jct.append(h['jct'])
                     else:
@@ -195,7 +198,7 @@ def post_request_and_get_response(args, prompts_set):
             str(start_time[0]) + ", " + str(start_time[1]) + ", " + 
             str(end_time[0])   + ", " + str(end_time[1]))
 
-        print("history_value i ", i, history_value)
+        print("history_value i ", i, history[0], history[1])
         i = i + 1
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
