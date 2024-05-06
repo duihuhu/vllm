@@ -145,8 +145,8 @@ def get_response(response: requests.Response) -> List[str]:
 
 
 def post_request_and_get_response(args, prompts_set):
+    i = 0 
     for prompts in prompts_set:
-        i = 0 
         iteration = 0 
         history_value = []
         inputs_len = []

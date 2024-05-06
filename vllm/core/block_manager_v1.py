@@ -332,8 +332,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block_table.append(block)
         # allocate_time = time.time()
         
-        if seq.last_node == self.gpu_allocator.radix_cache.root_node \
-            or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
+        if seq.last_node == self.gpu_allocator.radix_cache.root_node:
             if seq.last_node == self.gpu_allocator.radix_cache.root_node:
                 # print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
                 #     seq.last_node.children.keys())

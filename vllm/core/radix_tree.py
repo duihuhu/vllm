@@ -61,6 +61,7 @@ class RadixCache:
 
         value = []
         last_node = [self.root_node]
+        
         last_matched_len = [0]
         self._only_match_prefix_helper(self.root_node, key, value, last_node, last_matched_len)
         # if value:
