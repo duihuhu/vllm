@@ -627,7 +627,7 @@ class LLMEngine:
             if seq_group.is_finished():
                 finished_seq_groups.append(seq_group)
         
-        if finished_seq_groups:
+        if finished_seq_groups and self.scheduler.block_manager.enable_radix_caching:
             # start_time = time.time()
             self.update_radix_tree(finished_seq_groups)
             # end_time = time.time()

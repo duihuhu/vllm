@@ -300,7 +300,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return AllocStatus.LATER
 
     def allocate_radix_cache(self, seq_group: SequenceGroup) -> None:
-        start_time = time.time()
+        # start_time = time.time()
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)     
@@ -698,7 +698,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return
         block_table = self.block_tables[seq.seq_id]
         self._free_block_table(block_table)
-        # del self.block_tables[seq.seq_id]
+        if not self.enable_radix_caching:
+            del self.block_tables[seq.seq_id]
 
     def reset(self) -> None:
         for block_table in self.block_tables.values():
