@@ -275,7 +275,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 Device.CPU, block_size, num_cpu_blocks)
         # Mapping: seq_id -> BlockTable.
         self.block_tables: Dict[int, BlockTable] = {}
-
+        self.num_hash = 0
+        
     def can_allocate(self, seq_group: SequenceGroup) -> AllocStatus:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
@@ -321,8 +322,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 self.gpu_allocator.evictor.free_table.pop(block.block_hash)
 
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
-            block = self.gpu_allocator.allocate_radix_cache(hash(str(radix_token_ids[logical_idx])+ random_uuid()),
+            block = self.gpu_allocator.allocate_radix_cache(self.num_hash,
                             seq.num_hashed_tokens_of_block(logical_idx))
+            self.num_hash = self.num_hash + 1
             block_table.append(block)
 
         if seq.last_node == self.gpu_allocator.radix_cache.root_node or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
@@ -470,7 +472,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 len(seq.logical_token_blocks) - 1)
             
             # new_block = self.gpu_allocator.allocate_radix_cache(last_token, num_hashed_tokens)
-            new_block = self.gpu_allocator.allocate_radix_cache(hash(str(last_token)+ random_uuid()), num_hashed_tokens)
+            new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
+            self.num_hash = self.num_hash + 1
             prefix_len, child = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, [new_block])
             seq.prefix_len = prefix_len
             seq.last_node = child
