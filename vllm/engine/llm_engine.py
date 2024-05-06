@@ -423,9 +423,6 @@ class LLMEngine:
         # Process samples
         samples = outputs.samples
         parent_seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
-        
-        if seq_group.is_finished():
-            self.update_radix_tree(seq_group)
             
         existing_finished_seqs = seq_group.get_finished_seqs()
         parent_child_dict = {
@@ -587,15 +584,16 @@ class LLMEngine:
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
 
-    def update_radix_tree(self, seq_group):
-        seq = seq_group.get_seqs()[0]
-        radix_token_ids = seq.data.get_radix_token_ids()
-        block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-        print("radix_token_ids ", radix_token_ids[seq.prefix_len:], seq.prefix_len)
-        
-        prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len:], block_table[seq.prefix_len:])
-        seq.prefix_len = seq.prefix_len + prefix_len
-        seq.last_node = last_node 
+    def update_radix_tree(self, finished_seq_groups):
+        for seq_group in finished_seq_groups:
+            seq = seq_group.get_seqs()[0]
+            radix_token_ids = seq.data.get_radix_token_ids()
+            block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+            print("radix_token_ids ", radix_token_ids[seq.prefix_len:], seq.prefix_len)
+            
+            prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len:], block_table[seq.prefix_len:])
+            seq.prefix_len = seq.prefix_len + prefix_len
+            seq.last_node = last_node 
             
     def _process_model_outputs(
             self, output: SamplerOutput,
@@ -610,6 +608,9 @@ class LLMEngine:
             seq_group.update_num_computed_tokens(token_chunk_size)
             self._process_sequence_group_outputs(seq_group, outputs)
         
+        finished_seq_groups = [seq_group for seq_group in scheduler_outputs.scheduled_seq_groups if seq_group.is_finished()]
+        if finished_seq_groups:
+            self.update_radix_tree(finished_seq_groups)
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 

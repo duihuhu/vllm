@@ -679,7 +679,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return
         block_table = self.block_tables[seq.seq_id]
         self._free_block_table(block_table)
-        del self.block_tables[seq.seq_id]
+        # del self.block_tables[seq.seq_id]
 
     def reset(self) -> None:
         for block_table in self.block_tables.values():
