@@ -3,7 +3,6 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Tuple
-import torch
 import sys
 sys.setrecursionlimit(100000)
 
@@ -258,13 +257,23 @@ class RadixCache:
 if __name__ == "__main__":
     tree = RadixCache(disable=False)
 
-    tree.insert("Hello")
-    tree.insert("Hello")
+    tree.insert("HelloA")
+    tree.insert("HelloB")
     tree.insert("Hello_L.A.!")
     # tree.insert("Hello_world! Happy")
     # tree.insert("I love you!")
     tree.pretty_print()
-
+    
+    a = tuple([1,2,3,4,5])
+    b = tuple([1,2,4,5,6])
+    tree = RadixCache(disable=False)
+    
+    blocks, last_node, last_matched_len = tree.only_match_prefix(a)
+    last_len = [0]
+    
+    
+    
+    tree._insert_helper(node, key, value, last_len)
     # print(tree.match_prefix("I love you! aha"))
 
     # def evict_callback(x):
