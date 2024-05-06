@@ -252,6 +252,7 @@ class Scheduler:
                 # If the sequence group cannot be allocated, stop.
                 can_allocate = self.block_manager.can_allocate(seq_group)
                 if can_allocate == AllocStatus.LATER:
+                    print("can_allocate seqs later")
                     break
                 elif can_allocate == AllocStatus.NEVER:
                     logger.warning(
@@ -278,6 +279,7 @@ class Scheduler:
                 num_batched_tokens += num_prefill_tokens
                 if (num_batched_tokens >
                         self.scheduler_config.max_num_batched_tokens):
+                    print("exceed max_num_batched_tokens")
                     break
 
                 # The total number of sequences in the RUNNING state should not
@@ -285,6 +287,7 @@ class Scheduler:
                 num_new_seqs = seq_group.get_max_num_running_seqs()
                 if (num_curr_seqs + num_new_seqs >
                         self.scheduler_config.max_num_seqs):
+                    print("exceed max_num_seqs")
                     break
 
                 if lora_int_id > 0:
