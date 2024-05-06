@@ -339,6 +339,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 #     seq.last_node.children.keys())
             prefix_info, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node,\
                 radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
+            print("radix_token_ids last_node = root_node ")
+            print(self.gpu_allocator.radix_cache.pretty_print())
             # else:
             #     # print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
             #     #     seq.last_node.children.keys(), seq.last_node.parent.children.keys())
@@ -351,6 +353,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             if pre_prefix_len <= num_prompt_blocks:
                 print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, seq.last_node.parent.children.keys())
+                print("radix_token_ids last_node != root_node ")
                 print(self.gpu_allocator.radix_cache.pretty_print())
                 prefix_info, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, \
                     radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
