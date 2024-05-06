@@ -583,10 +583,8 @@ class LLMEngine:
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
 
-    def update_radix_tree(self):
-        print("update_radix_tree, update_radix_tree")
-        seq_groups = [seq_group for seq_group in self.scheduler.running if seq_group.is_finished()]
-        for seq_group in seq_groups:
+    def update_radix_tree(self, finishd_seq_groups):
+        for seq_group in finishd_seq_groups:
             seq = seq_group.get_seqs()[0]
             radix_token_ids = seq.data.get_radix_token_ids()
             num_prompt_blocks = len(seq.logical_token_blocks)     
@@ -611,7 +609,9 @@ class LLMEngine:
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
-        self.update_radix_tree()
+        finishd_seq_groups = [seq_group for seq_group in self.scheduler.running if seq_group.is_finished()]
+        if finishd_seq_groups:
+            self.update_radix_tree(finishd_seq_groups)
         
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
