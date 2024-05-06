@@ -332,20 +332,17 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block_table.append(block)
         allocate_time = time.time()
         
-        if seq.last_node == self.gpu_allocator.radix_cache.root_node or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
-            # print("radix_token_ids " , radix_token_ids)
-            prefix_len, last_node = self.gpu_allocator.insert_radix_cache(radix_token_ids,
-                                                                          block_table[:num_prompt_blocks])
-            seq.prefix_len = prefix_len
-            seq.last_node = last_node
-        else:
-            # print("seq.last_node ", seq.last_node)
-            # print("seq.last_node data ",  seq.data.get_radix_token_ids()[seq.prefix_len:])
-            # print("seq.last_node block_table ",  block_table[seq.prefix_len:num_prompt_blocks])
-            if pre_prefix_len < num_prompt_blocks:
-                prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):num_prompt_blocks])
-                seq.prefix_len = seq.prefix_len + prefix_len
-                seq.last_node = last_node
+        # if seq.last_node == self.gpu_allocator.radix_cache.root_node \
+        #     or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
+        #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache(radix_token_ids,
+        #                                                                   block_table[:num_prompt_blocks])
+        #     seq.prefix_len = prefix_len
+        #     seq.last_node = last_node
+        # else:
+        #     if pre_prefix_len < num_prompt_blocks:
+        #         prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):num_prompt_blocks])
+        #         seq.prefix_len = seq.prefix_len + prefix_len
+        #         seq.last_node = last_node
                 # Assign the block table for each sequence.
         insert_time = time.time()
         print("allocate_radix_cache, insert time, allocate time, free time , match time ", (insert_time-allocate_time) *1000, 

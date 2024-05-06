@@ -589,9 +589,20 @@ class LLMEngine:
         for seq_group in seq_groups:
             seq = seq_group.get_seqs()[0]
             radix_token_ids = seq.data.get_radix_token_ids()
+            num_prompt_blocks = len(seq.logical_token_blocks)     
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-            self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(
-                radix_token_ids[seq.prefix_len:], seq.last_node, block_table[seq.prefix_len:])
+            
+            if seq.last_node == self.scheduler.block_manager.gpu_allocator.radix_cache.root_node \
+                or seq.last_node.parent == self.scheduler.block_manager.gpu_allocator.radix_cache.root_node:
+                prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache(radix_token_ids,
+                                                                            block_table[:num_prompt_blocks])
+                seq.prefix_len = prefix_len
+                seq.last_node = last_node
+            else:
+                if seq.prefix_len < num_prompt_blocks:
+                    prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[(seq.prefix_len-seq.last_matched_len):], block_table[(seq.prefix_len-seq.last_matched_len):num_prompt_blocks])
+                    seq.prefix_len = seq.prefix_len + prefix_len
+                    seq.last_node = last_node 
             
     def _process_model_outputs(
             self, output: SamplerOutput,
