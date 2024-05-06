@@ -237,7 +237,6 @@ class RadixCache:
     def _total_size_helper(self, node):
         x = len(node.value)
         for child in node.children.values():
-            print("node.value ", node.value)
             x += self._total_size_helper(child)
         return x
 
