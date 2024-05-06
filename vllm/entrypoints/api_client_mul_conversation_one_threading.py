@@ -198,7 +198,7 @@ def post_request_and_get_response(args, prompts_set):
             str(start_time[0]) + ", " + str(start_time[1]) + ", " + 
             str(end_time[0])   + ", " + str(end_time[1]))
 
-        print("history_value i ", i, history[0], history[1], history[2])
+        # print("history_value i ", i, history[0], history[1], history[2])
         i = i + 1
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
@@ -240,7 +240,7 @@ if __name__ == "__main__":
         pre_time = pre_time + interval
         reqs_interval.append(pre_time)
 
-    # warmup(args, datasets[args.session:(args.session+1)])
+    warmup(args, datasets[args.session:(args.session+1)])
     
     # print("reqs_interval ", reqs_interval)
     main(args, datasets[:args.session], reqs_interval)
