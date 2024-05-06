@@ -314,6 +314,7 @@ class Scheduler:
                     blocks_to_copy=blocks_to_copy,
                     ignored_seq_groups=ignored_seq_groups,
                 )
+                print("len scheduled ", scheduled)
                 return scheduler_outputs
 
         # NOTE(woosuk): Preemption happens only when there is no available slot
@@ -591,5 +592,4 @@ class Scheduler:
                 or not self.running)
         else:
             passed_delay = True
-        print("passed_delay ", passed_delay)
         return passed_delay
