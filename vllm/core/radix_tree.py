@@ -96,9 +96,10 @@ class RadixCache:
         if self.disable:
             return len(key)
 
+        last_len = [0]
         if value is None:
             value = [x for x in key]
-        return self._insert_helper(self.root_node, key, value)
+        return self._insert_helper(self.root_node, key, value, last_len), last_len[0]
 
     def pretty_print(self):
         self._print_helper(self.root_node, 0)
@@ -186,25 +187,27 @@ class RadixCache:
         del new_node.parent.children[key]
         return new_node
 
-    def _insert_helper(self, node, key, value):
+    def _insert_helper(self, node, key, value, last_len):
         node.last_access_time = time.time()
 
         for c_key, child in node.children.items():
             prefix_len = match(c_key, key)
 
             if prefix_len == len(c_key):
+                last_len[0] = prefix_len
                 if prefix_len == len(key):
                     return prefix_len, child
                 else:
                     key = key[prefix_len:]
                     value = value[prefix_len:]
-                    pre_len, last_node = self._insert_helper(child, key, value)
+                    pre_len, last_node = self._insert_helper(child, key, value, last_len)
                     return prefix_len + pre_len, last_node
 
             if prefix_len:
+                last_len[0] = len(child.value[prefix_len:])
                 new_node = self._split_node(c_key, child, prefix_len)
                 pre_len, last_node =  self._insert_helper(
-                    new_node, key[prefix_len:], value[prefix_len:]
+                    new_node, key[prefix_len:], value[prefix_len:], last_len
                 )
                 return prefix_len + pre_len, last_node
 
@@ -214,6 +217,7 @@ class RadixCache:
             new_node.value = value
             node.children[key] = new_node
             self.evictable_size_ += len(value)
+            last_len[0] = len(value)
             return len(key), new_node
         return 0, node
 

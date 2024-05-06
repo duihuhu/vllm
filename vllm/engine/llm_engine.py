@@ -591,9 +591,10 @@ class LLMEngine:
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
             # print("radix_token_ids ", radix_token_ids[seq.prefix_len:], seq.prefix_len)
             
-            prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[seq.prefix_len-len(seq.last_node.value):], block_table[seq.prefix_len-len(seq.last_node.value):])
+            prefix_len, last_node, last_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(seq.prefix_len-seq.last_matched_len):], block_table[(seq.prefix_len-seq.last_matched_len):])
             seq.prefix_len = seq.prefix_len + prefix_len
             seq.last_node = last_node 
+            seq.last_matched_len = last_matched_len
             del self.scheduler.block_manager.block_tables[seq.seq_id]
             
     def _process_model_outputs(

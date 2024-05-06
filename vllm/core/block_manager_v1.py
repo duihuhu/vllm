@@ -105,7 +105,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
         return self.radix_cache.insert(key, value)
     
     def insert_radix_cache_on_node(self, node, key, value):
-        return self.radix_cache._insert_helper(node, key, value)
+        last_len = [0]
+        return self.radix_cache._insert_helper(node, key, value, last_len), last_len[0]
 
     def allocate_radix_cache(self, token, num_tokens: int = 0) -> PhysicalTokenBlock:
         block = self.allocate_block(token, num_tokens)
@@ -336,20 +337,22 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             if seq.last_node == self.gpu_allocator.radix_cache.root_node:
                 # print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
                 #     seq.last_node.children.keys())
-                prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
+                prefix_len, last_node, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
             else:
                 # print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
                 #     seq.last_node.children.keys(), seq.last_node.parent.children.keys())
-                prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
+                prefix_len, last_node, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
+            seq.last_matched_len = last_matched_len
             seq.prefix_len = prefix_len
             seq.last_node = last_node
             # print("allocate ", radix_token_ids, seq.prefix_len, prefix_len)
         else:
             if pre_prefix_len <= num_prompt_blocks:
                 print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, seq.last_node.parent.children.keys())
-                prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
+                prefix_len, last_node, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
+                seq.last_matched_len = last_matched_len
                 # Assign the block table for each sequence.
         # insert_time = time.time()
         # print("allocate_radix_cache, insert time, allocate time, free time , match time ", (insert_time-allocate_time) *1000, 
