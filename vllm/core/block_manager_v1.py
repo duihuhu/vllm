@@ -11,6 +11,7 @@ from vllm.logger import init_logger
 from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device, random_uuid
 from vllm.core.radix_tree import RadixCache
+import time
 import sys
 sys.setrecursionlimit(10000)
 
@@ -298,6 +299,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return AllocStatus.LATER
 
     def allocate_radix_cache(self, seq_group: SequenceGroup) -> None:
+        start_time = time.time()
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)     
@@ -308,6 +310,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq.last_node = last_node
         seq.last_matched_len = last_matched_len
         block_table: BlockTable  = []
+        match_time = time.time()
         if blocks:
             # print(self.gpu_allocator.radix_cache.pretty_print())
             # print(self.gpu_allocator.radix_cache._print_root_node())
@@ -320,13 +323,15 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in blocks:
             if block.block_hash in self.gpu_allocator.evictor:
                 self.gpu_allocator.evictor.free_table.pop(block.block_hash)
-
+        free_time = time.time()
+        
         for logical_idx in range(s_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(self.num_hash,
                             seq.num_hashed_tokens_of_block(logical_idx))
             self.num_hash = self.num_hash + 1
             block_table.append(block)
-
+        allocate_time = time.time()
+        
         if seq.last_node == self.gpu_allocator.radix_cache.root_node or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
             # print("radix_token_ids " , radix_token_ids)
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(radix_token_ids,
@@ -342,7 +347,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
                 # Assign the block table for each sequence.
-
+        insert_time = time.time()
+        print("allocate_radix_cache, insert time, allocate time, free time , match time ", insert_time-allocate_time, 
+              allocate_time-free_time, free_time-match_time, match_time-start_time)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
         
