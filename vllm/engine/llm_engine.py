@@ -465,8 +465,8 @@ class LLMEngine:
                                                      seq_group.sampling_params)
             self._check_stop(seq, seq_group.sampling_params)
 
-            # if seq.is_finished():
-            #     self.update_radix_tree(seq)
+            if seq.is_finished():
+                self.update_radix_tree(seq)
             
         # Non-beam search case
         if not seq_group.sampling_params.use_beam_search:
@@ -586,12 +586,12 @@ class LLMEngine:
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
 
-    # def update_radix_tree(self, seq):
-    #     radix_token_ids = seq.data.get_radix_token_ids()
-    #     block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-    #     prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len-seq.last_matched_len:], block_table[seq.prefix_len-seq.last_matched_len:])
-    #     seq.prefix_len = seq.prefix_len + prefix_len
-    #     seq.last_node = last_node 
+    def update_radix_tree(self, seq):
+        radix_token_ids = seq.data.get_radix_token_ids()
+        block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+        prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len:], block_table[seq.prefix_len:])
+        seq.prefix_len = seq.prefix_len + prefix_len
+        seq.last_node = last_node 
             
     def _process_model_outputs(
             self, output: SamplerOutput,
