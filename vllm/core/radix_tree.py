@@ -61,15 +61,14 @@ class RadixCache:
 
         value = []
         last_node = [self.root_node]
-        last_matched_len = 0 
-        self._only_match_prefix_helper(self.root_node, key, value, last_node, last_matched_len)
+        last_matched_len = self._only_match_prefix_helper(self.root_node, key, value, last_node)
         # if value:
         #     print(value)
             # value = torch.concat(value)
             # value.append(value)
         return value, last_node[0], last_matched_len
     
-    def _only_match_prefix_helper(self, node, key, value, last_node, last_matched_len):
+    def _only_match_prefix_helper(self, node, key, value, last_node):
         node.last_access_time = time.time()
 
         for c_key, child in node.children.items():
@@ -79,17 +78,18 @@ class RadixCache:
                     for val in child.value[:prefix_len]:
                         val.ref_count += 1
                     value.extend(child.value[:prefix_len])
-                    last_matched_len = prefix_len
                     last_node[0] = child
+                    return prefix_len
                 else:
                     if prefix_len == len(c_key):
-                        last_matched_len = len(c_key)
+                        return prefix_len
                     for val in child.value:
                         val.ref_count += 1
                     value.extend(child.value)
                     last_node[0] = child
-                    self._only_match_prefix_helper(child, key[prefix_len:], value, last_node, last_matched_len)
+                    return self._only_match_prefix_helper(child, key[prefix_len:], value, last_node)
                 break
+        return 0
             
     def insert(self, key, value=None):
         if self.disable:
