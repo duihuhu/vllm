@@ -200,11 +200,11 @@ def post_request_and_get_response(args, prompts_set):
 
 
 def main(args, prompts, reqs_interval):
-    post_request_and_get_response(args, prompts, reqs_interval)
+    post_request_and_get_response(args, prompts)
     
 def warmup(args, prompts):
-    for prompt in prompts:
-        post_request_and_get_response(args, prompt, 0)
+    # for prompt in prompts:
+    post_request_and_get_response(args, prompts)
     print("the end of warm up \n")
     
 if __name__ == "__main__":
