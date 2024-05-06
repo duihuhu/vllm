@@ -608,7 +608,11 @@ class LLMEngine:
             seq_group.update_num_computed_tokens(token_chunk_size)
             self._process_sequence_group_outputs(seq_group, outputs)
         
-        finished_seq_groups = [seq_group for seq_group in scheduler_outputs.scheduled_seq_groups if seq_group.is_finished()]
+        finished_seq_groups = []
+        for scheduled_seq_group in scheduled_seq_groups:
+            seq_group = scheduled_seq_group.seq_group
+            if seq_group.is_finished():
+                finished_seq_groups.append(seq_group)
         if finished_seq_groups:
             self.update_radix_tree(finished_seq_groups)
         # Free the finished sequence groups.
