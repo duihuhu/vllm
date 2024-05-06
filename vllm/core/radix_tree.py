@@ -83,8 +83,7 @@ class RadixCache:
                     last_node[0] = child
                     last_matched_len[0] = prefix_len
                 else:
-                    if prefix_len == len(c_key):
-                        last_matched_len[0] = prefix_len
+                    last_matched_len[0] = prefix_len
                     for val in child.value:
                         val.ref_count += 1
                     value.extend(child.value)
@@ -204,7 +203,6 @@ class RadixCache:
                     return prefix_len + pre_len, last_node
 
             if prefix_len:
-                last_len[0] = len(child.value[prefix_len:])
                 new_node = self._split_node(c_key, child, prefix_len)
                 pre_len, last_node =  self._insert_helper(
                     new_node, key[prefix_len:], value[prefix_len:], last_len
