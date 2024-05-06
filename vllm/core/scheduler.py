@@ -342,10 +342,10 @@ class Scheduler:
                     break
             else:
                 # Append new slots to the sequence group.
-                start_time = time.time()
+                # start_time = time.time()
                 self._append_slot(seq_group, blocks_to_copy)
-                end_time = time.time()
-                print("_append_slot ", end_time-start_time)
+                # end_time = time.time()
+                # print("_append_slot ", end_time-start_time)
                 running.append(seq_group)
         self.running = running
 
