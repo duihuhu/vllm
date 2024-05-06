@@ -76,15 +76,15 @@ class RadixCache:
             prefix_len = match(c_key, key)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
-                    for val in child.value[:prefix_len]:
-                        val.ref_count += 1
+                    # for val in child.value[:prefix_len]:
+                    #     val.ref_count += 1
                     value.extend(child.value[:prefix_len])
                     last_node[0] = child
                     last_matched_len[0] = prefix_len
                 else:
                     last_matched_len[0] = prefix_len
-                    for val in child.value:
-                        val.ref_count += 1
+                    # for val in child.value:
+                    #     val.ref_count += 1
                     value.extend(child.value)
                     last_node[0] = child
                     self._only_match_prefix_helper(child, key[prefix_len:], value, last_node, last_matched_len)
@@ -255,26 +255,29 @@ class RadixCache:
 
 
 if __name__ == "__main__":
-    tree = RadixCache(disable=False)
+    # tree = RadixCache(disable=False)
 
-    tree.insert("HelloA")
-    tree.insert("HelloB")
-    tree.insert("Hello_L.A.!")
-    # tree.insert("Hello_world! Happy")
-    # tree.insert("I love you!")
-    tree.pretty_print()
+    # tree.insert("HelloA")
+    # tree.insert("HelloB")
+    # tree.insert("Hello_L.A.!")
+    # # tree.insert("Hello_world! Happy")
+    # # tree.insert("I love you!")
+    # tree.pretty_print()
     
-    a = tuple([1,2,3,4,5])
-    b = tuple([1,2,4,5,6])
-    c = tuple([1,2,4,7,8])
+    a = tuple([508, 366, 2874])
+    b = tuple([508, 366, 2874, 263, 716, 29889])
+    c = tuple([508, 366, 2874, 263, 716, 29889])
     tree = RadixCache(disable=False)
-    
-    blocks, last_node, last_matched_len = tree.only_match_prefix(a)
     last_len = [0]
+    matched_len, last_node = tree._insert_helper(tree.root_node, a, a, last_len)
     
+    tree._insert_helper(last_node.parent, b, b, last_len)
+    tree.pretty_print()
+    blocks, last_node, last_matched_len = tree.only_match_prefix(c)
     
-    
-    tree._insert_helper(node, key, value, last_len)
+    print(len(blocks))
+
+    tree.pretty_print()
     # print(tree.match_prefix("I love you! aha"))
 
     # def evict_callback(x):
