@@ -224,8 +224,8 @@ def post_request_and_get_response(args, prompts_set):
                     else:
                         tbt.append(h['tbt'])
         i = i + 1
-        print("ttft " , ttft)
-        print("jct " , jct)
+    print("ttft " , ttft)
+    print("jct " , jct)
         # print("request, ttft ", request_ids, ttft)
         # print("request, jct, ttft, input_len, output_len, start_time, end_time, " +
         #     str(request_ids[0]) + ", " + str(request_ids[1]) + ", " + 
