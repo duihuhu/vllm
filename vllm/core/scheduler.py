@@ -301,6 +301,7 @@ class Scheduler:
                     ScheduledSequenceGroup(
                         seq_group=seq_group,
                         token_chunk_size=num_prefill_tokens))
+                print("len schedule ", len(scheduled), len(self.waiting))
             self.waiting.extendleft(leftover_waiting_sequences)
 
             if scheduled or ignored_seq_groups:
@@ -314,7 +315,6 @@ class Scheduler:
                     blocks_to_copy=blocks_to_copy,
                     ignored_seq_groups=ignored_seq_groups,
                 )
-                print("len scheduled ", len(scheduled))
                 return scheduler_outputs
 
         # NOTE(woosuk): Preemption happens only when there is no available slot
