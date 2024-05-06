@@ -423,11 +423,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             self.gpu_allocator.free_radix_cache(last_block)
             seq.last_node = last_node.children
             return last_node.children[last_token]
-        else:
-            prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, last_block)
-            seq.prefix_len = prefix_len
-            seq.last_node = last_node
-            return last_block
+        # else:
+        #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, last_block)
+        #     seq.prefix_len = prefix_len
+        #     seq.last_node = last_node
+        return last_block
 
     def _is_last_block_full(
         self,
