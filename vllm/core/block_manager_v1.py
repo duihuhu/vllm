@@ -472,7 +472,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         if last_token in seq.last_node.children.items():
             new_block = seq.last_node.children[last_token]
-            seq.prefix_len = prefix_len + 1
+            seq.prefix_len = seq.prefix_len + 1
             seq.last_node = seq.last_node.children[last_token]
         else:
             num_hashed_tokens = seq.num_hashed_tokens_of_block(
@@ -481,9 +481,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # new_block = self.gpu_allocator.allocate_radix_cache(last_token, num_hashed_tokens)
             new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
             self.num_hash = self.num_hash + 1
-            prefix_len, child = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, [new_block])
-            seq.prefix_len = prefix_len
-            seq.last_node = child
+            # prefix_len, child = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, [new_block])
+            # seq.prefix_len = prefix_len
+            # seq.last_node = child
         return new_block
     
     def _allocate_last_physical_block(
