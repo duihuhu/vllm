@@ -348,8 +348,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 seq.last_node = last_node
                 # Assign the block table for each sequence.
         insert_time = time.time()
-        print("allocate_radix_cache, insert time, allocate time, free time , match time ", insert_time-allocate_time, 
-              allocate_time-free_time, free_time-match_time, match_time-start_time)
+        print("allocate_radix_cache, insert time, allocate time, free time , match time ", (insert_time-allocate_time) *1000, 
+              (allocate_time-free_time) * 1000, (free_time-match_time) * 1000, (match_time-start_time)* 1000)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
         
