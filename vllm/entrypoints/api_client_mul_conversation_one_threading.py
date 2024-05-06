@@ -146,6 +146,7 @@ def get_response(response: requests.Response) -> List[str]:
 
 def post_request_and_get_response(args, prompts_set):
     for prompts in prompts_set:
+        i = 0 
         iteration = 0 
         history_value = []
         inputs_len = []
@@ -194,7 +195,8 @@ def post_request_and_get_response(args, prompts_set):
             str(start_time[0]) + ", " + str(start_time[1]) + ", " + 
             str(end_time[0])   + ", " + str(end_time[1]))
 
-        print("history_value ", history_value)
+        print("history_value i ", i, history_value)
+        i = i + 1
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
     # return True    
