@@ -583,9 +583,9 @@ class LLMEngine:
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
 
-    def update_radix_tree(self,):
-        seq_groups = [seq_group for seq_group in self.scheduler.running
-                        if seq_group.is_finished()]
+    def update_radix_tree(self):
+        print("update_radix_tree, update_radix_tree")
+        seq_groups = [seq_group for seq_group in self.scheduler.running if seq_group.is_finished()]
         for seq_group in seq_groups:
             seq = seq_group.get_seqs()[0]
             radix_token_ids = seq.data.get_radix_token_ids()
