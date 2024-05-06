@@ -148,7 +148,6 @@ def post_request_and_get_response(args, prompts_set):
     i = 0 
     history = [] 
     history_value_list = []
-    history_value = []
     inputs_len = []
     outputs_len = []
     ttft = [] 
@@ -159,6 +158,7 @@ def post_request_and_get_response(args, prompts_set):
     end_time = []
     for prompts in prompts_set:
         iteration = 0 
+        history_value = []
         for prompt in prompts:
             if iteration == 0:
                 history_value.extend(prompt[0])
