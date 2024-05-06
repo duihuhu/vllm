@@ -336,7 +336,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
             prefix_len, last_node = self.gpu_allocator.insert_radix_cache(radix_token_ids,
                                                                           block_table[:num_prompt_blocks])
-            seq.prefix_len = seq.prefix_len + prefix_len
+            seq.prefix_len = seq.prefix_len
             seq.last_node = last_node
         else:
             if pre_prefix_len < num_prompt_blocks:

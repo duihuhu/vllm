@@ -423,6 +423,10 @@ class LLMEngine:
         # Process samples
         samples = outputs.samples
         parent_seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+        
+        if seq_group.is_finished():
+            self.update_radix_tree(seq_group)
+            
         existing_finished_seqs = seq_group.get_finished_seqs()
         parent_child_dict = {
             parent_seq.seq_id: []
@@ -464,9 +468,6 @@ class LLMEngine:
             self.detokenizer.decode_sequence_inplace(seq,
                                                      seq_group.sampling_params)
             self._check_stop(seq, seq_group.sampling_params)
-
-            if seq.is_finished():
-                self.update_radix_tree(seq)
             
         # Non-beam search case
         if not seq_group.sampling_params.use_beam_search:
@@ -586,7 +587,8 @@ class LLMEngine:
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
 
-    def update_radix_tree(self, seq):
+    def update_radix_tree(self, seq_group):
+        seq = seq_group.get_seqs()[0]
         radix_token_ids = seq.data.get_radix_token_ids()
         block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
         print("radix_token_ids ", radix_token_ids[seq.prefix_len:], seq.prefix_len)
