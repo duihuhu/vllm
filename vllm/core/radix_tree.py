@@ -266,6 +266,7 @@ if __name__ == "__main__":
     
     a = tuple([1,2,3,4,5])
     b = tuple([1,2,4,5,6])
+    c = tuple([1,2,4,7,8])
     tree = RadixCache(disable=False)
     
     blocks, last_node, last_matched_len = tree.only_match_prefix(a)
