@@ -425,12 +425,12 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         # Compute a new hash for the block so that it can be shared by other
         # Sequences
-        last_token = seq.data.get_radix_token_ids()[-1]
-        last_node = seq.last_node
-        if last_token in last_node.children.key.items():
-            self.gpu_allocator.free_radix_cache(last_block)
-            seq.last_node = last_node.children
-            return last_node.children[last_token]
+        # last_token = seq.data.get_radix_token_ids()[-1]
+        # last_node = seq.last_node
+        # if last_token in last_node.children.key.items():
+        #     self.gpu_allocator.free_radix_cache(last_block)
+        #     seq.last_node = last_node.children
+        #     return last_node.children[last_token]
         # else:
         #     prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(last_node, last_token, last_block)
         #     seq.prefix_len = prefix_len
@@ -471,19 +471,19 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if not self.enable_caching:
             return self.gpu_allocator.allocate()
         
-        last_token = seq.data.get_radix_token_ids()[-1:]
-        # print(last_token, seq.last_node.parent, seq.last_node.children.items())
+        # last_token = seq.data.get_radix_token_ids()[-1:]
+        # # print(last_token, seq.last_node.parent, seq.last_node.children.items())
         
-        if last_token in seq.last_node.children.items():
-            new_block = seq.last_node.children[last_token]
-            seq.prefix_len = seq.prefix_len + 1
-            seq.last_node = seq.last_node.children[last_token]
-        else:
-            num_hashed_tokens = seq.num_hashed_tokens_of_block(
-                len(seq.logical_token_blocks) - 1)
-            
-            new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
-            self.num_hash = self.num_hash + 1
+        # if last_token in seq.last_node.children.items():
+        #     new_block = seq.last_node.children[last_token]
+        #     seq.prefix_len = seq.prefix_len + 1
+        #     seq.last_node = seq.last_node.children[last_token]
+        # else:
+        num_hashed_tokens = seq.num_hashed_tokens_of_block(
+            len(seq.logical_token_blocks) - 1)
+        
+        new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
+        self.num_hash = self.num_hash + 1
             # prefix_len, child = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, last_token, [new_block])
             # seq.prefix_len = prefix_len
             # seq.last_node = child
