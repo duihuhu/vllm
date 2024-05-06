@@ -49,7 +49,7 @@ def sample_requests(
             input_value_token_ids = tokenizer(input_value).input_ids
             output_value_token_ids = tokenizer(output_value).input_ids
             session_info.append((input_value_token_ids[1:], len(output_value_token_ids[1:])))
-            session_len =  session_len + len(input_value_token_ids[1:]) +  len(output_value_token_ids[1])  
+            session_len =  session_len + len(input_value_token_ids[1:]) +  len(output_value_token_ids[1:])  
             index = index + 2
         if session_len < 4096:
             filtered_dataset.append(session_info)
