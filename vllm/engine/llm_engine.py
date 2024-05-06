@@ -583,6 +583,16 @@ class LLMEngine:
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
 
+    def update_radix_tree(self,):
+        seq_groups = [seq_group for seq_group in self.scheduler.running
+                        if seq_group.is_finished()]
+        for seq_group in seq_groups:
+            seq = seq_group.get_seqs()[0]
+            radix_token_ids = seq.data.get_radix_token_ids()
+            block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+            self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(
+                radix_token_ids[seq.prefix_len:], seq.last_node, block_table[seq.prefix_len:])
+            
     def _process_model_outputs(
             self, output: SamplerOutput,
             scheduler_outputs: SchedulerOutputs) -> List[RequestOutput]:
@@ -596,6 +606,8 @@ class LLMEngine:
             seq_group.update_num_computed_tokens(token_chunk_size)
             self._process_sequence_group_outputs(seq_group, outputs)
 
+        self.update_radix_tree()
+        
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 
