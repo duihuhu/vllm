@@ -144,55 +144,55 @@ def get_response(response: requests.Response) -> List[str]:
     return output
 
 
-def post_request_and_get_response(args, prompts, interval):
-    iteration = 0 
-    history_value = []
-    inputs_len = []
-    outputs_len = []
-    ttft = [] 
-    jct = []
-    tbt = []
-    request_ids = []
-    start_time = []
-    end_time = []
-    for prompt in prompts:
-        if iteration == 0:
-            history_value.extend(prompt[0])
-            time.sleep(interval)
-        output_len = prompt[1]
-        # response = async_post_http_request(history_value, G_URL, args.n, output_len)
-        iteration = iteration + 1
-        request_id = random_uuid()
-        request_ids.append(request_id)
-        inputs_len.append(len(history_value))
-        outputs_len.append(output_len)
-        rsp = post_http_request(history_value, G_URL, request_id, args.n , output_len)
-        if args.stream:
-            for h in get_streaming_response(rsp):
-                if h['n'] == 0:
-                    if h['finished'] == True:
-                        start_time.append(h['start_time'])
+def post_request_and_get_response(args, prompts_set):
+    for prompts in prompts_set:
+        iteration = 0 
+        history_value = []
+        inputs_len = []
+        outputs_len = []
+        ttft = [] 
+        jct = []
+        tbt = []
+        request_ids = []
+        start_time = []
+        end_time = []
+        for prompt in prompts:
+            if iteration == 0:
+                history_value.extend(prompt[0])
+            output_len = prompt[1]
+            # response = async_post_http_request(history_value, G_URL, args.n, output_len)
+            iteration = iteration + 1
+            request_id = random_uuid()
+            request_ids.append(request_id)
+            inputs_len.append(len(history_value))
+            outputs_len.append(output_len)
+            rsp = post_http_request(history_value, G_URL, request_id, args.n , output_len)
+            if args.stream:
+                for h in get_streaming_response(rsp):
+                    if h['n'] == 0:
+                        if h['finished'] == True:
+                            start_time.append(h['start_time'])
+                            end_time.append(h['end_time'])
+                            jct.append(h['jct'])
+                            ttft.append(h['jct'])
+                        else:
+                            ttft.append(h['ttft'])
+                            start_time.append(h['start_time'])
+                    elif h['finished'] == True:
+                        history_value.extend(h['prefilled_token_id'])
                         end_time.append(h['end_time'])
                         jct.append(h['jct'])
-                        ttft.append(h['jct'])
                     else:
-                        ttft.append(h['ttft'])
-                        start_time.append(h['start_time'])
-                elif h['finished'] == True:
-                    history_value.extend(h['prefilled_token_id'])
-                    end_time.append(h['end_time'])
-                    jct.append(h['jct'])
-                else:
-                    tbt.append(h['tbt'])
-    # print("request, ttft ", request_ids, ttft)
-    print("request, jct, ttft, input_len, output_len, start_time, end_time, " +
-          str(request_ids[0]) + ", " + str(request_ids[1]) + ", " + 
-          str(jct[0]) + ", " + str(jct[1]) + ", " + 
-          str(ttft[0]) + ", " + str(ttft[1]) + ", " + 
-          str(inputs_len[0]) + ", " + str(inputs_len[1]) + ", " + 
-          str(outputs_len[0]) + ", " + str(outputs_len[1]) + ", " +
-          str(start_time[0]) + ", " + str(start_time[1]) + ", " + 
-          str(end_time[0])   + ", " + str(end_time[1]))
+                        tbt.append(h['tbt'])
+        # print("request, ttft ", request_ids, ttft)
+        print("request, jct, ttft, input_len, output_len, start_time, end_time, " +
+            str(request_ids[0]) + ", " + str(request_ids[1]) + ", " + 
+            str(jct[0]) + ", " + str(jct[1]) + ", " + 
+            str(ttft[0]) + ", " + str(ttft[1]) + ", " + 
+            str(inputs_len[0]) + ", " + str(inputs_len[1]) + ", " + 
+            str(outputs_len[0]) + ", " + str(outputs_len[1]) + ", " +
+            str(start_time[0]) + ", " + str(start_time[1]) + ", " + 
+            str(end_time[0])   + ", " + str(end_time[1]))
 
                     # waiting_time = output_len * waiting_time_per_token / 1000
                     # time.sleep(waiting_time)
@@ -200,10 +200,8 @@ def post_request_and_get_response(args, prompts, interval):
 
 
 def main(args, prompts, reqs_interval):
-    with ThreadPoolExecutor() as executor:
-        for prompt, interval in zip(prompts, reqs_interval):
-            executor.submit(post_request_and_get_response, args, prompt, interval)
-
+    post_request_and_get_response(args, prompts, reqs_interval)
+    
 def warmup(args, prompts):
     for prompt in prompts:
         post_request_and_get_response(args, prompt, 0)
