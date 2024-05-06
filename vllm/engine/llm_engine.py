@@ -465,6 +465,9 @@ class LLMEngine:
                                                      seq_group.sampling_params)
             self._check_stop(seq, seq_group.sampling_params)
 
+            if seq.is_finished():
+                self.update_radix_tree(seq)
+            
         # Non-beam search case
         if not seq_group.sampling_params.use_beam_search:
             # For newly created child sequences, add them to the sequence group
@@ -583,17 +586,12 @@ class LLMEngine:
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
 
-    def update_radix_tree(self, finishd_seq_groups):
-        print("len(finishd_seq_groups) ", len(finishd_seq_groups))
-        for seq_group in finishd_seq_groups:
-            print("radix_token_ids[seq.prefix_len-seq.last_matched_len:] ", radix_token_ids[seq.prefix_len-seq.last_matched_len:])
-            print("last_node " , seq.last_node.children.items())
-            seq = seq_group.get_seqs()[0]
-            radix_token_ids = seq.data.get_radix_token_ids()
-            block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-            prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len-seq.last_matched_len:], block_table[seq.prefix_len-seq.last_matched_len:])
-            seq.prefix_len = seq.prefix_len + prefix_len
-            seq.last_node = last_node 
+    def update_radix_tree(self, seq):
+        radix_token_ids = seq.data.get_radix_token_ids()
+        block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+        prefix_len, last_node = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[seq.prefix_len-seq.last_matched_len:], block_table[seq.prefix_len-seq.last_matched_len:])
+        seq.prefix_len = seq.prefix_len + prefix_len
+        seq.last_node = last_node 
             
     def _process_model_outputs(
             self, output: SamplerOutput,
@@ -601,10 +599,6 @@ class LLMEngine:
         now = time.time()
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
-
-        finishd_seq_groups = [seq_group for seq_group in self.scheduler.running if seq_group.is_finished()]
-        if finishd_seq_groups:
-            self.update_radix_tree(finishd_seq_groups)
         
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
