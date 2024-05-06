@@ -603,7 +603,7 @@ class LLMEngine:
             self.scheduler.block_manager.gpu_allocator.radix_cache.pretty_print()
             print("after update radix tree ", seq.prefix_len, prefix_info[0])
 
-            seq.prefix_len = seq.prefix_len + prefix_info[0]
+            seq.prefix_len = seq.prefix_len - seq.last_matched_len + prefix_info[0]
             seq.last_node = prefix_info[1] 
             seq.last_matched_len = last_matched_len
             del self.scheduler.block_manager.block_tables[seq.seq_id]
