@@ -310,7 +310,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq.last_node = last_node
         seq.last_matched_len = last_matched_len
         block_table: BlockTable  = []
-        match_time = time.time()
+        # match_time = time.time()
         if blocks:
             # print(self.gpu_allocator.radix_cache.pretty_print())
             # print(self.gpu_allocator.radix_cache._print_root_node())
@@ -323,22 +323,22 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in blocks:
             if block.block_hash in self.gpu_allocator.evictor:
                 self.gpu_allocator.evictor.free_table.pop(block.block_hash)
-        free_time = time.time()
+        # free_time = time.time()
         
         for logical_idx in range(pre_prefix_len, num_prompt_blocks):
             block = self.gpu_allocator.allocate_radix_cache(self.num_hash,
                             seq.num_hashed_tokens_of_block(logical_idx))
             self.num_hash = self.num_hash + 1
             block_table.append(block)
-        allocate_time = time.time()
+        # allocate_time = time.time()
         
         if seq.last_node == self.gpu_allocator.radix_cache.root_node \
             or seq.last_node.parent == self.gpu_allocator.radix_cache.root_node:
             if seq.last_node == self.gpu_allocator.radix_cache.root_node:
                 prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
             else:
-                print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
-                    seq.last_node.children.keys(), seq.last_node.parent.children.keys())
+                # print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
+                    # seq.last_node.children.keys(), seq.last_node.parent.children.keys())
                 prefix_len, last_node = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
             seq.prefix_len = prefix_len
             seq.last_node = last_node
@@ -350,9 +350,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 seq.prefix_len = seq.prefix_len + prefix_len
                 seq.last_node = last_node
                 # Assign the block table for each sequence.
-        insert_time = time.time()
-        print("allocate_radix_cache, insert time, allocate time, free time , match time ", (insert_time-allocate_time) *1000, 
-              (allocate_time-free_time) * 1000, (free_time-match_time) * 1000, (match_time-start_time)* 1000)
+        # insert_time = time.time()
+        # print("allocate_radix_cache, insert time, allocate time, free time , match time ", (insert_time-allocate_time) *1000, 
+            #   (allocate_time-free_time) * 1000, (free_time-match_time) * 1000, (match_time-start_time)* 1000)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
         
