@@ -240,7 +240,7 @@ if __name__ == "__main__":
         pre_time = pre_time + interval
         reqs_interval.append(pre_time)
 
-    warmup(args, datasets[args.session:(args.session+1)])
+    # warmup(args, datasets[args.session:(args.session+1)])
     
     # print("reqs_interval ", reqs_interval)
     main(args, datasets[:args.session], reqs_interval)
