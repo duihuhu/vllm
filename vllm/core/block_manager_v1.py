@@ -306,7 +306,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         radix_token_ids = seq.data.get_radix_token_ids()
         # value, last_node = self.gpu_allocator.radix_cache.match_prefix(radix_token_ids)
-        print("before match radix_token_ids ", radix_token_ids)
+        # print("before match radix_token_ids ", radix_token_ids)
         blocks, last_node, last_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
         seq.last_node = last_node
         seq.last_matched_len = last_matched_len
@@ -337,11 +337,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # if seq.last_node == self.gpu_allocator.radix_cache.root_node:
                 # print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
                 #     seq.last_node.children.keys())
-            print("radix_token_ids last_node = root_node ", radix_token_ids[(pre_prefix_len-seq.last_matched_len):], pre_prefix_len, seq.last_matched_len)
+            # print("radix_token_ids last_node = root_node ", radix_token_ids[(pre_prefix_len-seq.last_matched_len):], pre_prefix_len, seq.last_matched_len)
             prefix_info, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node,\
                 radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
-            print("")
-            print(self.gpu_allocator.radix_cache.pretty_print())
+
+            # print(self.gpu_allocator.radix_cache.pretty_print())
             # else:
             #     # print("radix_token_ids ", pre_prefix_len, seq.last_matched_len, 
             #     #     seq.last_node.children.keys(), seq.last_node.parent.children.keys())
@@ -353,12 +353,12 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # print("allocate ", radix_token_ids, seq.prefix_len, prefix_len)
         else:
             if pre_prefix_len <= num_prompt_blocks:
-                print("radix_token_ids last_node != root_node ", radix_token_ids[(pre_prefix_len-seq.last_matched_len):], pre_prefix_len, seq.last_matched_len, seq.last_node.parent.children.keys())
-                print(self.gpu_allocator.radix_cache.pretty_print())
+                # print("radix_token_ids last_node != root_node ", radix_token_ids[(pre_prefix_len-seq.last_matched_len):], pre_prefix_len, seq.last_matched_len, seq.last_node.parent.children.keys())
+                # print(self.gpu_allocator.radix_cache.pretty_print())
                 prefix_info, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, \
                     radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
-                print("after radix_token_ids last_node != root_node  ", seq.prefix_len, prefix_info[0], last_matched_len)
-                print(self.gpu_allocator.radix_cache.pretty_print())
+                # print("after radix_token_ids last_node != root_node  ", seq.prefix_len, prefix_info[0], last_matched_len)
+                # print(self.gpu_allocator.radix_cache.pretty_print())
                 seq.prefix_len = seq.prefix_len - seq.last_matched_len + prefix_info[0]
                 seq.last_node = prefix_info[1]
                 seq.last_matched_len = last_matched_len
