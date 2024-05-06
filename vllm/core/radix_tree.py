@@ -213,7 +213,8 @@ class RadixCache:
             new_node.value = value
             node.children[key] = new_node
             self.evictable_size_ += len(value)
-        return len(key), new_node
+            return len(key), new_node
+        return 0, node
 
     def _print_root_node(self):
         for c_key, child in self.root_node.children.items():
