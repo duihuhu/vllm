@@ -189,14 +189,13 @@ def post_request_and_get_response(args, prompts_set):
                     else:
                         tbt.append(h['tbt'])
         # print("request, ttft ", request_ids, ttft)
-        print("request, jct, ttft, input_len, output_len, start_time, end_time, " +
-            str(request_ids[0]) + ", " + str(request_ids[1]) + ", " + 
-            str(jct[0]) + ", " + str(jct[1]) + ", " + 
-            str(ttft[0]) + ", " + str(ttft[1]) + ", " + 
-            str(inputs_len[0]) + ", " + str(inputs_len[1]) + ", " + 
-            str(outputs_len[0]) + ", " + str(outputs_len[1]) + ", " +
-            str(start_time[0]) + ", " + str(start_time[1]) + ", " + 
-            str(end_time[0])   + ", " + str(end_time[1]))
+
+        label = "request, jct, ttft, input_len, output_len, start_time, end_time "
+        for request_id, req_jct, req_ttft, req_input_len, req_output_len, req_start_time, req_end_time in zip(request_ids, jct, ttft, inputs_len, outputs_len, start_time, end_time):
+            label = label + ", " + str(request_id) + ", " + str(req_jct)+ ", " + str(req_ttft)+ ", " + str(req_input_len)+ ", " + str(req_output_len)+ ", " + str(req_start_time)+ ", " + str(req_end_time)
+            
+        print(label)
+
 
         # print("history_value i ", i, history[0], history[1], history[2])
         i = i + 1
