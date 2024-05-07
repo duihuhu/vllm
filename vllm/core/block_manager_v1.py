@@ -756,7 +756,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for b in takewhile(lambda b: b.computed, block_table[:-1])
         ]
 
-    def get_common_computed_block_ids_one_seq(self, seqs: List[Sequence]) -> List[int]:
+    def get_common_computed_block_ids_one_seq(self, seqs: Sequence) -> List[int]:
         """Return the block ids that are common for a given sequence group.
 
         Used in prefill (can skip prefill of some blocks).
@@ -764,9 +764,12 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Can return non-empty result only with prefix caching enabled.
         if not self.enable_caching:
             return []
-
-        ids_list = [self.get_all_computed_blocks(seq) for seq in seqs]
-        return ids_list[0]
+        ids_list = []
+        block_table = self.block_tables[seqs.seq_id]
+        for block in block_table:
+            if block.computed == True:
+                ids_list.append(block.block_number)
+        return ids_list[:-1]
     
     def get_common_computed_block_ids(self, seqs: List[Sequence]) -> List[int]:
         """Return the block ids that are common for a given sequence group.

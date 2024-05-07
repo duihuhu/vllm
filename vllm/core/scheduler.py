@@ -434,16 +434,19 @@ class Scheduler:
             seq_data: Dict[int, SequenceData] = {}
             # seq_id -> physical block numbers
             block_tables: Dict[int, List[int]] = {}
+            seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
             ta = time.time()
-            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            for seq in seqs:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
                 # self.block_manager.access_all_blocks_in_seq(seq, now)
             tb = time.time()
             common_computed_block_nums = (
-                self.block_manager.get_common_computed_block_ids(
-                    seq_group.get_seqs(status=SequenceStatus.RUNNING)))
+                self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
+            # common_computed_block_nums = (
+            #     self.block_manager.get_common_computed_block_ids(
+            #         seq_group.get_seqs(status=SequenceStatus.RUNNING)))
             tc = time.time()
 
             seq_group_metadata = SequenceGroupMetadata(
