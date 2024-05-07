@@ -163,10 +163,10 @@ def post_request_and_get_response(args, prompts_set):
             output_len = prompt[1]
             if iteration == 0:
                 history_value.extend(prompt[0])
-                print("iteration 0 ", history_value, len(history_value), output_len)
+                # print("iteration 0 ", history_value, len(history_value), output_len)
                 history.append(prompt[0])
             if iteration == 1:
-                print("iteration 1 ", history_value,  len(history_value))
+                # print("iteration 1 ", history_value,  len(history_value))
                 history_value_list.append(history_value)
                 continue
             # response = async_post_http_request(history_value, G_URL, args.n, output_len)
@@ -210,7 +210,7 @@ def post_request_and_get_response(args, prompts_set):
             request_ids.append(request_id)
             inputs_len.append(len(history_value_list[i]))
             outputs_len.append(output_len)
-            print("second " ,history_value_list[i], len(history_value_list[i]), output_len)
+            # print("second " ,history_value_list[i], len(history_value_list[i]), output_len)
             rsp = post_http_request(history_value_list[i], G_URL, request_id, args.n , output_len)
             if args.stream:
                 for h in get_streaming_response(rsp):
