@@ -239,6 +239,7 @@ class Scheduler:
                     "sequence.")
                 # get_len includes output tokens if the request has been
                 # preempted.
+                print("num_prefill_tokens ", waiting_seqs[0].get_len())
                 num_prefill_tokens = waiting_seqs[0].get_len()
                 if num_prefill_tokens > self.prompt_limit:
                     logger.warning(

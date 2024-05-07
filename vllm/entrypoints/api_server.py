@@ -41,13 +41,13 @@ async def generate(request: Request) -> Response:
     - stream: whether to stream the results or not.
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
-    start_time = time.time()
     request_dict = await request.json()
     prompt_token_ids = request_dict.pop("prompt_token_ids") 
     stream = request_dict.pop("stream", False)
     request_id = request_dict.pop("request_id")
     sampling_params = SamplingParams(**request_dict)
-
+    
+    start_time = time.time()
     results_generator = engine.generate(prompt=None, prompt_token_ids=prompt_token_ids,
                                         sampling_params=sampling_params, request_id=request_id)
 
@@ -78,8 +78,9 @@ async def generate(request: Request) -> Response:
                 last_time = end_time
                 ret = {"prefilled_token_id": request_output.outputs[0].token_ids, 
                     "finished": request_output.finished, "n": n, "tbt": tbt, "start_time": start_time, "end_time": end_time}
-            yield (json.dumps(ret) + "\0").encode("utf-8")
             n = n + 1
+            yield (json.dumps(ret) + "\0").encode("utf-8")
+
 
     if stream:
         return StreamingResponse(stream_results())
