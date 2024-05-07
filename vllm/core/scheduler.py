@@ -434,20 +434,22 @@ class Scheduler:
             seq_data: Dict[int, SequenceData] = {}
             # seq_id -> physical block numbers
             block_tables: Dict[int, List[int]] = {}
-            seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
+            seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
             ta = time.time()
-            # for seq in seqs:
-            seq_id = seq.seq_id
-            seq_data[seq_id] = seq.data
-                # block_tables[seq_id] = self.block_manager.get_block_table(seq)
-            block_table = self.block_manager.block_tables[seq.seq_id]
-            taa = time.time()
+            for seq in seqs:
+                seq_id = seq.seq_id
+                seq_data[seq_id] = seq.data
+                if not self.block_manager.enable_radix_caching:
+                    block_tables[seq_id] = self.block_manager.get_block_table(seq)
+                else:
+                    block_table = self.block_manager.block_tables[seq.seq_id]
+                    block_tables[seq_id] = seq.computed_block + \
+                        [block.block_number for block in block_table[len(seq.computed_block):]]
 
-            block_tables[seq_id] = seq.computed_block + [block.block_number for block in block_table[len(seq.computed_block):]]
                 # self.block_manager.access_all_blocks_in_seq(seq, now)
             tb = time.time()
             common_computed_block_nums = (
-                self.block_manager.get_common_computed_block_ids_one_seq(seq))
+                self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
             # common_computed_block_nums = (
             #     self.block_manager.get_common_computed_block_ids(
             #         seq_group.get_seqs(status=SequenceStatus.RUNNING)))
@@ -472,7 +474,7 @@ class Scheduler:
             )
             seq_group_metadata_list.append(seq_group_metadata)
             td = time.time()
-            print("in seq group ", td-tc, tc-tb, tb-taa, taa-ta)
+            print("in seq group ", td-tc, tc-tb, tb-ta)
         t2 = time.time()
 
         # Now that the batch has been created, we can assume all blocks in the
