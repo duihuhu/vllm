@@ -770,8 +770,5 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def mark_blocks_as_computed(self, seq_group: SequenceGroup):
         if self.enable_caching:
-            t1 = time.time()
             for seq in seq_group.seqs_dict.values():
                 self.compute_full_blocks_in_seq(seq)
-            t2 = time.time()
-            print("mark_blocks_as_computed ", t2-t1)
