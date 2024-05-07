@@ -765,11 +765,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if not self.enable_caching:
             return []
         block_table = self.block_tables[seqs.seq_id]
-        for block in block_table:
+        for block in block_table[:-1]:
             if block.computed == True and block.block_number not in seqs.computed_block:
                 seqs.computed_block.append(block.block_number)
-        if seqs.computed_block:
-            del seqs.computed_block[-1]
         return seqs.computed_block
     
     def get_common_computed_block_ids(self, seqs: List[Sequence]) -> List[int]:
