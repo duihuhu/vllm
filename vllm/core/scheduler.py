@@ -442,11 +442,11 @@ class Scheduler:
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
                 # self.block_manager.access_all_blocks_in_seq(seq, now)
             tb = time.time()
-            common_computed_block_nums = (
-                self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
             # common_computed_block_nums = (
-            #     self.block_manager.get_common_computed_block_ids(
-            #         seq_group.get_seqs(status=SequenceStatus.RUNNING)))
+                # self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
+            common_computed_block_nums = (
+                self.block_manager.get_common_computed_block_ids(
+                    seq_group.get_seqs(status=SequenceStatus.RUNNING)))
             tc = time.time()
 
             seq_group_metadata = SequenceGroupMetadata(
