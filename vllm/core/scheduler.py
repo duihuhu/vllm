@@ -212,7 +212,7 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-
+        t1 = time.time()
         # Join waiting sequences if possible.
         if not self.swapped:
             ignored_seq_groups: List[SequenceGroup] = []
@@ -323,6 +323,8 @@ class Scheduler:
         # groups to preempt.
         self.running = self.policy.sort_by_priority(now, self.running)
 
+        t2 = time.time()
+
         # Reserve new token slots for the running sequence groups.
         running: Deque[SequenceGroup] = deque()
         preempted: List[SequenceGroup] = []
@@ -414,13 +416,14 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
             ignored_seq_groups=[],
         )
+        t3 = time.time()
+        print("scedhuer ", t3-t2 , t2-t1)
         return scheduler_outputs
 
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
-        t1 = time.time()
         scheduler_outputs = self._schedule()
         now = time.time()
 
@@ -472,8 +475,6 @@ class Scheduler:
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
-        t3 = time.time()
-        print("scheduer ", t3-now, now-t1)
         return seq_group_metadata_list, scheduler_outputs
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
