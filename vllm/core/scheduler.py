@@ -439,7 +439,7 @@ class Scheduler:
             for seq in seqs:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
-                block_tables[seq_id] = self.block_manager.get_block_table(seq)
+                # block_tables[seq_id] = self.block_manager.get_block_table(seq)
                 # self.block_manager.access_all_blocks_in_seq(seq, now)
             tb = time.time()
             common_computed_block_nums = (
