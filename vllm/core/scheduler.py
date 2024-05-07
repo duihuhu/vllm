@@ -434,17 +434,19 @@ class Scheduler:
             seq_data: Dict[int, SequenceData] = {}
             # seq_id -> physical block numbers
             block_tables: Dict[int, List[int]] = {}
-            seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+            seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
             ta = time.time()
             # for seq in seqs:
-            seq_id = seqs[0].seq_id
-            seq_data[seq_id] =  seqs[0].data
+            seq_id = seq.seq_id
+            seq_data[seq_id] = seq.data
+                # block_tables[seq_id] = self.block_manager.get_block_table(seq)
+            block_table = self.block_manager.block_tables[seq.seq_id]
             taa = time.time()
-            block_tables[seq_id] = self.block_manager.get_block_table(seqs[0])
+            block_tables[seq_id] =  [block.block_number for block in block_table]
                 # self.block_manager.access_all_blocks_in_seq(seq, now)
             tb = time.time()
             common_computed_block_nums = (
-                self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
+                self.block_manager.get_common_computed_block_ids_one_seq(seq))
             # common_computed_block_nums = (
             #     self.block_manager.get_common_computed_block_ids(
             #         seq_group.get_seqs(status=SequenceStatus.RUNNING)))
@@ -469,7 +471,7 @@ class Scheduler:
             )
             seq_group_metadata_list.append(seq_group_metadata)
             td = time.time()
-            print("in seq group ", td-tc, tc-tb, tb-taa, len(block_tables[seq_id]), len(self.block_manager.block_tables), taa-ta)
+            print("in seq group ", td-tc, tc-tb, tb-taa, taa-ta)
         t2 = time.time()
 
         # Now that the batch has been created, we can assume all blocks in the
