@@ -469,7 +469,7 @@ class Scheduler:
             )
             seq_group_metadata_list.append(seq_group_metadata)
             td = time.time()
-            print("in seq group ", td-tc, tc-tb, tb-taa, taa-ta)
+            print("in seq group ", td-tc, tc-tb, tb-taa, len(block_tables[seq_id]), taa-ta)
         t2 = time.time()
 
         # Now that the batch has been created, we can assume all blocks in the
