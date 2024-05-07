@@ -192,9 +192,13 @@ def post_request_and_get_response(args, prompts_set):
                         jct.append(h['jct'])
                     else:
                         tbt.append(h['tbt'])
+    
+    print("history_value_list ", history_value_list)
+    
     i = 0
     for prompts in prompts_set:
         iteration = 0 
+        history_value = []
         for prompt in prompts:
             if iteration == 0:
                 continue
