@@ -160,13 +160,15 @@ def post_request_and_get_response(args, prompts_set):
         iteration = 0 
         history_value = []
         for prompt in prompts:
+            output_len = prompt[1]
             if iteration == 0:
                 history_value.extend(prompt[0])
+                print("iteration 0 ", history_value, len(history_value), output_len)
                 history.append(prompt[0])
             if iteration == 1:
-                history_value_list.append(history_value)
+                print("iteration 1 ", history_value)
+                history_value_list.append(history_value, len(history_value))
                 continue
-            output_len = prompt[1]
             # response = async_post_http_request(history_value, G_URL, args.n, output_len)
             iteration = iteration + 1
             request_id = random_uuid()
@@ -193,7 +195,6 @@ def post_request_and_get_response(args, prompts_set):
                     else:
                         tbt.append(h['tbt'])
     
-    print("history_value_list ", history_value_list)
     
     i = 0
     for prompts in prompts_set:
