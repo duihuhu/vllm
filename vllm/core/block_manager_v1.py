@@ -765,7 +765,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if not self.enable_caching:
             return []
         block_table = self.block_tables[seqs.seq_id]
-        for block in block_table[:-1]:
+        for block in block_table[len(seqs.computed_block):-1]:
             if block.computed == True and block.block_number not in seqs.computed_block:
                 seqs.computed_block.append(block.block_number)
         return seqs.computed_block
