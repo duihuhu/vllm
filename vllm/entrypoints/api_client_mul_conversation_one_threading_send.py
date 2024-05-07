@@ -202,6 +202,7 @@ def post_request_and_get_response(args, prompts_set):
         history_value = []
         for prompt in prompts:
             if iteration == 0:
+                iteration = iteration + 1
                 continue
             output_len = prompt[1]
             iteration = iteration + 1
