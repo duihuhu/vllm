@@ -212,7 +212,6 @@ class Scheduler:
 
         # Fix the current time.
         now = time.time()
-        t1 = time.time()
         # Join waiting sequences if possible.
         if not self.swapped:
             ignored_seq_groups: List[SequenceGroup] = []
@@ -323,8 +322,6 @@ class Scheduler:
         # groups to preempt.
         self.running = self.policy.sort_by_priority(now, self.running)
 
-        t2 = time.time()
-
         # Reserve new token slots for the running sequence groups.
         running: Deque[SequenceGroup] = deque()
         preempted: List[SequenceGroup] = []
@@ -416,18 +413,15 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
             ignored_seq_groups=[],
         )
-        t3 = time.time()
-        print("in _schedule ", t3-t2 , t2-t1)
         return scheduler_outputs
 
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
-        t1 = time.time()
         scheduler_outputs = self._schedule()
-        t2 = time.time()
         now = time.time()
+        t1 = time.time()
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
@@ -469,6 +463,7 @@ class Scheduler:
                 if scheduler_outputs.prompt_run else None,
             )
             seq_group_metadata_list.append(seq_group_metadata)
+        t2 = time.time()
 
         # Now that the batch has been created, we can assume all blocks in the
         # batch will have been computed before the next scheduling invocation.
