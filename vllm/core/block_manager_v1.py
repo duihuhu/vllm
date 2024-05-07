@@ -770,8 +770,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def mark_blocks_as_computed(self, seq_group: SequenceGroup):
         if self.enable_caching:
-            start_time = time.time()
+            t1 = time.time()
             for seq in seq_group.seqs_dict.values():
                 self.compute_full_blocks_in_seq(seq)
-            end_time = time.time()
-            print("mark_blocks_as_computed " , start_time-end_time)
+            t2 = time.time()
+            print("mark_blocks_as_computed ", t2-t1)
