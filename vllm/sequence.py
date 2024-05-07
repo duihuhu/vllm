@@ -225,6 +225,7 @@ class Sequence:
         self.last_node = None
         self.prefix_len = 0
         self.last_matched_len = 0
+        self.computed_block = []
     
     @property
     def lora_int_id(self) -> int:

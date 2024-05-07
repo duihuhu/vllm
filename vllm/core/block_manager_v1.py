@@ -764,12 +764,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Can return non-empty result only with prefix caching enabled.
         if not self.enable_caching:
             return []
-        ids_list = []
         block_table = self.block_tables[seqs.seq_id]
         for block in block_table:
             if block.computed == True:
-                ids_list.append(block.block_number)
-        return ids_list[:-1]
+                if block.block_number not in seqs.computed_block:
+                    seqs.computed_block.append(block.block_number)
+        del seqs.computed_block[-1]
+        return seqs.computed_block
     
     def get_common_computed_block_ids(self, seqs: List[Sequence]) -> List[int]:
         """Return the block ids that are common for a given sequence group.
