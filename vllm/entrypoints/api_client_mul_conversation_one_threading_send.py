@@ -166,8 +166,8 @@ def post_request_and_get_response(args, prompts_set):
                 print("iteration 0 ", history_value, len(history_value), output_len)
                 history.append(prompt[0])
             if iteration == 1:
-                print("iteration 1 ", history_value)
-                history_value_list.append(history_value, len(history_value))
+                print("iteration 1 ", history_value,  len(history_value))
+                history_value_list.append(history_value)
                 continue
             # response = async_post_http_request(history_value, G_URL, args.n, output_len)
             iteration = iteration + 1
