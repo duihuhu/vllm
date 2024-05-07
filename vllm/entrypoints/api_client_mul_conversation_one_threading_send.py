@@ -209,6 +209,7 @@ def post_request_and_get_response(args, prompts_set):
             request_ids.append(request_id)
             inputs_len.append(len(history_value_list[i]))
             outputs_len.append(output_len)
+            print("second " ,history_value_list[i], history_value_list[i], output_len)
             rsp = post_http_request(history_value_list[i], G_URL, request_id, args.n , output_len)
             if args.stream:
                 for h in get_streaming_response(rsp):
