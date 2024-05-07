@@ -442,7 +442,8 @@ class Scheduler:
                 # block_tables[seq_id] = self.block_manager.get_block_table(seq)
             block_table = self.block_manager.block_tables[seq.seq_id]
             taa = time.time()
-            block_tables[seq_id] =  [block.block_number for block in block_table]
+
+            block_tables[seq_id] = seq.computed_block + [block.block_number for block in block_table[len(seq.computed_block):]]
                 # self.block_manager.access_all_blocks_in_seq(seq, now)
             tb = time.time()
             common_computed_block_nums = (
