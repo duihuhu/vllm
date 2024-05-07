@@ -19,7 +19,7 @@ from vllm.model_executor.parallel_utils.parallel_state import (
 from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
-
+import time
 
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -217,9 +217,11 @@ class Worker:
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
-
+        start = time.time()
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
+        end = time.time()
+        print("model execute time ", start-end)
         return output
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
