@@ -446,6 +446,7 @@ class Scheduler:
             common_computed_block_nums = (
                 self.block_manager.get_common_computed_block_ids(
                     seq_group.get_seqs(status=SequenceStatus.RUNNING)))
+            print("common_computed_block_nums ", common_computed_block_nums)
             tc = time.time()
 
             seq_group_metadata = SequenceGroupMetadata(
