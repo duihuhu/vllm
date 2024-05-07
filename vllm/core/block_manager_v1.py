@@ -768,7 +768,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in block_table:
             if block.computed == True and block.block_number not in seqs.computed_block:
                 seqs.computed_block.append(block.block_number)
-        del seqs.computed_block[-1]
+        if seqs.computed_block:
+            del seqs.computed_block[-1]
         return seqs.computed_block
     
     def get_common_computed_block_ids(self, seqs: List[Sequence]) -> List[int]:
