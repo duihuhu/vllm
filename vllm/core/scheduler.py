@@ -421,7 +421,6 @@ class Scheduler:
         # such as self.running, self.swapped, and self.waiting.
         scheduler_outputs = self._schedule()
         now = time.time()
-        t1 = time.time()
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
@@ -435,19 +434,16 @@ class Scheduler:
             # seq_id -> physical block numbers
             block_tables: Dict[int, List[int]] = {}
             seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
-            ta = time.time()
             for seq in seqs:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 block_tables[seq_id] = self.block_manager.get_block_table(seq)
                 # self.block_manager.access_all_blocks_in_seq(seq, now)
-            tb = time.time()
             common_computed_block_nums = (
                 self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
             # common_computed_block_nums = (
             #     self.block_manager.get_common_computed_block_ids(
             #         seq_group.get_seqs(status=SequenceStatus.RUNNING)))
-            tc = time.time()
 
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
@@ -467,9 +463,6 @@ class Scheduler:
                 if scheduler_outputs.prompt_run else None,
             )
             seq_group_metadata_list.append(seq_group_metadata)
-            td = time.time()
-            print("in seq group ", td-tc, tc-tb, tb-ta)
-        t2 = time.time()
 
         # Now that the batch has been created, we can assume all blocks in the
         # batch will have been computed before the next scheduling invocation.
@@ -478,8 +471,6 @@ class Scheduler:
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
-        t3 = time.time()
-        print("schedule in  ", t3-t2 , t2-t1)
         return seq_group_metadata_list, scheduler_outputs
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
