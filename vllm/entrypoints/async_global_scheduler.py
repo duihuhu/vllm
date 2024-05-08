@@ -112,7 +112,7 @@ async def asyc_forward_request_resp(request_dict, api_url):
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
-            return await response
+            return await response.text()
 
 async def forward_request_to_decode(prefill_res, api_url):
     headers = {"User-Agent": "Test Client"}
