@@ -109,7 +109,7 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
 def search_prefix(radix_tree, token_ids):
     value, node, last_node_matched_len = radix_tree.only_match_prefix(tuple(token_ids))
     if value:
-        return True, value[0], node.node_addr[0], last_node_matched_len
+        return True, value, node.node_addr[0], last_node_matched_len
     else:
         return False, [], [], 0
 
