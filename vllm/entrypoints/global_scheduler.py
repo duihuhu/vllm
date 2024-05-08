@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
 import httpx
 import random
-from vllm.entrypoints.global_trie_tree import RadixCache
+from vllm.entrypoints.global_radix_tree import RadixCache
 from vllm.entrypoints.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
@@ -107,11 +107,11 @@ def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
             yield data
 
 def search_prefix(radix_tree, token_ids):
-    value, node = radix_tree.only_match_prefix(tuple(token_ids))
+    value, node, last_node_matched_len = radix_tree.only_match_prefix(tuple(token_ids))
     if value:
-        return True, value[0], node.node_addr[0]
+        return True, value, node.node_addr[0], last_node_matched_len
     else:
-        return False, [], []
+        return False, [], [], 0
 
 def get_epd_cached_meta(ptree, dtree, token_ids):
     ep_host = None
@@ -122,12 +122,12 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
     cd_blocks = 0
     ed_host = None
     ed_port = None
-    p_matched, p_tokens, p_node = search_prefix(ptree, token_ids)
+    p_matched, p_tokens, p_node, p_last_node_matched_len = search_prefix(ptree, token_ids)
     if p_matched:
         ep_host, ep_port = p_node.split("_")
     else:
         ep_host, ep_port = cfg.eprefill_host, cfg.eprefill_port
-    d_matched, d_tokens, d_node = search_prefix(dtree, token_ids)
+    d_matched, d_tokens, d_node, d_last_node_matched_len = search_prefix(dtree, token_ids)
     if d_matched:
         cd_host, cd_port = d_node.split("_")
         print("d_node ", d_node)
@@ -169,7 +169,7 @@ async def add_request(request: Request) -> Response:
     async def stream_results() -> AsyncGenerator[bytes, None]:
         # prefill' response, return to client
         n = 0
-        prefilled_tokens = tuple(prefill_res["prompt_token_ids"] + prefill_res["prefilled_token_id"])
+        prefilled_tokens = tuple(prefill_res["prompt_token_ids"] + prefill_res["prefilled_token_id"][:-1])
         gs_ptoken_tree.insert(prefilled_tokens, None, str(eprefill_host + "_" + str(eprefill_port)))
         
         yield (json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8")
@@ -181,7 +181,7 @@ async def add_request(request: Request) -> Response:
                                                             (eprefill_host, eprefill_port))
             else:
                 if res['finished'] == True:
-                    decoded_tokens = tuple(res["prompt_token_ids"] + res["prefilled_token_id"])
+                    decoded_tokens = tuple(res["prompt_token_ids"] + res["prefilled_token_id"][:-1])
                     gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
                 
                 if res['finished'] == True and args.enable_dcache:
