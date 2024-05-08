@@ -77,10 +77,16 @@ def main(args, prompts):
     # coroutines = []
     # for prompt in prompts:
     #     print(f"prompt:", end=' ', flush=True)
-    result1 = post_request_and_get_response(args, prompts)
     
-    result2 = post_request_and_get_response(args, result1)
+    # result1 = post_request_and_get_response(args, prompts)
+    
+    # result2 = post_request_and_get_response(args, result1)
 
+    t1 = threading.Thread(target=post_request_and_get_response, args=(args, prompts)).start()
+    t2 =  threading.Thread(target=post_request_and_get_response, args=(args, prompts)).start()
+
+    t1.join()
+    t2.join()
     #     coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
     # await asyncio.gather(*coroutines)
 

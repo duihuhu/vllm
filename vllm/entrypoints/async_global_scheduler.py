@@ -144,6 +144,7 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()    
+    print("add request ", time.time())
     prompt_token_ids = request_dict["prompt_token_ids"]   
     #no matched other req
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
