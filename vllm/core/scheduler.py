@@ -419,10 +419,10 @@ class Scheduler:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
-        t1 = time.time()
+        # t1 = time.time()
         scheduler_outputs = self._schedule()
         now = time.time()
-        t2 = time.time()
+        # t2 = time.time()
 
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
@@ -472,7 +472,7 @@ class Scheduler:
                 if scheduler_outputs.prompt_run else None,
             )
             seq_group_metadata_list.append(seq_group_metadata)
-        t3 = time.time()
+        # t3 = time.time()
 
         # Now that the batch has been created, we can assume all blocks in the
         # batch will have been computed before the next scheduling invocation.
@@ -481,8 +481,8 @@ class Scheduler:
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
-        t4 = time.time()
-        print("in schedule ", t4-t3, t3-t2, t2-t1)
+        # t4 = time.time()
+        # print("in schedule ", t4-t3, t3-t2, t2-t1)
         return seq_group_metadata_list, scheduler_outputs
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:

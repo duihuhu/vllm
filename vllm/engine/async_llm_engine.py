@@ -221,7 +221,7 @@ class _AsyncLLMEngine(LLMEngine):
         t3 = time.time()
         p_output = self._process_model_outputs(output, scheduler_outputs)
         t4 = time.time()
-        # print("step async ", t4-t3, t3-t2, t2-t1)
+        print("step async ", t4-t3, t3-t2, t2-t1)
         return p_output
 
     async def encode_request_async(
