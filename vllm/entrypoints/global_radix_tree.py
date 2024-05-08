@@ -76,15 +76,15 @@ class RadixCache:
             prefix_len = match(c_key, key)
             if prefix_len != 0:
                 if prefix_len < len(c_key):
-                    for val in child.value[:prefix_len]:
-                        val.ref_count += 1
+                    # for val in child.value[:prefix_len]:
+                    #     val.ref_count += 1
                     value.extend(child.value[:prefix_len])
                     last_node[0] = child
                     last_node_matched_len[0] = prefix_len
                 else:
                     last_node_matched_len[0] = prefix_len
-                    for val in child.value:
-                        val.ref_count += 1
+                    # for val in child.value:
+                    #     val.ref_count += 1
                     value.extend(child.value)
                     last_node[0] = child
                     self._only_match_prefix_helper(child, key[prefix_len:], value, last_node, last_node_matched_len)
