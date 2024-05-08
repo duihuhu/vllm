@@ -280,8 +280,12 @@ class LLMEngine:
                                   arrival_time, lora_request, multi_modal_data)
         
         #there is no use for allocate kv blocks(reference not ++ , because it has not seq use to running)
-        phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group)
-        
+        # phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group)
+        if self.cache_config.enable_radix_caching:
+            phy_blocks, blocks_to_swap_in = self.scheduler.allocate_kv_radix_blocks(seq_group)
+        else:
+            phy_blocks, blocks_to_swap_in = self.scheduler.allocate_kv_blocks(seq_group)
+            
         blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
 
         computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
@@ -295,7 +299,6 @@ class LLMEngine:
         output_logprobs = request_output.outputs[0].logprobs[-1]
         seq.append_token_id(prefilled_token_ids, output_logprobs)
                 
-        
         if not blocks:
             kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
         else:
@@ -315,9 +318,12 @@ class LLMEngine:
             logger.info("remote recv engine prepare kv fail.")
             return
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
+        if len(blocks) > response.computed_blocks:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
-        self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
-
+            self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
+        else:
+            del self.scheduler.del_send_transfering(request_id)
+            
     def add_request(
         self,
         request_id: str,
@@ -416,8 +422,12 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
-            phy_blocks, blocks_to_swap_in = self.scheduler.allocate_kv_blocks(seq_group)
-                            
+            if self.cache_config.enable_radix_caching:
+                #todo blocks_to_swap_in
+                phy_blocks, blocks_to_swap_in = self.scheduler.allocate_kv_radix_blocks(seq_group)
+            else:
+                phy_blocks, blocks_to_swap_in = self.scheduler.allocate_kv_blocks(seq_group)
+               
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
@@ -432,16 +442,20 @@ class LLMEngine:
             
             for block in phy_blocks:
                 print("decode kv, response " , block.device, block.computed)
-            if not blocks:
+            if not phy_blocks:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
             else:
                 kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
-                self.scheduler.add_recv_transfering(seq_group)
                 if blocks_to_swap_in:
                     self.scheduler.add_swap_in_req_id(request_id)
-                self.kv_trans_scheduler.add_kv_request(request_id,
-                                                            prefill_request_output.global_ranks, blocks, False, blocks_to_swap_in)
-                
+                if blocks:
+                    self.scheduler.add_recv_transfering(seq_group)
+                    self.kv_trans_scheduler.add_kv_request(request_id,
+                                                                prefill_request_output.global_ranks, blocks, False, blocks_to_swap_in)
+                else:
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+
         return kv_response
     
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
@@ -703,10 +717,10 @@ class LLMEngine:
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
             if self.deploy_config.role == "decoder":
                 if seq.last_node == None:          
-                    prefix_info, last_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids, block_table)
-                    seq.prefix_len = seq.prefix_len - seq.last_matched_len + prefix_info[0]
+                    prefix_info, last_node_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids, block_table)
+                    seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
                     seq.last_node = prefix_info[1] 
-                    seq.last_matched_len = last_matched_len
+                    seq.last_node_matched_len = last_node_matched_len
                     del self.scheduler.block_manager.block_tables[seq.seq_id]
 
     def _process_model_outputs(

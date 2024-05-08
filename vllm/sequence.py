@@ -232,7 +232,7 @@ class Sequence:
         # to record last node in prefix cache tree
         self.last_node = None
         self.prefix_len = 0
-        self.last_matched_len = 0
+        self.last_node_matched_len = 0
         self.computed_block = []
 
     @property

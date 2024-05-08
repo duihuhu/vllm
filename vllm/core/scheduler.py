@@ -296,16 +296,16 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
     
-    def allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
-        seq = seq_group.get_seqs()[0]
-        if not self.block_manager.can_allocate(seq_group):
-            return None
-        else:
-            self._allocate_only_kv_blocks(seq_group)
-            # self.block_manager.block_tables[seq.seq_id]
-            block_table = self.block_manager.kv_block_tables[seq.seq_id]
-            phy_blocks = [phy_block for phy_block in block_table]
-            return phy_blocks
+    # def allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
+    #     seq = seq_group.get_seqs()[0]
+    #     if not self.block_manager.can_allocate(seq_group):
+    #         return None
+    #     else:
+    #         self._allocate_only_kv_blocks(seq_group)
+    #         # self.block_manager.block_tables[seq.seq_id]
+    #         block_table = self.block_manager.kv_block_tables[seq.seq_id]
+    #         phy_blocks = [phy_block for phy_block in block_table]
+    #         return phy_blocks
         
     def allocate_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
         seq = seq_group.get_seqs()[0]
@@ -314,6 +314,17 @@ class Scheduler:
         else:
             blocks_to_swap_in = self._allocate_kv_blocks(seq_group)
             # self.block_manager.block_tables[seq.seq_id]
+            block_table = self.block_manager.kv_block_tables[seq.seq_id]
+
+            phy_blocks = [phy_block for phy_block in block_table]
+            return phy_blocks, blocks_to_swap_in
+    
+    def allocate_kv_radix_blocks(self, seq_group: SequenceGroup) -> List[int]:
+        seq = seq_group.get_seqs()[0]
+        if not self.block_manager.can_allocate(seq_group):
+            return None
+        else:
+            blocks_to_swap_in = self._allocate_kv_radix_blocks(seq_group)
             block_table = self.block_manager.kv_block_tables[seq.seq_id]
 
             phy_blocks = [phy_block for phy_block in block_table]
@@ -639,15 +650,28 @@ class Scheduler:
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
 
-    def _allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> None:
-        self.block_manager.allocate_only_kv_blocks(seq_group)
+    # alread merge into _allocate_kv_blocks
+    # def _allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> None:
+    #     self.block_manager.allocate_only_kv_blocks(seq_group)
         
     def _allocate_kv_blocks(self, seq_group: SequenceGroup) -> None:
-        blocks_to_swap_in = self.block_manager.allocate_kv_blocks(seq_group)
-        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-            seq.status = SequenceStatus.RUNNING
+        blocks_to_swap_in = {}
+        if self.deploy_config.role == "prompt":
+            self.block_manager.allocate_only_kv_blocks(seq_group)
+        elif self.deploy_config.role == "decoder":
+            blocks_to_swap_in = self.block_manager.allocate_kv_blocks(seq_group)
+            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                seq.status = SequenceStatus.RUNNING
+            return blocks_to_swap_in
+    
+    def _allocate_kv_radix_blocks(self, seq_group: SequenceGroup) -> None:
+        blocks_to_swap_in = self.block_manager.allocate_radix_cache(seq_group, True)
+        if self.deploy_config.role == "decoder":
+            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                seq.status = SequenceStatus.RUNNING
         return blocks_to_swap_in
     
+    # alread merge into _allocate
     # def _allocate_mixed_cache(self, seq_group: SequenceGroup,  blocks_to_swap_in: Dict[int, int] = {}) -> None:
     #     mapping = self.block_manager.allocate_mixed_cache(seq_group)
     #     blocks_to_swap_in.update(mapping)

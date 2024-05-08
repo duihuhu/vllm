@@ -121,10 +121,10 @@ class CachedBlockAllocator(BlockAllocatorBase):
         return self.radix_cache.insert(key, value)
     
     def insert_radix_cache_on_node(self, node, key, value):
-        last_len = [0]
+        last_node_matched_len = [0]
         if node == None:
             node = self.radix_cache.root_node
-        return self.radix_cache._insert_helper(node, key, value, last_len), last_len[0]
+        return self.radix_cache._insert_helper(node, key, value, last_node_matched_len), last_node_matched_len[0]
 
     def allocate_radix_cache(self, token, num_tokens: int = 0) -> PhysicalTokenBlock:
         block = self.allocate_block(token, num_tokens)
@@ -393,14 +393,17 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return AllocStatus.LATER
 
-    def allocate_radix_cache(self, seq_group: SequenceGroup) -> None:
+    def allocate_radix_cache(self, seq_group: SequenceGroup, prepare_kv_blocks=None) -> None:
+         #todo if mcache open, should consider cache in dram
+        blocks_to_swap_in = {}
+        
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)     
         radix_token_ids = seq.data.get_radix_token_ids()
-        blocks, last_node, last_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
+        blocks, last_node, last_node_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
         seq.last_node = last_node
-        seq.last_matched_len = last_matched_len
+        seq.last_node_matched_len = last_node_matched_len
         block_table: BlockTable  = []
         if blocks:
             block_table = blocks.copy()
@@ -420,25 +423,32 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block_table.append(block)
         
         if seq.last_node == self.gpu_allocator.radix_cache.root_node:
-            prefix_info, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node,\
-                radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
+            prefix_info, last_node_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node,\
+                radix_token_ids[(pre_prefix_len-seq.last_node_matched_len):], block_table[(pre_prefix_len-seq.last_node_matched_len):])
 
-            seq.last_matched_len = last_matched_len
+            seq.last_node_matched_len = last_node_matched_len
             seq.prefix_len = prefix_info[0]
             seq.last_node = prefix_info[1]
         else:
             if pre_prefix_len <= num_prompt_blocks:
 
-                prefix_info, last_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, \
-                    radix_token_ids[(pre_prefix_len-seq.last_matched_len):], block_table[(pre_prefix_len-seq.last_matched_len):])
+                prefix_info, last_node_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, \
+                    radix_token_ids[(pre_prefix_len-seq.last_node_matched_len):], block_table[(pre_prefix_len-seq.last_node_matched_len):])
 
-                seq.prefix_len = seq.prefix_len - seq.last_matched_len + prefix_info[0]
+                seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
                 seq.last_node = prefix_info[1]
-                seq.last_matched_len = last_matched_len
+                seq.last_node_matched_len = last_node_matched_len
                 # Assign the block table for each sequence.
-        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-            self.block_tables[seq.seq_id] = block_table.copy()
         
+        if not prepare_kv_blocks:
+            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                self.block_tables[seq.seq_id] = block_table.copy()     
+        else:       
+            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                self.kv_block_tables[seq.seq_id] = block_table.copy()
+                
+        return blocks_to_swap_in
+    
     def allocate_mixed_cache(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
@@ -500,11 +510,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             self.block_tables[seq.seq_id] = block_table.copy()
         return block_number_mapping
 
+    #todo need merge allocate_only_kv_blocks with allocate_kv_blocks
     def allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
-
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)
 
@@ -1084,10 +1094,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for block in kv_block_table:
                 block_table.append(block)
             self.block_tables[seq.seq_id] = block_table
-            num_prompt_blocks = len(seq.logical_token_blocks)
-            for logical_idx in range(num_prompt_blocks):
-                kv_hash_block =  seq.hash_of_block(logical_idx)
-                if kv_hash_block in self.gpu_allocator.cached_kv_blocks:
-                    self.gpu_allocator.cached_blocks[kv_hash_block] = self.gpu_allocator.cached_kv_blocks[kv_hash_block]
-                    del self.gpu_allocator.cached_kv_blocks[kv_hash_block]    
+            #if self.enable_radix_caching, we process the same key's cache in after seq finished.
+            if not self.enable_radix_caching:
+                num_prompt_blocks = len(seq.logical_token_blocks)
+                for logical_idx in range(num_prompt_blocks):
+                    kv_hash_block =  seq.hash_of_block(logical_idx)
+                    if kv_hash_block in self.gpu_allocator.cached_kv_blocks:
+                        self.gpu_allocator.cached_blocks[kv_hash_block] = self.gpu_allocator.cached_kv_blocks[kv_hash_block]
+                        del self.gpu_allocator.cached_kv_blocks[kv_hash_block]    
             del self.kv_block_tables[seq.seq_id]
+    
