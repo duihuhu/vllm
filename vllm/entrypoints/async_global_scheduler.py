@@ -53,7 +53,7 @@ async def monitor_report(request: Request) -> Response:
     global_ranks =  request_dict.pop("global_ranks") 
     timestamp = request_dict.pop("timestamp")
     key = host + "_" + str(port) + "_" + engine_type
-    print("key global_ranks", key, global_ranks)
+    # print("key global_ranks", key, global_ranks)
     # print(key, unfinished_req, unfinished_tokens)
     if instance_table.get(key):
         instance = instance_table[key]
@@ -80,7 +80,7 @@ async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode
         request_dict['cmeta_port'] = cdecode_port
         request_dict['cmeta_ranks'] = cdecode_ranks
         request_dict['cmeta_kv_len'] = cdecode_blocks
-    print("request info ", request_dict["request_id"], time.time())
+    # print("request info ", request_dict["request_id"], time.time())
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
@@ -126,8 +126,8 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
     d_matched, d_tokens, d_node, d_last_node_matched_len = search_prefix(dtree, token_ids)
     if d_matched:
         cd_host, cd_port = d_node.split("_")
-        print("d_node ", d_node)
-        print("d_tokens ", d_tokens, len(d_tokens), len(p_tokens))
+        # print("d_node ", d_node)
+        # print("d_tokens ", d_tokens, len(d_tokens), len(p_tokens))
         instance = instance_table.get(d_node + "_" + cfg.edecode_label)
         cd_ranks = instance.global_ranks
         cd_blocks = len(d_tokens)
@@ -141,21 +141,21 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()   
     prompt_token_ids = request_dict["prompt_token_ids"]
-    print("request info ", request_dict["request_id"], time.time())
+    # print("request info ", request_dict["request_id"], time.time())
     #no matched other req
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
         edecode_host, edecode_port, cdecode_blocks = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
 
-    print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
+    # print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
     #提出 prefill repsonse内容text
     #forward_request_to_decode
     prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
                                                         (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks)
     
-    print("after asyc_forward_request ", time.time())
+    # print("after asyc_forward_request ", time.time())
     #提出 prefill repsonse内容text
     #decode_response
-    print("stream_results stream_results ")
+    # print("stream_results stream_results ")
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for resp in prefill_response:
             resp = resp.decode('utf-8')
