@@ -34,6 +34,10 @@ req_engine_info: Dict[str, List[str]] = {}
 
 coroutines: Dict[str, List] = {}
 
+gs_ptoken_tree = RadixCache()
+gs_dtoken_tree = RadixCache()
+request_num = 0
+
 @app.post("/monitor_report")
 async def monitor_report(request: Request) -> Response:
     headers = request.headers
@@ -206,13 +210,10 @@ if __name__ == "__main__":
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
     parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
-    request_num = 0
     args = parser.parse_args()
     if args.tokenizer is None:
         args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
-    gs_ptoken_tree = RadixCache()
-    gs_dtoken_tree = RadixCache()
     uvicorn.run(app,
                 host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,
