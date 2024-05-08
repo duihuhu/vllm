@@ -197,7 +197,7 @@ async def add_request(request: Request) -> Response:
          async for resp in prefill_response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
-            print("resp ")
+            print("resp ", resp)
             yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
              
     # #return results to global scheduler
