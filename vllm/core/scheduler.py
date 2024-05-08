@@ -196,6 +196,7 @@ class Scheduler:
     
     def add_send_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the send transfering map.
+        print("add_send_transfering ", seq_group.request_id)
         self.send_transfering[seq_group.request_id] = seq_group
     
     #todo check free_seq
