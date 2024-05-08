@@ -168,7 +168,6 @@ async def add_request(request: Request) -> Response:
         async for resp in decode_response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
-            print("decode_response ", resp)
             if n ==0:
                 kv_prepared = await asyc_forward_request_resp(resp, cfg.forward_eprefill_res_url % 
                                             (eprefill_host, eprefill_port))  
