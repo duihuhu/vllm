@@ -17,7 +17,7 @@ import time
 import requests
 import aiohttp
 
-
+AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
@@ -86,6 +86,7 @@ async def forward_request_to_prefill(request_dict, api_url, cdecode_host=None, c
     return response
 
 async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
+    await asyncio.sleep(3) 
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
         request_dict['cmeta_host'] = cdecode_host
