@@ -193,7 +193,7 @@ class RadixCache:
 
             if prefix_len == len(c_key):
                 if prefix_len == len(key):
-                    last_len[0] = prefix_len
+                    last_node_matched_len[0] = prefix_len
                     return prefix_len, child
                 else:
                     key = key[prefix_len:]
