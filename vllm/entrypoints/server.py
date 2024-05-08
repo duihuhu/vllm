@@ -209,7 +209,6 @@ async def generate_prefill(request: Request) -> Response:
     # prompt = payload.pop("prompt")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
-
     cache_meta = None
     if "cmeta_host" in payload:
         cmeta_host =  payload.pop("cmeta_host")

@@ -336,7 +336,10 @@ class _AsyncLLMEngine(LLMEngine):
             output = all_outputs[0][0]
         else:
             output = []
-
+            
+        for seq_group in self.scheduler.running:
+            print("running ", seq_group.request_id)
+        
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
