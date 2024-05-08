@@ -130,8 +130,8 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
     d_matched, d_tokens, d_node, d_last_node_matched_len = search_prefix(dtree, token_ids)
     if d_matched:
         cd_host, cd_port = d_node.split("_")
-        print("d_node ", d_node)
-        print("d_tokens ", d_tokens, len(d_tokens), len(p_tokens))
+        # print("d_node ", d_node)
+        # print("d_tokens ", d_tokens, len(d_tokens), len(p_tokens))
         instance = instance_table.get(d_node + "_" + cfg.edecode_label)
         cd_ranks = instance.global_ranks
         cd_blocks = len(d_tokens)
@@ -149,7 +149,7 @@ async def add_request(request: Request) -> Response:
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
         edecode_host, edecode_port, cdecode_blocks = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
 
-    print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
+    # print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
     #提出 prefill repsonse内容text
     #forward_request_to_decode
     prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % 
@@ -157,14 +157,14 @@ async def add_request(request: Request) -> Response:
     #提出 prefill repsonse内容text
     for res in get_streaming_response(prefill_response):
         prefill_res = res
-        print("gs prefill_res ", prefill_res)
+        # print("gs prefill_res ", prefill_res)
         
     #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
     
     decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % 
                                                         (edecode_host, edecode_port))
     #decode_response
-    print("stream_results stream_results ")
+    # print("stream_results stream_results ")
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
         # prefill' response, return to client
@@ -185,7 +185,7 @@ async def add_request(request: Request) -> Response:
                     gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
                 
                 if res['finished'] == True and args.enable_dcache:
-                    print("res", res, n)
+                    # print("res", res, n)
                     decoded_tokens = tuple(res["prompt_token_ids"] + res["prefilled_token_id"])
                     gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
                     pkv_response = await forward_request_to_prefill(res, cfg.forward_eprefill_res_kv_url % 
