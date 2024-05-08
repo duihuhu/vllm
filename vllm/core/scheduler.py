@@ -213,7 +213,7 @@ class Scheduler:
         return self.send_transfering[request_id]
 
     def add_recv_finished(self, request_ids: List[str]):
-        print("recv_finished_req_ids ", request_ids)
+        # print("recv_finished_req_ids ", request_ids)
         self.recv_finished_req_ids.extend(request_ids)
     
     def add_swap_finished(self, request_ids: List[str]):

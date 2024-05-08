@@ -36,7 +36,6 @@ coroutines: Dict[str, List] = {}
 
 gs_ptoken_tree = RadixCache()
 gs_dtoken_tree = RadixCache()
-request_num = 0
 
 @app.post("/monitor_report")
 async def monitor_report(request: Request) -> Response:
@@ -75,10 +74,6 @@ async def monitor_report(request: Request) -> Response:
     return ret
 
 async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
-    global request_num
-    if request_num == 0:
-        request_num = request_num + 1
-        await asyncio.sleep(5)
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
         request_dict['cmeta_host'] = cdecode_host
