@@ -173,7 +173,9 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
 
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
-    request_dict = await request.json()    
+    request_dict = await request.json()   
+    task = asyncio.current_task()
+    print("Coroutine ID:", id(task)) 
     print("add request ", time.time())
     prompt_token_ids = request_dict["prompt_token_ids"]
     
