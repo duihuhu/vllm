@@ -15,6 +15,7 @@ from typing import Dict, Set, List, Iterable, AsyncGenerator
 import asyncio
 import time
 import requests
+import aiohttp
 
 
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
@@ -91,9 +92,19 @@ async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode
         request_dict['cmeta_port'] = cdecode_port
         request_dict['cmeta_ranks'] = cdecode_ranks
         request_dict['cmeta_kv_len'] = cdecode_blocks
-        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
-    else:
-        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
+    async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
+        async with session.post(url=api_url, json=request_dict,
+                    headers=headers) as response:
+            if response.status == 200:
+                print("response " , response.content)
+                async for chunk in response.iter_lines(chunk_size=8192,
+                        decode_unicode=False,
+                        delimiter=b"\0"):
+                if chunk:
+                    data = json.loads(chunk.decode("utf-8"))
+                    # output = data["text"]
+                    # print(data)
+                    yield data
     return response
 
 async def forward_request_to_decode(prefill_res, api_url):
