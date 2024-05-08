@@ -638,7 +638,7 @@ class Scheduler:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
         t4 = time.time()
-
+        print("schedule ", t4-t3, t3-t2, t2-t1)
         return seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
