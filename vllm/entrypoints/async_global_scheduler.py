@@ -86,7 +86,6 @@ async def forward_request_to_prefill(request_dict, api_url, cdecode_host=None, c
     return response
 
 async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
-    await asyncio.sleep(3) 
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
         request_dict['cmeta_host'] = cdecode_host
@@ -107,6 +106,13 @@ async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode
                         message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
                         yield message.strip()  # 返回提取的消息
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
+
+async def asyc_forward_request_resp(request_dict, api_url):
+    headers = {"User-Agent": "Test Client"}
+    async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
+        async with session.post(url=api_url, json=request_dict,
+                                headers=headers) as response:
+            return await response
 
 async def forward_request_to_decode(prefill_res, api_url):
     headers = {"User-Agent": "Test Client"}
@@ -201,23 +207,23 @@ async def add_request(request: Request) -> Response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
             print("resp ", resp)
-            # if n ==0:
-            #     await send_to_prefill_response_kv_prepared(resp, cfg.forward_eprefill_res_url % 
-            #                                 (eprefill_host, eprefill_port))  
-            # else:
-            #     if resp['finished'] == True:
-            #         decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"][:-1])
-            #         gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
+            if n ==0:
+                kv_prepared = await asyc_forward_request_resp(resp, cfg.forward_eprefill_res_url % 
+                                            (eprefill_host, eprefill_port))  
+            else:
+                if resp['finished'] == True:
+                    decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"][:-1])
+                    gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
                 
-            #     if resp['finished'] == True and args.enable_dcache:
-            #         print("res", resp, n)
-            #         decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"])
-            #         gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
-            #         pkv_response = await forward_request_to_prefill(resp, cfg.forward_eprefill_res_kv_url % 
-            #                                                         (eprefill_host, eprefill_port))
-            #         for pkv_res in get_streaming_response(pkv_response):
-            #             await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % 
-            #                                             (edecode_host, edecode_port))
+                # if resp['finished'] == True and args.enable_dcache:
+                    # print("res", resp, n)
+                    # decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"])
+                    # gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
+                    # pkv_response = await forward_request_to_prefill(resp, cfg.forward_eprefill_res_kv_url % 
+                    #                                                 (eprefill_host, eprefill_port))
+                    # for pkv_res in get_streaming_response(pkv_response):
+                    #     await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % 
+                    #                                     (edecode_host, edecode_port))
 
                     #how to know data pass??
                     # gs_ptoken_tree.insert(decoded_tokens, None, str(cfg.edecode_host + ":" + cfg.edecode_port))
