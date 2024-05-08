@@ -440,8 +440,8 @@ class LLMEngine:
                 for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
                     seq.append_token_id(token_id, output_logprob)
             
-            for block in phy_blocks:
-                print("decode kv, response " , block.device, block.computed)
+            # for block in phy_blocks:
+                # print("decode kv, response " , block.device, block.computed)
             if not phy_blocks:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
             else:
