@@ -73,7 +73,7 @@ def post_request_and_get_response(args, prompt):
             #     print(f"vllm : {line!r}", flush=True)
             
 def post_request(args, prompt):
-    result1 = post_request_and_get_response(args, prompts)
+    result1 = post_request_and_get_response(args, prompt)
     
     result2 = post_request_and_get_response(args, result1)
     
