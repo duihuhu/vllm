@@ -180,7 +180,8 @@ async def add_request(request: Request) -> Response:
     #forward_request_to_decode
     prefill_response = await asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
                                                         (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks)
-
+    
+    print("after asyc_forward_request ", time.time())
     #提出 prefill repsonse内容text
     for res in get_streaming_response(prefill_response):
         prefill_res = res
