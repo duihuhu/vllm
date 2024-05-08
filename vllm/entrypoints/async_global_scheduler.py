@@ -206,7 +206,7 @@ async def add_request(request: Request) -> Response:
         async for resp in decode_response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
-            print("resp ", resp)
+            print("decode_response ", resp)
             if n ==0:
                 kv_prepared = await asyc_forward_request_resp(resp, cfg.forward_eprefill_res_url % 
                                             (eprefill_host, eprefill_port))  
@@ -228,8 +228,8 @@ async def add_request(request: Request) -> Response:
                     #how to know data pass??
                     # gs_ptoken_tree.insert(decoded_tokens, None, str(cfg.edecode_host + ":" + cfg.edecode_port))
 
-            yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
-
+                yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
+            n = n + 1 
     return StreamingResponse(stream_results())
 
 
