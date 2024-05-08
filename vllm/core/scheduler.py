@@ -149,6 +149,7 @@ class Scheduler:
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
             sliding_window=self.cache_config.sliding_window,
             enable_caching=self.cache_config.enable_prefix_caching,
+            enable_mcache=self.cache_config.enable_mcache,
             enable_radix_caching=self.cache_config.enable_radix_caching)
 
         # Sequence groups in the WAITING state.

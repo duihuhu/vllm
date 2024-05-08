@@ -445,6 +445,7 @@ class EngineArgs:
                                    self.forced_num_gpu_blocks,
                                    model_config.get_sliding_window(),
                                    self.enable_prefix_caching,
+                                   self.enable_mcache,
                                    self.enable_radix_caching)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size, self.tensor_parallel_size,

@@ -318,6 +318,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         watermark: float = 0.01,
         sliding_window: Optional[int] = None,
         enable_caching: bool = False,
+        enable_mcache: bool = False,
         enable_radix_caching: bool = False,
     ) -> None:
         self.block_size = block_size
