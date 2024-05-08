@@ -72,7 +72,11 @@ def post_request_and_get_response(args, prompt):
             #     num_printed_lines += 1
             #     print(f"vllm : {line!r}", flush=True)
             
-                
+def post_request(args, prompt):
+    result1 = post_request_and_get_response(args, prompts)
+    
+    result2 = post_request_and_get_response(args, result1)
+    
 def main(args, prompts):
     # coroutines = []
     # for prompt in prompts:
@@ -83,7 +87,7 @@ def main(args, prompts):
     # result2 = post_request_and_get_response(args, result1)
     td = []
     for i in range(2):
-        td.append(threading.Thread(target=post_request_and_get_response, args=(args, prompts)))
+        td.append(threading.Thread(target=post_request, args=(args, prompts)))
     
     for t in td:
         t.start()

@@ -4,8 +4,6 @@ import json
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
-import httpx
-import random
 from vllm.entrypoints.global_radix_tree import RadixCache
 from vllm.entrypoints.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
 from vllm.entrypoints.comm import EngineType
@@ -14,7 +12,6 @@ import vllm.entrypoints.entrypoints_config as cfg
 from typing import Dict, Set, List, Iterable, AsyncGenerator
 import asyncio
 import time
-import requests
 import aiohttp
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
@@ -73,18 +70,6 @@ async def monitor_report(request: Request) -> Response:
     ret = {"result": 'monitor_report succ'}
     return ret
 
-async def forward_request_to_prefill(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
-    headers = {"User-Agent": "Test Client"}
-    if cdecode_host:
-        request_dict['cmeta_host'] = cdecode_host
-        request_dict['cmeta_port'] = cdecode_port
-        request_dict['cmeta_ranks'] = cdecode_ranks
-        request_dict['cmeta_kv_len'] = cdecode_blocks
-        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
-    else:
-        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
-    return response
-
 async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
@@ -113,29 +98,7 @@ async def asyc_forward_request_resp(request_dict, api_url):
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
             return await response.text()
-
-async def forward_request_to_decode(prefill_res, api_url):
-    headers = {"User-Agent": "Test Client"}
-    pload = prefill_res
-    response = requests.post(api_url, headers=headers, json=pload, stream=True)
-    return response
-
-async def send_to_prefill_response_kv_prepared(d_res, api_url):
-    headers = {"User-Agent": "Test Client"}
-    pload = d_res
-    response = requests.post(api_url, headers=headers, json=pload, stream=True)
-    return response
-
-
-def get_streaming_response(response: requests.Response) -> Iterable[List[str]]:
-    for chunk in response.iter_lines(chunk_size=8192,
-                                     decode_unicode=False,
-                                     delimiter=b"\0"):
-        if chunk:
-            data = json.loads(chunk.decode("utf-8"))
-            # output = data["text"]
-            yield data
-
+        
 def search_prefix(radix_tree, token_ids):
     value, node, last_node_matched_len = radix_tree.only_match_prefix(tuple(token_ids))
     if value:
@@ -174,9 +137,6 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()   
-    task = asyncio.current_task()
-    print("Coroutine ID:", id(task)) 
-    print("add request ", time.time())
     prompt_token_ids = request_dict["prompt_token_ids"]
     
     #no matched other req
