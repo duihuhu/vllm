@@ -75,6 +75,7 @@ async def monitor_report(request: Request) -> Response:
     return ret
 
 async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
+    global request_num
     if request_num == 0:
         request_num = request_num + 1
         await asyncio.sleep(5)
