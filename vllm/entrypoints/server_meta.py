@@ -13,7 +13,13 @@ class InferResults:
         sampling_params,
         index,
         texts: List[str],
-        finished: bool
+        finished: bool,
+        ttft = 0,
+        jct = 0,
+        tbt = 0,
+        num_result = 0,
+        start_time = 0,
+        end_time = 0
     ) -> None:
         self.request_id = request_id
         self.opp_ranks = opp_ranks
@@ -27,6 +33,13 @@ class InferResults:
         self.index = index
         self.texts = texts
         self.finished = finished
+        
+        self.ttft = ttft
+        self.jct = jct
+        self.tbt = tbt
+        self.num_result = num_result
+        self.start_time = start_time
+        self.end_time = end_time
     
     def __json__(self) -> Dict:
         prompt_logprobs = []
@@ -65,6 +78,12 @@ class InferResults:
             "sampling_params": self.sampling_params.__json__(),
             "index": self.index,
             "texts": self.texts,
-            "finished": self.finished
+            "finished": self.finished,
+            "ttft": self.ttft,
+            "jct": self.jct,
+            "tbt": self.tbt,
+            "n": self.num_result,
+            "start_time": self.start_time,
+            "end_time": self.end_time
         }
     

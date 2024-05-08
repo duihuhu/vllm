@@ -154,7 +154,7 @@ async def generate_decode(request: Request) -> Response:
         finished=finished,
     )
     request_output.global_ranks = opp_ranks
-    
+    start_time = time.time()
     results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
     
@@ -167,6 +167,7 @@ async def generate_decode(request: Request) -> Response:
         
         #response to decode
         async for request_output in results_generator:
+            end_time = time.time()
             infer_result = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
@@ -178,8 +179,14 @@ async def generate_decode(request: Request) -> Response:
                 sampling_params = sampling_params,
                 index = request_output.outputs[0].index,
                 texts = [output.text for output in request_output.outputs],
-                finished = request_output.finished
+                finished = request_output.finished,
+                jct = end_time - start_time,    #when finished true need
+                tbt = end_time - start_time,    #when finished false need
+                num_result = -1,
+                start_time = start_time,
+                end_time = end_time
             )
+            start_time = end_time
             yield (json.dumps(infer_result.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
     
     return StreamingResponse(stream_results())
@@ -210,6 +217,7 @@ async def generate_prefill(request: Request) -> Response:
         print("matched decode instance " ,cmeta_host, cmeta_port, cmeta_ranks)
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
+    start_time = time.time()
     results_generator = server.engine.generate(prompt=None, sampling_params=sampling_params, request_id=request_id,\
         prompt_token_ids=prompt_token_ids, cache_meta=cache_meta)
     
@@ -217,6 +225,7 @@ async def generate_prefill(request: Request) -> Response:
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
             # print("request_output " , request_output)
+            end_time = time.time()
             infer_results = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
@@ -228,8 +237,13 @@ async def generate_prefill(request: Request) -> Response:
                 sampling_params = sampling_params,
                 index = request_output.outputs[0].index,
                 texts = [output.text for output in request_output.outputs],
-                finished = request_output.finished
+                finished = request_output.finished,
+                ttft = end_time - start_time,
+                jct = end_time - start_time,    #when finished true need
+                start_time = start_time,
+                end_time = end_time
             )
+            
             yield (json.dumps(infer_results.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
