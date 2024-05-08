@@ -90,14 +90,14 @@ class RadixCache:
                     self._only_match_prefix_helper(child, key[prefix_len:], value, last_node, last_node_matched_len)
                 # break
             
-    def insert(self, key, value=None):
+    def insert(self, key, value=None, addr=None):
         if self.disable:
             return len(key)
 
         last_len = [0]
         if value is None:
             value = [x for x in key]
-        return self._insert_helper(self.root_node, key, value, last_len), last_len[0]
+        return self._insert_helper(self.root_node, key, value, addr=None, last_len), last_len[0]
 
     def pretty_print(self):
         self._print_helper(self.root_node, 0)
