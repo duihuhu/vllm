@@ -148,7 +148,8 @@ class Scheduler:
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
             sliding_window=self.cache_config.sliding_window,
-            enable_caching=self.cache_config.enable_prefix_caching)
+            enable_caching=self.cache_config.enable_prefix_caching,
+            enable_radix_caching=self.cache_config.enable_radix_caching)
 
         # Sequence groups in the WAITING state.
         self.waiting: Deque[SequenceGroup] = deque()
@@ -571,16 +572,25 @@ class Scheduler:
             seq_data: Dict[int, SequenceData] = {}
             # seq_id -> physical block numbers
             block_tables: Dict[int, List[int]] = {}
-
-            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+            for seq in seqs:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
-                block_tables[seq_id] = self.block_manager.get_block_table(seq)
-                self.block_manager.access_all_blocks_in_seq(seq, now)
+                if not self.block_manager.enable_radix_caching:
+                    block_tables[seq_id] = self.block_manager.get_block_table(seq)
+                    self.block_manager.access_all_blocks_in_seq(seq, now)
+                else:
+                    block_table = self.block_manager.block_tables[seq.seq_id]
+                    block_tables[seq_id] = seq.computed_block + \
+                        [block.block_number for block in block_table[len(seq.computed_block):]] 
 
-            common_computed_block_nums = (
-                self.block_manager.get_common_computed_block_ids(
-                    seq_group.get_seqs(status=SequenceStatus.RUNNING)))
+            if self.block_manager.enable_radix_caching:
+                common_computed_block_nums = (
+                    self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
+            else:
+                common_computed_block_nums = (
+                    self.block_manager.get_common_computed_block_ids(
+                        seq_group.get_seqs(status=SequenceStatus.RUNNING)))
 
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
@@ -641,7 +651,10 @@ class Scheduler:
             seq.status = SequenceStatus.RUNNING
             
     def _allocate(self, seq_group: SequenceGroup) -> None:
-        self.block_manager.allocate(seq_group)
+        if self.block_manager.enable_radix_caching:
+            self.block_manager.allocate_radix_cache(seq_group)
+        else:
+            self.block_manager.allocate(seq_group)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             seq.status = SequenceStatus.RUNNING
 

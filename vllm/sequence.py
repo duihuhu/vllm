@@ -123,9 +123,13 @@ class SequenceData:
         # The number of tokens that are computed (that run against the model).
         self._num_computed_tokens = 0
 
+        self.radix_token_id = tuple(prompt_token_ids)
+
     def append_token_id(self, token_id: int, logprob: float) -> None:
         self.output_token_ids.append(token_id)
         self.cumulative_logprob += logprob
+        
+        self.radix_token_id = self.radix_token_id + (token_id,)
 
     def get_len(self) -> int:
         return len(self.output_token_ids) + len(self.prompt_token_ids)
@@ -139,6 +143,9 @@ class SequenceData:
     def get_token_ids(self) -> List[int]:
         return self.prompt_token_ids + self.output_token_ids
 
+    def get_radix_token_ids(self):
+        return self.radix_token_id
+    
     def get_num_computed_tokens(self) -> int:
         """Return the number of prefill tokens that are already computed."""
         return self._num_computed_tokens
@@ -221,6 +228,12 @@ class Sequence:
         self.read_offset = 0
         # Input + output tokens
         self.tokens: Optional[List[str]] = None
+
+        # to record last node in prefix cache tree
+        self.last_node = None
+        self.prefix_len = 0
+        self.last_matched_len = 0
+        self.computed_block = []
 
     @property
     def lora_int_id(self) -> int:

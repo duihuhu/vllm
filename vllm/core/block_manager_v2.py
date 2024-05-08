@@ -41,6 +41,7 @@ class BlockSpaceManagerV2(BlockSpaceManager):
         watermark: float = 0.01,
         sliding_window: Optional[int] = None,
         enable_caching: bool = False,
+        enable_radix_caching: bool = False,
     ) -> None:
         self.block_size = block_size
         self.num_total_gpu_blocks = num_gpu_blocks
@@ -55,6 +56,8 @@ class BlockSpaceManagerV2(BlockSpaceManager):
 
         assert not enable_caching, "Prefix caching not yet supported"
         self.enable_caching = enable_caching
+
+        self.enable_radix_caching = enable_radix_caching
 
         self.watermark_blocks = int(watermark * num_gpu_blocks)
 
