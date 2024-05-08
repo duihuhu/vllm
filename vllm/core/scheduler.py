@@ -790,8 +790,12 @@ class Scheduler:
 
             #should free 
             block_table = self.block_manager.block_tables[seq.seq_id]
-            for bkt in block_table:
-                self.block_manager.gpu_allocator.free(bkt)
+            if self.block_manager.enable_radix_caching:
+                for bkt in block_table:
+                    self.block_manager.gpu_allocator.free_radix_cache(bkt)
+            else:
+                for bkt in block_table:
+                    self.block_manager.gpu_allocator.free(bkt)
             del self.block_manager.block_tables[seq.seq_id]
             
             if request_id in self.send_transfering:

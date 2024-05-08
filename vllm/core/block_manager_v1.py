@@ -122,6 +122,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
     
     def insert_radix_cache_on_node(self, node, key, value):
         last_len = [0]
+        if node == None:
+            node = self.radix_cache.root_node
         return self.radix_cache._insert_helper(node, key, value, last_len), last_len[0]
 
     def allocate_radix_cache(self, token, num_tokens: int = 0) -> PhysicalTokenBlock:
