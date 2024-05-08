@@ -149,7 +149,7 @@ async def add_request(request: Request) -> Response:
     # eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
     #     edecode_host, edecode_port, cdecode_blocks = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
-            edecode_host, edecode_port, cdecode_blocks =  cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port,
+            edecode_host, edecode_port, cdecode_blocks =  cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
     # print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
     #提出 prefill repsonse内容text
     #forward_request_to_decode
