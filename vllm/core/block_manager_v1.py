@@ -88,6 +88,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
         self.radix_cache: RadixCache = RadixCache()
 
+        self.enable_mcache: bool = False
     # def get_num_evictor_blocks(self) -> int:
     #     return self.evictor.num_blocks
     
@@ -179,7 +180,10 @@ class CachedBlockAllocator(BlockAllocatorBase):
         block.ref_count -= 1
         if block.ref_count == 0:
             assert block.block_hash not in self.evictor
-            self.evictor.add(block)
+            if self.enable_mcache:
+                self.evictor.add_mcache(block)
+            else:
+                self.evictor.add(block)
 
             # Remove the block from the cached_blocks
             del self.cached_blocks[block.block_hash]
@@ -334,7 +338,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         assert watermark >= 0.0
 
         self.enable_caching = enable_caching
-
+        self.enable_mcache = enable_mcache
+        
         self.enable_radix_caching = enable_radix_caching
         
         self.watermark_blocks = int(watermark * num_gpu_blocks)
@@ -431,7 +436,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
             self.block_tables[seq.seq_id] = block_table.copy()
         
-
     def allocate_mixed_cache(self, seq_group: SequenceGroup) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
@@ -751,7 +755,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # seq.last_node = child
         return new_block
     
-
     def _allocate_last_physical_block(
         self,
         seq: Sequence,

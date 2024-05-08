@@ -34,7 +34,12 @@ class Evictor(ABC):
     def add(self, block: PhysicalTokenBlock):
         """Adds block to the evictor, making it a candidate for eviction"""
         pass
-
+    
+    @abstractmethod
+    def add_mcache(self, block: PhysicalTokenBlock):
+        """logical when use mcache with hash, Adds block to the evictor, making it a candidate for eviction"""
+        pass
+    
     @abstractmethod
     def remove(self, block_hash: int) -> PhysicalTokenBlock:
         """Simply removes the block with the hash value block_hash from the
@@ -74,6 +79,7 @@ class LRUEvictor(Evictor):
         self.free_table: OrderedDict[int, PhysicalTokenBlock] = OrderedDict()
 
         self.free_cache_table: OrderedDict[int, PhysicalTokenBlock] = OrderedDict()
+        
     def __contains__(self, block_hash: int) -> bool:
         return block_hash in self.free_table or block_hash in self.free_cache_table
 
@@ -97,11 +103,14 @@ class LRUEvictor(Evictor):
         evicted_block.computed = False
         return evicted_block
 
-    def add(self, block: PhysicalTokenBlock):
+    def add_mcache(self, block: PhysicalTokenBlock):
         if block.device == Device.CPU:
             self.free_table[block.block_hash] = block
         else:
             self.free_cache_table[block.block_hash] = block
+
+    def add(self, block: PhysicalTokenBlock):
+        self.free_table[block.block_hash] = block
 
     def remove(self, block_hash: int) -> PhysicalTokenBlock:
         if (block_hash not in self.free_table and block_hash not in self.free_cache_table):
@@ -110,13 +119,12 @@ class LRUEvictor(Evictor):
         if block_hash in self.free_table:
             block: PhysicalTokenBlock = self.free_table[block_hash]
             self.free_table.pop(block_hash)
-        else:
+        elif block_hash in self.free_cache_table:
             block: PhysicalTokenBlock = self.free_cache_table[block_hash]
             self.free_cache_table.pop(block_hash)
         return block
     
     def get_can_evicted_block(self) -> PhysicalTokenBlock:
-        
         evicted_block = next(iter(self.free_cache_table.values()))
         for _, block in self.free_cache_table.items():
             if evicted_block.last_accessed < block.last_accessed:

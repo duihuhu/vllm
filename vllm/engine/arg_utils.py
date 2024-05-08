@@ -69,6 +69,7 @@ class EngineArgs:
     role: str = None
     enable_dcache: bool = False
     enable_mcache: bool = False
+    enable_cache_meta: bool = False
     local_host: bool = str
     local_port: bool = str
     
@@ -396,6 +397,11 @@ class EngineArgs:
             action="store_true",
             help=('enable memory cache '))
         
+        parser.add_argument(
+            '--enable-cache-meta',
+            action="store_true",
+            help=('enable check cache meta from global scheduler'))
+
 
         parser.add_argument(
             '--local-host',
@@ -481,7 +487,7 @@ class EngineArgs:
         else:
             vision_language_config = None
 
-        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, self.enable_mcache, self.local_host, self.local_port)
+        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, self.enable_mcache, self.enable_cache_meta, self.local_host, self.local_port)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 

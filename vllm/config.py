@@ -836,6 +836,7 @@ class DeployConfig:
         role: str=None,
         enable_dcache: bool = False,
         enable_mcache: bool = False,
+        enable_cache_meta: bool = False,
         local_host: str = None,
         local_port: str = None
         ) -> None:
@@ -843,6 +844,7 @@ class DeployConfig:
             self.role = role
             self.enable_dcache = enable_dcache
             self.enable_mcache = enable_mcache
+            self.enable_cache_meta = enable_cache_meta
             
             self.local_host = local_host
             self.local_port = local_port

@@ -375,21 +375,22 @@ class Scheduler:
                     ignored_seq_groups.append(seq_group)
                     self.waiting.popleft()
                     continue
-                if not seq_group.cache_meta or not seq_group.cache_meta.ready:
-                    # If the sequence group cannot be allocated, stop.
-                    can_allocate = self.block_manager.can_allocate(seq_group)
-                    if can_allocate == AllocStatus.LATER:
-                        break
-                    elif can_allocate == AllocStatus.NEVER:
-                        logger.warning(
-                            f"Input prompt ({num_prefill_tokens} tokens) is too "
-                            f"long and exceeds the capacity of block_manager")
-                        for seq in waiting_seqs:
-                            seq.status = SequenceStatus.FINISHED_IGNORED
-                        ignored_seq_groups.append(seq_group)
-                        self.waiting.popleft()
-                        continue
-                    
+                if self.deploy_config.enable_cache_meta:
+                    if not seq_group.cache_meta or not seq_group.cache_meta.ready:
+                        # If the sequence group cannot be allocated, stop.
+                        can_allocate = self.block_manager.can_allocate(seq_group)
+                        if can_allocate == AllocStatus.LATER:
+                            break
+                        elif can_allocate == AllocStatus.NEVER:
+                            logger.warning(
+                                f"Input prompt ({num_prefill_tokens} tokens) is too "
+                                f"long and exceeds the capacity of block_manager")
+                            for seq in waiting_seqs:
+                                seq.status = SequenceStatus.FINISHED_IGNORED
+                            ignored_seq_groups.append(seq_group)
+                            self.waiting.popleft()
+                            continue
+                        
                 lora_int_id = 0
                 if self.lora_enabled:
                     lora_int_id = seq_group.lora_int_id
@@ -400,18 +401,19 @@ class Scheduler:
                         leftover_waiting_sequences.appendleft(seq_group)
                         self.waiting.popleft()
                         continue
-
-                if seq_group.cache_meta and not seq_group.cache_meta.ready:
-                    self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
-                    seq = seq_group.get_seqs()[0]
-                    block_table = self.block_manager.block_tables[seq.seq_id]
-                    phy_blocks = [phy_block for phy_block in block_table]
-                    computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-                    if len(computed_blocks) < seq_group.cache_meta.cmeta_kv_len:
-                        seq_group.cache_meta.cached_len = len(computed_blocks)
-                        cached_seq_groups.append(seq_group)
-                        self.waiting.popleft()
-                        continue    
+                
+                if self.deploy_config.enable_cache_meta:
+                    if seq_group.cache_meta and not seq_group.cache_meta.ready:
+                        self._allocate(seq_group, blocks_to_swap_in)
+                        seq = seq_group.get_seqs()[0]
+                        block_table = self.block_manager.block_tables[seq.seq_id]
+                        phy_blocks = [phy_block for phy_block in block_table]
+                        computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+                        if len(computed_blocks) < seq_group.cache_meta.cmeta_kv_len:
+                            seq_group.cache_meta.cached_len = len(computed_blocks)
+                            cached_seq_groups.append(seq_group)
+                            self.waiting.popleft()
+                            continue    
 
                 # If the number of batched tokens exceeds the limit, stop.
                 num_batched_tokens += num_prefill_tokens
@@ -430,11 +432,12 @@ class Scheduler:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
                 # self._allocate(seq_group)
-                if not seq_group.cache_meta:
-                    self._allocate_mixed_cache(seq_group, blocks_to_swap_in)
-                elif seq_group.cache_meta and seq_group.cache_meta.ready:
-                    for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-                        seq.status = SequenceStatus.RUNNING
+                if not self.deploy_config.enable_cache_meta:
+                    self._allocate(seq_group, blocks_to_swap_in)
+                elif self.deploy_config.enable_cache_meta:
+                    if seq_group.cache_meta and seq_group.cache_meta.ready:
+                        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                            seq.status = SequenceStatus.RUNNING
                     
                 # print("_allocate_mixed_cache blocks_to_swap_in ", blocks_to_swap_in)
                 self.running.append(seq_group)
@@ -644,15 +647,18 @@ class Scheduler:
             seq.status = SequenceStatus.RUNNING
         return blocks_to_swap_in
     
-    def _allocate_mixed_cache(self, seq_group: SequenceGroup,  blocks_to_swap_in: Dict[int, int] = {}) -> None:
-        mapping = self.block_manager.allocate_mixed_cache(seq_group)
-        blocks_to_swap_in.update(mapping)
-        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-            seq.status = SequenceStatus.RUNNING
+    # def _allocate_mixed_cache(self, seq_group: SequenceGroup,  blocks_to_swap_in: Dict[int, int] = {}) -> None:
+    #     mapping = self.block_manager.allocate_mixed_cache(seq_group)
+    #     blocks_to_swap_in.update(mapping)
+    #     for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+    #         seq.status = SequenceStatus.RUNNING
             
-    def _allocate(self, seq_group: SequenceGroup) -> None:
+    def _allocate(self, seq_group: SequenceGroup,  blocks_to_swap_in: Dict[int, int] = {}) -> None:
         if self.block_manager.enable_radix_caching:
             self.block_manager.allocate_radix_cache(seq_group)
+        elif self.block_manager.enable_mcache:
+            mapping = self.block_manager.allocate_mixed_cache(seq_group)
+            blocks_to_swap_in.update(mapping)
         else:
             self.block_manager.allocate(seq_group)
         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
@@ -812,16 +818,17 @@ class Scheduler:
                 #move cached_kv_blocks to cached_blocks
                 self.block_manager.move_kv_blocks_meta(seq_group)
                 self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
-                
-            if seq_group.cache_meta:
-                seq_group.cache_meta.ready = True
-                for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
-                    seq.status = SequenceStatus.WAITING
-                self.waiting.append(seq_group)
-                del self.recv_transfering[request_id]
-                self.recv_finished_req_ids.remove(request_id)
-                self.block_manager.mark_trans_blocks_as_computed(seq_group=seq_group)
-                continue
+            
+            if self.deploy_config.enable_cache_meta:
+                if seq_group.cache_meta:
+                    seq_group.cache_meta.ready = True
+                    for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                        seq.status = SequenceStatus.WAITING
+                    self.waiting.append(seq_group)
+                    del self.recv_transfering[request_id]
+                    self.recv_finished_req_ids.remove(request_id)
+                    self.block_manager.mark_trans_blocks_as_computed(seq_group=seq_group)
+                    continue
             
             # recv cache in prompt is only cache, not has reference, so it will in evicted cache
             if self.deploy_config.role == "prompt":

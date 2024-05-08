@@ -300,9 +300,10 @@ class _AsyncLLMEngine(LLMEngine):
         """
         seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self.scheduler.schedule()
 
-        if cached_seq_groups:
-            for seq_group in cached_seq_groups:
-                asyncio.create_task(self._query_cache(seq_group))
+        if self.deploy_config.enable_cache_meta:
+            if cached_seq_groups:
+                for seq_group in cached_seq_groups:
+                    asyncio.create_task(self._query_cache(seq_group))
         
         if self.deploy_config.enable_mcache:
             if cache_blocks_to_swap_out:
