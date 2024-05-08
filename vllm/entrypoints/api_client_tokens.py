@@ -64,6 +64,7 @@ def post_request_and_get_response(args, prompt):
         for h in get_streaming_response(rsp):
             if h['finished'] == True:
                 print("res", h)
+                return h["prefilled_token_id"]
             # clear_line(num_printed_lines)
             # num_printed_lines = 0
             # for _, line in enumerate(h):
@@ -75,7 +76,9 @@ def main(args, prompts):
     # coroutines = []
     # for prompt in prompts:
     #     print(f"prompt:", end=' ', flush=True)
-    post_request_and_get_response(args, prompts)
+    prefilled_token_id = post_request_and_get_response(args, prompts)
+    prefilled_token_id = post_request_and_get_response(args, prompts + prefilled_token_id)
+
     #     coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
     # await asyncio.gather(*coroutines)
 

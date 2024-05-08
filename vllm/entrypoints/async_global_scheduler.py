@@ -170,6 +170,7 @@ async def add_request(request: Request) -> Response:
         # prefill' response, return to client
         n = 0
         prefilled_tokens = tuple(prefill_res["prompt_token_ids"] + prefill_res["prefilled_token_id"])
+        print("prefilled_tokens", len(prefilled_tokens))
         gs_ptoken_tree.insert(prefilled_tokens, None, str(eprefill_host + "_" + str(eprefill_port)))
         
         yield (json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8")
@@ -182,6 +183,7 @@ async def add_request(request: Request) -> Response:
             else:
                 if res['finished'] == True:
                     decoded_tokens = tuple(res["prompt_token_ids"] + res["prefilled_token_id"])
+                    print("decoded_tokens " , len(decoded_tokens))
                     gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
                 
                 if res['finished'] == True and args.enable_dcache:
