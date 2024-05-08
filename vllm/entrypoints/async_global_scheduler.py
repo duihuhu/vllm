@@ -92,20 +92,20 @@ async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode
         request_dict['cmeta_port'] = cdecode_port
         request_dict['cmeta_ranks'] = cdecode_ranks
         request_dict['cmeta_kv_len'] = cdecode_blocks
+        
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         async with session.post(url=api_url, json=request_dict,
-                    headers=headers) as response:
+                                headers=headers) as response:
             if response.status == 200:
-                print("response " , response.content)
-                async for chunk in response.iter_lines(chunk_size=8192,
-                        decode_unicode=False,
-                        delimiter=b"\0"):
-                if chunk:
-                    data = json.loads(chunk.decode("utf-8"))
-                    # output = data["text"]
-                    # print(data)
-                    yield data
-    return response
+                delimiter=b"\0"
+                buffer = b''  # 用于缓存数据块中的部分消息
+                async for chunk in response.content.iter_any():
+                    buffer += chunk  # 将新的数据块添加到缓冲区中
+                    while delimiter in buffer:
+                        index = buffer.index(delimiter)  # 查找分隔符在缓冲区中的位置
+                        message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
+                        yield message.strip()  # 返回提取的消息
+                        buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
 
 async def forward_request_to_decode(prefill_res, api_url):
     headers = {"User-Agent": "Test Client"}
@@ -177,8 +177,9 @@ async def add_request(request: Request) -> Response:
     print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
     #提出 prefill repsonse内容text
     #forward_request_to_decode
-    prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % 
+    prefill_response = await asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
                                                         (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks)
+
     #提出 prefill repsonse内容text
     for res in get_streaming_response(prefill_response):
         prefill_res = res
