@@ -322,7 +322,7 @@ class LLMEngine:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
             self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
         else:
-            del self.scheduler.del_send_transfering(request_id)
+            self.scheduler.del_send_transfering(request_id)
             
     def add_request(
         self,
