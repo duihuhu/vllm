@@ -338,7 +338,7 @@ class _AsyncLLMEngine(LLMEngine):
             output = []
             
         for seq_group in self.scheduler.running:
-            print("running ", seq_group.request_id, seq_group.is_finished)
+            print("running ", seq_group.request_id, seq_group.is_finished())
         
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
