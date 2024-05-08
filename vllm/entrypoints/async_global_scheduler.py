@@ -71,13 +71,16 @@ async def monitor_report(request: Request) -> Response:
     return ret
 
 async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
+    if request_num == 0:
+        request_num = request_num + 1
+        await asyncio.sleep(5)
     headers = {"User-Agent": "Test Client"}
     if cdecode_host:
         request_dict['cmeta_host'] = cdecode_host
         request_dict['cmeta_port'] = cdecode_port
         request_dict['cmeta_ranks'] = cdecode_ranks
         request_dict['cmeta_kv_len'] = cdecode_blocks
-        
+    print("request info ", request_dict["request_id"], time.time())
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
@@ -138,7 +141,7 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()   
     prompt_token_ids = request_dict["prompt_token_ids"]
-    
+    print("request info ", request_dict["request_id"], time.time())
     #no matched other req
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
         edecode_host, edecode_port, cdecode_blocks = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
@@ -203,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
     parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
-    
+    request_num = 0
     args = parser.parse_args()
     if args.tokenizer is None:
         args.tokenizer = args.model
