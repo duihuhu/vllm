@@ -84,6 +84,18 @@ async def forward_request_to_prefill(request_dict, api_url, cdecode_host=None, c
         response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
     return response
 
+async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode_port=None, cdecode_ranks=None, cdecode_blocks=None):
+    headers = {"User-Agent": "Test Client"}
+    if cdecode_host:
+        request_dict['cmeta_host'] = cdecode_host
+        request_dict['cmeta_port'] = cdecode_port
+        request_dict['cmeta_ranks'] = cdecode_ranks
+        request_dict['cmeta_kv_len'] = cdecode_blocks
+        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
+    else:
+        response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
+    return response
+
 async def forward_request_to_decode(prefill_res, api_url):
     headers = {"User-Agent": "Test Client"}
     pload = prefill_res
@@ -145,7 +157,8 @@ def get_epd_cached_meta(ptree, dtree, token_ids):
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()    
     print("add request ", time.time())
-    prompt_token_ids = request_dict["prompt_token_ids"]   
+    prompt_token_ids = request_dict["prompt_token_ids"]
+    
     #no matched other req
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
         edecode_host, edecode_port, cdecode_blocks = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
