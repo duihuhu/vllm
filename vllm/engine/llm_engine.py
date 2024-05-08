@@ -731,9 +731,7 @@ class LLMEngine:
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
         finished_seq_groups = []
-
-        for seq_group in self.scheduler.running:
-            print("running 1 ", seq_group.request_id, seq_group.is_finished())
+            
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
             token_chunk_size = scheduled_seq_group.token_chunk_size
@@ -742,9 +740,6 @@ class LLMEngine:
             
             if seq_group.is_finished():
                 finished_seq_groups.append(seq_group)
-
-        for seq_group in self.scheduler.running:
-            print("running 2 ", seq_group.request_id, seq_group.is_finished())
             
         if finished_seq_groups and self.scheduler.block_manager.enable_radix_caching:
             # start_time = time.time()
@@ -752,9 +747,6 @@ class LLMEngine:
 
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
-        
-        for seq_group in self.scheduler.running:
-            print("running 3 ", seq_group.request_id, seq_group.is_finished())
         # Create the outputs.
         request_outputs: List[RequestOutput] = []
         for scheduled_seq_group in scheduled_seq_groups:
