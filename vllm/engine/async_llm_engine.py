@@ -206,9 +206,9 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        t1 = time.time()
+        # t1 = time.time()
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
-        t2 = time.time()
+        # t2 = time.time()
 
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -218,10 +218,10 @@ class _AsyncLLMEngine(LLMEngine):
                 scheduler_outputs.blocks_to_copy)
         else:
             output = []
-        t3 = time.time()
+        # t3 = time.time()
         p_output = self._process_model_outputs(output, scheduler_outputs)
-        t4 = time.time()
-        print("step async ", t4-t3, t3-t2, t2-t1)
+        # t4 = time.time()
+        # print("step async ", t4-t3, t3-t2, t2-t1)
         return p_output
 
     async def encode_request_async(
