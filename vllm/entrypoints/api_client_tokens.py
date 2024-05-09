@@ -101,7 +101,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     # asyncio.run(main(args,prompts))
     # prompts = ['San Francisco is a San Francisco is a San Francisco is a']
-    prompts = ['San Francisco is ']
+    prompts = ['San Francisco is a']
     
     input_value_token_ids = tokenizer(prompts[0]).input_ids
 

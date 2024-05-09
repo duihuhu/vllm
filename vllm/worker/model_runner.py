@@ -642,15 +642,12 @@ class ModelRunner:
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
     ) -> Optional[SamplerOutput]:
-        t1 = time.time()
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
          ) = self.prepare_input_tensors(seq_group_metadata_list)
 
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
-        t2 = time.time()
-
         # Execute the model.
         if attn_metadata.use_cuda_graph:
             graph_batch_size = input_tokens.shape[0]
@@ -673,15 +670,11 @@ class ModelRunner:
         # Only perform sampling in the driver worker.
         if not sampling_metadata.perform_sampling:
             return None
-        t3 = time.time()
-
         # Sample the next token.
         output = self.model.sample(
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-        t4 = time.time()
-        print("in model ", t4-t3, t3-t2, t2-t1, logits.shape,sampling_metadata)
         return output
 
     @torch.inference_mode()
