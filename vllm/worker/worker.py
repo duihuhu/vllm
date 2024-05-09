@@ -260,7 +260,7 @@ class Worker:
         # if wait_for_swap_out:
         #     self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
         
-        swap_finished_req_ids = []
+        # swap_finished_req_ids = []
         # if num_seq_groups == 0:
             # swap_finished_req_ids = self.cache_engine.check_finished_events()
     
