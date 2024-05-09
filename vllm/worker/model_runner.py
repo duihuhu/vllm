@@ -662,14 +662,14 @@ class ModelRunner:
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        print("before kv_caches ", kv_caches[0])
+        # print("before kv_caches ", kv_caches[0])
         torch.cuda.synchronize()
         start_time = time.time()
         # print("execute_model_kwargs ",  execute_model_kwargs["input_ids"], execute_model_kwargs["positions"], execute_model_kwargs["attn_metadata"])
         hidden_states = model_executable(**execute_model_kwargs)
         torch.cuda.synchronize()
         end_time  = time.time()
-        print("model_executable ", end_time-start_time, seq_group_metadata_list[0].is_prompt)
+        # print("model_executable ", end_time-start_time, seq_group_metadata_list[0].is_prompt)
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
