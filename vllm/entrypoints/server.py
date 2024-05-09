@@ -185,7 +185,7 @@ async def generate_decode(request: Request) -> Response:
                 finished = request_output.finished,
                 jct = end_time - last_time,   
                 tbt = end_time - last_time,   
-                num_result = -1,
+                num_result = len(request_output.outputs[0].token_ids),
                 start_time = last_time,
                 end_time = end_time
             )
