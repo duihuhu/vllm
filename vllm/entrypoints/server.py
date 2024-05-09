@@ -181,11 +181,14 @@ async def generate_prefill(request: Request) -> Response:
     """
     payload = await request.json()
     prompt = payload.pop("prompt")
+
+    prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
 
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
-    results_generator = server.engine.generate(prompt, sampling_params, request_id)
+    results_generator = server.engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, \
+        sampling_params=sampling_params, request_id=request_id)
     
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
