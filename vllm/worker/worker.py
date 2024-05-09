@@ -231,7 +231,7 @@ class Worker:
         blocks_to_swap_in: Optional[Dict[int, int]] = None,
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
-        wait_for_swap_out: List[str] = None,
+        # wait_for_swap_out: List[str] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
