@@ -29,7 +29,7 @@ import ray
 import json
 import socket
 from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferRequestIdTask, TransferBlocksTask, TransferTaskSwapBlocks
-
+import time
 logger = init_logger(__name__)
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -269,10 +269,11 @@ class Worker:
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
-
+        start_time = time.time()
         output = self.model_runner.execute_model(seq_group_metadata_list,
                                                  self.gpu_cache)
-        
+        end_time = time.time()
+        print("model execute time ", end_time-start_time)
         # swap_finished_req_ids = self.cache_engine.check_finished_events()
         # return (output, swap_finished_req_ids)
         return output
