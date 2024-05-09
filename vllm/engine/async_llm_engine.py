@@ -341,6 +341,8 @@ class _AsyncLLMEngine(LLMEngine):
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
+        t4 = time.time()
+        print("step async ", t4-t3, t3-t2, t2-t1)
         if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
             prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
             for seq_group in prefilled_seq_groups:
@@ -350,8 +352,7 @@ class _AsyncLLMEngine(LLMEngine):
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
-        t4 = time.time()
-        print("step async ", t4-t3, t3-t2, t2-t1)
+
         # if self.deploy_config.enable_mcache:
             # num_blocks = self.scheduler.check_hbm_usage()
             # # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()
