@@ -243,7 +243,7 @@ async def generate_prefill(request: Request) -> Response:
                 finished = request_output.finished,
                 ttft = end_time - start_time,
                 jct = end_time - start_time,    #when finished true need
-                num_result = n,
+                num_result = len(request_output.outputs[0].token_ids),
                 start_time = start_time,
                 end_time = end_time
             )
