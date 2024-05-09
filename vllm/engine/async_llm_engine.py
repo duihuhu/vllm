@@ -313,15 +313,15 @@ class _AsyncLLMEngine(LLMEngine):
                     blocks_to_swap_out=cache_blocks_to_swap_out
             )
         t2 = time.time()
-        if scheduler_outputs.is_empty():
-            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
-                self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_send_transfering:
-                    # logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
-                    # print(self.scheduler.swapping_in, self.scheduler.swapping_out ,  self.scheduler.send_transfering ,
-                    #       self.scheduler.recv_transfering,  self.scheduler.req_send_transfering)
-                    time.sleep(0.00001)
-            else:
-                return []
+        # if scheduler_outputs.is_empty():
+        #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+        #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_send_transfering:
+        #             # logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+        #             # print(self.scheduler.swapping_in, self.scheduler.swapping_out ,  self.scheduler.send_transfering ,
+        #             #       self.scheduler.recv_transfering,  self.scheduler.req_send_transfering)
+        #             time.sleep(0.00001)
+        #     else:
+        #         return []
             
         if not scheduler_outputs.is_empty():
             # Execute the model.
