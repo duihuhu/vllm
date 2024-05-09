@@ -706,6 +706,9 @@ void paged_attention_v1_launcher(
     case 32:                                                          \
       CALL_V1_LAUNCHER(T, CACHE_T, 32, IS_FP8_E5M2_KV_CACHE);         \
       break;                                                          \
+    case 128:                                                         \
+      CALL_V1_LAUNCHER(T, CACHE_T, 128, IS_FP8_E5M2_KV_CACHE);        \
+      break;                                                          \
     default:                                                          \
       TORCH_CHECK(false, "Unsupported block size: ", block_size);     \
       break;                                                          \
@@ -898,6 +901,9 @@ void paged_attention_v2_launcher(
       break;                                                                \
     case 32:                                                                \
       CALL_V2_LAUNCHER(T, CACHE_T, 32, IS_FP8_E5M2_KV_CACHE);               \
+      break;                                                                \
+    case 128:                                                               \
+      CALL_V2_LAUNCHER(T, CACHE_T, 128, IS_FP8_E5M2_KV_CACHE);              \
       break;                                                                \
     default:                                                                \
       TORCH_CHECK(false, "Unsupported block size: ", block_size);           \
