@@ -342,7 +342,7 @@ class _AsyncLLMEngine(LLMEngine):
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         t4 = time.time()
-        print("step async ", t4-t3, t3-t2, t2-t1)
+        # print("step async ", t4-t3, t3-t2, t2-t1)
         if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
             prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
             for seq_group in prefilled_seq_groups:
