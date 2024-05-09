@@ -130,7 +130,7 @@ class RequestTracker:
         self._request_streams[request_id].put(request_output)
         if is_prefill or request_output.finished:
             if verbose:
-                logger.info(f"Finished request {request_id}.", time.time())
+                logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
 
     def process_kv_response(self,
