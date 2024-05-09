@@ -298,7 +298,7 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        # t1 = time.time()
+        t1 = time.time()
         seq_group_metadata_list, scheduler_outputs, cache_blocks_to_swap_out, cached_seq_groups = self.scheduler.schedule()
 
         if self.deploy_config.enable_cache_meta:
@@ -337,7 +337,7 @@ class _AsyncLLMEngine(LLMEngine):
             # output = all_outputs[0]
         else:
             output = []
-        # t3 = time.time()
+        t3 = time.time()
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
@@ -350,8 +350,8 @@ class _AsyncLLMEngine(LLMEngine):
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
-        # t4 = time.time()
-        # print("step async ", t4-t3, t3-t2, t2-t1)
+        t4 = time.time()
+        print("step async ", t4-t3, t3-t2, t2-t1)
         # if self.deploy_config.enable_mcache:
             # num_blocks = self.scheduler.check_hbm_usage()
             # # num_blocks = self.scheduler.block_manager.gpu_allocator.get_num_can_evicted_blocks()

@@ -243,7 +243,7 @@ async def generate_prefill(request: Request) -> Response:
                 finished = request_output.finished,
                 ttft = end_time - start_time,
                 jct = end_time - start_time,    #when finished true need
-                num_result = 0,
+                num_result = n,
                 start_time = start_time,
                 end_time = end_time
             )
