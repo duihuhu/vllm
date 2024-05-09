@@ -123,10 +123,11 @@ class Worker:
                                      self.local_rank)
         # Set random seed.
         set_random_seed(self.model_config.seed)
-        
-        if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 2) !=0:
-            print("self.local_rank ", self.get_local_rank)
-            raise ValueError("CreateHcclFromRankTable error")
+       
+        if self.deploy_config.enable_separate: 
+            if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 2) !=0:
+                print("self.local_rank ", self.get_local_rank)
+                raise ValueError("CreateHcclFromRankTable error")
         return self.get_local_rank
 
     def load_model(self):
