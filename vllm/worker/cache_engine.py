@@ -247,6 +247,7 @@ class CacheEngine:
                     del self.recv_waiting_request_ids[channel]
                 else:
                     recv_blocks_finished.append(TransferTaskMeta(channel,request_id))
+                    gpu_ops.HandleNcclCommDestroy()
         # release recv events
         for channel in recv_finished_events:
             self.recv_events.pop(channel)

@@ -139,6 +139,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "RecvBlocksRemote",
     &RecvBlocksRemote,
     "RecvBlocksRemote");
+  
+  gpu_ops.def(
+    "HandleNcclCommDestroy",
+    &HandleNcclCommDestroy,
+    "HandleNcclCommDestroy");
 
 #ifndef USE_ROCM
   // Custom all-reduce kernels

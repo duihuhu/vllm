@@ -291,3 +291,8 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     }
     // std::cout << "recv blocks success" << std::endl;
 }
+
+void HandleNcclCommDestroy()
+{
+    ncclCommDestroy(g_globalNcclComm);
+}
