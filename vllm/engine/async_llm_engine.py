@@ -334,7 +334,7 @@ class _AsyncLLMEngine(LLMEngine):
             # self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             
             # Only the driver worker returns the sampling results.
-            output = all_outputs[0][0]
+            output = all_outputs[0]
         else:
             output = []
         t3 = time.time()

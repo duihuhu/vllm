@@ -435,8 +435,8 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
             })
 
         # Only the driver worker returns the sampling results.
-        # output = all_outputs[0]
-        return all_outputs
+        output = all_outputs[0]
+        return output
 
     async def check_health_async(self) -> None:
         """Raises an error if engine is unhealthy."""
