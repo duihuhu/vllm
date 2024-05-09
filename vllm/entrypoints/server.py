@@ -180,7 +180,7 @@ async def generate_prefill(request: Request) -> Response:
         Response: _description_
     """
     payload = await request.json()
-    prompt = payload.pop("prompt")
+    # prompt = payload.pop("prompt")
 
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
