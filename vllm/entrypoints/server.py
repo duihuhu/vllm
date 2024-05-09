@@ -160,16 +160,12 @@ async def generate_decode(request: Request) -> Response:
     
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
-        n = 0
-        last_time = 0
         #response to p
         async for kv_response in results_generator:
             yield (json.dumps(kv_response.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
             break
         #response to decode
         async for request_output in results_generator:
-            if n == 0:
-                last_time = start_time
             end_time = time.time()
             infer_result = InferResults(
                 request_id = request_output.request_id,
@@ -183,15 +179,13 @@ async def generate_decode(request: Request) -> Response:
                 index = request_output.outputs[0].index,
                 texts = [output.text for output in request_output.outputs],
                 finished = request_output.finished,
-                jct = end_time - last_time,   
-                tbt = end_time - last_time,   
+                jct = end_time - start_time,   
+                tbt = end_time - start_time,   
                 num_result = len(request_output.outputs[0].token_ids),
-                start_time = last_time,
+                start_time = start_time,
                 end_time = end_time
             )
-            last_time = end_time
             yield (json.dumps(infer_result.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
-            n = n + 1
     return StreamingResponse(stream_results())
     
     
