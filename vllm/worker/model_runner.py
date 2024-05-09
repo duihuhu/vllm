@@ -669,7 +669,7 @@ class ModelRunner:
         torch.cuda.synchronize()
         end_time  = time.time()
         print("model_executable ", end_time-start_time)
-        
+        print("kv_caches ", kv_caches[0])
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
