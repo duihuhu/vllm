@@ -682,7 +682,7 @@ class ModelRunner:
             sampling_metadata=sampling_metadata,
         )
         t4 = time.time()
-        print("in model ", t4-t3, t3-t2, t2-t1)
+        print("in model ", t4-t3, t3-t2, t2-t1, type(logits),type(sampling_metadata))
         return output
 
     @torch.inference_mode()
