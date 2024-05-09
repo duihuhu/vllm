@@ -324,6 +324,11 @@ class _AsyncLLMEngine(LLMEngine):
         #         return []
             
         if not scheduler_outputs.is_empty():
+            print("seq_group_metadata_list ", seq_group_metadata_list)
+            print("scheduler_outputs.blocks_to_swap_in " ,scheduler_outputs.blocks_to_swap_in)
+            print("blocks_to_swap_out ", scheduler_outputs.blocks_to_swap_out)
+            print("blocks_to_copy ", scheduler_outputs.blocks_to_copy)
+
             # Execute the model.
             output = await self.model_executor.execute_model_async(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
