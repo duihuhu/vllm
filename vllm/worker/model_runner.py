@@ -670,14 +670,11 @@ class ModelRunner:
         # Only perform sampling in the driver worker.
         if not sampling_metadata.perform_sampling:
             return None
-        start_time = time.time()
         # Sample the next token.
         output = self.model.sample(
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-        end_time = time.time()
-        print("model sample ", end_time-start_time)
         return output
 
     @torch.inference_mode()
