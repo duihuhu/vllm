@@ -191,7 +191,7 @@ async def generate_decode(request: Request) -> Response:
             )
             last_time = end_time
             yield (json.dumps(infer_result.__json__(), ensure_ascii=False) + "\0").encode("utf-8")
-    
+            n = n + 1
     return StreamingResponse(stream_results())
     
     
