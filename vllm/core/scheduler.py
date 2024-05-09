@@ -846,6 +846,7 @@ class Scheduler:
             seq_group = self.recv_transfering[request_id]
 
             if self.deploy_config.role == "decoder":
+                print("in decoder running append ", time.time())
                 self.running.append(seq_group)
                 #end recv, when role is decode
                 #move kv_block_tables to block_table
