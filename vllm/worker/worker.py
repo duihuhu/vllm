@@ -274,7 +274,8 @@ class Worker:
                                                  self.gpu_cache)
         
         # swap_finished_req_ids = self.cache_engine.check_finished_events()
-        return (output, swap_finished_req_ids)
+        # return (output, swap_finished_req_ids)
+        return output
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
         return self.model_runner.add_lora(lora_request)
