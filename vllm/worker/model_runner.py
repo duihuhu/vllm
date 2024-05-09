@@ -664,7 +664,7 @@ class ModelRunner:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         torch.cuda.synchronize()
         start_time = time.time()
-        print("execute_model_kwargs ",  execute_model_kwargs)
+        print("execute_model_kwargs ",  execute_model_kwargs["input_tokens"], execute_model_kwargs["positions"], execute_model_kwargs["attn_metadata"])
         hidden_states = model_executable(**execute_model_kwargs)
         torch.cuda.synchronize()
         end_time  = time.time()
