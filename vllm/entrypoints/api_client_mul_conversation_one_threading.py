@@ -172,7 +172,6 @@ def post_request_and_get_response(args, prompts_set):
             rsp = post_http_request(history_value, G_URL, request_id, args.n , output_len)
             if args.stream:
                 for h in get_streaming_response(rsp):
-                    print("resp " , h)
                     if h['n'] == 0:
                         if h['finished'] == True:
                             start_time.append(h['start_time'])
@@ -192,8 +191,10 @@ def post_request_and_get_response(args, prompts_set):
         # print("request, ttft ", request_ids, ttft)
 
         label = "request, jct, ttft, input_len, output_len, start_time, end_time "
-        for request_id, req_jct, req_ttft, req_input_len, req_output_len, req_start_time, req_end_time in zip(request_ids, jct, ttft, inputs_len, outputs_len, start_time, end_time):
-            label = label + ", " + str(request_id) + ", " + str(req_jct)+ ", " + str(req_ttft)+ ", " + str(req_input_len)+ ", " + str(req_output_len)+ ", " + str(req_start_time)+ ", " + str(req_end_time)
+        # for request_id, req_jct, req_ttft, req_input_len, req_output_len, req_start_time, req_end_time in zip(request_ids, jct, ttft, inputs_len, outputs_len, start_time, end_time):
+        #     label = label + ", " + str(request_id) + ", " + str(req_jct)+ ", " + str(req_ttft)+ ", " + str(req_input_len)+ ", " + str(req_output_len)+ ", " + str(req_start_time)+ ", " + str(req_end_time)
+        print(request_ids)
+        print(jct)
             
         print(label)
 
