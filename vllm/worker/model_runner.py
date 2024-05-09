@@ -665,7 +665,7 @@ class ModelRunner:
         # print("before kv_caches ", kv_caches[0])
         torch.cuda.synchronize()
         start_time = time.time()
-        # print("execute_model_kwargs ",  execute_model_kwargs["input_ids"], execute_model_kwargs["positions"], execute_model_kwargs["attn_metadata"])
+        print("execute_model_kwargs ",  execute_model_kwargs["input_ids"], execute_model_kwargs["positions"], execute_model_kwargs["attn_metadata"])
         hidden_states = model_executable(**execute_model_kwargs)
         torch.cuda.synchronize()
         end_time  = time.time()
