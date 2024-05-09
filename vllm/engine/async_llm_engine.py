@@ -325,7 +325,7 @@ class _AsyncLLMEngine(LLMEngine):
             
         if not scheduler_outputs.is_empty():
             # Execute the model.
-            all_outputs = await self.model_executor.execute_model_async(
+            output = await self.model_executor.execute_model_async(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
                 scheduler_outputs.blocks_to_swap_out,
                 scheduler_outputs.blocks_to_copy)
@@ -334,7 +334,7 @@ class _AsyncLLMEngine(LLMEngine):
             # self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             
             # Only the driver worker returns the sampling results.
-            output = all_outputs[0]
+            # output = all_outputs[0]
         else:
             output = []
         t3 = time.time()
