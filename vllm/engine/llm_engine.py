@@ -395,14 +395,7 @@ class LLMEngine:
         # processing
         sampling_params.eos_token_id = seq.eos_token_id
 
-        #reconstruct sequence
-        if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
-            prefilled_token_ids = prefill_request_output.outputs[0].token_ids
-            output_logprobs = prefill_request_output.outputs[0].logprobs
-            for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
-                seq.append_token_id(token_id, output_logprob)
-                
-                print("add decode request ", seq.data.get_len(), seq.data.get_token_ids())        
+       
         
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
@@ -417,6 +410,13 @@ class LLMEngine:
         else:
             phy_blocks = self.scheduler.allocate_kv_blocks(seq_group)
             
+            #reconstruct sequence
+            if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+                prefilled_token_ids = prefill_request_output.outputs[0].token_ids
+                output_logprobs = prefill_request_output.outputs[0].logprobs
+                for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                    seq.append_token_id(token_id, output_logprob)
+                            
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
             if not blocks:
