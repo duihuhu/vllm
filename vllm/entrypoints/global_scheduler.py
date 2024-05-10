@@ -123,6 +123,8 @@ async def add_request(request: Request) -> Response:
                 # print("gs prefill_res ", prefill_res)
                 
             #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
+            if prefill_res["finished"] == True:
+                return Response((json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8"))
             
             decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port))
             # decode_port = cfg.edecode_port if random.choice([True, False]) else cfg.edecode_port1

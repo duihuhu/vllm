@@ -279,7 +279,7 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data)
         
-        phy_blocks = self.scheduler.allocate_only_kv_blocks(seq_group)
+        phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True )
         
         blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
         computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
@@ -408,7 +408,7 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
-            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group)
+            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             
             #reconstruct sequence
             if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
@@ -677,7 +677,20 @@ class LLMEngine:
                 # iteration
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
-
+    #todo need record seq last node when transfering 
+    def update_radix_tree(self, finished_seq_groups):
+        for seq_group in finished_seq_groups:
+            seq = seq_group.get_seqs()[0]
+            radix_token_ids = seq.data.get_radix_token_ids()
+            block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+            if self.deploy_config.role == "decoder":
+                if seq.last_node == None:          
+                    prefix_info, last_node_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids, block_table)
+                    seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
+                    seq.last_node = prefix_info[1] 
+                    seq.last_node_matched_len = last_node_matched_len
+                    del self.scheduler.block_manager.block_tables[seq.seq_id]
+                    
     def _process_model_outputs(
             self, output: SamplerOutput,
             scheduler_outputs: SchedulerOutputs) -> List[RequestOutput]:
@@ -685,12 +698,19 @@ class LLMEngine:
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
+        finished_seq_groups = []
+
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
             token_chunk_size = scheduled_seq_group.token_chunk_size
             seq_group.update_num_computed_tokens(token_chunk_size)
             self._process_sequence_group_outputs(seq_group, outputs)
-
+            if seq_group.is_finished():
+                finished_seq_groups.append(seq_group)
+            
+        if finished_seq_groups and self.scheduler.block_manager.enable_radix_caching:
+            # start_time = time.time()
+            self.update_radix_tree(finished_seq_groups)
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 

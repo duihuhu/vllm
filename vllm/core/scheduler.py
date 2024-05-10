@@ -148,7 +148,8 @@ class Scheduler:
             num_gpu_blocks=self.cache_config.num_gpu_blocks,
             num_cpu_blocks=self.cache_config.num_cpu_blocks,
             sliding_window=self.cache_config.sliding_window,
-            enable_caching=self.cache_config.enable_prefix_caching)
+            enable_caching=self.cache_config.enable_prefix_caching,
+            enable_radix_caching=self.cache_config.enable_radix_caching)
 
         # Sequence groups in the WAITING state.
         self.waiting: Deque[SequenceGroup] = deque()
@@ -269,30 +270,6 @@ class Scheduler:
     
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
-    
-    def allocate_only_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
-        seq = seq_group.get_seqs()[0]
-        if not self.block_manager.can_allocate(seq_group):
-            return None
-        else:
-            self._only_allocate(seq_group)
-            self.block_manager.block_tables[seq.seq_id]
-            block_table = self.block_manager.block_tables[seq.seq_id]
-            phy_blocks = [phy_block for phy_block in block_table]
-            return phy_blocks
-        
-    def allocate_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
-        seq = seq_group.get_seqs()[0]
-        if not self.block_manager.can_allocate(seq_group):
-            return None
-        else:
-            self._allocate(seq_group)
-            self.block_manager.block_tables[seq.seq_id]
-            block_table = self.block_manager.block_tables[seq.seq_id]
-            # blocks = [phy_block.block_number for phy_block in block_table]
-            # return blocks
-            phy_blocks = [phy_block for phy_block in block_table]
-            return phy_blocks
     
     def fetch_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
         seq = seq_group.get_seqs()[0]
@@ -526,15 +503,26 @@ class Scheduler:
             # seq_id -> physical block numbers
             block_tables: Dict[int, List[int]] = {}
 
-            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+            seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+            for seq in seqs:
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
-                block_tables[seq_id] = self.block_manager.get_block_table(seq)
-                self.block_manager.access_all_blocks_in_seq(seq, now)
+                if not self.block_manager.enable_radix_caching:
+                    block_tables[seq_id] = self.block_manager.get_block_table(seq)
+                    self.block_manager.access_all_blocks_in_seq(seq, now)
+                else:
+                    block_table = self.block_manager.block_tables[seq.seq_id]
+                    block_tables[seq_id] = seq.computed_block + \
+                        [block.block_number for block in block_table[len(seq.computed_block):]] 
 
-            common_computed_block_nums = (
-                self.block_manager.get_common_computed_block_ids(
-                    seq_group.get_seqs(status=SequenceStatus.RUNNING)))
+
+            if self.block_manager.enable_radix_caching:
+                common_computed_block_nums = (
+                    self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
+            else:
+                common_computed_block_nums = (
+                    self.block_manager.get_common_computed_block_ids(
+                        seq_group.get_seqs(status=SequenceStatus.RUNNING)))
 
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
@@ -578,14 +566,23 @@ class Scheduler:
         
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
-
-    def _only_allocate(self, seq_group: SequenceGroup) -> None:
-        self.block_manager.allocate(seq_group)
         
-    def _allocate(self, seq_group: SequenceGroup) -> None:
-        self.block_manager.allocate(seq_group)
-        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-            seq.status = SequenceStatus.RUNNING
+    def allocate_kv_blocks(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
+        return self._allocate(seq_group, is_kv_prepared)
+    
+    def _allocate(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
+        if self.block_manager.enable_radix_caching:
+            self.block_manager.allocate_radix_cache(seq_group, is_kv_prepared)
+        else:
+            self.block_manager.allocate(seq_group, is_kv_prepared)
+        if self.deploy_config.role == "decoder":
+            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                seq.status = SequenceStatus.RUNNING
+                
+        if is_kv_prepared:
+            block_table = self.block_manager.kv_block_tables[seq.seq_id]
+            phy_blocks = [phy_block for phy_block in block_table]
+            return phy_blocks
 
     def _append_slot(
         self,
@@ -699,26 +696,22 @@ class Scheduler:
         for request_id in self.send_finished_req_ids[:]:
             seq_group = self.send_transfering[request_id]
             seq = seq_group.get_seqs()[0]
-            self.free_seq(seq)
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
             
-            #should free or swap to cpu blocks
-            # block_table = self.block_manager.block_tables[seq.seq_id]
-            # max_full_block = seq.get_len() // self.block_manager.block_size - 1
-            # new_block_table = []
-            # for i in range(max_full_block):
-            #     if block_table[i].computed:
-            #         new_block_table.append(block_table[i])
-            #     else:
-            #         # self.block_manager.gpu_allocator.free_out_evictor(block_table[i])
-            #         self.block_manager.gpu_allocator.free(block_table[i])
-            # self.block_manager.block_tables[seq.seq_id] = block_table
-
+            #should free 
+            block_table = self.block_manager.block_tables[seq.seq_id]
+            if self.block_manager.enable_radix_caching:
+                for bkt in block_table:
+                    self.block_manager.gpu_allocator.free_radix_cache(bkt)
+            else:
+                self.free_seq(seq)
+            
         for request_id in self.recv_finished_req_ids[:]:
             seq_group = self.recv_transfering[request_id]
             if self.deploy_config.role == "decoder":
                 self.running.append(seq_group)
+                self.block_manager.move_kv_blocks_meta(seq_group)
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
