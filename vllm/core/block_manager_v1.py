@@ -310,7 +310,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         radix_token_ids = seq.data.get_radix_token_ids()
         blocks, last_node, last_node_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
-        print("allocate_radix_cache ", blocks)
         seq.last_node = last_node
         seq.last_node_matched_len = last_node_matched_len
         block_table: BlockTable  = []
@@ -751,7 +750,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         return commonprefix([ids for ids in ids_list if ids != []])
 
     def mark_blocks_as_computed(self, seq_group: SequenceGroup):
-        if self.enable_caching:
+        if self.enable_caching or self.enable_radix_caching:
             for seq in seq_group.seqs_dict.values():
                 self.compute_full_blocks_in_seq(seq)
 
