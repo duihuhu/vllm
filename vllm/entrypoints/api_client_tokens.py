@@ -92,6 +92,9 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int, default=1)
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
+    parser.add_argument("--seq-lens", type=int, default=1)
+       
+
     args = parser.parse_args()
     # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
@@ -101,9 +104,14 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     # asyncio.run(main(args,prompts))
     # prompts = ['San Francisco is a San Francisco is a San Francisco is a']
-    prompts = ['San Francisco is a']
+    warmup_prompt = ['111111']
+    warmup_token_ids = tokenizer(warmup_prompt[0]).input_ids[:-1]
+    main(args,warmup_token_ids)
     
-    input_value_token_ids = tokenizer(prompts[0]).input_ids
-
-    main(args,input_value_token_ids)
+    input_strs = 'San Francisco'
+    for i in range(args.seq_lens):
+        input_strs = input_strs + " " + 'San Francisco'
+    prompts = [input_strs]
+    prompts_value_token_ids = tokenizer(prompts[0]).input_ids[:-1]
+    main(args,prompts_value_token_ids)
     
