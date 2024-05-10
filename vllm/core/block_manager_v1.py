@@ -466,7 +466,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
         self.num_hash = self.num_hash + 1
-        print("_allocate_last_physical_block_radix_cache ", self.num_hash)
         return new_block
 
     def _allocate_last_physical_block(
@@ -506,7 +505,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_table = self.block_tables[seq.seq_id]
         # If we need to allocate a new physical block
         if len(block_table) < len(logical_blocks):
-            print("allocate new physical ")
             # Currently this code only supports adding one physical block
             assert len(block_table) == len(logical_blocks) - 1
 
@@ -519,12 +517,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # The sequence has a new logical block.
                 # Allocate a new physical block.
                 if self.enable_radix_caching:
-                    print("allocate enable_radix_caching ")
                     new_block = self._allocate_last_physical_block_radix_cache(seq)
-                    block_table.append(new_block)
                 else:
                     new_block = self._allocate_last_physical_block(seq)
-                    block_table.append(new_block)
+                block_table.append(new_block)
                 return None
 
         # We want to append the token to the last physical block.
