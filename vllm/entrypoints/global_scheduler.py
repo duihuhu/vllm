@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
 import httpx
 import random
-from vllm.entrypoints.global_radix_tree import Trie
+from vllm.entrypoints.global_radix_tree import RadixCache
 from vllm.entrypoints.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     if args.tokenizer is None:
         args.tokenizer = args.model
     tokenizer = get_tokenizer(args.tokenizer)
-    trie = Trie()
+    trie = RadixCache()
     uvicorn.run(app,
                 host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,
