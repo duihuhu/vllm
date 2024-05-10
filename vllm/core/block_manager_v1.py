@@ -423,7 +423,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq: Sequence,
         last_block: PhysicalTokenBlock,
     ) -> PhysicalTokenBlock:
-        assert self.enable_caching
+        assert self.enable_radix_caching
         #todo only for last block , I think it should be merge when accomplished seq
         return last_block
 
@@ -458,7 +458,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self,
         seq: Sequence,
     ) -> PhysicalTokenBlock:
-        if not self.enable_caching:
+        if not self.enable_caching or not self.enable_radix_caching:
             return self.gpu_allocator.allocate()
         #todo can when seq finished, merging to radix tree
         num_hashed_tokens = seq.num_hashed_tokens_of_block(
