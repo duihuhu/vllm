@@ -138,10 +138,10 @@ async def generate_decode(request: Request) -> Response:
         finished=finished,
     )
     request_output.global_ranks = opp_ranks
-    
+    start_time = time.time()
     results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
-    
+    n = 0
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
         #response to p
@@ -151,6 +151,10 @@ async def generate_decode(request: Request) -> Response:
         
         #response to decode
         async for request_output in results_generator:
+            global n 
+            if n == 0:
+                last_time = start_time
+            end_time = time.time()
             infer_result = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
@@ -162,8 +166,15 @@ async def generate_decode(request: Request) -> Response:
                 sampling_params = sampling_params,
                 index = request_output.outputs[0].index,
                 texts = [output.text for output in request_output.outputs],
-                finished = request_output.finished
+                finished = request_output.finished,
+                jct = end_time - start_time,
+                tbt = end_time - last_time,
+                n = -1,
+                start_time=start_time,
+                end_time=end_time
             )
+            n = n + 1
+            last_time = end_time
             yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")
     
     return StreamingResponse(stream_results())
@@ -184,7 +195,7 @@ async def generate_prefill(request: Request) -> Response:
     stream = payload.pop("stream")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
-
+    start_time = time.time()
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
     results_generator = server.engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, \
@@ -193,6 +204,7 @@ async def generate_prefill(request: Request) -> Response:
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         async for request_output in results_generator:
+            end_time = time.time()
             # print("request_output " , request_output)
             infer_results = InferResults(
                 request_id = request_output.request_id,
@@ -205,7 +217,13 @@ async def generate_prefill(request: Request) -> Response:
                 sampling_params = sampling_params,
                 index = request_output.outputs[0].index,
                 texts = [output.text for output in request_output.outputs],
-                finished = request_output.finished
+                finished = request_output.finished,
+                ttft = end_time-start_time,
+                jct =  end_time-start_time,
+                tbt =  end_time-start_time,
+                n = 0,
+                start_time=start_time,
+                end_time=end_time
             )
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
