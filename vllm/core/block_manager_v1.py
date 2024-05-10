@@ -458,7 +458,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self,
         seq: Sequence,
     ) -> PhysicalTokenBlock:
-        if not self.enable_caching or not self.enable_radix_caching:
+        if not self.enable_caching and not self.enable_radix_caching:
             return self.gpu_allocator.allocate()
         #todo can when seq finished, merging to radix tree
         num_hashed_tokens = seq.num_hashed_tokens_of_block(
@@ -519,6 +519,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # The sequence has a new logical block.
                 # Allocate a new physical block.
                 if self.enable_radix_caching:
+                    print("allocate enable_radix_caching ")
                     new_block = self._allocate_last_physical_block_radix_cache(seq)
                 else:
                     new_block = self._allocate_last_physical_block(seq)
