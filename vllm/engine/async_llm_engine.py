@@ -272,13 +272,13 @@ class _AsyncLLMEngine(LLMEngine):
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
-        if scheduler_outputs.is_empty():
-            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
-                self.scheduler.send_transfering or self.scheduler.recv_transfering:
-                    logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
-                    time.sleep(0.05)
-            else:
-                return []
+        # if scheduler_outputs.is_empty():
+        #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+        #         self.scheduler.send_transfering or self.scheduler.recv_transfering:
+        #             logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+        #             time.sleep(0.05)
+        #     else:
+        #         return []
             
         if not scheduler_outputs.is_empty():
             # Execute the model.
