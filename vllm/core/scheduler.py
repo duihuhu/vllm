@@ -704,16 +704,16 @@ class Scheduler:
             self.send_finished_req_ids.remove(request_id)
             
             #should free or swap to cpu blocks
-            block_table = self.block_manager.block_tables[seq.seq_id]
-            max_full_block = seq.get_len() // self.block_manager.block_size - 1
-            new_block_table = []
-            for i in range(max_full_block):
-                if block_table[i].computed:
-                    new_block_table.append(block_table[i])
-                else:
-                    # self.block_manager.gpu_allocator.free_out_evictor(block_table[i])
-                    self.block_manager.gpu_allocator.free(block_table[i])
-            self.block_manager.block_tables[seq.seq_id] = block_table
+            # block_table = self.block_manager.block_tables[seq.seq_id]
+            # max_full_block = seq.get_len() // self.block_manager.block_size - 1
+            # new_block_table = []
+            # for i in range(max_full_block):
+            #     if block_table[i].computed:
+            #         new_block_table.append(block_table[i])
+            #     else:
+            #         # self.block_manager.gpu_allocator.free_out_evictor(block_table[i])
+            #         self.block_manager.gpu_allocator.free(block_table[i])
+            # self.block_manager.block_tables[seq.seq_id] = block_table
 
         for request_id in self.recv_finished_req_ids[:]:
             seq_group = self.recv_transfering[request_id]
