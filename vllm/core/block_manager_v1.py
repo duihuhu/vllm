@@ -734,7 +734,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         Used in prefill (can skip prefill of some blocks).
         """
         # Can return non-empty result only with prefix caching enabled.
-        if not self.enable_caching:
+        if not self.enable_caching or not self.enable_radix_caching:
             return []
         block_table = self.block_tables[seqs.seq_id]
         for block in block_table[len(seqs.computed_block):-1]:
