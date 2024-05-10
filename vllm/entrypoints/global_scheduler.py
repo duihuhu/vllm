@@ -120,7 +120,7 @@ async def add_request(request: Request) -> Response:
         
             for res in get_streaming_response(prefill_response):
                 prefill_res = res
-                print("gs prefill_res ", prefill_res)
+                # print("gs prefill_res ", prefill_res)
                 
             #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
             
