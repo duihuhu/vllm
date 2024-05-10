@@ -460,7 +460,7 @@ class ModelRunner:
             seq_start_loc=None,
             context_lens=context_lens,
             block_tables=block_tables,
-            use_cuda_graph=True,
+            use_cuda_graph=use_captured_graph,
             kv_cache_dtype=self.kv_cache_dtype,
         )
         return (input_tokens, input_positions, attn_metadata,
