@@ -93,10 +93,12 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int, default=1)
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
-    args = parser.parse_args()
+    parser.add_argument("--seq-lens", type=int, default=1)
+    
     # prompts = ['San Francisco is a', 'Where is Beijing?', 'Who is Bill Gates?']
     
     tokenizer_path = "/home/jovyan/models/Llama-2-13b-hf/"
+    args = parser.parse_args()
 
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
@@ -105,10 +107,13 @@ if __name__ == "__main__":
     warm_prompts = ['111111']
     warm_value_token_ids = tokenizer(warm_prompts[0]).input_ids[1:]
     for i in range(20):
-        main(args,warm_value_token_ids)
-        
-    prompts = ['San Francisco']
+        main(args, warm_value_token_ids)
     
+    input_prompt = 'San Francisco'
+
+    for i in range(args.seq_lens):
+        input_prompt = input_prompt + " " + 'San Francisco'
+    prompts = [input_prompt]
     input_value_token_ids = tokenizer(prompts[0]).input_ids[1:]
 
     main(args,input_value_token_ids)
