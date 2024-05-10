@@ -313,7 +313,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq.last_node = last_node
         seq.last_node_matched_len = last_node_matched_len
         block_table: BlockTable  = []
-        print("blocks ", blocks)
         if blocks:
             block_table = blocks.copy()
             pre_prefix_len = len(blocks)
@@ -352,7 +351,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if not is_kv_prepared:
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.block_tables[seq.seq_id] = block_table.copy()     
-            print("block_tables ", self.block_tables[seq.seq_id])
 
         else:       
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
@@ -738,6 +736,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Can return non-empty result only with prefix caching enabled.
         if not self.enable_caching or not self.enable_radix_caching:
             return []
+        print("self.block_tables[seqs.seq_id] ", self.block_tables[seqs.seq_id], seqs.computed_block)
         block_table = self.block_tables[seqs.seq_id]
         for block in block_table[len(seqs.computed_block):-1]:
             if block.computed == True:

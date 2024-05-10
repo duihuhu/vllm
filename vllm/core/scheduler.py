@@ -519,7 +519,6 @@ class Scheduler:
             if self.block_manager.enable_radix_caching:
                 common_computed_block_nums = (
                     self.block_manager.get_common_computed_block_ids_one_seq(seqs[0]))
-                print("common_computed_block_nums ", common_computed_block_nums)
             else:
                 common_computed_block_nums = (
                     self.block_manager.get_common_computed_block_ids(
