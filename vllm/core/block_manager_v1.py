@@ -521,6 +521,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 if self.enable_radix_caching:
                     print("allocate enable_radix_caching ")
                     new_block = self._allocate_last_physical_block_radix_cache(seq)
+                    block_table.append(new_block)
                 else:
                     new_block = self._allocate_last_physical_block(seq)
                     block_table.append(new_block)
