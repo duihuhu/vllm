@@ -574,7 +574,7 @@ class LLMEngine:
             # old sequences.
             for seq, parent in child_seqs:
                 if seq is parent and seq.is_finished():
-                    self.scheduler.free_seq(seq)
+                    # self.scheduler.free_seq(seq)
                     pass
             return
 
