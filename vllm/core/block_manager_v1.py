@@ -466,7 +466,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
         self.num_hash = self.num_hash + 1
-
+        print("_allocate_last_physical_block_radix_cache ", self.num_hash)
         return new_block
 
     def _allocate_last_physical_block(
