@@ -111,44 +111,51 @@ async def add_request(request: Request) -> Response:
         #forward_request_to_decode
         prefill_response = await forward_request_to_prefill(request_dict, cfg.forward_eprefill_url % (cfg.eprefill_host, cfg.eprefill_port))
         #提出 prefill repsonse内容text
-        for res in get_streaming_response(prefill_response):
-            prefill_res = res
-            print("gs prefill_res ", prefill_res)
-            
-        #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
-        
-        decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port))
-        # decode_port = cfg.edecode_port if random.choice([True, False]) else cfg.edecode_port1
-        # decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, decode_port))
-        
-        #decode_response
-
-        print("stream_results stream_results ")
-        #return results to global scheduler
-        async def stream_results() -> AsyncGenerator[bytes, None]:
-            # prefill' response, return to client
-            n = 0
-            yield (json.dumps(prefill_res) + "\0").encode("utf-8")
-
-            for res in get_streaming_response(decode_response):
-                # print("res", res, n)
-                #first send to prefll: add_response_kv_prepared
-                if n == 0:
-                    await send_to_prefill_response_kv_prepared(res, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
-                else:
-                    if res['finished'] == True:
-                        print("res", res, n)
-                        # pload = {
-                        #         "request_id": res['request_id'], 
-                        #         "token_ids": res['prompt_token_ids'] + res['prefilled_token_id'],
-                        #     }
-                        # pkv_response = await forward_request_to_prefill(res, cfg.forward_eprefill_res_kv_url % (cfg.eprefill_host, cfg.eprefill_port))
-                        # for pkv_res in get_streaming_response(pkv_response):
-                        #     await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % (cfg.edecode_host, cfg.edecode_port))
-                    
+        if not args.enable_separate:
+            async def stream_results_prefill() -> AsyncGenerator[bytes, None]:
+                for res in get_streaming_response(prefill_response):
                     yield (json.dumps(res) + "\0").encode("utf-8")
-                n = n + 1
-        return StreamingResponse(stream_results())
+            return StreamingResponse(stream_results_prefill())
+        else:
+        
+            for res in get_streaming_response(prefill_response):
+                prefill_res = res
+                print("gs prefill_res ", prefill_res)
+                
+            #choose decode host and port(now is localhost), forward_request_to_decode generate_decode
+            
+            decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port))
+            # decode_port = cfg.edecode_port if random.choice([True, False]) else cfg.edecode_port1
+            # decode_response = await forward_request_to_decode(prefill_res, cfg.forward_edecode_url % (cfg.edecode_host, decode_port))
+            
+            #decode_response
+
+            print("stream_results stream_results ")
+            #return results to global scheduler
+            async def stream_results() -> AsyncGenerator[bytes, None]:
+                # prefill' response, return to client
+                n = 0
+                yield (json.dumps(prefill_res) + "\0").encode("utf-8")
+
+                for res in get_streaming_response(decode_response):
+                    # print("res", res, n)
+                    #first send to prefll: add_response_kv_prepared
+                    if n == 0:
+                        await send_to_prefill_response_kv_prepared(res, cfg.forward_eprefill_res_url % (cfg.eprefill_host, cfg.eprefill_port))
+                    else:
+                        if res['finished'] == True:
+                            print("res", res, n)
+                            # pload = {
+                            #         "request_id": res['request_id'], 
+                            #         "token_ids": res['prompt_token_ids'] + res['prefilled_token_id'],
+                            #     }
+                            # pkv_response = await forward_request_to_prefill(res, cfg.forward_eprefill_res_kv_url % (cfg.eprefill_host, cfg.eprefill_port))
+                            # for pkv_res in get_streaming_response(pkv_response):
+                            #     await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % (cfg.edecode_host, cfg.edecode_port))
+                        
+                        yield (json.dumps(res) + "\0").encode("utf-8")
+                    n = n + 1
+            return StreamingResponse(stream_results())
         
         #prefill_response to send to d
         #generate decode
@@ -159,8 +166,8 @@ async def add_request(request: Request) -> Response:
         
         #update trie tree by token or by seqs
         
-        request_table[request_id] = req_cache
-        infight_req.add(request_id)
+        # request_table[request_id] = req_cache
+        # infight_req.add(request_id)
     
 
 
@@ -170,7 +177,8 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=9000)
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
-
+    parser.add_argument('--enable-separate',action="store_true")
+    
     args = parser.parse_args()
     if args.tokenizer is None:
         args.tokenizer = args.model
