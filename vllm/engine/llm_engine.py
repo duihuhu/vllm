@@ -413,7 +413,6 @@ class LLMEngine:
             self.scheduler.add_seq_group(seq_group)
         else:
             phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
-            print("phy blocks ", phy_blocks)
             #reconstruct sequence
             if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
                 prefilled_token_ids = prefill_request_output.outputs[0].token_ids
