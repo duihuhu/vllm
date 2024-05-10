@@ -141,7 +141,7 @@ async def generate_decode(request: Request) -> Response:
     start_time = time.time()
     results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
-    n = 0
+    last_time = start_time
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
         #response to p
@@ -151,9 +151,6 @@ async def generate_decode(request: Request) -> Response:
         
         #response to decode
         async for request_output in results_generator:
-            global n 
-            if n == 0:
-                last_time = start_time
             end_time = time.time()
             infer_result = InferResults(
                 request_id = request_output.request_id,
@@ -173,7 +170,6 @@ async def generate_decode(request: Request) -> Response:
                 start_time=start_time,
                 end_time=end_time
             )
-            n = n + 1
             last_time = end_time
             yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")
     
