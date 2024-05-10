@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
 import httpx
 import random
-from vllm.entrypoints.global_trie_tree import Trie
+from vllm.entrypoints.global_radix_tree import Trie
 from vllm.entrypoints.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
