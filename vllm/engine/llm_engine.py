@@ -717,7 +717,6 @@ class LLMEngine:
             if seq_group.is_finished():
                 finished_seq_groups.append(seq_group)
             if self.deploy_config.role == "prompt":
-                print("prefill process_model_outputs ",  seq_group)
                 prefilled_seq_groups.append(seq_group)
             
         if (finished_seq_groups and self.scheduler.block_manager.enable_radix_caching) \

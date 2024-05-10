@@ -331,7 +331,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             block_table.append(block)
         
         if seq.last_node == self.gpu_allocator.radix_cache.root_node:
-            print("insert ")
             prefix_info, last_node_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node,\
                 radix_token_ids[(pre_prefix_len-seq.last_node_matched_len):], block_table[(pre_prefix_len-seq.last_node_matched_len):])
 
@@ -713,7 +712,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for i in reversed(range(max_full_block)):
             if block_table[i].computed:
                 break
-            print("mark true ", i , max_full_block)
+            # print("mark true ", i , max_full_block)
             block_table[i].computed = True
 
     def get_all_computed_blocks(self, seq: Sequence) -> List[int]:
@@ -736,7 +735,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Can return non-empty result only with prefix caching enabled.
         if not self.enable_caching and not self.enable_radix_caching:
             return []
-        print("self.block_tables[seqs.seq_id] ", self.block_tables[seqs.seq_id], seqs.computed_block)
         block_table = self.block_tables[seqs.seq_id]
         for block in block_table[len(seqs.computed_block):-1]:
             if block.computed == True:
