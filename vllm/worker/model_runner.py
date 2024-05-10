@@ -247,7 +247,8 @@ class ModelRunner:
                 block_offset = i % self.block_size
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
-            
+                
+        print("prompt_lens, subquery_lens", prompt_lens, subquery_lens)
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
@@ -374,8 +375,6 @@ class ModelRunner:
                 context_lens.append(context_len)
 
                 block_table = seq_group_metadata.block_tables[seq_id]
-                print("block_table ", block_table)
-                print("position ", position)
                 block_number = block_table[position // self.block_size]
                 block_offset = position % self.block_size
                 slot = block_number * self.block_size + block_offset
