@@ -667,7 +667,8 @@ class ModelRunner:
         hidden_states = model_executable(**execute_model_kwargs)
         torch.cuda.synchronize()
         end_time = time.time()
-        print("model_executable ", end_time-start_time)
+        print("model_executable ", end_time-start_time, execute_model_kwargs["input_ids"],  execute_model_kwargs["positions"],
+              execute_model_kwargs["attn_metadata"])
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
