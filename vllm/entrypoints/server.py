@@ -141,9 +141,9 @@ async def generate_decode(request: Request) -> Response:
     start_time = time.time()
     results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
-    last_time = start_time
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
+        last_time = start_time
         #response to p
         async for kv_response in results_generator:
             yield (json.dumps(kv_response.__json__()) + "\0").encode("utf-8")
