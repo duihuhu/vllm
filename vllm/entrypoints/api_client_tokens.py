@@ -78,7 +78,7 @@ def main(args, prompts):
     # for prompt in prompts:
     #     print(f"prompt:", end=' ', flush=True)
     prefilled_token_id = post_request_and_get_response(args, prompts)
-    prefilled_token_id = post_request_and_get_response(args, prompts + prefilled_token_id)
+    # prefilled_token_id = post_request_and_get_response(args, prompts + prefilled_token_id)
 
     #     coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt)))
     # await asyncio.gather(*coroutines)
@@ -102,9 +102,14 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     # asyncio.run(main(args,prompts))
     # prompts = ['San Francisco is a San Francisco is a San Francisco is a']
-    prompts = ['San Francisco is a']
+    warm_prompts = ['111111']
+    warm_value_token_ids = tokenizer(warm_prompts[0]).input_ids[1:]
+    for i in range(20):
+        main(args,warm_value_token_ids)
+        
+    prompts = ['San Francisco']
     
-    input_value_token_ids = tokenizer(prompts[0]).input_ids
+    input_value_token_ids = tokenizer(prompts[0]).input_ids[1:]
 
     main(args,input_value_token_ids)
     
