@@ -699,7 +699,7 @@ class Scheduler:
         for request_id in self.send_finished_req_ids[:]:
             seq_group = self.send_transfering[request_id]
             seq = seq_group.get_seqs()[0]
-            # self.free_seq(seq)
+            self.free_seq(seq)
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
             
