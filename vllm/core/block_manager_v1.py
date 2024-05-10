@@ -352,6 +352,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if not is_kv_prepared:
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.block_tables[seq.seq_id] = block_table.copy()     
+            print("block_tables ", self.block_tables[seq.seq_id])
+
         else:       
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.kv_block_tables[seq.seq_id] = block_table.copy()
