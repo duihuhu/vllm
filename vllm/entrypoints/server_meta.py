@@ -81,6 +81,7 @@ class InferResults:
             "ttft": self.ttft,
             "jct": self.jct,
             "tbt": self.tbt,
+            "n": self.n,
             "start_time": self.start_time,
             "end_time": self.end_time,    
         }
