@@ -307,7 +307,11 @@ class LLMEngine:
             return
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
         print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
-        self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
+        if len(blocks) > response.computed_blocks:
+        # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
+            self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
+        else:
+            self.scheduler.del_send_transfering(request_id)
 
     def add_request(
         self,
@@ -419,13 +423,17 @@ class LLMEngine:
                             
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-            if not blocks:
+            if not phy_blocks:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
             else:
                 kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
-                self.scheduler.add_recv_transfering(seq_group)
-                self.kv_trans_scheduler.add_kv_request(request_id,
-                                                            prefill_request_output.global_ranks, blocks, False)
+                if blocks:
+                    self.scheduler.add_recv_transfering(seq_group)
+                    self.kv_trans_scheduler.add_kv_request(request_id,
+                                                                prefill_request_output.global_ranks, blocks, False)
+                else:
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
         return kv_response
     
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
@@ -699,7 +707,8 @@ class LLMEngine:
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
         finished_seq_groups = []
-
+        prefilled_seq_groups = []
+        
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
             token_chunk_size = scheduled_seq_group.token_chunk_size
@@ -707,8 +716,11 @@ class LLMEngine:
             self._process_sequence_group_outputs(seq_group, outputs)
             if seq_group.is_finished():
                 finished_seq_groups.append(seq_group)
+            if self.deploy_config.enable_separate:
+                prefilled_seq_groups.append(seq_group)
             
-        if finished_seq_groups and self.scheduler.block_manager.enable_radix_caching:
+        if (finished_seq_groups and self.scheduler.block_manager.enable_radix_caching) \
+            or (self.deploy_config.enable_separate and prefilled_seq_groups):
             # start_time = time.time()
             self.update_radix_tree(finished_seq_groups)
         # Free the finished sequence groups.
