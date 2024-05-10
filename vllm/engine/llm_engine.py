@@ -716,11 +716,11 @@ class LLMEngine:
             self._process_sequence_group_outputs(seq_group, outputs)
             if seq_group.is_finished():
                 finished_seq_groups.append(seq_group)
-            if self.deploy_config.enable_separate:
+            if self.deploy_config.role == "prompt":
                 prefilled_seq_groups.append(seq_group)
             
         if (finished_seq_groups and self.scheduler.block_manager.enable_radix_caching) \
-            or (self.deploy_config.enable_separate and prefilled_seq_groups):
+            or (self.deploy_config.role == "prompt" and prefilled_seq_groups):
             # start_time = time.time()
             self.update_radix_tree(finished_seq_groups)
         # Free the finished sequence groups.
