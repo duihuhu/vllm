@@ -181,7 +181,7 @@ async def generate_prefill(request: Request) -> Response:
     """
     payload = await request.json()
     # prompt = payload.pop("prompt")
-
+    stream = payload.pop("stream")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
 
