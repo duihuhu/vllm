@@ -141,7 +141,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
             # Remove the block from the cached_blocks
             del self.cached_blocks[block.block_hash]
 
-    #todo 
+    #todo if only manage block.ref_count there, use background thread to release
+    #not need self.evictor.add(block)
     def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")

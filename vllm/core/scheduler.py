@@ -705,6 +705,7 @@ class Scheduler:
             if self.block_manager.enable_radix_caching:
                 for bkt in block_table:
                     self.block_manager.gpu_allocator.free_radix_cache(bkt)
+                del self.block_manager.block_tables[seq.seq_id]
             else:
                 self.free_seq(seq)
             

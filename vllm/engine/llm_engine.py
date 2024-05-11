@@ -279,7 +279,7 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data)
         
-        phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True )
+        phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
         
         blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
         computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
@@ -306,7 +306,7 @@ class LLMEngine:
             logger.info("remote recv engine prepare kv fail.")
             return
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
-        print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
+        # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         if len(blocks) > response.computed_blocks:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
             self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
