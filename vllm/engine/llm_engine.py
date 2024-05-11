@@ -689,16 +689,17 @@ class LLMEngine:
                 self.scheduler.free_seq(seq)
     #todo need record seq last node when transfering 
     def update_radix_tree(self, finished_seq_groups):
+        print("update_radix_tree ")
         for seq_group in finished_seq_groups:
             seq = seq_group.get_seqs()[0]
             radix_token_ids = seq.data.get_radix_token_ids()
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-            if seq.last_node == None:          
-                prefix_info, last_node_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids, block_table)
-                seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
-                seq.last_node = prefix_info[1] 
-                seq.last_node_matched_len = last_node_matched_len
-                del self.scheduler.block_manager.block_tables[seq.seq_id]
+            print("update_radix_tree i ")
+            prefix_info, last_node_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(seq.last_node, radix_token_ids, block_table)
+            seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
+            seq.last_node = prefix_info[1] 
+            seq.last_node_matched_len = last_node_matched_len
+            del self.scheduler.block_manager.block_tables[seq.seq_id]
                     
     def _process_model_outputs(
             self, output: SamplerOutput,
