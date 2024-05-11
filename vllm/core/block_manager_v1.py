@@ -464,7 +464,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         #todo can when seq finished, merging to radix tree
         num_hashed_tokens = seq.num_hashed_tokens_of_block(
             len(seq.logical_token_blocks) - 1)
-        
+        print("_allocate_last_physical_block_radix_cache ", self.num_hash)
         new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
         self.num_hash = self.num_hash + 1
         return new_block
