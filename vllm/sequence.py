@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Union
 from vllm.block import LogicalTokenBlock
 from vllm.lora.request import LoRARequest
 from vllm.sampling_params import SamplingParams
+from vllm.entrypoints.comm import CacheMeta
 
 if TYPE_CHECKING:
     import torch
@@ -391,6 +392,7 @@ class SequenceGroup:
         arrival_time: float,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
+        cache_meta: Optional[CacheMeta] = None
     ) -> None:
         self.request_id = request_id
         self.seqs_dict = {seq.seq_id: seq for seq in seqs}
@@ -404,7 +406,7 @@ class SequenceGroup:
         self.prompt_logprobs: Optional[PromptLogprobs] = None
         self.state = SequenceGroupState()
         self.multi_modal_data = multi_modal_data
-
+        self.cache_meta = cache_meta
     @property
     def prompt(self) -> str:
         # All sequences in the group should have the same prompt.

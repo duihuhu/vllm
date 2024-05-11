@@ -15,8 +15,9 @@ from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
 from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
-from vllm.sequence import MultiModalData
+from vllm.sequence import MultiModalData, SequenceStatus
 from vllm.usage.usage_lib import UsageContext
+from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
@@ -259,7 +260,49 @@ class RequestTracker:
 
 class _AsyncLLMEngine(LLMEngine):
     """Extension of LLMEngine to add async methods."""
-
+    async def _pull_cache_signal(self, cache_meta, request_id, prompt_token_ids):
+        decode_entry_point = (cache_meta.cmeta_host, cache_meta.cmeta_port)
+        query_meta = QueryMeta(cache_meta, self.deploy_config.deploy_host, self.deploy_config.deploy_port, 
+                               self.deploy_config.get_global_ranks(), request_id, prompt_token_ids).__json__()
+        data = CommData(
+            headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
+            payload=query_meta
+        )
+        return CommEngine.async_send_to(decode_entry_point, "pull_dcache", data)
+    
+    async def _query_cache_meta(self, cache_meta, request_id, prompt_token_ids):
+        decode_entry_point = (cache_meta.cmeta_host, cache_meta.cmeta_port)
+        query_cache_meta = QueryCacheMeta(request_id, prompt_token_ids).__json__()
+        data = CommData(
+            headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
+            payload=query_cache_meta
+        )
+        return CommEngine.async_send_to(decode_entry_point, "query_dcache", data)
+        
+    async def _query_cache(self, seq_group):
+        seq = seq_group.get_seqs()[0] 
+        query_response = self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids).json()
+        resp_cached_len = query_response["dcached_len"]
+        seq_group.cache_meta.cmeta_kv_len = resp_cached_len
+        block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+        phy_blocks = [phy_block for phy_block in block_table]              
+        computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+        print("add_recv_transfering, computed_blocks, phy_blocks, dcached_len " , 
+                len(computed_blocks), len(phy_blocks), resp_cached_len, seq_group.cache_meta.cached_len)
+        
+        if len(computed_blocks) == resp_cached_len:
+            seq_group.cache_meta.is_ready = True
+            for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                seq.status = SequenceStatus.WAITING
+            self.scheduler.waiting.append(seq_group)
+        else:
+            self.scheduler.add_recv_transfering(seq_group)
+            phy_blocks_num = [phy_block.block_number for phy_block in phy_blocks]
+            self.kv_trans_scheduler.add_kv_request(seq_group.request_id, seq_group.cache_meta.cmeta_ranks, 
+                                                    phy_blocks_num[len(computed_blocks
+                                                                       ): resp_cached_len], False)
+            self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
+        return 
     async def step_async(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.
@@ -270,15 +313,20 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
+        seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
         if scheduler_outputs.is_empty():
-            # if self.scheduler.swapping_in or self.scheduler.swapping_out or \
-            #     self.scheduler.send_transfering or self.scheduler.recv_transfering:
-            #         logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
-            #         time.sleep(0.05)
-            # else:
-            return []
+            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+                self.scheduler.send_transfering or self.scheduler.recv_transfering:
+                    logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s")
+                    time.sleep(0.05)
+            else:
+                return []
+            
+        if self.deploy_config.enable_cache_meta:
+            if cached_seq_groups:
+                for seq_group in cached_seq_groups:
+                    asyncio.create_task(self._query_cache(seq_group))
             
         if not scheduler_outputs.is_empty():
             # Execute the model.

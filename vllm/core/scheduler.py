@@ -278,6 +278,9 @@ class Scheduler:
         return blocks
 
     def _schedule(self) -> SchedulerOutputs:
+        
+        #to record req when enable-cache-meta
+        cached_seq_groups: List[SequenceGroup] = []
         # Blocks that need to be swapped or copied before model execution.
         blocks_to_swap_in: Dict[int, int] = {}
         blocks_to_swap_out: Dict[int, int] = {}
@@ -324,20 +327,22 @@ class Scheduler:
                     ignored_seq_groups.append(seq_group)
                     self.waiting.popleft()
                     continue
-
-                # If the sequence group cannot be allocated, stop.
-                can_allocate = self.block_manager.can_allocate(seq_group)
-                if can_allocate == AllocStatus.LATER:
-                    break
-                elif can_allocate == AllocStatus.NEVER:
-                    logger.warning(
-                        f"Input prompt ({num_prefill_tokens} tokens) is too "
-                        f"long and exceeds the capacity of block_manager")
-                    for seq in waiting_seqs:
-                        seq.status = SequenceStatus.FINISHED_IGNORED
-                    ignored_seq_groups.append(seq_group)
-                    self.waiting.popleft()
-                    continue
+                
+                #if seq_group has not cache_meta or the first time in waiting
+                if not seq_group.cache_meta or not seq_group.cache_meta.is_ready:
+                    # If the sequence group cannot be allocated, stop.
+                    can_allocate = self.block_manager.can_allocate(seq_group)
+                    if can_allocate == AllocStatus.LATER:
+                        break
+                    elif can_allocate == AllocStatus.NEVER:
+                        logger.warning(
+                            f"Input prompt ({num_prefill_tokens} tokens) is too "
+                            f"long and exceeds the capacity of block_manager")
+                        for seq in waiting_seqs:
+                            seq.status = SequenceStatus.FINISHED_IGNORED
+                        ignored_seq_groups.append(seq_group)
+                        self.waiting.popleft()
+                        continue
 
                 lora_int_id = 0
                 if self.lora_enabled:
@@ -349,7 +354,22 @@ class Scheduler:
                         leftover_waiting_sequences.appendleft(seq_group)
                         self.waiting.popleft()
                         continue
-
+                
+                #if enable_cache_meta, we should pull cache from other node, so, we put it in cached_seq_groups
+                #it do not affect num_batched_tokens and other reqs
+                if self.deploy_config.enable_cache_meta:
+                    if seq_group.cache_meta and not seq_group.cache_meta.is_ready:
+                        self._allocate(seq_group)
+                        seq = seq_group.get_seqs()[0]
+                        block_table = self.block_manager.block_tables[seq.seq_id]
+                        phy_blocks = [phy_block for phy_block in block_table]
+                        computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+                        if len(computed_blocks) < seq_group.cache_meta.cmeta_kv_len:
+                            seq_group.cache_meta.cached_len = len(computed_blocks)
+                            cached_seq_groups.append(seq_group)
+                            self.waiting.popleft()
+                            continue    
+                        
                 # If the number of batched tokens exceeds the limit, stop.
                 num_batched_tokens += num_prefill_tokens
                 if (num_batched_tokens >
@@ -366,7 +386,13 @@ class Scheduler:
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
-                self._allocate(seq_group)
+                if not self.deploy_config.enable_cache_meta:
+                    self._allocate(seq_group)
+                else:
+                    if seq_group.cache_meta and seq_group.cache_meta.is_ready:
+                        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                            seq.status = SequenceStatus.RUNNING
+                            
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs
                 scheduled.append(
@@ -386,7 +412,7 @@ class Scheduler:
                     blocks_to_copy=blocks_to_copy,
                     ignored_seq_groups=ignored_seq_groups,
                 )
-                return scheduler_outputs
+                return scheduler_outputs, cached_seq_groups
 
         # NOTE(woosuk): Preemption happens only when there is no available slot
         # to keep all the sequence groups in the RUNNING state.
@@ -482,13 +508,13 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
             ignored_seq_groups=[],
         )
-        return scheduler_outputs
+        return scheduler_outputs, cached_seq_groups
 
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
         # Schedule sequence groups.
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
-        scheduler_outputs = self._schedule()
+        scheduler_outputs, cached_seq_groups = self._schedule()
         now = time.time()
 
         # Create input data structures.
@@ -551,7 +577,7 @@ class Scheduler:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
 
-        return seq_group_metadata_list, scheduler_outputs
+        return seq_group_metadata_list, scheduler_outputs, cached_seq_groups
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
         self.block_manager.fork(parent_seq, child_seq)
@@ -715,9 +741,19 @@ class Scheduler:
                 self.running.append(seq_group)
                 self.block_manager.move_kv_blocks_meta(seq_group)
                 
-            if self.deploy_config.role == "prompt" and self.deploy_config.enable_dcache:
-                self.block_manager.move_kv_blocks_meta(seq_group)
+            if self.deploy_config.role == "prompt":
+                if self.deploy_config.enable_dcache:
+                    self.block_manager.move_kv_blocks_meta(seq_group)
+                
+                if self.deploy_config.enable_cache_meta:
+                    seq_group.cache_meta.is_ready = True
+                    for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
+                        seq.status = SequenceStatus.WAITING
+                    self.waiting.append(seq_group)
 
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
-            self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
+            self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
+            
+            
+

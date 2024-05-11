@@ -835,11 +835,18 @@ class DeployConfig:
         enable_separate: bool=False,
         role: str=None,
         enable_dcache: bool = False,
+        enable_cache_meta: bool = False,
+        deploy_host: str = None,
+        deploy_port: str = None
         ) -> None:
             self.enable_separate = enable_separate
             self.role = role
             self.enable_dcache = enable_dcache
+            self.enable_cache_meta = enable_cache_meta
             self.global_ranks = None
+            
+            self.deploy_host = deploy_host
+            self.deploy_port = deploy_port
             self._verify_args()
     
     def _verify_args(self) -> None:

@@ -166,7 +166,7 @@ class BlockSpaceManagerV2(BlockSpaceManager):
         # Tracked here https://github.com/vllm-project/vllm/issues/3667
         pass
 
-    def mark_blocks_as_computed(self, seq_group: SequenceGroup):
+    def mark_blocks_as_computed(self, seq_group: SequenceGroup, enable_cache_meta=False):
         # We ignore the sequence group as its not necessary. After the batch is
         # formed by the scheduler, we do not need to mark blocks from individual
         # sequence groups as computed -- all blocks in the batch can be marked

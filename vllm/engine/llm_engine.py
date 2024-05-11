@@ -26,6 +26,8 @@ from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter
 from vllm.core.kv_trans_scheduler import KvTransScheduler
+from vllm.entrypoints.comm import CacheMeta
+
 
 from functools import partial
 logger = init_logger(__name__)
@@ -322,7 +324,8 @@ class LLMEngine:
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        prefill_request_output: Optional[RequestOutput] = None
+        prefill_request_output: Optional[RequestOutput] = None,
+        cache_meta: Optional[CacheMeta] = None,
     ) -> KvPreparedResponse:
         
         """Add a request to the engine's request pool.
@@ -403,7 +406,7 @@ class LLMEngine:
         
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
-                                  arrival_time, lora_request, multi_modal_data)
+                                  arrival_time, lora_request, multi_modal_data, cache_meta=cache_meta)
 
         # Add the sequence group to the scheduler.
 
