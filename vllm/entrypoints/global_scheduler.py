@@ -176,7 +176,8 @@ if __name__ == "__main__":
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
     parser.add_argument('--enable-separate',action="store_true")
-    
+    parser.add_argument('--enable-dcache',action="store_true")
+
     args = parser.parse_args()
     if args.tokenizer is None:
         args.tokenizer = args.model
