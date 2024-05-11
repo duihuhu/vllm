@@ -714,6 +714,10 @@ class Scheduler:
             if self.deploy_config.role == "decoder":
                 self.running.append(seq_group)
                 self.block_manager.move_kv_blocks_meta(seq_group)
+                
+            if self.deploy_config.role == "prompt" and self.deploy_config.enable_dcache:
+                self.block_manager.move_kv_blocks_meta(seq_group)
+
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group)
