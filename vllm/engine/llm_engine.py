@@ -581,7 +581,8 @@ class LLMEngine:
             # old sequences.
             for seq, parent in child_seqs:
                 if seq is parent and seq.is_finished():
-                    self.scheduler.free_seq(seq)
+                    if not self.deploy_config.enable_dcache:
+                        self.scheduler.free_seq(seq)
                     pass
             return
 
@@ -705,7 +706,6 @@ class LLMEngine:
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
         finished_seq_groups = []
-        prefilled_seq_groups = []
         
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
