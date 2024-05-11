@@ -664,7 +664,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if seq.seq_id not in self.block_tables:
             # Already freed or haven't been scheduled yet.
             return
-        print("free operation ", seq.seq_id)
+        # print("free operation ", seq.seq_id)
         block_table = self.block_tables[seq.seq_id]
         self._free_block_table(block_table)
         if not self.enable_radix_caching:
