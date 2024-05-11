@@ -423,6 +423,7 @@ class LLMEngine:
             blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
             computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
             print("decoder computed blocks, total phy_blocks, blocks ", len(computed_blocks), len(phy_blocks), len(blocks))
+            print("decoder phy_blocks ", phy_blocks)
             if not phy_blocks:
                 kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
             else:
