@@ -727,10 +727,12 @@ class Scheduler:
             self.send_finished_req_ids.remove(request_id)
             
             #should free 
-            block_table = self.block_manager.block_tables[seq.seq_id]
+            # block_table = self.block_manager.block_tables[seq.seq_id]
             if self.block_manager.enable_radix_caching:
-                for bkt in block_table:
-                    self.block_manager.gpu_allocator.free_radix_cache(bkt)
+                # for bkt in block_table:
+                #     self.block_manager.gpu_allocator.free_radix_cache(bkt)
+                for seq in seq_group.get_seqs():
+                    self.block_manager.free(seq)    
                 del self.block_manager.block_tables[seq.seq_id]
             else:
                 self.free_seq(seq)
@@ -744,6 +746,8 @@ class Scheduler:
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
                     self.block_manager.move_kv_blocks_meta(seq_group)
+                    for seq in seq_group.get_seqs():
+                        self.block_manager.free(seq)    
                 
                 if self.deploy_config.enable_cache_meta:
                     seq_group.cache_meta.is_ready = True
