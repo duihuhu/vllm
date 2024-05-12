@@ -282,6 +282,7 @@ class _AsyncLLMEngine(LLMEngine):
     async def _query_cache(self, seq_group):
         seq = seq_group.get_seqs()[0] 
         query_response = await self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids)
+        print("query_response ", query_response)
         resp_cached_len = query_response["dcached_len"]
         seq_group.cache_meta.cmeta_kv_len = resp_cached_len
         block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
