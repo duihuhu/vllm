@@ -281,7 +281,7 @@ class _AsyncLLMEngine(LLMEngine):
         
     async def _query_cache(self, seq_group):
         seq = seq_group.get_seqs()[0] 
-        query_response = self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids).json()
+        query_response = await self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids)
         resp_cached_len = query_response["dcached_len"]
         seq_group.cache_meta.cmeta_kv_len = resp_cached_len
         block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
@@ -302,7 +302,6 @@ class _AsyncLLMEngine(LLMEngine):
                                                     phy_blocks_num[len(computed_blocks
                                                                        ): resp_cached_len], False)
             self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
-        return 
     async def step_async(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.
