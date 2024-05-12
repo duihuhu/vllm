@@ -208,10 +208,18 @@ async def generate_prefill(request: Request) -> Response:
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
     start_time = time.time()
+    
+    if "cmeta_host" in payload:
+        cmeta_host =  payload.pop("cmeta_host")
+        cmeta_port =  payload.pop("cmeta_port")
+        cmeta_ranks =  payload.pop("cmeta_ranks")
+        cmeta_kv_len = payload.pop("cmeta_kv_len")
+        cache_meta = CacheMeta(cmeta_host, cmeta_port, cmeta_ranks, cmeta_kv_len)
+        print("matched decode instance " ,cmeta_host, cmeta_port, cmeta_ranks)
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
     results_generator = server.engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, \
-        sampling_params=sampling_params, request_id=request_id)
+        sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta)
     
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:

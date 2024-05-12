@@ -717,7 +717,8 @@ class AsyncLLMEngine:
         arrival_time: Optional[float] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        prefill_request_output: Optional[RequestOutput] = None
+        prefill_request_output: Optional[RequestOutput] = None,
+        cache_meta: Optional[CacheMeta] = None
     ) -> AsyncStream:
         if self.log_requests:
             shortened_prompt = prompt
@@ -768,7 +769,8 @@ class AsyncLLMEngine:
             arrival_time=arrival_time,
             lora_request=lora_request,
             multi_modal_data=multi_modal_data,
-            prefill_request_output=prefill_request_output
+            prefill_request_output=prefill_request_output,
+            cache_meta = cache_meta
         )
 
         return stream
@@ -793,7 +795,8 @@ class AsyncLLMEngine:
         prompt_token_ids: Optional[List[int]] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        prefill_request_output: Optional[RequestOutput] = None
+        prefill_request_output: Optional[RequestOutput] = None,
+        cache_meta: Optional[CacheMeta] = None
     ) -> AsyncIterator[RequestOutput]:
         """Generate outputs for a request.
 
@@ -870,7 +873,8 @@ class AsyncLLMEngine:
                 arrival_time=arrival_time,
                 lora_request=lora_request,
                 multi_modal_data=multi_modal_data,
-                prefill_request_output=prefill_request_output
+                prefill_request_output=prefill_request_output,
+                cache_meta = cache_meta
             )
 
             async for request_output in stream:
