@@ -18,7 +18,7 @@ from vllm.sampling_params import SamplingParams
 from vllm.sequence import MultiModalData, SequenceStatus
 from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
-
+import json
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
     os.environ.get("VLLM_ENGINE_ITERATION_TIMEOUT_S", "60"))
@@ -268,7 +268,7 @@ class _AsyncLLMEngine(LLMEngine):
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
             payload=query_meta
         )
-        return CommEngine.async_send_to(decode_entry_point, "pull_kv_cache", data)
+        return await CommEngine.async_send_to(decode_entry_point, "pull_kv_cache", data)
     
     async def _query_cache_meta(self, cache_meta, request_id, prompt_token_ids):
         decode_entry_point = (cache_meta.cmeta_host, cache_meta.cmeta_port)
@@ -283,6 +283,7 @@ class _AsyncLLMEngine(LLMEngine):
         seq = seq_group.get_seqs()[0] 
         query_response = await self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids)
         print("query_response ", query_response)
+        query_response = json.loads(query_response)
         resp_cached_len = query_response["dcached_len"]
         seq_group.cache_meta.cmeta_kv_len = resp_cached_len
         block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
@@ -302,7 +303,7 @@ class _AsyncLLMEngine(LLMEngine):
             self.kv_trans_scheduler.add_kv_request(seq_group.request_id, seq_group.cache_meta.cmeta_ranks, 
                                                     phy_blocks_num[len(computed_blocks
                                                                        ): resp_cached_len], False)
-            self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
+            await self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
     async def step_async(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.
