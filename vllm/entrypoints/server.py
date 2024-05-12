@@ -135,6 +135,7 @@ async def generate_decode(request: Request) -> Response:
     index = payload.pop("index")
     texts = payload.pop("texts")
     finished = payload.pop("finished")
+    print("request_id ", request_id)
     
     prompt_logprobs = pprobs_key_s2i(prompt_logprobs)
     output_logprobs = cprobs_key_s2i(output_logprobs)

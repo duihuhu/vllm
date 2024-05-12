@@ -327,7 +327,7 @@ class _AsyncLLMEngine(LLMEngine):
         #     else:
         #         return []
             
-        if self.deploy_config.enable_cache_meta:
+        if self.deploy_config.enable_cache_meta and self.deploy_config.role == "prompt":
             if cached_seq_groups:
                 for seq_group in cached_seq_groups:
                     asyncio.create_task(self._query_cache(seq_group, request_tracker))
@@ -351,6 +351,7 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
             prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
             for seq_group in prefilled_seq_groups:
+                print("add request to add_send_transfering ", seq_group.request_id)
                 self.scheduler.add_send_transfering(seq_group)
         
         if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:

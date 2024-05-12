@@ -761,7 +761,7 @@ class Scheduler:
                     for seq in seq_group.get_seqs():
                         self.block_manager.free(seq)    
                 
-                if self.deploy_config.enable_cache_meta:
+                if self.deploy_config.enable_cache_meta and seq_group.cache_meta:
                     seq_group.cache_meta.is_ready = True
                     for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
                         seq.status = SequenceStatus.WAITING

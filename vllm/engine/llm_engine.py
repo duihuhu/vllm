@@ -307,6 +307,7 @@ class LLMEngine:
             self.scheduler.del_send_transfering(request_id)
             logger.info("remote recv engine prepare kv fail.")
             return
+        print("fetch_kv_blocks request id ", request_id)
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         if len(blocks) > response.computed_blocks:
