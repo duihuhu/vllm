@@ -303,7 +303,8 @@ class _AsyncLLMEngine(LLMEngine):
             self.kv_trans_scheduler.add_kv_request(seq_group.request_id, seq_group.cache_meta.cmeta_ranks, 
                                                     phy_blocks_num[len(computed_blocks
                                                                        ): resp_cached_len], False)
-            await self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
+            pull_response = await self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
+            print("pull_response ", pull_response)
     async def step_async(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.

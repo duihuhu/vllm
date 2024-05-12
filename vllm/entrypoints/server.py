@@ -27,7 +27,8 @@ async def pull_kv_cache(response: Request) -> None:
     query_meta = QueryMeta(**payload)
     await server.engine.pull_kv_blocks(query_meta)
     server.engine._request_tracker.new_requests_event.set()
-    return 
+    ret = {"ret": "success"}
+    return ret
 
 @app.post("/query_kv_cache")
 async def query_kv_cache(response: Request) -> None:
