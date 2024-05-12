@@ -157,48 +157,46 @@ async def add_request(request: Request) -> Response:
     #decode_response
     # print("stream_results stream_results ")
     async def stream_results() -> AsyncGenerator[bytes, None]:
+        prefill_res = None
         async for resp in prefill_response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
             prefill_res = resp
             prefilled_tokens = tuple(prefill_res["prompt_token_ids"] + prefill_res["prefilled_token_id"][:-1])
             gs_ptoken_tree.insert(prefilled_tokens, None, str(eprefill_host + "_" + str(eprefill_port)))
-            
-            if prefill_res["finished"] == True:
-                return Response((json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8"))
-            
+                        
             yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
+            if prefill_res["finished"] != True:
+                decode_response = asyc_forward_request(prefill_res, cfg.forward_edecode_url % 
+                                                            (edecode_host, edecode_port))
+        if prefill_res["finished"] != True:
+            n = 0
+            async for resp in decode_response:
+                resp = resp.decode('utf-8')
+                resp = json.loads(resp)
+                if n ==0:
+                    kv_prepared = await asyc_forward_request_resp(resp, cfg.forward_eprefill_res_url % 
+                                                (eprefill_host, eprefill_port))  
+                else:
+                    if resp['finished'] == True:
+                        decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"][:-1])
+                        gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
+                    
+                    # if resp['finished'] == True and args.enable_dcache:
+                        # print("res", resp, n)
+                        # decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"])
+                        # gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
+                        # pkv_response = await forward_request_to_prefill(resp, cfg.forward_eprefill_res_kv_url % 
+                        #                                                 (eprefill_host, eprefill_port))
+                        # for pkv_res in get_streaming_response(pkv_response):
+                        #     await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % 
+                        #                                     (edecode_host, edecode_port))
 
-            
-            decode_response = asyc_forward_request(prefill_res, cfg.forward_edecode_url % 
-                                                        (edecode_host, edecode_port))
-        n = 0
-        async for resp in decode_response:
-            resp = resp.decode('utf-8')
-            resp = json.loads(resp)
-            if n ==0:
-                kv_prepared = await asyc_forward_request_resp(resp, cfg.forward_eprefill_res_url % 
-                                            (eprefill_host, eprefill_port))  
-            else:
-                if resp['finished'] == True:
-                    decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"][:-1])
-                    gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
-                
-                # if resp['finished'] == True and args.enable_dcache:
-                    # print("res", resp, n)
-                    # decoded_tokens = tuple(resp["prompt_token_ids"] + resp["prefilled_token_id"])
-                    # gs_dtoken_tree.insert(decoded_tokens, None, str(edecode_host + "_" + str(edecode_port)))
-                    # pkv_response = await forward_request_to_prefill(resp, cfg.forward_eprefill_res_kv_url % 
-                    #                                                 (eprefill_host, eprefill_port))
-                    # for pkv_res in get_streaming_response(pkv_response):
-                    #     await forward_request_to_decode(pkv_res, cfg.forward_edecode_res_kv_url  % 
-                    #                                     (edecode_host, edecode_port))
+                        #how to know data pass??
+                        # gs_ptoken_tree.insert(decoded_tokens, None, str(cfg.edecode_host + ":" + cfg.edecode_port))
 
-                    #how to know data pass??
-                    # gs_ptoken_tree.insert(decoded_tokens, None, str(cfg.edecode_host + ":" + cfg.edecode_port))
-
-                yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
-            n = n + 1 
+                    yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
+                n = n + 1 
     return StreamingResponse(stream_results())
 
 
