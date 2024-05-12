@@ -25,3 +25,6 @@ edecode_port =  8083
 
 edecode_port1 =  8084
 
+edecode_label = "EDECODE"
+eprefill_label = "EPREFILL"
+
