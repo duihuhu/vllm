@@ -282,6 +282,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         #record block num in radix tree(only for eaily use orignal allocate fuction )
         self.num_hash = 0
+        
+        # Mapping: request_id -> BlockTable, use for pull data
+        self.req_pull_block_tables: Dict[str, BlockTable] = {}
+        
     def can_allocate(self, seq_group: SequenceGroup) -> AllocStatus:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
@@ -301,6 +305,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return AllocStatus.OK
         else:
             return AllocStatus.LATER
+    
+    def query_kv_blocks(self, query_cache_meta):
+        blocks = []
+        blocks, last_node, last_node_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(tuple(query_cache_meta.prompt_token_ids))
+        print("decode mathch cache, ", len(blocks), query_cache_meta.request_id)
+        self.req_pull_block_tables[query_cache_meta.request_id] = blocks
+        return len(blocks)
     
     def allocate_radix_cache(self, seq_group: SequenceGroup, is_kv_prepared=None) -> None:
          #todo if mcache open, should consider cache in dram

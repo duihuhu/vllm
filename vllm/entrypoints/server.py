@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
-from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader
+from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta, QueryMeta, QueryCacheMeta
 from vllm.entrypoints.server_meta import InferResults
 import entrypoints_config as cfg
 import uvicorn
@@ -20,6 +20,22 @@ TIMEOUT_KEEP_ALIVE = 5
 ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
+
+@app.post("/pull_kv_cache")
+async def pull_kv_cache(response: Request) -> None:
+    payload = await response.json()
+    query_meta = QueryMeta(**payload)
+    await server.engine.pull_kv_blocks(query_meta)
+    server.engine._request_tracker.new_requests_event.set()
+    return 
+
+@app.post("/query_kv_cache")
+async def query_kv_cache(response: Request) -> None:
+    payload = await response.json()
+    query_cache_meta = QueryCacheMeta(**payload)
+    dcached_len = await server.engine.query_kv_blocks(query_cache_meta)
+    ret = {"dcached_len": dcached_len}
+    return ret
 
 @app.post("/response_kv_result")
 async def response_kv_result(response: Request) -> None:
@@ -262,8 +278,8 @@ class Server:
         self.engine = AsyncLLMEngine.from_engine_args(engine_args=engine_args)
         self.global_ranks = self.engine.engine.get_global_ranks()
         
-        # self.reporter = threading.Thread(target=self.report_local_info, args=(server_args.report_interval_time,))
-        # self.reporter.start()
+        self.reporter = threading.Thread(target=self.report_local_info, args=(server_args.report_interval_time,))
+        self.reporter.start()
     
     def report_local_info(self, report_interval_time: float):
         #todo 从engine中获得相关负载信息，目前手动构造

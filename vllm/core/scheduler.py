@@ -177,6 +177,8 @@ class Scheduler:
         self.send_transfering: Dict[str, SequenceGroup] = {}
         self.recv_transfering: Dict[str, SequenceGroup] = {}
         
+        self.req_pull_send_transfering: Dict[str, int] = {}
+
         self.num_workers: int = 0
 
     @property

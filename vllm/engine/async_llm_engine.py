@@ -268,7 +268,7 @@ class _AsyncLLMEngine(LLMEngine):
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
             payload=query_meta
         )
-        return CommEngine.async_send_to(decode_entry_point, "pull_dcache", data)
+        return CommEngine.async_send_to(decode_entry_point, "pull_kv_cache", data)
     
     async def _query_cache_meta(self, cache_meta, request_id, prompt_token_ids):
         decode_entry_point = (cache_meta.cmeta_host, cache_meta.cmeta_port)
@@ -277,7 +277,7 @@ class _AsyncLLMEngine(LLMEngine):
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
             payload=query_cache_meta
         )
-        return CommEngine.async_send_to(decode_entry_point, "query_dcache", data)
+        return CommEngine.async_send_to(decode_entry_point, "query_kv_cache", data)
         
     async def _query_cache(self, seq_group):
         seq = seq_group.get_seqs()[0] 
@@ -673,7 +673,8 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.swapping_in and
                 not self.engine.scheduler.swapping_out and
                 not self.engine.scheduler.recv_transfering and
-                not self.engine.scheduler.send_transfering):
+                not self.engine.scheduler.send_transfering and
+                not self.engine.scheduler.req_pull_send_transfering):
                 
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
@@ -771,13 +772,19 @@ class AsyncLLMEngine:
         )
 
         return stream
+    
+    async def pull_kv_blocks(self, query_meta):
+        self.engine.pull_kv_blocks(query_meta)
+    
+    async def query_kv_blocks(self, query_cache_meta):
+        return self.engine.query_kv_blocks(query_cache_meta)
 
     async def add_kv_response(
         self,
         response: KvPreparedResponse,
     ) -> None:
         self._request_tracker.add_kv_response(response=response)
-        
+    
     async def generate(
         self,
         prompt: Optional[str],
