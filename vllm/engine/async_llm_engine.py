@@ -279,7 +279,7 @@ class _AsyncLLMEngine(LLMEngine):
         )
         return await CommEngine.async_send_to(decode_entry_point, "query_kv_cache", data)
         
-    async def _query_cache(self, seq_group):
+    async def _query_cache(self, seq_group, request_tracker):
         seq = seq_group.get_seqs()[0] 
         query_response = await self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids)
         print("query_response ", query_response)
@@ -304,8 +304,10 @@ class _AsyncLLMEngine(LLMEngine):
                                                     phy_blocks_num[len(computed_blocks
                                                                        ): resp_cached_len], False)
             pull_response = await self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
+            request_tracker.new_requests_event.set()
+
             print("pull_response ", pull_response)
-    async def step_async(self) -> List[RequestOutput]:
+    async def step_async(self, request_tracker) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.
 
@@ -328,7 +330,7 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_cache_meta:
             if cached_seq_groups:
                 for seq_group in cached_seq_groups:
-                    asyncio.create_task(self._query_cache(seq_group))
+                    asyncio.create_task(self._query_cache(seq_group, request_tracker))
             
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -653,7 +655,7 @@ class AsyncLLMEngine:
             request_outputs = await self.engine.step.remote()
         else:
             await self.engine.trans_kv_step_aysnc()
-            request_outputs = await self.engine.step_async()
+            request_outputs = await self.engine.step_async(self._request_tracker)
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
