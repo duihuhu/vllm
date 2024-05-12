@@ -291,6 +291,7 @@ class Server:
                 remained_gpu_blocks=0,
                 remained_cpu_blocks=0,
                 num_unfinished_requests=0,
+                global_ranks = self.global_ranks,
                 timestamp=time.time()
             )
             data = CommData(
