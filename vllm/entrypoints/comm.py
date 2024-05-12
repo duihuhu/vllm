@@ -41,13 +41,13 @@ class CommData:
 class CommEngine:
     @staticmethod
     def send_to(entry_point: Tuple[str, int], func_name: str, data: CommData):
-        api_url = f"{entry_point[0]}:{entry_point[1]}/{func_name}"
+        api_url = f"http://{entry_point[0]}:{entry_point[1]}/{func_name}"
         response = requests.post(api_url, headers=data.headers, json=data.payload, stream=True)
         return response
 
     @staticmethod
     async def async_send_to(entry_point: Tuple[str, int], func_name: str, data: CommData):
-        api_url = f"{entry_point[0]}:{entry_point[1]}/{func_name}"
+        api_url = f"http://{entry_point[0]}:{entry_point[1]}/{func_name}"
         async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
             async with session.post(url=api_url, json=data.payload,
                                     headers=data.headers) as response:
