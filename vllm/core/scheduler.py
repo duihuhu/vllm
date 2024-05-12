@@ -388,7 +388,7 @@ class Scheduler:
                 if lora_int_id > 0:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
-                if not self.deploy_config.enable_cache_meta:
+                if not seq_group.cache_meta:
                     self._allocate(seq_group)
                 else:
                     if seq_group.cache_meta and seq_group.cache_meta.is_ready:
