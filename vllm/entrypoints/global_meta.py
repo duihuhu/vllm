@@ -38,7 +38,8 @@ class InstanceInfo:
                  remained_gpu_blocks,
                  remained_cpu_blocks,
                  engine_type,
-                 timestamp) -> None:
+                 timestamp,
+                 global_ranks=None) -> None:
         self.host = host
         self.service_port = service_port
         self.num_unfinished_reqs = num_unfinished_reqs
@@ -48,6 +49,7 @@ class InstanceInfo:
         self.remained_cpu_blocks = remained_cpu_blocks
         self.engine_type = engine_type
         self.timestamp = timestamp
+        self.global_ranks = global_ranks
         
 class TransDataType(Enum):
     PART = "incr"
