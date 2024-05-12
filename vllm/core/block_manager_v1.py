@@ -769,7 +769,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def mark_blocks_as_computed(self, seq_group: SequenceGroup, enable_cache_meta=False):
         if self.enable_caching or self.enable_radix_caching:
-            if not enable_cache_meta:
+            if not enable_cache_meta or not seq_group.cache_meta:
                 for seq in seq_group.seqs_dict.values():
                     self.compute_full_blocks_in_seq(seq)
             else:
