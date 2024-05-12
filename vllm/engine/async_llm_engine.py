@@ -277,7 +277,7 @@ class _AsyncLLMEngine(LLMEngine):
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
             payload=query_cache_meta
         )
-        return CommEngine.async_send_to(decode_entry_point, "query_kv_cache", data)
+        return await CommEngine.async_send_to(decode_entry_point, "query_kv_cache", data)
         
     async def _query_cache(self, seq_group):
         seq = seq_group.get_seqs()[0] 

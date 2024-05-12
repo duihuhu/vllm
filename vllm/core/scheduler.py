@@ -518,7 +518,8 @@ class Scheduler:
         # such as self.running, self.swapped, and self.waiting.
         scheduler_outputs, cached_seq_groups = self._schedule()
         now = time.time()
-        print(" scheduler_outputs , cached_seq_groups ", scheduler_outputs, cached_seq_groups)
+        if scheduler_outputs:
+            print(" scheduler_outputs , cached_seq_groups ", scheduler_outputs.scheduled_seq_groups, cached_seq_groups)
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
