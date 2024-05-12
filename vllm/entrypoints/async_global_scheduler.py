@@ -163,7 +163,12 @@ async def add_request(request: Request) -> Response:
             prefill_res = resp
             prefilled_tokens = tuple(prefill_res["prompt_token_ids"] + prefill_res["prefilled_token_id"][:-1])
             gs_ptoken_tree.insert(prefilled_tokens, None, str(eprefill_host + "_" + str(eprefill_port)))
+            
+            if prefill_res["finished"] == True:
+                return Response((json.dumps(prefill_res, ensure_ascii=False) + "\0").encode("utf-8"))
+            
             yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
+
             
             decode_response = asyc_forward_request(prefill_res, cfg.forward_edecode_url % 
                                                         (edecode_host, edecode_port))
