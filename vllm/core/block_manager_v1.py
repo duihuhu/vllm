@@ -747,7 +747,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Can return non-empty result only with prefix caching enabled.
         if not self.enable_caching and not self.enable_radix_caching:
             return []
-        print("get_common_computed_block_ids_one_seq ",  self.block_tables[seqs.seq_id])
+        # print("get_common_computed_block_ids_one_seq ",  self.block_tables[seqs.seq_id])
         block_table = self.block_tables[seqs.seq_id]
         for block in block_table[len(seqs.computed_block):-1]:
             if block.computed == True:
