@@ -919,6 +919,7 @@ class CUDAGraphRunner:
                 **kwargs,
             )
         torch.cuda.synchronize()
+        start_time = time.time()
 
         # Capture the graph.
         # NOTE(woosuk): Python 3.8 does not support multi-line with statements.
@@ -934,7 +935,8 @@ class CUDAGraphRunner:
                     **kwargs,
                 )
         torch.cuda.synchronize()
-
+        end_time = time.time()
+        print(" self.model ", end_time-start_time)
         # Save the input and output buffers.
         self.input_buffers = {
             "input_ids": input_ids,
