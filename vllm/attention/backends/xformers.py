@@ -190,8 +190,6 @@ class XFormersImpl(AttentionImpl):
         Returns:
             shape = [num_tokens, num_heads * head_size]
         """
-        torch.cuda.synchronize()
-        start_time = time.time()
         num_tokens, hidden_size = query.shape
         query = query.view(-1, self.num_heads, self.head_size)
         key = key.view(-1, self.num_kv_heads, self.head_size)
@@ -288,9 +286,6 @@ class XFormersImpl(AttentionImpl):
                 self.scale,
                 self.alibi_slopes,
             )
-        torch.cuda.synchronize()
-        end_time = time.time()
-        print("forward_decode " , end_time-start_time)
         # Reshape the output tensor.
         return output.view(-1, self.num_heads * self.head_size)
 
