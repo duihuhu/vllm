@@ -519,7 +519,7 @@ class Scheduler:
         scheduler_outputs, cached_seq_groups = self._schedule()
         now = time.time()
         # if scheduler_outputs:
-        print(" scheduler_outputs , cached_seq_groups ", scheduler_outputs.scheduled_seq_groups, cached_seq_groups)
+            # print(" scheduler_outputs , cached_seq_groups ", scheduler_outputs.scheduled_seq_groups, cached_seq_groups)
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
@@ -533,9 +533,7 @@ class Scheduler:
             block_tables: Dict[int, List[int]] = {}
 
             seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
-            print("seqs ", seqs)
             for seq in seqs:
-                print("seq.seq_id ", seq.seq_id)
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 if not self.block_manager.enable_radix_caching:
@@ -581,7 +579,6 @@ class Scheduler:
         for scheduled_seq_group in scheduler_outputs.scheduled_seq_groups:
             self.block_manager.mark_blocks_as_computed(
                 scheduled_seq_group.seq_group)
-        print("seq_group_metadata_list ", seq_group_metadata_list)
         return seq_group_metadata_list, scheduler_outputs, cached_seq_groups
 
     def fork_seq(self, parent_seq: Sequence, child_seq: Sequence) -> None:
