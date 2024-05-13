@@ -263,8 +263,10 @@ class LlamaModel(nn.Module):
         torch.cuda.synchronize()
         start_time = time.time()
         if inputs_embeds is not None:
+            print("None ")
             hidden_states = inputs_embeds
         else:
+            print("not None ")
             hidden_states = self.get_input_embeddings(input_ids)
 
         residual = None
