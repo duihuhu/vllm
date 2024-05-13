@@ -150,17 +150,11 @@ class LlamaAttention(nn.Module):
         kv_cache: torch.Tensor,
         attn_metadata: AttentionMetadata,
     ) -> torch.Tensor:
-        torch.cuda.synchronize()
-        start_time = time.time()
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
         attn_output = self.attn(q, k, v, kv_cache, attn_metadata)
         output, _ = self.o_proj(attn_output)
-        torch.cuda.synchronize()
-        end_time = time.time()
-        print("Attention attn " , end_time-start_time)
-
         return output
 
 
@@ -210,6 +204,8 @@ class LlamaDecoderLayer(nn.Module):
         residual: Optional[torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
+        torch.cuda.synchronize()
+        start_time = time.time()
         if residual is None:
             residual = hidden_states
             hidden_states = self.input_layernorm(hidden_states)
@@ -226,6 +222,9 @@ class LlamaDecoderLayer(nn.Module):
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
         hidden_states = self.mlp(hidden_states)
+        torch.cuda.synchronize()
+        end_time = time.time()
+        print("LlamaDecoderLayer forward " , end_time-start_time)
         return hidden_states, residual
 
 
