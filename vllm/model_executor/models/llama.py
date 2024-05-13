@@ -150,16 +150,17 @@ class LlamaAttention(nn.Module):
         kv_cache: torch.Tensor,
         attn_metadata: AttentionMetadata,
     ) -> torch.Tensor:
-        torch.cuda.synchronize()
-        start_time = time.time()
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
+        torch.cuda.synchronize()
+        start_time = time.time()
         attn_output = self.attn(q, k, v, kv_cache, attn_metadata)
-        output, _ = self.o_proj(attn_output)
         torch.cuda.synchronize()
         end_time = time.time()
-        print("forward_decode " , end_time-start_time)
+        print("Attention attn " , end_time-start_time)
+        output, _ = self.o_proj(attn_output)
+
         return output
 
 
