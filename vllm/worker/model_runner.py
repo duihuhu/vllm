@@ -663,8 +663,10 @@ class ModelRunner:
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
+        torch.cuda.synchronize()
         start_time = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
+        torch.cuda.synchronize()
         end_time = time.time()
         print("model_executable ", end_time-start_time)
             #   , execute_model_kwargs["input_ids"],  execute_model_kwargs["positions"],
@@ -953,7 +955,7 @@ class CUDAGraphRunner:
     ) -> torch.Tensor:
         # KV caches are fixed tensors, so we don't need to copy them.
         del kv_caches
-
+        start_time = time.time()
         # Copy the input tensors to the input buffers.
         self.input_buffers["input_ids"].copy_(input_ids, non_blocking=True)
         self.input_buffers["positions"].copy_(positions, non_blocking=True)
@@ -965,7 +967,8 @@ class CUDAGraphRunner:
                                                  non_blocking=True)
         # Run the graph.
         self.graph.replay()
-
+        end_time = time.time()
+        print("self.graph ", end_time-start_time)
         # Return the output tensor.
         return self.output_buffers["hidden_states"]
 
