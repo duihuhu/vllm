@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from vllm.attention.backends.abstract import AttentionMetadata
 from vllm.attention.selector import get_attn_backend
-
+import time
 
 class Attention(nn.Module):
     """Attention layer.
@@ -43,4 +43,8 @@ class Attention(nn.Module):
         kv_cache: Optional[torch.Tensor],
         attn_metadata: AttentionMetadata,
     ) -> torch.Tensor:
-        return self.impl.forward(query, key, value, kv_cache, attn_metadata)
+        start_time = time.time()
+        res = self.impl.forward(query, key, value, kv_cache, attn_metadata)
+        end_time = time.time()
+        print("attention forward ", end_time-start_time)
+        return res
