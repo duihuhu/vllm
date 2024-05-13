@@ -277,10 +277,11 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-        hidden_states, _ = self.norm(hidden_states, residual)
         torch.cuda.synchronize()
         end_time = time.time()
         print("forward_decode " , end_time-start_time)
+        hidden_states, _ = self.norm(hidden_states, residual)
+
         return hidden_states
 
 
