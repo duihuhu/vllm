@@ -44,8 +44,9 @@ async def generate(request: Request) -> Response:
     request_dict = await request.json()
     # prompt = request_dict.pop("prompt")
     stream = request_dict.pop("prompt_token_ids", False)
+    request_id = request_dict.pop("request_id")
     sampling_params = SamplingParams(**request_dict)
-    request_id = random_uuid()
+    # request_id = random_uuid()
 
     results_generator = engine.generate(prompt, sampling_params, request_id)
 
