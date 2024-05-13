@@ -954,7 +954,8 @@ class CUDAGraphRunner:
         **kwargs,
     ) -> torch.Tensor:
         # KV caches are fixed tensors, so we don't need to copy them.
-        del kv_caches
+        del kv_caches        
+        torch.cuda.synchronize()
         start_time = time.time()
         # Copy the input tensors to the input buffers.
         self.input_buffers["input_ids"].copy_(input_ids, non_blocking=True)
@@ -967,6 +968,7 @@ class CUDAGraphRunner:
                                                  non_blocking=True)
         # Run the graph.
         self.graph.replay()
+        torch.cuda.synchronize()
         end_time = time.time()
         print("self.graph ", end_time-start_time)
         # Return the output tensor.
