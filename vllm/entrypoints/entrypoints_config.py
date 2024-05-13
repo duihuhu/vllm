@@ -28,3 +28,10 @@ edecode_port1 =  8084
 edecode_label = "EDECODE"
 eprefill_label = "EPREFILL"
 
+
+forward_generate_url = "http://%s:%s/generate"
+generate_host =  "127.0.0.1"
+generate_port =  8082
+
+
+
