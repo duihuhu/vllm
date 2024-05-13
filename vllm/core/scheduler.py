@@ -533,7 +533,9 @@ class Scheduler:
             block_tables: Dict[int, List[int]] = {}
 
             seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
+            print("seqs ", seqs)
             for seq in seqs:
+                print("seq.seq_id ", seq.seq_id)
                 seq_id = seq.seq_id
                 seq_data[seq_id] = seq.data
                 if not self.block_manager.enable_radix_caching:
