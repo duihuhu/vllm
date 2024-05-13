@@ -15,7 +15,7 @@ from vllm.attention.ops.paged_attn import (PagedAttention,
                                            PagedAttentionMetadata)
 from vllm.logger import init_logger
 from vllm.utils import is_hip
-
+import time
 logger = init_logger(__name__)
 
 
@@ -274,6 +274,9 @@ class XFormersImpl(AttentionImpl):
                 )
         else:
             # Decoding run.
+            torch.cuda.synchronize()
+
+            start_time = time.time()
             output = PagedAttention.forward_decode(
                 query,
                 key_cache,
@@ -286,7 +289,9 @@ class XFormersImpl(AttentionImpl):
                 self.scale,
                 self.alibi_slopes,
             )
-
+            torch.cuda.synchronize()
+            end_time = time.time()
+            print("forward_decode " , end_time-start_time)
         # Reshape the output tensor.
         return output.view(-1, self.num_heads * self.head_size)
 
