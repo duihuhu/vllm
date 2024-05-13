@@ -196,6 +196,7 @@ class XFormersImpl(AttentionImpl):
         value = value.view(-1, self.num_kv_heads, self.head_size)
 
         if kv_cache is not None:
+            print("AAAAAA")
             key_cache, value_cache = PagedAttention.split_kv_cache(
                 kv_cache, self.num_kv_heads, self.head_size)
 
@@ -276,6 +277,7 @@ class XFormersImpl(AttentionImpl):
             # Decoding run.
             # torch.cuda.synchronize()
             # start_time = time.time()
+            print("DDDDD")
             output = PagedAttention.forward_decode(
                 query,
                 key_cache,
