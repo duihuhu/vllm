@@ -663,10 +663,8 @@ class ModelRunner:
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        torch.cuda.synchronize()
         start_time = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
-        torch.cuda.synchronize()
         end_time = time.time()
         print("model_executable ", end_time-start_time)
             #   , execute_model_kwargs["input_ids"],  execute_model_kwargs["positions"],
@@ -919,8 +917,6 @@ class CUDAGraphRunner:
                 **kwargs,
             )
         torch.cuda.synchronize()
-        start_time = time.time()
-
         # Capture the graph.
         # NOTE(woosuk): Python 3.8 does not support multi-line with statements.
         # https://stackoverflow.com/questions/31039022/python-multi-line-with-statement
@@ -935,8 +931,6 @@ class CUDAGraphRunner:
                     **kwargs,
                 )
         torch.cuda.synchronize()
-        end_time = time.time()
-        print(" self.model ", end_time-start_time)
         # Save the input and output buffers.
         self.input_buffers = {
             "input_ids": input_ids,
