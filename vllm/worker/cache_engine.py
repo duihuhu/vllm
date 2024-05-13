@@ -147,8 +147,6 @@ class CacheEngine:
         with torch.cuda.stream(self.recv_streams[channel]):
             tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
                                                dtype=torch.uint8).cuda()
-            if opposite_rank !=0:
-                opposite_rank = 1
             gpu_ops.RecvRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
             self.recv_waiting_request_ids[channel] = tensor_of_request_id
             event = torch.cuda.Event()
@@ -161,8 +159,6 @@ class CacheEngine:
         print("recv_blocks ", len(src_blocks))
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         with torch.cuda.stream(self.recv_streams[channel]):
-            if opposite_rank !=0:
-                opposite_rank = 1
             gpu_ops.RecvBlocksRemote(gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
             event = torch.cuda.Event()
             event.record()
@@ -176,8 +172,6 @@ class CacheEngine:
         with torch.cuda.stream(self.send_streams[channel]):
             tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
             self.send_waiting_request_ids[request_id] = tensor_of_request_id
-            if opposite_rank !=0:
-                opposite_rank = 1
             gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
             gpu_ops.SendBlocksRemote(gpu_cache, dst_blocks, self.cache_size_per_block, opposite_rank)
             event = torch.cuda.Event()
