@@ -266,6 +266,7 @@ class LlamaModel(nn.Module):
             hidden_states = inputs_embeds
         else:
             hidden_states = self.get_input_embeddings(input_ids)
+        torch.cuda.synchronize()
         t2 = time.time()
         residual = None
         for i in range(len(self.layers)):
@@ -277,6 +278,7 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
+        torch.cuda.synchronize()
         t3 = time.time()
 
         hidden_states, _ = self.norm(hidden_states, residual)
