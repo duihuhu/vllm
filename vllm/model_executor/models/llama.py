@@ -204,8 +204,6 @@ class LlamaDecoderLayer(nn.Module):
         residual: Optional[torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
-        torch.cuda.synchronize()
-        start_time = time.time()
         if residual is None:
             residual = hidden_states
             hidden_states = self.input_layernorm(hidden_states)
@@ -222,9 +220,6 @@ class LlamaDecoderLayer(nn.Module):
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
         hidden_states = self.mlp(hidden_states)
-        torch.cuda.synchronize()
-        end_time = time.time()
-        print("LlamaDecoderLayer forward " , end_time-start_time)
         return hidden_states, residual
 
 
@@ -265,7 +260,8 @@ class LlamaModel(nn.Module):
         attn_metadata: AttentionMetadata,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-
+        torch.cuda.synchronize()
+        start_time = time.time()
         if inputs_embeds is not None:
             hidden_states = inputs_embeds
         else:
@@ -283,7 +279,9 @@ class LlamaModel(nn.Module):
             )
 
         hidden_states, _ = self.norm(hidden_states, residual)
-
+        torch.cuda.synchronize()
+        end_time = time.time()
+        print("LlamaModel forward " , end_time-start_time)
         return hidden_states
 
 
