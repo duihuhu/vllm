@@ -261,12 +261,13 @@ class LlamaModel(nn.Module):
         attn_metadata: AttentionMetadata,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        torch.cuda.synchronize()
-        start_time = time.time()
+
         if inputs_embeds is not None:
             hidden_states = inputs_embeds
         else:
             hidden_states = self.get_input_embeddings(input_ids)
+        torch.cuda.synchronize()
+        start_time = time.time()
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
