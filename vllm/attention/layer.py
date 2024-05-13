@@ -43,8 +43,4 @@ class Attention(nn.Module):
         kv_cache: Optional[torch.Tensor],
         attn_metadata: AttentionMetadata,
     ) -> torch.Tensor:
-        start_time = time.time()
-        res = self.impl.forward(query, key, value, kv_cache, attn_metadata)
-        end_time = time.time()
-        print("attention forward ", end_time-start_time)
-        return res
+        return self.impl.forward(query, key, value, kv_cache, attn_metadata)
