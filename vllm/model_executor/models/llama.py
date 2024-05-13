@@ -266,9 +266,7 @@ class LlamaModel(nn.Module):
             hidden_states = inputs_embeds
         else:
             hidden_states = self.get_input_embeddings(input_ids)
-        torch.cuda.synchronize()
-        end_time = time.time()
-        print("LlamaModel forward get_input_embeddings " , end_time-start_time)
+
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
@@ -280,7 +278,9 @@ class LlamaModel(nn.Module):
                 residual,
             )
         hidden_states, _ = self.norm(hidden_states, residual)
-
+        torch.cuda.synchronize()
+        end_time = time.time()
+        print("LlamaModel forward " , end_time-start_time)
         return hidden_states
 
 
