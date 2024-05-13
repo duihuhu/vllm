@@ -607,7 +607,7 @@ class Scheduler:
         else:
             self.block_manager.allocate(seq_group, is_kv_prepared)
             
-        if (self.deploy_config.role == "prompt") or (self.deploy_config.role == "decoder" and is_kv_prepared):
+        if not self.deploy_config.enable_separate or (self.deploy_config.role == "prompt") or (self.deploy_config.role == "decoder" and is_kv_prepared):
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 seq.status = SequenceStatus.RUNNING
                 
