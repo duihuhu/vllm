@@ -61,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument("--workers", type=int, default=1)
     
     args = parser.parse_args()
-    uvicorn.run(app='global_scheduler:app',
+    uvicorn.run(app='agg_global_scheduler:app',
                 host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,
                 log_level="debug",
