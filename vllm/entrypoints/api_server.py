@@ -42,8 +42,8 @@ async def generate(request: Request) -> Response:
     - other fields: the sampling parameters (See `SamplingParams` for details).
     """
     request_dict = await request.json()
-    prompt = request_dict.pop("prompt")
-    stream = request_dict.pop("stream", False)
+    # prompt = request_dict.pop("prompt")
+    stream = request_dict.pop("prompt_token_ids", False)
     sampling_params = SamplingParams(**request_dict)
     request_id = random_uuid()
 
