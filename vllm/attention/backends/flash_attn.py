@@ -222,9 +222,6 @@ class FlashAttentionImpl(AttentionImpl):
                 )
         else:
             # Decoding run.
-            torch.cuda.synchronize()
-
-            start_time = time.time()
             output = PagedAttention.forward_decode(
                 query,
                 key_cache,
@@ -237,9 +234,6 @@ class FlashAttentionImpl(AttentionImpl):
                 self.scale,
                 self.alibi_slopes,
             )
-            torch.cuda.synchronize()
-            end_time = time.time()
-            print("forward_decode " , end_time-start_time)
 
         # Reshape the output tensor.
         return output.view(num_tokens, hidden_size)
