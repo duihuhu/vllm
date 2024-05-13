@@ -43,12 +43,13 @@ async def generate(request: Request) -> Response:
     """
     request_dict = await request.json()
     # prompt = request_dict.pop("prompt")
-    stream = request_dict.pop("prompt_token_ids", False)
+    prompt_token_ids = request_dict.pop("prompt_token_ids", False)
+    stream = request_dict.pop("stream")
     request_id = request_dict.pop("request_id")
     sampling_params = SamplingParams(**request_dict)
     # request_id = random_uuid()
 
-    results_generator = engine.generate(prompt, sampling_params, request_id)
+    results_generator = engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, sampling_params=sampling_params, request_id=request_id)
 
     # Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
