@@ -285,7 +285,7 @@ class LlamaModel(nn.Module):
         torch.cuda.synchronize()
         t4 = time.time()
         print("LlamaModel forward " , t4-t1, t4-t3, t3-t2, t2-t1)
-        print("hidden_states ", hidden_states)
+        # print("hidden_states ", hidden_states)
         return hidden_states
 
 
