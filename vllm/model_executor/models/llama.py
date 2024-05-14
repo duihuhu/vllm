@@ -271,6 +271,12 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
+            if i == 0:
+                print("positions ", positions)
+                print("hidden_states ", hidden_states)
+                print("kv_caches[i] ", kv_caches[i])
+                print("attn_metadata ", attn_metadata)
+                print("residual ", residual)
             hidden_states, residual = layer(
                 positions,
                 hidden_states,
