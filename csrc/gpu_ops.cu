@@ -45,7 +45,7 @@ using namespace at;
 
 ncclComm_t g_globalNcclComm = nullptr;
 
-int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
+int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 32) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
     constexpr int32_t ROOT_INFO_OK = 1;
@@ -150,7 +150,6 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
         cudaGetDevice(&deviceId);
         auto gpuStream = c10::cuda::getCurrentCUDAStream();
         auto cudaStream = gpuStream.stream();
-        int size = 10;
         cudaMalloc(&send_buf, size * sizeof(float));
 
         NCCLCHECK(ncclSend(send_buf, size , ncclFloat, 1, g_globalNcclComm, cudaStream));
@@ -162,7 +161,6 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
         cudaGetDevice(&deviceId);
         auto gpuStream = c10::cuda::getCurrentCUDAStream();
         auto cudaStream = gpuStream.stream();
-        int size = 10;
         cudaMalloc(&recv_buf, size * sizeof(float));
 
         NCCLCHECK(ncclRecv(recv_buf, size , ncclFloat, 0, g_globalNcclComm, cudaStream));
