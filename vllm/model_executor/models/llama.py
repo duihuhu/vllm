@@ -273,6 +273,7 @@ class LlamaModel(nn.Module):
             layer = self.layers[i]
             if i == 0:
                 print("positions ", positions)
+                print("input_ids ", input_ids)
                 print("hidden_states ", hidden_states)
                 print("kv_caches[i] ", kv_caches[i])
                 print("attn_metadata ", attn_metadata)
