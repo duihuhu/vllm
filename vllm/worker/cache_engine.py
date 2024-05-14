@@ -5,7 +5,7 @@ from typing import Dict, List, Tuple
 import torch
 
 from vllm.attention import get_attn_backend
-from vllm.config import CacheConfig, ModelConfig, ParallelConfig
+from vllm.config import CacheConfig, ModelConfig, ParallelConfig, DeployConfig
 from vllm.logger import init_logger
 from vllm.utils import STR_DTYPE_TO_TORCH_DTYPE, is_pin_memory_available
 
@@ -30,6 +30,7 @@ class CacheEngine:
         cache_config: CacheConfig,
         model_config: ModelConfig,
         parallel_config: ParallelConfig,
+        deploy_config: DeployConfig,
         request_id_size: int = 32,
     ) -> None:
         self.cache_config = cache_config
@@ -44,6 +45,8 @@ class CacheEngine:
         self.num_gpu_blocks = cache_config.num_gpu_blocks
         self.num_cpu_blocks = cache_config.num_cpu_blocks
 
+        self.deploy_config = deploy_config
+        
         if cache_config.cache_dtype == "auto":
             self.dtype = model_config.dtype
         else:
@@ -83,7 +86,12 @@ class CacheEngine:
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
 
-        # self.recv_streams[] = torch.cuda.Stream(device=torch.cuda.current_device())
+        if self.deploy_config.role == "prompt":
+            self.recv_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
+            self.send_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
+        else:
+            self.recv_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
+            self.send_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
 
     #hucc
     #for request id: send gpu->gpu , copy request id from gpu to cpu 
@@ -143,7 +151,6 @@ class CacheEngine:
 
     # pull语义, 由send方法调用
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:
-        print("channel ", channel)
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
             

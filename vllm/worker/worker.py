@@ -126,7 +126,7 @@ class Worker:
         set_random_seed(self.model_config.seed)
         
         # if self.deploy_config.enable_separate:
-        if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 2, 32) !=0:
+        if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 2, 0) !=0:
             print("self.local_rank ", self.get_local_rank)
             raise ValueError("CreateNcclFromRankTable error")
         return self.get_local_rank
@@ -186,7 +186,7 @@ class Worker:
     def init_cache_engine(self, cache_config: CacheConfig) -> None:
         self.cache_config = cache_config
         self.cache_engine = CacheEngine(self.cache_config, self.model_config,
-                                        self.parallel_config)
+                                        self.parallel_config, self.deploy_config)
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
 
