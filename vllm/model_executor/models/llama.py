@@ -271,13 +271,6 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            if i == 1:
-                print("positions ", positions)
-                print("input_ids ", input_ids)
-                print("hidden_states ", hidden_states)
-                print("kv_caches[i] ", kv_caches[i])
-                print("attn_metadata ", attn_metadata)
-                print("residual ", residual)
             hidden_states, residual = layer(
                 positions,
                 hidden_states,
@@ -292,7 +285,7 @@ class LlamaModel(nn.Module):
         torch.cuda.synchronize()
         t4 = time.time()
         print("LlamaModel forward " , t4-t1, t4-t3, t3-t2, t2-t1)
-
+        print("hidden_states ", hidden_states)
         return hidden_states
 
 
