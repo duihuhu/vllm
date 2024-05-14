@@ -317,9 +317,7 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        t1 = time.time()
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
-        t2 = time.time()
 
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
@@ -336,17 +334,19 @@ class _AsyncLLMEngine(LLMEngine):
             
         if not scheduler_outputs.is_empty():
             # Execute the model.
+            t2 = time.time()
             all_outputs = await self.model_executor.execute_model_async(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
                 scheduler_outputs.blocks_to_swap_out,
                 scheduler_outputs.blocks_to_copy)
-            
+            t3 = time.time()
+            print("execute_model_async ", t3-t2)
             self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.
             output = all_outputs[0][0]
         else:
             output = []
-        t3 = time.time()
+
 
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
@@ -360,8 +360,6 @@ class _AsyncLLMEngine(LLMEngine):
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
-        t4 = time.time()
-        print("step_async ", t4-t1, t4-t3, t3-t2, t2-t1)
         return processed_outputs
 
     async def encode_request_async(
