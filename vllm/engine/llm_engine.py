@@ -417,27 +417,27 @@ class LLMEngine:
         else:
             phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             #reconstruct sequence
-            # if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
-            #     prefilled_token_ids = prefill_request_output.outputs[0].token_ids
-            #     output_logprobs = prefill_request_output.outputs[0].logprobs
-            #     for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
-            #         seq.append_token_id(token_id, output_logprob)
+            if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+                prefilled_token_ids = prefill_request_output.outputs[0].token_ids
+                output_logprobs = prefill_request_output.outputs[0].logprobs
+                for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                    seq.append_token_id(token_id, output_logprob)
                             
-            # blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
-            # computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-            # # print("decoder computed blocks, total phy_blocks, blocks ", len(computed_blocks), len(phy_blocks), len(blocks))
-            # # print("decoder phy_blocks ", phy_blocks)
-            # if not phy_blocks:
-            #     kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
-            # else:
-            #     kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
-            #     if blocks:
-            #         self.scheduler.add_recv_transfering(seq_group)
-            #         self.kv_trans_scheduler.add_kv_request(request_id,
-            #                                                     prefill_request_output.global_ranks, blocks, False)
-            #     else:
-            self.scheduler.running.append(seq_group)
-            self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+            blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
+            computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+            # print("decoder computed blocks, total phy_blocks, blocks ", len(computed_blocks), len(phy_blocks), len(blocks))
+            # print("decoder phy_blocks ", phy_blocks)
+            if not phy_blocks:
+                kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
+            else:
+                kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
+                if blocks:
+                    self.scheduler.add_recv_transfering(seq_group)
+                    self.kv_trans_scheduler.add_kv_request(request_id,
+                                                                prefill_request_output.global_ranks, blocks, False)
+                else:
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
         return kv_response
     
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:
