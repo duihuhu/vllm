@@ -147,8 +147,6 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 3
     if (size!=0) {
         if (rank == 0){
             float *send_buf;
-            int deviceId = 0;
-            cudaGetDevice(&deviceId);
             auto gpuStream = c10::cuda::getCurrentCUDAStream();
             auto cudaStream = gpuStream.stream();
             cudaMalloc(&send_buf, size * sizeof(float));
@@ -158,8 +156,6 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 3
         }
         else {
             float *recv_buf;
-            int deviceId = 0;
-            cudaGetDevice(&deviceId);
             auto gpuStream = c10::cuda::getCurrentCUDAStream();
             auto cudaStream = gpuStream.stream();
             cudaMalloc(&recv_buf, size * sizeof(float));
@@ -222,8 +218,8 @@ std::map<uint32_t, uint32_t> srcToDsts, uint32_t cacheSize, bool isCpu2Gpu)
 void SendRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t destRank)
 {
 
-    int deviceId = 0;
-    cudaGetDevice(&deviceId);
+    // int deviceId = 0;
+    // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
     NCCLCHECK(ncclSend((void*) requestIdOnDevice, requestIdSize, ncclInt, destRank, g_globalNcclComm, cudaStream));
@@ -234,8 +230,8 @@ void SendRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint3
 void RecvRequestRemote(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t srcRank)
 {
 
-    int deviceId = 0;
-    cudaGetDevice(&deviceId);
+    // int deviceId = 0;
+    // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
 
@@ -284,8 +280,8 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 {
     int layerNum = dstCaches.size();
 
-    int deviceId = 0;
-    cudaGetDevice(&deviceId);
+    // int deviceId = 0;
+    // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
     auto cudaStream = gpuStream.stream();
