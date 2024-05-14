@@ -289,8 +289,8 @@ class _AsyncLLMEngine(LLMEngine):
         block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
         phy_blocks = [phy_block for phy_block in block_table]              
         computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-        print("add_recv_transfering, computed_blocks, phy_blocks, dcached_len " , 
-                len(computed_blocks), len(phy_blocks), resp_cached_len, seq_group.cache_meta.cached_len)
+        # print("add_recv_transfering, computed_blocks, phy_blocks, dcached_len " , 
+        #         len(computed_blocks), len(phy_blocks), resp_cached_len, seq_group.cache_meta.cached_len)
         
         if len(computed_blocks) == resp_cached_len:
             seq_group.cache_meta.is_ready = True
