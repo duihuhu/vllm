@@ -194,6 +194,7 @@ class Scheduler:
     
     def add_send_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the send transfering map.
+        print("add send transfering ", seq_group.request_id, time.time())
         self.send_transfering[seq_group.request_id] = seq_group
     
     #todo check free_seq
@@ -216,7 +217,6 @@ class Scheduler:
     
     def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the recv transfering map
-        print("add recv transfering ", seq_group.request_id, time.time())
         self.recv_transfering[seq_group.request_id] = seq_group
 
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
