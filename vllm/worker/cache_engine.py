@@ -83,6 +83,8 @@ class CacheEngine:
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
 
+        # self.recv_streams[] = torch.cuda.Stream(device=torch.cuda.current_device())
+
     #hucc
     #for request id: send gpu->gpu , copy request id from gpu to cpu 
     def get_request_id_from_tensor(self, device_tensor: torch.Tensor) -> str:
@@ -141,6 +143,7 @@ class CacheEngine:
 
     # pull语义, 由send方法调用
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:
+        print("channel ", channel)
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
             
