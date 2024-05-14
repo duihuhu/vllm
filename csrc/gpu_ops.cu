@@ -144,6 +144,30 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8) {
     // }
 
     std::cout << "Create Global NCCL Comm Success" << std::endl;
+    if (rank == 0){
+        float *send_buf;
+        int deviceId = 0;
+        cudaGetDevice(&deviceId);
+        auto gpuStream = c10::cuda::getCurrentCUDAStream();
+        auto cudaStream = gpuStream.stream();
+        int size = 10;
+        cudaMalloc(&send_buf, size * sizeof(float));
+
+        NCCLCHECK(ncclSend(send_buf, size , ncclFloat, 1, g_globalNcclComm, cudaStream));
+        cudaStreamSynchronize(0);
+    }
+    else {
+        float *recv_buf;
+        int deviceId = 0;
+        cudaGetDevice(&deviceId);
+        auto gpuStream = c10::cuda::getCurrentCUDAStream();
+        auto cudaStream = gpuStream.stream();
+        int size = 10;
+        cudaMalloc(&recv_buf, size * sizeof(float));
+
+        NCCLCHECK(ncclRecv(recv_buf, size , ncclFloat, 0, g_globalNcclComm, cudaStream));
+        cudaStreamSynchronize(0);
+    }
 
     return 0;
 }
