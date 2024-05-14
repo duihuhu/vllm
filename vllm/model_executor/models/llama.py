@@ -271,7 +271,7 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            if i == 0:
+            if i == 1:
                 print("positions ", positions)
                 print("input_ids ", input_ids)
                 print("hidden_states ", hidden_states)
