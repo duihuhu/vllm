@@ -86,12 +86,12 @@ class CacheEngine:
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
 
-        if self.deploy_config.role == "prompt":
-            self.recv_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
-            self.send_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
-        else:
-            self.recv_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
-            self.send_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
+        # if self.deploy_config.role == "prompt":
+        #     self.recv_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
+        #     self.send_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
+        # else:
+        #     self.recv_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
+        #     self.send_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
 
     #hucc
     #for request id: send gpu->gpu , copy request id from gpu to cpu 
