@@ -210,7 +210,6 @@ async def generate_prefill(request: Request) -> Response:
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
     start_time = time.time()
-    n = 0
     cache_meta = None
     if "cmeta_host" in payload:
         cmeta_host =  payload.pop("cmeta_host")
@@ -225,6 +224,7 @@ async def generate_prefill(request: Request) -> Response:
         sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta)
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
+        n = 0
         last_time = start_time
         async for request_output in results_generator:
             end_time = time.time()
@@ -250,6 +250,7 @@ async def generate_prefill(request: Request) -> Response:
             )
             last_time = end_time
             n = n + 1
+            print("n ", n)
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
