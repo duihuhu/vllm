@@ -249,7 +249,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
     cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-
+    NCCLCHECK(ncclGroupStart())
     for (int i=0; i < layerNum; i++) {
         at::Tensor srcKeyCache = srcCaches[i].first;
         at::Tensor srcValueCache = srcCaches[i].second;
@@ -272,6 +272,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             }
         }
     }
+    NCCLCHECK(ncclGroupEnd());
     // std::cout << "send blocks success" << std::endl;
 }
 
@@ -285,6 +286,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
     auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclGroupStart())
 
     for (int i=0; i < layerNum; i++) {
         at::Tensor dstKeyCache = dstCaches[i].first;
@@ -308,6 +310,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             }
         }
     }
+    NCCLCHECK(ncclGroupEnd());
     // std::cout << "recv blocks success" << std::endl;
 }
 
