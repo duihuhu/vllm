@@ -62,7 +62,7 @@ def sample_requests(
 def random_uuid() -> str:
     return str(uuid.uuid4().hex)
 
-async def asyc_forward_request_resp(request_dict, api_url):
+async def asyc_forward_request(request_dict, api_url):
     headers = {"User-Agent": "Test Client"}
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         async with session.post(url=api_url, json=request_dict,
@@ -89,7 +89,7 @@ async def post_request_and_get_response(args, req):
         "logprobs": 1,
         "stream":True
     }
-    response = await asyc_forward_request_resp(pload, G_URL)
+    response = asyc_forward_request(pload, G_URL)
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
