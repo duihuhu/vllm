@@ -87,6 +87,7 @@ async def main(args, reqs):
     waiting_time = 0
     coroutines = []
     for req in reqs:
+        print("time ", time.time())
         coroutines.append(asyncio.create_task(post_request_and_get_response(args, req)))
         interval = np.random.exponential(1.0 / args.request_rate)
         waiting_time = waiting_time + interval
