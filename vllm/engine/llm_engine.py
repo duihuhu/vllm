@@ -424,7 +424,7 @@ class LLMEngine:
             seq_group = self.scheduler.decode_waiting[0][0]
             prefill_request_output = self.scheduler.decode_waiting[0][1]
             if self.scheduler.block_manager.can_allocate(seq_group):
-                self.scheduler.decode_waiting.pop(0)
+                self.scheduler.decode_waiting.popleft()
                 phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
                 #reconstruct sequence
                 if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
