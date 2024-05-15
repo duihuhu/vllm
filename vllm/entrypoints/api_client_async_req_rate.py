@@ -127,7 +127,7 @@ if __name__ == "__main__":
     parser.add_argument("--n", type=int, default=1)
     parser.add_argument("--prompt", type=str, default="San Francisco is a")
     parser.add_argument("--stream", action="store_true")
-    parser.add_argument("--request-rate", type=float, default=1.6)
+    parser.add_argument("--request-rate", type=float, default=1)
     parser.add_argument("--num-requests", type=int, default=1)
     args = parser.parse_args()
     tokenizer_path = "/home/jovyan/models/Llama-2-13b-hf/"
