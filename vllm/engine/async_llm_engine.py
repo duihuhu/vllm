@@ -360,7 +360,7 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
         t4 = time.time()
-        print("step_async ", t4-t1, t4-t3, t3-t2, t2-t1)
+        print("step_async ", t4-t1)
         return processed_outputs
 
     async def encode_request_async(
