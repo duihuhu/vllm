@@ -112,7 +112,7 @@ if __name__ == "__main__":
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
-    reqs = sample_requests("/home/jovyan/vllm/vllm/entrypoints/one_conversation.json", tokenizer, args.num_requests)
+    reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
     
 
     asyncio.run(main(args, reqs))
