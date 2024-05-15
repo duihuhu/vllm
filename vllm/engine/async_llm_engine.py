@@ -420,7 +420,7 @@ class _AsyncLLMEngine(LLMEngine):
         if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
             return 
         
-        print("trans_kv_step_aysnc ")
+        # print("trans_kv_step_aysnc ")
         finished_tasks = await self.model_executor._run_workers_async(
             "check_finished_transfer_task",
             # get_all_outputs=True
@@ -610,7 +610,7 @@ class AsyncLLMEngine:
         """Kick the engine to process the waiting requests.
 
         Returns True if there are in-progress requests."""
-        t1 = time.time()
+        # t1 = time.time()
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
 
@@ -663,12 +663,12 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
         else:
-            t2 = time.time()
+            # t2 = time.time()
             await self.engine.trans_kv_step_aysnc()
-            t3 = time.time()
+            # t3 = time.time()
             request_outputs = await self.engine.step_async(self._request_tracker)
-            t4 = time.time()
-            print("engine step ", t4-t1, t4-t3, t3-t2, t2-t1)
+            # t4 = time.time()
+            # print("engine step ", t4-t1, t4-t3, t3-t2, t2-t1)
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:

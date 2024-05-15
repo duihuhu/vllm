@@ -152,7 +152,7 @@ class KvTransScheduler:
         for task_meta in send_blocks_finished:
             self.send_finished_worker_count[task_meta.request_id] -= 1
             if self.send_finished_worker_count[task_meta.request_id] == 0:
-                print("send request blocks finished ")
+                # print("send request blocks finished ")
                 self.channel_requests_ids[task_meta.channel][0].remove(task_meta.request_id)
                 self.channel_requests_num[task_meta.channel][0] -= 1
                 del self.send_block_ids[task_meta.request_id]
