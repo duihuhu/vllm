@@ -109,19 +109,25 @@ async def post_request_and_get_response(args, req, waiting_time):
         else:
             if resp['finished'] == True:
                 end_time = resp['end_time']
-    print("jct, ttft, input_len, output_len ", end_time-start_time, " " , ttft, " " , req[-2], " " , req[-1])
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
-    return (end_time-start_time, ttft, req[-2], " " , req[-1])
+    return (end_time-start_time, ttft, req[-2] , req[-1])
 
 async def main(args, reqs):
+    jct = []
+    ttft = []
     waiting_time = 0
     coroutines = []
     for req in reqs:
         coroutines.append(asyncio.create_task(post_request_and_get_response(args, req, waiting_time)))
         interval = np.random.exponential(1.0 / args.request_rate)
         waiting_time = waiting_time + interval
-    res = await asyncio.gather(*coroutines)
-    print("Res ", res)
+    response = await asyncio.gather(*coroutines)
+    for res in response:
+        jct.append(res[0])
+        ttft.append(res[1])
+        print("Res ", res)
+    print("average jct , p90 jct,  p95 jct, ttft , p90 ttft, p95 ttft", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), \
+        np.average(ttft), np.average(ttft, 90), np.average(ttft, 95))
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
