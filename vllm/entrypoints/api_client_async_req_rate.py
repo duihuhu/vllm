@@ -89,8 +89,12 @@ async def post_request_and_get_response(args, req):
         "logprobs": 1,
         "stream":True
     }
-    resp = await asyc_forward_request_resp(pload, G_URL)
-    print("resp ", resp)
+    response = await asyc_forward_request_resp(pload, G_URL)
+    async for resp in response:
+        resp = resp.decode('utf-8')
+        resp = json.loads(resp)
+        print("resp ", resp)
+        # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     # return resp
 
 async def main(args, reqs):
