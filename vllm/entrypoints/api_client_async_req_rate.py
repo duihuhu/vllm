@@ -100,7 +100,7 @@ async def post_request_and_get_response(args, req, waiting_time):
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
-        print("resp ", resp)
+        # print("resp ", resp)
         if resp['n'] == 0:
             start_time = resp['start_time']
             ttft = resp['ttft']
