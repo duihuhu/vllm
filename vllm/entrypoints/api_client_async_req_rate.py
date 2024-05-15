@@ -93,8 +93,6 @@ async def main(args, reqs):
         time.sleep(waiting_time)
     await asyncio.gather(*coroutines)
                 
-def main(args, prompts):
-    post_request_and_get_response(args, prompts)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
