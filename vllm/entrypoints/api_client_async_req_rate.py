@@ -111,7 +111,7 @@ async def post_request_and_get_response(args, req, waiting_time):
                 end_time = resp['end_time']
     print("jct, ttft, input_len, output_len ", end_time-start_time, " " , ttft, " " , req[-2], " " , req[-1])
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
-    # return resp
+    return (end_time-start_time, ttft, req[-2], " " , req[-1])
 
 async def main(args, reqs):
     waiting_time = 0
@@ -120,9 +120,9 @@ async def main(args, reqs):
         coroutines.append(asyncio.create_task(post_request_and_get_response(args, req, waiting_time)))
         interval = np.random.exponential(1.0 / args.request_rate)
         waiting_time = waiting_time + interval
-    await asyncio.gather(*coroutines)
-                
-
+    res = await asyncio.gather(*coroutines)
+    print("Res ", res)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
