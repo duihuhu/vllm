@@ -125,7 +125,7 @@ async def main(args, reqs):
     for res in response:
         jct.append(res[0])
         ttft.append(res[1])
-        print("Res ", res)
+        # print("Res ", res)
     print("average jct , p90 jct,  p95 jct, ttft , p90 ttft, p95 ttft", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), \
         np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95))
     
