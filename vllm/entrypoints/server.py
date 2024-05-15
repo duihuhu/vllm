@@ -223,8 +223,9 @@ async def generate_prefill(request: Request) -> Response:
     results_generator = server.engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, \
         sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta)
     #Streaming case
+    n = 0 
     async def stream_results() -> AsyncGenerator[bytes, None]:
-        n = 0
+        nonlocal n
         last_time = start_time
         async for request_output in results_generator:
             end_time = time.time()
@@ -244,13 +245,12 @@ async def generate_prefill(request: Request) -> Response:
                 ttft = end_time-last_time,
                 jct =  end_time-last_time,
                 tbt =  end_time-last_time,
-                n = 0,
+                n = n,
                 start_time=start_time,
                 end_time=end_time
             )
             last_time = end_time
             n = n + 1
-            print("n ", n)
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())
