@@ -109,7 +109,7 @@ async def post_request_and_get_response(args, req, waiting_time):
         else:
             if resp['finished'] == True:
                 end_time = resp['end_time']
-    print("jct, ttft, input_len, output_len ", end_time, start_time, end_time-start_time, ttft, req[-2], req[-1])
+    print("jct, ttft, input_len, output_len ", end_time-start_time, " " , ttft, " " , req[-2], " " , req[-1])
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     # return resp
 
