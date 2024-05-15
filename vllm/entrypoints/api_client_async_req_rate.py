@@ -78,7 +78,9 @@ async def asyc_forward_request(request_dict, api_url):
                         yield message.strip()  # 返回提取的消息
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
                         
-async def post_request_and_get_response(args, req):
+async def post_request_and_get_response(args, req, waiting_time):
+    await asyncio.sleep(waiting_time)
+    print("post_request_and_get_response ", time.time())
     pload = {
         "prompt_token_ids": req[1],
         "request_id": random_uuid(), 
@@ -90,7 +92,6 @@ async def post_request_and_get_response(args, req):
         "stream":True
     }
     response = asyc_forward_request(pload, G_URL)
-    print("post_request_and_get_response ", time.time())
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
@@ -102,12 +103,10 @@ async def main(args, reqs):
     waiting_time = 0
     coroutines = []
     for req in reqs:
-        print("time ", time.time(), waiting_time)
-        coroutines.append(asyncio.create_task(post_request_and_get_response(args, req)))
+        coroutines.append(asyncio.create_task(post_request_and_get_response(args, req, waiting_time)))
         print("bbb ")
         interval = np.random.exponential(1.0 / args.request_rate)
         waiting_time = waiting_time + interval
-        time.sleep(waiting_time)
     await asyncio.gather(*coroutines)
                 
 
