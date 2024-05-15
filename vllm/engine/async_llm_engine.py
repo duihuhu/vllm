@@ -317,7 +317,7 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        t1 = time.time() 
+        # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
         # if scheduler_outputs.is_empty():
@@ -332,7 +332,7 @@ class _AsyncLLMEngine(LLMEngine):
             if cached_seq_groups:
                 for seq_group in cached_seq_groups:
                     asyncio.create_task(self._query_cache(seq_group, request_tracker))
-        t2 = time.time() 
+        # t2 = time.time() 
         if not scheduler_outputs.is_empty():
             # Execute the model.
             all_outputs = await self.model_executor.execute_model_async(
@@ -346,7 +346,7 @@ class _AsyncLLMEngine(LLMEngine):
         else:
             output = []
 
-        t3 = time.time()
+        # t3 = time.time()
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
@@ -359,8 +359,8 @@ class _AsyncLLMEngine(LLMEngine):
             decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
             for seq_group in decoded_seq_groups:
                 self.scheduler.add_send_transfering(seq_group)
-        t4 = time.time()
-        print("step_async ", t4-t1)
+        # t4 = time.time()
+        # print("step_async ", t4-t1)
         return processed_outputs
 
     async def encode_request_async(
@@ -609,7 +609,7 @@ class AsyncLLMEngine:
         """Kick the engine to process the waiting requests.
 
         Returns True if there are in-progress requests."""
-
+        t1 = time.time()
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
 
@@ -663,7 +663,10 @@ class AsyncLLMEngine:
             request_outputs = await self.engine.step.remote()
         else:
             await self.engine.trans_kv_step_aysnc()
+            t2 = time.time()
             request_outputs = await self.engine.step_async(self._request_tracker)
+            t3 = time.time()
+            print("engine step ", t3-t1, t3-t2, t2-t1)
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
