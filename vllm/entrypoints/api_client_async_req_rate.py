@@ -104,6 +104,8 @@ async def post_request_and_get_response(args, req, waiting_time):
         if resp['n'] == 0:
             start_time = resp['start_time']
             ttft = resp['ttft']
+            if resp['finished'] == True:
+                end_time = resp['end_time']
         else:
             if resp['finished'] == True:
                 end_time = resp['end_time']
@@ -135,9 +137,9 @@ if __name__ == "__main__":
 
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-
-    reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
     random.seed(0)
+    reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
+
 
     # reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
     asyncio.run(main(args, reqs))
