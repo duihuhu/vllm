@@ -79,6 +79,7 @@ async def asyc_forward_request(request_dict, api_url):
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
                         
 async def post_request_and_get_response(args, req, waiting_time):
+    print("waiting_time ", waiting_time)
     await asyncio.sleep(waiting_time)
     print("post_request_and_get_response ", time.time())
     pload = {
