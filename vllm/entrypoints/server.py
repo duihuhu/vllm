@@ -222,11 +222,10 @@ async def generate_prefill(request: Request) -> Response:
     sampling_params = SamplingParams(**payload)
     results_generator = server.engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, \
         sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta)
-    
+    n = 0
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
         last_time = start_time
-        n = 0
         async for request_output in results_generator:
             end_time = time.time()
             # print("request_output " , request_output)
