@@ -12,6 +12,9 @@ from vllm.lora.request import LoRARequest
 from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceStatus)
 
+from vllm.outputs import RequestOutput
+
+
 logger = init_logger(__name__)
 
 
@@ -153,6 +156,7 @@ class Scheduler:
 
         # Sequence groups in the WAITING state.
         self.waiting: Deque[SequenceGroup] = deque()
+        self.decode_waiting: Tuple[Deque[SequenceGroup], RequestOutput] = tuple()
         # Sequence groups in the RUNNING state.
         self.running: Deque[SequenceGroup] = deque()
         # Sequence groups in the SWAPPED state.
@@ -188,6 +192,10 @@ class Scheduler:
     def add_seq_group(self, seq_group: SequenceGroup) -> None:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
+
+    def add_decode_seq_group(self, seq_group: SequenceGroup) -> None:
+        # Add sequence groups to the waiting queue.
+        self.decode_waiting.append(seq_group)
 
     def add_send_finished(self, request_ids: List[str]):
         self.send_finished_req_ids.extend(request_ids)

@@ -417,7 +417,9 @@ class _AsyncLLMEngine(LLMEngine):
     async def trans_kv_step_aysnc(self) -> None:
         if not self.deploy_config.enable_separate:
             return
-
+        if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
+            return 
+        
         finished_tasks = await self.model_executor._run_workers_async(
             "check_finished_transfer_task",
             # get_all_outputs=True
@@ -612,17 +614,13 @@ class AsyncLLMEngine:
             self._request_tracker.get_new_and_finished_requests())
 
         for new_request in new_requests:
-            kv_response = None
             # Add the request into the vLLM engine's waiting queue.
             # TODO: Maybe add add_request_batch to reduce Ray overhead
             try:
                 if self.engine_use_ray:
-                    kv_response = await self.engine.add_request.remote(**new_request)
+                    await self.engine.add_request.remote(**new_request)
                 else:
-                    kv_response = await self.engine.add_request_async(**new_request)
-                if kv_response:
-                    self._request_tracker.process_kv_response(
-                        self.engine.get_global_ranks(), kv_response)
+                    await self.engine.add_request_async(**new_request)
             except ValueError as e:
                 # TODO: use a vLLM specific error for failed validation
                 self._request_tracker.process_exception(
@@ -633,6 +631,7 @@ class AsyncLLMEngine:
         if finished_requests:
             await self._engine_abort(finished_requests)
 
+        #kv_responses in 
         kv_responses = self._request_tracker.get_kv_responses()
         for kv_response in kv_responses:
             # Add the response
@@ -652,7 +651,13 @@ class AsyncLLMEngine:
             if kv_response:
                 self._request_tracker.process_kv_results(
                     self.engine.get_global_ranks(), kv_response)
-    
+                
+        #kv_responses out
+        kv_responses = self.engine.schedule_decode_waiting()
+        for kv_response in kv_responses:
+            self._request_tracker.process_kv_response(
+                self.engine.get_global_ranks(), kv_response)
+        
         if self.engine_use_ray:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
