@@ -91,7 +91,7 @@ async def post_request_and_get_response(args, req):
     }
     resp = await asyc_forward_request_resp(pload, G_URL)
     print("resp ", resp)
-    return resp
+    # return resp
 
 async def main(args, reqs):
     waiting_time = 0
