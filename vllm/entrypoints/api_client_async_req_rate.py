@@ -90,6 +90,7 @@ async def post_request_and_get_response(args, req):
         "stream":True
     }
     response = asyc_forward_request(pload, G_URL)
+    print("post_request_and_get_response ", time.time())
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
