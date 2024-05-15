@@ -225,6 +225,7 @@ async def generate_prefill(request: Request) -> Response:
     n = 0
     #Streaming case
     async def stream_results() -> AsyncGenerator[bytes, None]:
+        global n
         last_time = start_time
         async for request_output in results_generator:
             end_time = time.time()
