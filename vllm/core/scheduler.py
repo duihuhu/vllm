@@ -156,7 +156,7 @@ class Scheduler:
 
         # Sequence groups in the WAITING state.
         self.waiting: Deque[SequenceGroup] = deque()
-        self.decode_waiting: Tuple[Deque[SequenceGroup], RequestOutput] = tuple()
+        self.decode_waiting: Deque[Tuple[SequenceGroup, RequestOutput]] = deque(tuple())
         # Sequence groups in the RUNNING state.
         self.running: Deque[SequenceGroup] = deque()
         # Sequence groups in the SWAPPED state.
