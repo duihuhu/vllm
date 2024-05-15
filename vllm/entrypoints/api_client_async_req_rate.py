@@ -91,11 +91,21 @@ async def post_request_and_get_response(args, req, waiting_time):
         "logprobs": 1,
         "stream":True
     }
+    
     response = asyc_forward_request(pload, G_URL)
+    start_time = 0
+    end_time = 0
+    ttft = 0
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
-        print("resp ", resp)
+        if resp['n'] == 0:
+            start_time = resp['start_time']
+            ttft = resp['ttft']
+        else:
+            if resp['finished'] == True:
+                end_time = resp['end_time']
+    print("jct, ttft, input_len, output_len ", start_time-end_time, ttft, req[-2], req[-1])
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     # return resp
 
@@ -104,7 +114,6 @@ async def main(args, reqs):
     coroutines = []
     for req in reqs:
         coroutines.append(asyncio.create_task(post_request_and_get_response(args, req, waiting_time)))
-        print("bbb ")
         interval = np.random.exponential(1.0 / args.request_rate)
         waiting_time = waiting_time + interval
     await asyncio.gather(*coroutines)
