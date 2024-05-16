@@ -97,6 +97,7 @@ async def post_request_and_get_response(args, req, waiting_time):
     start_time = 0
     end_time = 0
     ttft = 0
+    tbt = []
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
@@ -107,14 +108,17 @@ async def post_request_and_get_response(args, req, waiting_time):
             if resp['finished'] == True:
                 end_time = resp['end_time']
         else:
-            if resp['finished'] == True:
+            if resp['finished'] != True:
+                tbt.append(resp['tbt'])
+            elif resp['finished'] == True:
                 end_time = resp['end_time']
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
-    return (end_time-start_time, ttft, req[-2] , req[-1])
+    return (end_time-start_time, ttft, tbt, req[-2] , req[-1])
 
 async def main(args, reqs):
     jct = []
     ttft = []
+    tbt = []
     waiting_time = 0
     coroutines = []
     for req in reqs:
@@ -125,9 +129,11 @@ async def main(args, reqs):
     for res in response:
         jct.append(res[0])
         ttft.append(res[1])
+        tbt.extend(response[2])
         # print("Res ", res)
     print("average jct , p90 jct,  p95 jct, ttft , p90 ttft, p95 ttft", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), \
         np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95))
+    print("tbt ", tbt)
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -144,10 +150,10 @@ if __name__ == "__main__":
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     random.seed(0)
-    reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
+    # reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
 
 
-    # reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
+    reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
     asyncio.run(main(args, reqs))
 
     
