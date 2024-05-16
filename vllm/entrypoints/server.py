@@ -319,7 +319,7 @@ class Server:
         uvicorn.run(app,
                     host=self.local_entry_point[0],
                     port=self.local_entry_point[1],
-                    log_level="warning",
+                    log_level="info",
                     timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
 
 if __name__ == "__main__":
