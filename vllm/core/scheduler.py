@@ -181,10 +181,10 @@ class Scheduler:
         self.send_transfering: Dict[str, SequenceGroup] = {}
         self.recv_transfering: Dict[str, SequenceGroup] = {}
         
+        #for record request id - > data
         self.req_pull_send_transfering: Dict[str, int] = {}
 
         self.num_workers: int = 0
-
     @property
     def lora_enabled(self) -> bool:
         return bool(self.lora_config)
@@ -289,7 +289,7 @@ class Scheduler:
         return blocks
 
     def _schedule(self) -> SchedulerOutputs:
-        
+    
         #to record req when enable-cache-meta
         cached_seq_groups: List[SequenceGroup] = []
         # Blocks that need to be swapped or copied before model execution.

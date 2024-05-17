@@ -314,7 +314,7 @@ class LLMEngine:
             self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
         else:
             self.scheduler.del_send_transfering(request_id)
-
+        
     def add_request(
         self,
         request_id: str,
@@ -1025,9 +1025,11 @@ class LLMEngine:
     
     def pull_kv_blocks(self, query_meta):
         blocks = self.scheduler.block_manager.req_pull_block_tables[query_meta.request_id]
-       
         blocks_num = [block.block_number for block in blocks]
         dcached_len = self.scheduler.req_pull_send_transfering[query_meta.request_id]
         print("pull kv blocks ", query_meta.cache_meta["cached_len"],  dcached_len)
         self.kv_trans_scheduler.add_kv_request(
             query_meta.request_id, query_meta.opp_ranks, blocks_num[query_meta.cache_meta["cached_len"]: dcached_len], True)
+    
+
+    

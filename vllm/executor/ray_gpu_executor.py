@@ -423,15 +423,16 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
+        blocks_to_send_remote: Dict[str, int],
     ) -> SamplerOutput:
         all_outputs = await self._run_workers_async(
             "execute_model",
-            # seq_group_metadata_list=seq_group_metadata_list,
             driver_kwargs={
                 "seq_group_metadata_list": seq_group_metadata_list,
                 "blocks_to_swap_in": blocks_to_swap_in,
                 "blocks_to_swap_out": blocks_to_swap_out,
                 "blocks_to_copy": blocks_to_copy,
+                "blocks_to_send_remote": blocks_to_send_remote,
             })
 
         # Only the driver worker returns the sampling results.

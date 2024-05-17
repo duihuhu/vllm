@@ -27,6 +27,11 @@ from vllm.utils import (CudaMemoryProfiler, async_tensor_h2d,
                         is_pin_memory_available, make_tensor_with_pad,
                         maybe_expand_dim)
 
+#
+from vllm.worker.cache_engine import CacheEngine
+from vllm._C import gpu_ops
+
+
 logger = init_logger(__name__)
 
 _PAD_SLOT_ID = -1
@@ -641,6 +646,8 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
+        blocks_to_send_remote: Optional[Dict[int, List[int]]] = None,
+        cache_engine: CacheEngine = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
@@ -660,11 +667,18 @@ class ModelRunner:
             "positions": input_positions,
             "kv_caches": kv_caches,
             "attn_metadata": attn_metadata,
+            "blocks_to_send_remote": blocks_to_send_remote,
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         # torch.cuda.synchronize()
         # start_time = time.time()
+
+        # for request_id, block in blocks_to_send_remote:
+        #     tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
+        #     cache_engine.send_waiting_request_ids[request_id] = tensor_of_request_id
+        #     gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), cache_engine.request_id_size, block[1])
+            
         hidden_states = model_executable(**execute_model_kwargs)
         # torch.cuda.synchronize()
         # end_time = time.time()

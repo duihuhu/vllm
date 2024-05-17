@@ -5,7 +5,7 @@ from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
 from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta, QueryMeta, QueryCacheMeta
-from vllm.entrypoints.server_meta import InferResults
+from vllm.entrypoints.server_meta import InferResults, QueryBlocks
 import entrypoints_config as cfg
 import uvicorn
 import threading
@@ -21,6 +21,18 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+@app.post("/query_layer_kv_blocks")
+async def query_layer_kv_blocks(response: Request) -> None:
+    payload = await response.json()
+    request_id = payload.pop("request_id")
+    prompt_token_ids = payload.pop("prompt_token_ids")
+    global_ranks =  payload.pop("global_ranks")
+    sampling_params_json = payload.pop("sampling_params")
+    sampling_params =  SamplingParams(**sampling_params_json)
+    blocks_num = await server.engine.prepare_layer_kv_blocks(request_id=request_id, sampling_params=sampling_params, \
+        prompt_token_ids=prompt_token_ids, global_ranks=global_ranks)
+    return {"ret": blocks_num, "global_ranks": server.global_ranks}
+    
 @app.post("/pull_kv_cache")
 async def pull_kv_cache(response: Request) -> None:
     payload = await response.json()

@@ -258,6 +258,7 @@ class LlamaModel(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
+        blocks_to_send_remote: Optional[Dict[int, List[int]]] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # torch.cuda.synchronize()
@@ -278,6 +279,7 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
+            print("blocks_to_send_remote ", blocks_to_send_remote)
         # torch.cuda.synchronize()
         # t3 = time.time()
 

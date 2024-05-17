@@ -837,12 +837,14 @@ class DeployConfig:
         enable_dcache: bool = False,
         enable_cache_meta: bool = False,
         deploy_host: str = None,
-        deploy_port: str = None
+        deploy_port: str = None,
+        enable_layer: bool = False
         ) -> None:
             self.enable_separate = enable_separate
             self.role = role
             self.enable_dcache = enable_dcache
             self.enable_cache_meta = enable_cache_meta
+            self.enable_layer = enable_layer
             self.global_ranks = None
             
             self.deploy_host = deploy_host
