@@ -353,7 +353,7 @@ class _AsyncLLMEngine(LLMEngine):
             if cached_seq_groups:
                 for seq_group in cached_seq_groups:
                     asyncio.create_task(self._query_cache(seq_group, request_tracker))
-        
+        blocks_to_send_remote = None
         if self.deploy_config.enable_layer  and self.deploy_config.role == "prompt":
             blocks_to_send_remote = await self.query_layer_kv_blocks()
             print("scheduler blocks_to_send_remote ", blocks_to_send_remote)
