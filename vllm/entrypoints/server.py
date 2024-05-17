@@ -31,7 +31,7 @@ async def query_layer_kv_blocks(response: Request) -> None:
     sampling_params =  SamplingParams(**sampling_params_json)
     blocks_num = await server.engine.prepare_layer_kv_blocks(prompt=None, request_id=request_id, sampling_params=sampling_params, \
         prompt_token_ids=prompt_token_ids, global_ranks=global_ranks)
-    return {"ret": blocks_num, "global_ranks": server.global_ranks}
+    return {"blocks_num": blocks_num, "global_ranks": server.global_ranks}
     
 @app.post("/pull_kv_cache")
 async def pull_kv_cache(response: Request) -> None:
