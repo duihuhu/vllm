@@ -852,7 +852,7 @@ class AsyncLLMEngine:
                                   arrival_time, lora_request, multi_modal_data, None)
         phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
         blocks_num = [block.block_number for block in phy_blocks]
-        self.engine.scheduler.add_recv_transfering[request_id] = seq_group
+        self.engine.scheduler.add_recv_transfering(seq_group)
         self.engine.kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks_num, False)
         return len(phy_blocks)
 
