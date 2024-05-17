@@ -312,20 +312,12 @@ class _AsyncLLMEngine(LLMEngine):
 
     async def _query_layer_kv_blocks(self, seq_group: SequenceGroup):
             decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
-            query_blocks =  QueryBlocks(seq_group.request_id, seq_group.prompt_token_ids, seq_group.sampling_params, self.get_global_ranks())
+            query_blocks =  QueryBlocks(seq_group.request_id, seq_group.prompt_token_ids, seq_group.sampling_params, self.get_global_ranks()).__json__()
             data = CommData(
                 headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
                 payload=query_blocks
             )
             return await CommEngine.async_send_to(decode_entry_point, "query_layer_kv_blocks", data)
-
-    async def send_layer_kv_blocks_signal(self, request_id):
-            decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
-            data = CommData(
-                headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
-                payload=request_id
-            )
-            return await CommEngine.async_send_to(decode_entry_point, "send_layer_kv_blocks_signal", data)
         
     async def query_layer_kv_blocks(self):
         layer_blocks = {}
