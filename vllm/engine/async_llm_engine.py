@@ -356,6 +356,7 @@ class _AsyncLLMEngine(LLMEngine):
         
         if self.deploy_config.enable_layer  and self.deploy_config.role == "prompt":
             blocks_to_send_remote = await self.query_layer_kv_blocks()
+            print("scheduler blocks_to_send_remote ", blocks_to_send_remote)
             
         # t2 = time.time() 
         if not scheduler_outputs.is_empty():
