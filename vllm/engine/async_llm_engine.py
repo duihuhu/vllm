@@ -324,7 +324,7 @@ class _AsyncLLMEngine(LLMEngine):
         for seq_group in  self.scheduler.running:
             query_response = await self._query_layer_kv_blocks(seq_group)
             query_response = json.loads(query_response)
-            layer_blocks[seq_group.request_id] = (query_response["block_num"], query_response["global_ranks"])
+            layer_blocks[seq_group.request_id] = (query_response["blocks_num"], query_response["global_ranks"])
 
         return layer_blocks
 
