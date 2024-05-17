@@ -832,9 +832,7 @@ class AsyncLLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         global_ranks: Optional[List[int]] = None,
     ) -> KvPreparedResponse:
-        if lora_request is not None and not self.lora_config:
-            raise ValueError(f"Got lora_request {lora_request} but LoRA is "
-                             "not enabled!")
+
         if arrival_time is None:
             arrival_time = time.time()
         prompt_token_ids = self.encode_request(
@@ -844,12 +842,10 @@ class AsyncLLMEngine:
             lora_request=lora_request)
 
         # Create the sequences.
-        block_size = self.cache_config.block_size
-        seq_id = next(self.seq_counter)
-        eos_token_id = self.tokenizer.get_lora_tokenizer(
-            lora_request).eos_token_id
+        block_size = self.engine.cache_config.block_size
+        seq_id = next(self.engine.seq_counter)
         seq = Sequence(seq_id, prompt, prompt_token_ids, block_size,
-                       eos_token_id, lora_request)
+                       None, lora_request)
 
         # Defensive copy of SamplingParams, which are used by the sampler,
         # this doesn't deep-copy LogitsProcessor objects
