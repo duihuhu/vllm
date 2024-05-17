@@ -29,7 +29,7 @@ async def query_layer_kv_blocks(response: Request) -> None:
     global_ranks =  payload.pop("global_ranks")
     sampling_params_json = payload.pop("sampling_params")
     sampling_params =  SamplingParams(**sampling_params_json)
-    blocks_num = await server.engine.prepare_layer_kv_blocks(request_id=request_id, sampling_params=sampling_params, \
+    blocks_num = await server.engine.prepare_layer_kv_blocks(prompt=None, request_id=request_id, sampling_params=sampling_params, \
         prompt_token_ids=prompt_token_ids, global_ranks=global_ranks)
     return {"ret": blocks_num, "global_ranks": server.global_ranks}
     
