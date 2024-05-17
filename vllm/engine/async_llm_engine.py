@@ -835,12 +835,6 @@ class AsyncLLMEngine:
 
         if arrival_time is None:
             arrival_time = time.time()
-        prompt_token_ids = self.encode_request(
-            request_id=request_id,
-            prompt=prompt,
-            prompt_token_ids=prompt_token_ids,
-            lora_request=lora_request)
-
         # Create the sequences.
         block_size = self.engine.cache_config.block_size
         seq_id = next(self.engine.seq_counter)
