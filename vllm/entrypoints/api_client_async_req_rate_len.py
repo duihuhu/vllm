@@ -148,15 +148,24 @@ if __name__ == "__main__":
     parser.add_argument("--stream", action="store_true")
     parser.add_argument("--request-rate", type=float, default=1)
     parser.add_argument("--num-requests", type=int, default=1)
+    parser.add_argument("--input-len", type=int, default=1)
+    parser.add_argument("--output-len", type=int, default=1)
+
     args = parser.parse_args()
     tokenizer_path = "/home/jovyan/models/Llama-2-13b-hf/"
 
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     random.seed(0)
-    reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
+    # reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
+    dummy_prompt_token_ids = np.random.randint(0, 10000, args.input_len)
+    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
+    req = (0, dummy_prompt_token_ids, args.input_len, args.output_len)
+    reqs = []
+    for i in range(args.num_requests):
+        reqs.append(req)
 
-
+    print("reqs ", reqs)    
     # reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
     asyncio.run(main(args, reqs))
 
