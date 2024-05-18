@@ -136,8 +136,7 @@ async def main(args, reqs):
         ttft.append(res[1])
         tbt.extend(res[2])
         # print("Res ", res)
-    print("average jct , p90 jct,  p95 jct, ttft , p90 ttft, p95 ttft", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), \
-        np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95), np.average(tbt), np.percentile(jct, 90), np.percentile(jct, 95))
+    print("average jct , p90 jct,  p95 jct, average ttft , p90 ttft, p95 ttft, average tbt , p90 tbt, p95 tbt ", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95), np.average(tbt), np.percentile(jct, 90), np.percentile(jct, 95))
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
