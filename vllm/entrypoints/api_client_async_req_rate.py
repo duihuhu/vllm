@@ -56,7 +56,7 @@ def sample_requests(
             continue
         filtered_dataset.append((prompt, prompt_token_ids, prompt_len, output_len))
 
-    # print(len(filtered_dataset))
+    print(len(filtered_dataset))
 
     # Sample the requests.
     sampled_requests = random.sample(filtered_dataset, num_requests)
