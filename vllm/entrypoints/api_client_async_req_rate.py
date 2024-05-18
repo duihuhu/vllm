@@ -132,11 +132,10 @@ async def main(args, reqs):
     for res in response:
         jct.append(res[0])
         ttft.append(res[1])
-        tbt.extend(response[2])
+        tbt.extend(res[2])
         # print("Res ", res)
     print("average jct , p90 jct,  p95 jct, ttft , p90 ttft, p95 ttft", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), \
-        np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95))
-    print("tbt ", tbt)
+        np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95), np.average(tbt), np.percentile(jct, 90), np.percentile(jct, 95))
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -153,10 +152,10 @@ if __name__ == "__main__":
     # Sample the requests.
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     random.seed(0)
-    # reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
+    reqs = sample_requests("/home/jovyan/hucc/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", tokenizer, args.num_requests)
 
 
-    reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
+    # reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
     asyncio.run(main(args, reqs))
 
     
