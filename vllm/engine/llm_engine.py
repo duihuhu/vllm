@@ -440,7 +440,7 @@ class LLMEngine:
                 # if not phy_blocks:
                 #     kv_response = KvPreparedResponse(seq_group.request_id, -1, "opp device has not enough memory", 0)
                 # else:
-                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
+                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks))
                 if blocks:
                     self.scheduler.add_recv_transfering(seq_group)
                     self.kv_trans_scheduler.add_kv_request(seq_group.request_id,
