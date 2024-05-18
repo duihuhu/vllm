@@ -95,6 +95,7 @@ async def post_request_and_get_response(args, req, waiting_time):
         "temperature": 0.0,
         "max_tokens": req[-1],
         "logprobs": 1,
+        "ignore_eos": True,
         "stream":True
     }
     
