@@ -27,6 +27,7 @@ from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
 from vllm.utils import Counter
 from vllm.core.kv_trans_scheduler import KvTransScheduler
 from vllm.entrypoints.comm import CacheMeta
+from vllm.core.interfaces import AllocStatus
 
 
 from functools import partial
@@ -426,7 +427,8 @@ class LLMEngine:
         while self.scheduler.decode_waiting:
             seq_group = self.scheduler.decode_waiting[0][0]
             prefill_request_output = self.scheduler.decode_waiting[0][1]
-            if self.scheduler.block_manager.can_allocate(seq_group):
+            can_allocate =  self.scheduler.block_manager.can_allocate(seq_group)
+            if can_allocate == AllocStatus.OK:
                 self.scheduler.decode_waiting.popleft()
                 phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
                 #reconstruct sequence
