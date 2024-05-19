@@ -127,6 +127,8 @@ class RequestTracker:
                                request_output: RequestOutput,
                                *,
                                verbose: bool = False) -> None:
+        if is_prefill:
+            print("vllm p return first token ", request_output.request_id)
         """Process a request output from the engine."""
         request_id = request_output.request_id
         request_output.global_ranks = global_ranks
@@ -140,6 +142,7 @@ class RequestTracker:
                             global_ranks: List[int],
                             kv_response: KvPreparedResponse) -> None:
         """Process a request output from the engine"""
+        print("request tracker vllm d return response ", kv_response.request_id)
         request_id = kv_response.request_id
         kv_response.global_ranks = global_ranks
         self._request_streams.get(request_id).put(kv_response)
@@ -653,6 +656,7 @@ class AsyncLLMEngine:
         return engine_class(*args, **kwargs)
 
     async def transfer_step(self) -> bool: 
+        print("transfer_step in ")
         #kv_responses in 
         kv_responses = self._request_tracker.get_kv_responses()
         for kv_response in kv_responses:
@@ -682,8 +686,10 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step.remote()
         else:
             await self.engine.trans_kv_step_aysnc()
+        print("transfer_step out ")
                 
     async def engine_step(self) -> bool:
+        print("engine_step in ")
         """Kick the engine to process the waiting requests.
 
         Returns True if there are in-progress requests."""
@@ -722,6 +728,7 @@ class AsyncLLMEngine:
                 self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
                 self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
+        print("engine_step out ")
 
         return len(request_outputs) > 0
 

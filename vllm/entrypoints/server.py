@@ -157,6 +157,7 @@ async def generate_decode(request: Request) -> Response:
     )
     request_output.global_ranks = opp_ranks
     start_time = time.time()
+    print(" server d recv first ", request_output.request_id)
     results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
     #return results to global scheduler
@@ -251,6 +252,7 @@ async def generate_prefill(request: Request) -> Response:
             )
             last_time = end_time
             n = n + 1
+            print(" server p return first token ", request_output.request_id)
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())

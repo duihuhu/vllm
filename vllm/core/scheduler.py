@@ -224,6 +224,7 @@ class Scheduler:
         self.recv_finished_req_ids.extend(request_ids)
     
     def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
+        print("add_recv_transfering ", seq_group.request_id)
         #Add sequence groups to the recv transfering map
         self.recv_transfering[seq_group.request_id] = seq_group
 
