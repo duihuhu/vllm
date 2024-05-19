@@ -138,7 +138,7 @@ class Worker:
         return self.rank
 
     def get_local_rank(self):
-        return self.local_rank
+        return self.device_id
        
     def get_nccl_local_rank(self):
         return self.nccl_local_rank
