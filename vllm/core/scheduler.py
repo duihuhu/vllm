@@ -301,7 +301,7 @@ class Scheduler:
         # Fix the current time.
         now = time.time()
         
-        self._check_tranfer_finished_req()
+        # self._check_tranfer_finished_req()
         
         # Join waiting sequences if possible.
         if not self.swapped:
@@ -731,7 +731,7 @@ class Scheduler:
         return passed_delay
 
     #kv缓存传输完了
-    def _check_tranfer_finished_req(self) -> None:
+    def _check_tranfer_finished_req(self, request_tracker) -> None:
         for request_id in self.send_finished_req_ids[:]:
             if request_id in self.req_pull_send_transfering:
                 del self.req_pull_send_transfering[request_id]
@@ -764,6 +764,7 @@ class Scheduler:
                 print("decoder append request to running ", seq_group.request_id, time.time())
                 self.running.append(seq_group)
                 self.block_manager.move_kv_blocks_meta(seq_group)
+                request_tracker.new_requests_event.set()
                 
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:

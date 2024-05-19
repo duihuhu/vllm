@@ -686,6 +686,8 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step.remote()
         else:
             await self.engine.trans_kv_step_aysnc()
+            
+        self.engine.scheduler._check_tranfer_finished_req(self._request_tracker)
         # print("transfer_step out ")
                 
     async def engine_step(self) -> bool:
