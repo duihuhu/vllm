@@ -138,7 +138,7 @@ class Worker:
         return self.rank
     
     def get_device_id(self):
-        return self.device_id
+        return self.get_local_rank
 
     def get_gpu_cache_addr(self):
         gpu_cache_addr:  List[Tuple[List[int], List[int]]] = []
