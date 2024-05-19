@@ -133,6 +133,12 @@ class Worker:
 
     def load_model(self):
         self.model_runner.load_model()
+        
+    def get_rank(self):
+        return self.rank
+    
+    def get_device_id(self):
+        return self.device_id
 
     def get_gpu_cache_addr(self):
         gpu_cache_addr:  List[Tuple[List[int], List[int]]] = []

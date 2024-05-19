@@ -179,11 +179,15 @@ class LLMEngine:
         gpu_addr = self.model_executor._run_workers(
             "get_gpu_cache_addr",
         )
+        ranks = self.model_executor._run_workers(
+            "get_rank",
+        )
+        device_ids = self.model_executor._run_workers(
+            "get_device_id",
+        )
+        
         for i in range(len(gpu_addr)):
-            if i == 0:
-                self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.model_executor.driver_worker.rank, self.model_executor.driver_worker.device_id))
-            else:
-                self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.model_executor.workers[i-1].rank, self.model_executor.workers[i-1].device_id))
+            self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, ranks[i], device_ids[i]))
         
 
     @classmethod
