@@ -186,12 +186,15 @@ class LLMEngine:
         device_ids = self.model_executor._run_workers(
             "get_device_id",
         )
+        nccl_local_ranks = self.model_executor._run_workers(
+            "get_nccl_local_rank",
+        )
         mp.set_start_method('spawn')
         print("ranks ", ranks)
         print("device_ids ", device_ids)
 
         for i in range(len(gpu_addr)):
-            self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, ranks[i], device_ids[i]))
+            self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, ranks[i], device_ids[i], nccl_local_ranks[i]))
         
 
     @classmethod

@@ -113,10 +113,10 @@ class Worker:
                 f"Not support device type: {self.device_config.device}")
         
         if not self.is_driver_worker:
-            self.get_local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
-            logger.info("worker get from rank = %d, ", self.get_local_rank)
+            self.nccl_local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
+            logger.info("worker get from rank = %d, ", self.nccl_local_rank)
         else:
-            self.get_local_rank = self.device_id
+            self.nccl_local_rank = self.device_id
             
         # Initialize the distributed environment.
         init_distributed_environment(self.parallel_config, self.rank,
@@ -126,19 +126,22 @@ class Worker:
         set_random_seed(self.model_config.seed)
         
         # if self.deploy_config.enable_separate:
-        #     if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4, 0) !=0:
+        #     if gpu_ops.CreateGlobalNcclComm(self.nccl_local_rank, 4, 0) !=0:
         #         # print("self.local_rank ", self.get_local_rank)
         #         raise ValueError("CreateNcclFromRankTable error")
-        return self.get_local_rank
+        return self.nccl_local_rank
 
     def load_model(self):
         self.model_runner.load_model()
         
     def get_rank(self):
         return self.rank
-    
+
     def get_device_id(self):
-        return self.get_local_rank
+        return self.device_id
+       
+    def get_nccl_local_rank(self):
+        return self.nccl_local_rank
 
     def get_gpu_cache_addr(self):
         gpu_cache_addr:  List[Tuple[List[int], List[int]]] = []
