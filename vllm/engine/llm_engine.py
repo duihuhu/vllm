@@ -30,6 +30,7 @@ from vllm.entrypoints.comm import CacheMeta
 from vllm.core.interfaces import AllocStatus
 
 from vllm.worker.transfer_worker import TransferWorker
+import multiprocessing as mp
 
 from functools import partial
 logger = init_logger(__name__)
@@ -185,7 +186,7 @@ class LLMEngine:
         device_ids = self.model_executor._run_workers(
             "get_device_id",
         )
-        
+        mp.set_start_method('spawn')
         for i in range(len(gpu_addr)):
             self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, ranks[i], device_ids[i]))
         
