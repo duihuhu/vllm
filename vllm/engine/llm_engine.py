@@ -27,6 +27,7 @@ from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
 from vllm.utils import Counter
 from vllm.core.kv_trans_scheduler import KvTransScheduler
 from vllm.entrypoints.comm import CacheMeta
+from vllm.core.interfaces import AllocStatus
 
 
 from functools import partial
@@ -423,7 +424,8 @@ class LLMEngine:
         while self.scheduler.decode_waiting:
             seq_group = self.scheduler.decode_waiting[0][0]
             prefill_request_output = self.scheduler.decode_waiting[0][1]
-            if self.scheduler.block_manager.can_allocate(seq_group):
+            can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+            if can_allocate == AllocStatus.OK:
                 self.scheduler.decode_waiting.popleft()
                 phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
                 #reconstruct sequence
@@ -440,14 +442,16 @@ class LLMEngine:
                 # if not phy_blocks:
                 #     kv_response = KvPreparedResponse(seq_group.request_id, -1, "opp device has not enough memory", 0)
                 # else:
-                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks))
-                # if blocks:
-                #     self.scheduler.add_recv_transfering(seq_group)
-                #     self.kv_trans_scheduler.add_kv_request(seq_group.request_id,
-                #                                                 prefill_request_output.global_ranks, blocks, False)
-                # else:
-                self.scheduler.running.append(seq_group)
-                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
+                if blocks:
+                    # if seq_group.request_id in self.scheduler.recv_transfering:
+                    print("test for vllm d allocate seq request id ", seq_group.request_id, time.time())
+                    self.scheduler.add_recv_transfering(seq_group)
+                    self.kv_trans_scheduler.add_kv_request(seq_group.request_id,
+                                                                prefill_request_output.global_ranks, blocks, False)
+                else:
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 kv_responses.append(kv_response)
             else:
                 break
