@@ -43,7 +43,8 @@ class TransferWorker:
             raise ValueError("CreateNcclFromRankTable error")
         while True:
             # 接收任务
-            task_type, task = self.task_queue.recv()
+            task_info = self.task_queue.recv()
+            task_type, task = task_info[0], task_info[1]
             if task_type == TaskType.TRANSFER_SEND:
                 task_meta = task.meta
                 self.comm_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
