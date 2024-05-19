@@ -311,7 +311,7 @@ class LLMEngine:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         if len(blocks) > response.computed_blocks:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
-            # print("vllm p kv response ", request_id)
+            print("test for vllm p kv response ", request_id, time.time())
             self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
         else:
             self.scheduler.del_send_transfering(request_id)
@@ -415,10 +415,10 @@ class LLMEngine:
         # Add the sequence group to the scheduler.
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
-            # print("vllm p add request ", seq_group.request_id)
+            print("test for vllm p add request ", seq_group.request_id, time.time())
         else:
             self.scheduler.add_decode_seq_group((seq_group, prefill_request_output))
-            # print("vllm d add request ", seq_group.request_id)
+            print("test for vllm d add request ", seq_group.request_id, time.time())
         return kv_response
     
     def schedule_decode_waiting(self):
@@ -446,7 +446,7 @@ class LLMEngine:
                 kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
                 if blocks:
                     # if seq_group.request_id in self.scheduler.recv_transfering:
-                    # print("vllm d allocate seq request id ", seq_group.request_id)
+                    print("test for vllm d allocate seq request id ", seq_group.request_id, time.time())
                     self.scheduler.add_recv_transfering(seq_group)
                     self.kv_trans_scheduler.add_kv_request(seq_group.request_id,
                                                                 prefill_request_output.global_ranks, blocks, False)

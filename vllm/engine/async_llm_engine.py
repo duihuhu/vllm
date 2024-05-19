@@ -127,8 +127,8 @@ class RequestTracker:
                                request_output: RequestOutput,
                                *,
                                verbose: bool = False) -> None:
-        # if is_prefill:
-            # print("vllm p return first token ", request_output.request_id)
+        if is_prefill:
+            print("test for vllm p return first token ", request_output.request_id, time.time())
         """Process a request output from the engine."""
         request_id = request_output.request_id
         request_output.global_ranks = global_ranks
@@ -142,7 +142,7 @@ class RequestTracker:
                             global_ranks: List[int],
                             kv_response: KvPreparedResponse) -> None:
         """Process a request output from the engine"""
-        # print("request tracker vllm d return response ", kv_response.request_id)
+        print("test for request tracker vllm d return response ", kv_response.request_id, time.time())
         request_id = kv_response.request_id
         kv_response.global_ranks = global_ranks
         self._request_streams.get(request_id).put(kv_response)
