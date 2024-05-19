@@ -62,13 +62,13 @@ class RayGPUExecutor(ExecutorBase):
 
         # Create the parallel GPU workers.
         self._init_workers_ray(placement_group)
-
         # Profile the memory usage and initialize the cache.
         self._init_cache()
-
+        
         self.forward_dag = None
         if USE_RAY_COMPILED_DAG:
             self.forward_dag = self._compiled_ray_dag()
+
 
     def _init_workers_ray(self, placement_group: "PlacementGroup",
                           **ray_remote_kwargs):
@@ -84,7 +84,6 @@ class RayGPUExecutor(ExecutorBase):
         self.driver_dummy_worker: RayWorkerVllm = None
         # The remaining workers are the actual ray actors.
         self.workers: List[RayWorkerVllm] = []
-
         # Create the workers.
         driver_ip = get_ip()
         for bundle_id, bundle in enumerate(placement_group.bundle_specs):

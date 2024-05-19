@@ -318,3 +318,96 @@ void HandleNcclCommDestroy()
 {
     ncclCommDestroy(g_globalNcclComm);
 }
+
+
+
+void SendRequest(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t destRank)
+{
+
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclSend((void*) requestIdOnDevice, requestIdSize, ncclInt, destRank, g_globalNcclComm, cudaStream));
+    return;
+}
+
+void RecvRequest(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t srcRank)
+{
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    auto cudaStream = gpuStream.stream();
+
+    NCCLCHECK(ncclRecv((void*) requestIdOnDevice, requestIdSize, ncclInt, srcRank, g_globalNcclComm, cudaStream));
+
+    return;
+}
+
+void SendBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64_t>>> srcCaches, std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
+{
+    int layerNum = srcCaches.size();
+
+    int deviceId = 0;
+    cudaGetDevice(&deviceId);
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclGroupStart());
+    for (int i=0; i < layerNum; i++) {
+        std::vector<u_int64_t>& srcKeyCache = srcCaches[i].first;
+        std::vector<u_int64_t>& srcValueCache = srcCaches[i].second;
+
+        for (int j = 0; j < srcBlocks.size(); j++) {
+            int blockIdx = srcBlocks[j];
+            void *srcKeyCachePtr = (void *)srcKeyCache[blockIdx];
+            void *srcValueCachePtr = (void *)srcValueCache[blockIdx];
+            // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
+            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
+                g_globalNcclComm, cudaStream)) {
+                std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
+            }
+
+            // std::cout << "start send value cache " << srcValueCachePtr << std::endl;
+
+            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
+                g_globalNcclComm, cudaStream)) {
+                std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
+            }
+        }
+    }
+    NCCLCHECK(ncclGroupEnd());
+    // std::cout << "send blocks success" << std::endl;
+}
+
+void RecvBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64_t>>> dstCaches, std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank)
+{
+    int layerNum = dstCaches.size();
+
+    // int deviceId = 0;
+    // cudaGetDevice(&deviceId);
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+
+    auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclGroupStart());
+
+    for (int i=0; i < layerNum; i++) {
+        std::vector<u_int64_t> dstKeyCache = dstCaches[i].first;
+        std::vector<u_int64_t> dstValueCache = dstCaches[i].second;
+
+        for (int j = 0; j < dstBlocks.size(); j++) {
+            int blockIdx = dstBlocks[j];
+            void *dstKeyCachePtr = (void *)dstKeyCache[blockIdx];
+            void *dstValueCachePtr = (void *)dstValueCache[blockIdx];
+            // std::cout << "start recv key cache: " << dstKeyCachePtr << std::endl;
+            if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt, srcRank,\
+                g_globalNcclComm, cudaStream)) {
+                std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
+            }
+
+            // std::cout << "start recv value cache " << dstValueCachePtr << std::endl;
+
+            if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt, srcRank,\
+                g_globalNcclComm, cudaStream)) {
+                std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
+            }
+        }
+    }
+    NCCLCHECK(ncclGroupEnd());
+    // std::cout << "recv blocks success" << std::endl;
+}

@@ -19,3 +19,13 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank);
 
 void HandleNcclCommDestroy();
+
+
+
+void SendRequest(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t destRank);
+
+void RecvRequest(uint64_t requestIdOnDevice, uint32_t requestIdSize, uint32_t srcRank);
+
+void SendBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64_t>>> srcCaches, std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank);
+
+void RecvBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64_t>>> dstCaches, std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank);

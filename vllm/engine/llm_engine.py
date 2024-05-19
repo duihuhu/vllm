@@ -29,6 +29,7 @@ from vllm.core.kv_trans_scheduler import KvTransScheduler
 from vllm.entrypoints.comm import CacheMeta
 from vllm.core.interfaces import AllocStatus
 
+from vllm.worker.transfer_worker import TransferWorker
 
 from functools import partial
 logger = init_logger(__name__)
@@ -120,6 +121,8 @@ class LLMEngine:
                                              device_config, deploy_config, lora_config,
                                              vision_language_config)
 
+        self._init_transfer_workers()
+        
         self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.tensor_parallel_size)
         
         # If usage stat is enabled, collect relevant info.
@@ -170,6 +173,18 @@ class LLMEngine:
                 local_interval=_LOCAL_LOGGING_INTERVAL_SEC,
                 labels=dict(model_name=model_config.model))
             self.stat_logger.info("cache_config", self.cache_config)
+
+    def _init_transfer_workers(self):
+        self.transfer_workers: List[TransferWorker] = []
+        gpu_addr = self.model_executor._run_workers(
+            "get_gpu_cache_addr",
+        )
+        for i in range(len(gpu_addr)):
+            if i == 0:
+                self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.driver_worker.rank, self.driver_worker.device_id))
+            else:
+                self.transfer_workers.append(TransferWorker(gpu_addr[i], self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.workers[i].rank, self.workers[i].device_id))
+        
 
     @classmethod
     def from_engine_args(

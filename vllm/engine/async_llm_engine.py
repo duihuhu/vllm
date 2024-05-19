@@ -18,6 +18,7 @@ from vllm.sampling_params import SamplingParams
 from vllm.sequence import MultiModalData, SequenceStatus
 from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
+from vllm.worker.transfer_worker import TaskType
 import json
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
@@ -448,37 +449,30 @@ class _AsyncLLMEngine(LLMEngine):
         if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
             return 
         
-        # print("trans_kv_step_aysnc ")
-        finished_tasks = await self.model_executor._run_workers_async(
-            "check_finished_transfer_task",
-            # get_all_outputs=True
-        )
-        
+        finished_tasks = []
+        for i in range(self.parallel_config.tensor_parallel_size):
+            finished_tasks.append(self.transfer_workers[i].get_batch_finished_task())
+            
         for worker_finished_tasks in finished_tasks:
-            real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
-            if real_send_finished_req_ids:
-                self.scheduler.add_send_finished(real_send_finished_req_ids)
-            if real_recv_finished_req_ids:
-                self.scheduler.add_recv_finished(real_recv_finished_req_ids)
+            for worker_finished_task in worker_finished_tasks:
+                real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_task)
+                if real_send_finished_req_ids:
+                    self.scheduler.add_send_finished(real_send_finished_req_ids)
+                if real_recv_finished_req_ids:
+                    self.scheduler.add_recv_finished(real_recv_finished_req_ids)
                 
         scheduler_outputs = self.kv_trans_scheduler.schedule()
         if scheduler_outputs.task_for_send_blocks:
-            await self.model_executor._run_workers_async(
-                "send_blocks",
-                scheduler_outputs.task_for_send_blocks
-            )
+            for i in range(self.parallel_config.tensor_parallel_size):
+                self.transfer_workers[i].add_task((TaskType.TRANSFER_SEND, scheduler_outputs.task_for_send_blocks))
             
         if scheduler_outputs.task_for_recv_request_id:
-            await self.model_executor._run_workers_async(
-                "recv_request_id",
-                scheduler_outputs.task_for_recv_request_id
-            )
+            for i in range(self.parallel_config.tensor_parallel_size):
+                self.transfer_workers[i].add_task((TaskType.TRANSFER_RECV_ID, scheduler_outputs.task_for_recv_request_id))
             
         if scheduler_outputs.task_for_recv_blocks:
-            await self.model_executor._run_workers_async(
-                "recv_blocks",
-                scheduler_outputs.task_for_recv_blocks
-            )
+            for i in range(self.parallel_config.tensor_parallel_size):
+                self.transfer_workers[i].add_task((TaskType.TRANSFER_RECV_BLOCKS, scheduler_outputs.task_for_recv_blocks))
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
