@@ -135,7 +135,7 @@ class Worker:
         self.model_runner.load_model()
 
     def get_gpu_cache_addr(self):
-        gpu_cache_addr:  List[Tuple[List[int], List[int]]] = None
+        gpu_cache_addr:  List[Tuple[List[int], List[int]]] = []
         for i in range(self.cache_engine.num_layers):
             key_caches = self.gpu_cache[i][0]
             value_caches = self.gpu_cache[i][1]
