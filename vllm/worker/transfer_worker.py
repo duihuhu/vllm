@@ -1,4 +1,5 @@
 
+import multiprocessing
 from multiprocessing import Process, Pipe
 from vllm.worker.comm_engine import CommEngine
 import enum
@@ -13,6 +14,8 @@ class TaskType:
 
 class TransferWorker:
     def __init__(self, gpu_cache_addr, cache_config, model_config, parallel_config, deploy_config, rank, local_rank) -> None:
+        multiprocessing.set_start_method('spawn')
+
         self.gpu_cache_addr = gpu_cache_addr
         
         self.comm_engine = CommEngine(cache_config, model_config, parallel_config, deploy_config, gpu_cache_addr)
