@@ -415,10 +415,10 @@ class LLMEngine:
         # Add the sequence group to the scheduler.
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
-            print("vllm p add request ", seq_group.request_id)
+            # print("vllm p add request ", seq_group.request_id)
         else:
             self.scheduler.add_decode_seq_group((seq_group, prefill_request_output))
-            print("vllm d add request ", seq_group.request_id)
+            # print("vllm d add request ", seq_group.request_id)
         return kv_response
     
     def schedule_decode_waiting(self):

@@ -252,7 +252,7 @@ async def generate_prefill(request: Request) -> Response:
             )
             last_time = end_time
             n = n + 1
-            print(" server p return first token ", request_output.request_id)
+            # print(" server p return first token ", request_output.request_id)
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
 
     return StreamingResponse(stream_results())

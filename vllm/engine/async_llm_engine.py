@@ -691,7 +691,7 @@ class AsyncLLMEngine:
         # print("transfer_step out ")
                 
     async def engine_step(self) -> bool:
-        print("engine_step in ")
+        # print("engine_step in ")
         """Kick the engine to process the waiting requests.
 
         Returns True if there are in-progress requests."""
@@ -730,7 +730,7 @@ class AsyncLLMEngine:
                 self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
                 self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
-        print("engine_step out ")
+        # print("engine_step out ")
 
         return len(request_outputs) > 0
 
