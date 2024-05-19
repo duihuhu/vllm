@@ -12,7 +12,7 @@ class TaskType:
     TRANSFER_CHECK_FINISHED = enum.auto() 
 
 class TransferWorker:
-    def __init__(self, gpu_cache_addr, cache_config, model_config, parallel_config, deploy_config, rank, device_id, nccl_local_rank) -> None:
+    def __init__(self, gpu_cache_addr, cache_config, model_config, parallel_config, deploy_config, rank, local_rank, nccl_local_rank) -> None:
 
         self.gpu_cache_addr = gpu_cache_addr
         
@@ -26,7 +26,7 @@ class TransferWorker:
         self.task_queue = Pipe()
         self.result_queue = Pipe()
         self.rank = rank
-        self.local_rank = device_id
+        self.local_rank = local_rank
         self.nccl_local_rank = nccl_local_rank
         
         self.execute = Process(target=self.worker)
