@@ -191,7 +191,7 @@ class LLMEngine:
         )
         mp.set_start_method('spawn')
         print("ranks ", ranks)
-        print("device_ids ", device_ids)
+        print("local_ranks ", local_ranks)
         print("nccl_local_ranks ", nccl_local_ranks)
 
         for i in range(len(gpu_addr)):
