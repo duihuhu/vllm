@@ -125,10 +125,10 @@ class Worker:
         # Set random seed.
         set_random_seed(self.model_config.seed)
         
-        if self.deploy_config.enable_separate:
-            if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4, 0) !=0:
-                # print("self.local_rank ", self.get_local_rank)
-                raise ValueError("CreateNcclFromRankTable error")
+        # if self.deploy_config.enable_separate:
+        #     if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4, 0) !=0:
+        #         # print("self.local_rank ", self.get_local_rank)
+        #         raise ValueError("CreateNcclFromRankTable error")
         return self.get_local_rank
 
     def load_model(self):
