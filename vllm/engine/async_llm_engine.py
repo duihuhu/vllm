@@ -574,6 +574,11 @@ class AsyncLLMEngine:
                 and not self._background_loop_unshielded.done())
 
     @property
+    def is_transfer_running(self) -> bool:
+        return (self.tranfer_loop is not None
+                and not self._tranfer_loop_unshielded.done())
+
+    @property
     def is_stopped(self) -> bool:
         return self.errored or (self.background_loop is not None
                                 and self._background_loop_unshielded.done())
@@ -597,7 +602,7 @@ class AsyncLLMEngine:
 
     def start_tranfer_loop(self) -> None:
         """Start the background loop."""
-        if self.is_running:
+        if self.is_transfer_running:
             raise RuntimeError("tranfer loop is already running.")
         
         self._tranfer_loop_unshielded = asyncio.get_event_loop(
