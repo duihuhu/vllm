@@ -23,6 +23,8 @@ logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
     os.environ.get("VLLM_ENGINE_ITERATION_TIMEOUT_S", "60"))
 
+TRANSFER_ITERATION_TIMEOUT_S = int(
+    os.environ.get("VLLM_TRANSFER_ITERATION_TIMEOUT_S", "60"))
 
 class AsyncEngineDeadError(RuntimeError):
     pass
@@ -82,7 +84,7 @@ class AsyncStream:
 class RequestTracker:
     """Synchronous abstraction for tracking requests."""
 
-    def __init__(self) -> None:
+    def __init__(self, deploy_role) -> None:
         self._request_streams: Dict[str, AsyncStream] = {}
         self._finished_requests: asyncio.Queue[str] = asyncio.Queue()
         self._new_requests: asyncio.Queue[Tuple[AsyncStream,
@@ -95,6 +97,10 @@ class RequestTracker:
         self._kv_results_requests_streams: Dict[str, AsyncStream] = {}
         self._kv_results_requests: asyncio.Queue[Tuple[AsyncStream,
                                     dict]] = asyncio.Queue()
+        
+        self.transfer_requests_event = asyncio.Event()
+        
+        self.deploy_role = deploy_role
 
     def __contains__(self, item):
         return item in self._request_streams
@@ -189,6 +195,9 @@ class RequestTracker:
             **engine_add_request_kwargs
         }))
         self.new_requests_event.set()
+        
+        if self.deploy_role == "decoder":
+            self.transfer_requests_event.set()
         return stream
 
     def add_kv_response(self,
@@ -198,6 +207,9 @@ class RequestTracker:
         })
         self.new_requests_event.set()
         
+        if self.deploy_role == "prompt":
+            self.transfer_requests_event.set()
+    
     def abort_request(self, request_id: str, *, verbose: bool = False) -> None:
         """Abort a request during next background loop iteration."""
         if verbose:
@@ -249,11 +261,24 @@ class RequestTracker:
             
         return new_requests, finished_requests
 
+    async def wait_for_transfer_requests(self, deploy_role):
+        if deploy_role == "prompt":
+            if not self.has_new_response():
+                await self.transfer_requests_event.wait()
+                
+        if deploy_role == "decoder":
+            if not self.has_new_requests():
+                await self.transfer_requests_event.wait()
+        self.transfer_requests_event.clear()
+        
     async def wait_for_new_requests(self):
         if not self.has_new_requests():
             await self.new_requests_event.wait()
         self.new_requests_event.clear()
 
+    def has_new_response(self):
+        return not self._kv_responses.empty()
+    
     def has_new_requests(self):
         return not self._new_requests.empty()
 
@@ -570,6 +595,19 @@ class AsyncLLMEngine:
         else:
             return self.engine.get_tokenizer()
 
+    def start_tranfer_loop(self) -> None:
+        """Start the background loop."""
+        if self.is_running:
+            raise RuntimeError("tranfer loop is already running.")
+        
+        self._tranfer_loop_unshielded = asyncio.get_event_loop(
+        ).create_task(self.run_transfer_loop())
+        self._tranfer_loop_unshielded.add_done_callback(
+            partial(_raise_exception_on_finish,
+                    error_callback=self._error_callback))
+        self.tranfer_loop = asyncio.shield(self._tranfer_loop_unshielded)
+        
+               
     def start_background_loop(self) -> None:
         """Start the background loop."""
         if self.errored:
@@ -578,7 +616,7 @@ class AsyncLLMEngine:
         if self.is_running:
             raise RuntimeError("Background loop is already running.")
         # Initialize the RequestTracker here so it uses the right event loop.
-        self._request_tracker = RequestTracker()
+        self._request_tracker = RequestTracker(self.engine.deploy_config.role)
 
         self._background_loop_unshielded = asyncio.get_event_loop(
         ).create_task(self.run_engine_loop())
@@ -606,6 +644,37 @@ class AsyncLLMEngine:
                 self._engine_class).remote
         return engine_class(*args, **kwargs)
 
+    async def transfer_step(self) -> bool: 
+        #kv_responses in 
+        kv_responses = self._request_tracker.get_kv_responses()
+        for kv_response in kv_responses:
+            # Add the response
+            if self.engine_use_ray:
+                await self.engine.add_kv_response.remote(**kv_response)
+            else:
+                self.engine.add_kv_response(**kv_response)
+        
+        kv_results_requests = self._request_tracker.get_new_kv_results_request()
+        
+        for kv_result_requests in kv_results_requests:
+            kv_response = None
+            if self.engine_use_ray:
+                kv_response = await self.engine.add_kv_results_request.remote(**kv_result_requests)
+            else:
+                kv_response = self.engine.add_kv_results_request(**kv_result_requests)
+            if kv_response:
+                self._request_tracker.process_kv_results(
+                    self.engine.get_global_ranks(), kv_response)
+                
+        kv_responses = self.engine.schedule_decode_waiting()
+        for kv_response in kv_responses:
+            self._request_tracker.process_kv_response(
+                self.engine.get_global_ranks(), kv_response)   
+        if self.engine_use_ray:
+            await self.engine.trans_kv_step.remote()
+        else:
+            await self.engine.trans_kv_step_aysnc()
+                
     async def engine_step(self) -> bool:
         """Kick the engine to process the waiting requests.
 
@@ -631,41 +700,10 @@ class AsyncLLMEngine:
                 )
         if finished_requests:
             await self._engine_abort(finished_requests)
-
-        #kv_responses in 
-        kv_responses = self._request_tracker.get_kv_responses()
-        for kv_response in kv_responses:
-            # Add the response
-            if self.engine_use_ray:
-                await self.engine.add_kv_response.remote(**kv_response)
-            else:
-                self.engine.add_kv_response(**kv_response)
-        
-        kv_results_requests = self._request_tracker.get_new_kv_results_request()
-        
-        for kv_result_requests in kv_results_requests:
-            kv_response = None
-            if self.engine_use_ray:
-                kv_response = await self.engine.add_kv_results_request.remote(**kv_result_requests)
-            else:
-                kv_response = self.engine.add_kv_results_request(**kv_result_requests)
-            if kv_response:
-                self._request_tracker.process_kv_results(
-                    self.engine.get_global_ranks(), kv_response)
                 
-        #kv_responses out
-        kv_responses = self.engine.schedule_decode_waiting()
-        for kv_response in kv_responses:
-            self._request_tracker.process_kv_response(
-                self.engine.get_global_ranks(), kv_response)
-        
         if self.engine_use_ray:
-            await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
         else:
-            # t2 = time.time()
-            await self.engine.trans_kv_step_aysnc()
-            # t3 = time.time()
             request_outputs = await self.engine.step_async(self._request_tracker)
             # t4 = time.time()
             # print("engine step ", t4-t1, t4-t3, t3-t2, t2-t1)
@@ -685,15 +723,34 @@ class AsyncLLMEngine:
         else:
             self.engine.abort_request(request_ids)
 
+    async def run_transfer_loop(self):
+        has_requests_in_progress = False
+        while True:
+            if (not has_requests_in_progress and
+                not self.engine.scheduler.recv_transfering and
+                not self.engine.scheduler.send_transfering and
+                not self.engine.scheduler.req_pull_send_transfering and 
+                not self.engine.scheduler.decode_waiting):
+                
+                await self._request_tracker.wait_for_transfer_requests(self.engine.deploy_config.role)
+                 
+            try:
+                has_requests_in_progress = await asyncio.wait_for(
+                    self.transfer_step(), TRANSFER_ITERATION_TIMEOUT_S)
+            except asyncio.TimeoutError as exc:
+                logger.error(
+                    "Engine iteration timed out. This should never happen!")
+                self.set_errored(exc)
+                raise
+            await asyncio.sleep(0)
+        pass
+    
     async def run_engine_loop(self):
         has_requests_in_progress = False
         while True:
             if (not has_requests_in_progress and
                 not self.engine.scheduler.swapping_in and
-                not self.engine.scheduler.swapping_out and
-                not self.engine.scheduler.recv_transfering and
-                not self.engine.scheduler.send_transfering and
-                not self.engine.scheduler.req_pull_send_transfering):
+                not self.engine.scheduler.swapping_out):
                 
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
@@ -757,6 +814,8 @@ class AsyncLLMEngine:
         if not self.is_running:
             if self.start_engine_loop:
                 self.start_background_loop()
+                self.start_tranfer_loop()
+
             else:
                 raise AsyncEngineDeadError(
                     "Background loop is not running. If it was running, "

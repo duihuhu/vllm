@@ -314,7 +314,7 @@ class LLMEngine:
             self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
         else:
             self.scheduler.del_send_transfering(request_id)
-
+        
     def add_request(
         self,
         request_id: str,
@@ -440,14 +440,16 @@ class LLMEngine:
                 # if not phy_blocks:
                 #     kv_response = KvPreparedResponse(seq_group.request_id, -1, "opp device has not enough memory", 0)
                 # else:
-                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks))
-                # if blocks:
-                #     self.scheduler.add_recv_transfering(seq_group)
-                #     self.kv_trans_scheduler.add_kv_request(seq_group.request_id,
-                #                                                 prefill_request_output.global_ranks, blocks, False)
-                # else:
-                self.scheduler.running.append(seq_group)
-                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
+                if blocks:
+                    # if seq_group.request_id in self.scheduler.recv_transfering:
+                    #     print("seq request id ", seq_group.request_id)
+                    self.scheduler.add_recv_transfering(seq_group)
+                    self.kv_trans_scheduler.add_kv_request(seq_group.request_id,
+                                                                prefill_request_output.global_ranks, blocks, False)
+                else:
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 kv_responses.append(kv_response)
             else:
                 break
@@ -1025,9 +1027,11 @@ class LLMEngine:
     
     def pull_kv_blocks(self, query_meta):
         blocks = self.scheduler.block_manager.req_pull_block_tables[query_meta.request_id]
-       
         blocks_num = [block.block_number for block in blocks]
         dcached_len = self.scheduler.req_pull_send_transfering[query_meta.request_id]
         print("pull kv blocks ", query_meta.cache_meta["cached_len"],  dcached_len)
         self.kv_trans_scheduler.add_kv_request(
             query_meta.request_id, query_meta.opp_ranks, blocks_num[query_meta.cache_meta["cached_len"]: dcached_len], True)
+    
+
+    
