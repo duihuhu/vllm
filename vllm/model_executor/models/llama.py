@@ -262,7 +262,6 @@ class LlamaModel(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
         blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
-        cache_engine: Optional[CacheEngine] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # torch.cuda.synchronize()
@@ -282,6 +281,8 @@ class LlamaModel(nn.Module):
                 residual,
             )
             if blocks_to_send_remote:
+                blocks_to_send_remote = blocks_to_send_remote[0]
+                cache_engine =  blocks_to_send_remote[1]
                 for request_id, block_info in blocks_to_send_remote.items():
                     channel = ""
                     for i in range(len(block_info[1])):
