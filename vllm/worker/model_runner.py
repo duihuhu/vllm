@@ -662,25 +662,45 @@ class ModelRunner:
             model_executable = self.graph_runners[graph_batch_size]
         else:
             model_executable = self.model
-        execute_model_kwargs = {
-            "input_ids": input_tokens,
-            "positions": input_positions,
-            "kv_caches": kv_caches,
-            "attn_metadata": attn_metadata,
-            "blocks_to_send_remote": blocks_to_send_remote,
-            "cache_size_per_block": cache_engine.cache_size_per_block
-        }
+        if cache_engine:
+            execute_model_kwargs = {
+                "input_ids": input_tokens,
+                "positions": input_positions,
+                "kv_caches": kv_caches,
+                "attn_metadata": attn_metadata,
+                "blocks_to_send_remote": blocks_to_send_remote,
+                "cache_size_per_block": cache_engine.cache_size_per_block
+            }
+        else:
+            execute_model_kwargs = {
+                "input_ids": input_tokens,
+                "positions": input_positions,
+                "kv_caches": kv_caches,
+                "attn_metadata": attn_metadata,
+                "blocks_to_send_remote": blocks_to_send_remote,
+                "cache_size_per_block": 0
+            }
+            
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
 
         for request_id, block_info in blocks_to_send_remote.items():
-            channel =  str(block_info[1][0]) + "_" + str(block_info[1][1])
+            channel = ""
+            if i == 0:
+                    channel = str(block_info[1][0])
+            else:
+                channel =  channel + "_" + str(block_info[1][i])
             cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1])
 
         hidden_states = model_executable(**execute_model_kwargs)
         
         for request_id, block_info in blocks_to_send_remote.items():
-            channel =  str(block_info[1][0]) + "_" + str(block_info[1][1])
+            for i in range(len(block_info[1])):
+                if i == 0:
+                     channel = str(block_info[1][0])
+                else:
+                    channel =  channel + "_" + str(block_info[1][i])
+                    
             cache_engine.set_event(channel=channel, request_id=request_id)
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
