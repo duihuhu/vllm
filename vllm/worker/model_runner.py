@@ -646,7 +646,7 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
-        blocks_to_send_remote: Optional[Dict[int, List[int]]] = None,
+        blocks_to_send_remote: Dict[str, List[int, List[int], List[int]]] = None,
         cache_engine: CacheEngine = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
@@ -668,18 +668,24 @@ class ModelRunner:
             "kv_caches": kv_caches,
             "attn_metadata": attn_metadata,
             "blocks_to_send_remote": blocks_to_send_remote,
+            "cache_size_per_block": cache_engine.cache_size_per_block
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         # torch.cuda.synchronize()
         # start_time = time.time()
 
-        # for request_id, block in blocks_to_send_remote:
-        #     tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
-        #     cache_engine.send_waiting_request_ids[request_id] = tensor_of_request_id
-        #     gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), cache_engine.request_id_size, block[1])
-            
+        for request_id, block_info in blocks_to_send_remote.items():
+            tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
+            cache_engine.send_waiting_request_ids[request_id] = tensor_of_request_id
+            gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), cache_engine.request_id_size, block_info[1])
+    
+
         hidden_states = model_executable(**execute_model_kwargs)
+        
+        for request_id, block_info in blocks_to_send_remote.items():
+            channel = ""
+            cache_engine.set_event(channel=channel, request_id=request_id)
         # torch.cuda.synchronize()
         # end_time = time.time()
         # print("model_executable ", end_time-start_time)

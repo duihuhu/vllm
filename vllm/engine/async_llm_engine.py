@@ -324,7 +324,7 @@ class _AsyncLLMEngine(LLMEngine):
         for seq_group in  self.scheduler.running:
             query_response = await self._query_layer_kv_blocks(seq_group)
             query_response = json.loads(query_response)
-            layer_blocks[seq_group.request_id] = (query_response["blocks_num"], query_response["global_ranks"])
+            layer_blocks[seq_group.request_id] = [query_response["blocks_num"], query_response["global_ranks"]]
 
         return layer_blocks
 
@@ -357,6 +357,11 @@ class _AsyncLLMEngine(LLMEngine):
         blocks_to_send_remote = None
         if self.deploy_config.enable_layer  and self.deploy_config.role == "prompt":
             blocks_to_send_remote = await self.query_layer_kv_blocks()
+            for seq_group_metadata in seq_group_metadata_list:
+                if seq_group_metadata.request_id in blocks_to_send_remote:
+                    for key, value in seq_group_metadata.block_tables.items():
+                        blocks_to_send_remote[seq_group_metadata.request_id].append(value)
+                    
             print("scheduler blocks_to_send_remote ", blocks_to_send_remote)
             
         # t2 = time.time() 

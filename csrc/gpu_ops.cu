@@ -314,6 +314,41 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     // std::cout << "recv blocks success" << std::endl;
 }
 
+
+void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
+    std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
+{
+    int deviceId = 0;
+    cudaGetDevice(&deviceId);
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclGroupStart());
+
+    at::Tensor srcKeyCache = srcCaches.first;
+    at::Tensor srcValueCache = srcCaches.second;
+
+    for (int j = 0; j < srcBlocks.size(); j++) {
+        int blockIdx = srcBlocks[j];
+        void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
+        void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
+        // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
+        if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
+            g_globalNcclComm, cudaStream)) {
+            std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
+        }
+
+        // std::cout << "start send value cache " << srcValueCachePtr << std::endl;
+
+        if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
+            g_globalNcclComm, cudaStream)) {
+            std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
+        }
+    }
+    NCCLCHECK(ncclGroupEnd());
+    // std::cout << "send blocks success" << std::endl;
+}
+
+
 void HandleNcclCommDestroy()
 {
     ncclCommDestroy(g_globalNcclComm);

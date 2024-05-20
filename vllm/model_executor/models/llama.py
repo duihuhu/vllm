@@ -48,6 +48,8 @@ from vllm.model_executor.weight_utils import (default_weight_loader,
 from vllm.sequence import SamplerOutput
 import time
 
+from vllm._C import gpu_ops
+
 class LlamaMLP(nn.Module):
 
     def __init__(
@@ -258,7 +260,8 @@ class LlamaModel(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        blocks_to_send_remote: Optional[Dict[int, List[int]]] = None,
+        blocks_to_send_remote: Optional[Dict[str, List[int, List[int], List[int]]]] = None,
+        cache_size_per_block: int = 16,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # torch.cuda.synchronize()
@@ -280,6 +283,8 @@ class LlamaModel(nn.Module):
                 residual,
             )
             print("blocks_to_send_remote ", blocks_to_send_remote)
+            for request_id, block_info in blocks_to_send_remote.items():
+                gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], cache_size_per_block, block_info[-2])
         # torch.cuda.synchronize()
         # t3 = time.time()
 
