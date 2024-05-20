@@ -153,7 +153,7 @@ class CacheEngine:
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
-            
+        print("recv_request_id ", recv_request_id)
         with torch.cuda.stream(self.recv_streams[channel]):
             tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
                                                dtype=torch.uint8).cuda()
@@ -166,7 +166,7 @@ class CacheEngine:
     def recv_blocks(self, channel: str, request_id: str, src_blocks: List[int], opposite_rank: int) -> None:      
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
-        # print("recv_blocks ", len(src_blocks))
+        print("recv_blocks ", len(src_blocks))
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         with torch.cuda.stream(self.recv_streams[channel]):
             gpu_ops.RecvBlocksRemote(gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
