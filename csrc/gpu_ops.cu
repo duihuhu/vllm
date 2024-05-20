@@ -382,7 +382,6 @@ void RecvBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
     auto cudaStream = gpuStream.stream();
-    NCCLCHECK(ncclGroupStart());
 
     for (int i=0; i < layerNum; i++) {
         std::vector<u_int64_t> dstKeyCache = dstCaches[i].first;
@@ -406,6 +405,5 @@ void RecvBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64
             }
         }
     }
-    NCCLCHECK(ncclGroupEnd());
-    // std::cout << "recv blocks success" << std::endl;
+    std::cout << "recv blocks success" << std::endl;
 }
