@@ -191,10 +191,7 @@ class Scheduler:
         self.swapping_out: List[SwappingSequenceGroup] = []
         
         self.enable_layer =  deploy_config.enable_layer
-        if not deploy_config.enable_layer:
-            self.send_finished_req_ids: List[str] = []
-        else:
-            self.send_layer_finished_req_ids: Dict[str, List[int]] = []
+        self.send_finished_req_ids: List[str] = []
             
         self.recv_finished_req_ids: List[str] = []
         
