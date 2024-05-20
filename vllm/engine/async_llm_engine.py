@@ -463,15 +463,18 @@ class _AsyncLLMEngine(LLMEngine):
                 
         scheduler_outputs = self.kv_trans_scheduler.schedule()
         if scheduler_outputs.task_for_send_blocks:
+            print("trans_kv_step_aysnc TRANSFER_SEND ")
             for i in range(self.parallel_config.tensor_parallel_size):
                 self.transfer_workers[i].add_task((TaskType.TRANSFER_SEND, scheduler_outputs.task_for_send_blocks))
             
         if scheduler_outputs.task_for_recv_request_id:
+            print("trans_kv_step_aysnc TRANSFER_RECV_ID ")
             for i in range(self.parallel_config.tensor_parallel_size):
                 self.transfer_workers[i].add_task((TaskType.TRANSFER_RECV_ID, scheduler_outputs.task_for_recv_request_id))
             
         if scheduler_outputs.task_for_recv_blocks:
             for i in range(self.parallel_config.tensor_parallel_size):
+                print("trans_kv_step_aysnc TRANSFER_RECV_BLOCKS ")
                 self.transfer_workers[i].add_task((TaskType.TRANSFER_RECV_BLOCKS, scheduler_outputs.task_for_recv_blocks))
 
 class AsyncLLMEngine:

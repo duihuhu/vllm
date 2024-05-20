@@ -116,8 +116,11 @@ class CommEngine:
         with torch.cuda.stream(self.send_streams[channel]):
             tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
             self.send_waiting_request_ids[request_id] = tensor_of_request_id
+            print("before send request ", channel, opposite_rank)
             gpu_ops.SendRequest(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
+            print("before send blocks ", channel, opposite_rank)
             gpu_ops.SendBlocks(self.gpu_cache_addr, dst_blocks, self.cache_size_per_block, opposite_rank)
+            print("after send blocks ", channel, opposite_rank)
             event = torch.cuda.Event()
             event.record() 
         if channel not in self.send_events:
