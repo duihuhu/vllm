@@ -261,7 +261,7 @@ class LlamaModel(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
         blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
-        cache_size_per_block: int = 16,
+        cache_size_per_block: Optional[int] = 16,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # torch.cuda.synchronize()
@@ -270,8 +270,6 @@ class LlamaModel(nn.Module):
             hidden_states = inputs_embeds
         else:
             hidden_states = self.get_input_embeddings(input_ids)
-        # torch.cuda.synchronize()
-        # t2 = time.time()
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
@@ -286,14 +284,7 @@ class LlamaModel(nn.Module):
             if blocks_to_send_remote:
                 for request_id, block_info in blocks_to_send_remote.items():
                     gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], cache_size_per_block, block_info[-2])
-        # torch.cuda.synchronize()
-        # t3 = time.time()
-
         hidden_states, _ = self.norm(hidden_states, residual)
-        # torch.cuda.synchronize()
-        # t4 = time.time()
-        # print("LlamaModel forward " , t4-t1, t4-t3, t3-t2, t2-t1)
-        # print("hidden_states ", hidden_states)
         return hidden_states
 
 
