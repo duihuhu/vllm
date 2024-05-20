@@ -896,8 +896,20 @@ class AsyncLLMEngine:
         blocks_num = [block.block_number for block in phy_blocks]
         self.engine.scheduler.add_recv_transfering(seq_group)
         self.engine.kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks_num, False)
+        
         self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
+        
+        if not self.is_running:
+            if self.start_engine_loop:
+                self.start_background_loop()
+            else:
+                raise AsyncEngineDeadError(
+                    "Background loop is not running. If it was running, "
+                    "inspect the output to find the stacktrace of the "
+                    "error that caused the background loop to stop "
+                    "(AsyncEngineDeadError).")
         self._request_tracker.new_requests_event.set()
+        
         return len(phy_blocks)
 
     async def pull_kv_blocks(self, query_meta):
