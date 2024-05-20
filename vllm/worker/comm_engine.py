@@ -136,8 +136,8 @@ class CommEngine:
         send_blocks_finished: List[TransferTaskMeta] = []
         for channel, request_ids_and_events in self.send_events.items():
             for idx, (request_id, event) in enumerate(request_ids_and_events):
+                print("query request check_send_finished_events ", channel, request_id)
                 if event.query():
-                    print("finshed check_send_finished_events ", channel, request_id)
                     send_blocks_finished.append(TransferTaskMeta(channel, request_id))
                     send_finished_events.append((channel, idx))
                     # request_tensor = self.remote_recv_waiting_request_ids[request_id]
@@ -145,6 +145,7 @@ class CommEngine:
                 else:
                     break
         for channel, idx in send_finished_events:
+            print("finshed check_send_finished_events ", channel, idx)
             self.send_events[channel].pop(idx)
             
         return send_blocks_finished
