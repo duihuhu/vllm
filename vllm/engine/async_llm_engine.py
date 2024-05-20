@@ -484,7 +484,7 @@ class _AsyncLLMEngine(LLMEngine):
     async def trans_kv_step_aysnc(self) -> None:
         if not self.deploy_config.enable_separate:
             return
-        if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
+        if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering and not self.scheduler.prompt_send_waiting and not self.scheduler.meta_recv_finished and not self.scheduler.decode_recv_finished:
             return 
         
         # print("trans_kv_step_aysnc ")

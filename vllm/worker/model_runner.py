@@ -668,7 +668,7 @@ class ModelRunner:
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
-                "blocks_to_send_remote": (blocks_to_send_remote,cache_engine),
+                "blocks_to_send_remote": (blocks_to_send_remote, cache_engine),
             }
         else:
             execute_model_kwargs = {
