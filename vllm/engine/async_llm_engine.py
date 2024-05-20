@@ -328,6 +328,7 @@ class _AsyncLLMEngine(LLMEngine):
             query_response = await self._query_layer_kv_blocks(seq_group)
             query_response = json.loads(query_response)
             layer_blocks[seq_group.request_id] = (query_response["blocks_num"], query_response["global_ranks"])
+            self.scheduler.add_send_transfering(seq_group)
 
         return layer_blocks
 

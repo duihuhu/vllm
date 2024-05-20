@@ -49,7 +49,8 @@ class KvTransScheduler:
     """
     def __init__(
         self,
-        num_workers: int
+        num_workers: int,
+        enable_layer: bool = False
     ) -> None:
         self.is_channel_sending: Dict[str, bool] = {}
         self.channel_requests_num: Dict[str, List[int]] = {}
@@ -65,6 +66,7 @@ class KvTransScheduler:
         ############
         self.is_channel_recving: Dict[str, bool] = {}
         self.recv_waiting_requests: List[TransferTaskMeta] = []
+        self.enable_layer = enable_layer
     
     def add_kv_request(
         self,
@@ -150,17 +152,18 @@ class KvTransScheduler:
     ) -> List[str]:
         real_finished_req_ids = []
         for task_meta in send_blocks_finished:
-            # self.send_finished_worker_count[task_meta.request_id] -= 1
-            # if self.send_finished_worker_count[task_meta.request_id] == 0:
-            #     # print("send request blocks finished ")
-            #     self.channel_requests_ids[task_meta.channel][0].remove(task_meta.request_id)
-            #     self.channel_requests_num[task_meta.channel][0] -= 1
-            #     del self.send_block_ids[task_meta.request_id]
-            #     del self.send_finished_worker_count[task_meta.request_id]
-            #     self.is_channel_sending[task_meta.channel] = True
-            #     real_finished_req_ids.append(task_meta.request_id)
-            real_finished_req_ids.append(task_meta.request_id)
-
+            if not self.enable_layer:
+                self.send_finished_worker_count[task_meta.request_id] -= 1
+                if self.send_finished_worker_count[task_meta.request_id] == 0:
+                    # print("send request blocks finished ")
+                    self.channel_requests_ids[task_meta.channel][0].remove(task_meta.request_id)
+                    self.channel_requests_num[task_meta.channel][0] -= 1
+                    del self.send_block_ids[task_meta.request_id]
+                    del self.send_finished_worker_count[task_meta.request_id]
+                    self.is_channel_sending[task_meta.channel] = True
+                    real_finished_req_ids.append(task_meta.request_id)
+            else:
+                real_finished_req_ids.append(task_meta.request_id)
         return real_finished_req_ids
 
     def _process_recv_request_id_finished(
