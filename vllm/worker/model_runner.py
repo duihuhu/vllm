@@ -668,6 +668,8 @@ class ModelRunner:
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
+                "blocks_to_send_remote": blocks_to_send_remote,
+                "cache_size_per_block": cache_engine.cache_size_per_block
             }
         else:
             execute_model_kwargs = {
@@ -675,8 +677,6 @@ class ModelRunner:
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
-                "blocks_to_send_remote": blocks_to_send_remote,
-                "cache_size_per_block": None
             }
             
         if self.vision_language_config:
