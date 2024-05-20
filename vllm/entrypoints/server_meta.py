@@ -101,9 +101,9 @@ class QueryBlocks:
             "global_ranks": self.global_ranks
         }
 class PrefilledMeta:
-    def __init__(self, request_id, prefilled_token_id,  output_logprobs) -> None:
+    def __init__(self, request_id, prefilled_token_ids,  output_logprobs) -> None:
         self.request_id = request_id
-        self.prefilled_token_id = prefilled_token_id
+        self.prefilled_token_ids = prefilled_token_ids
         self.output_logprobs = output_logprobs
         
     def __json__(self) -> Dict:
@@ -121,6 +121,6 @@ class PrefilledMeta:
         
             return {
             "request_id": self.request_id,
-            "prefilled_token_id": self.prefilled_token_id,
+            "prefilled_token_ids": self.prefilled_token_ids,
             "output_logprobs": output_logprobs,
         }
