@@ -290,6 +290,7 @@ class Worker:
         task: TransferBlocksTask
     ) -> None:
         task_meta = task.meta
+        print("task meta channel ", task_meta.channel)
         self.cache_engine.recv_blocks(task_meta.channel, task_meta.request_id,
                                       task.blocks, task.opposite_ranks[self.rank])
         
