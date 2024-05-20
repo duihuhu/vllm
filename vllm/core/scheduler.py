@@ -135,6 +135,7 @@ class Scheduler:
         cache_config: CacheConfig,
         deploy_config: DeployConfig, 
         lora_config: Optional[LoRAConfig],
+        tensor_parallel_size: Optional[int],
     ) -> None:
         self.scheduler_config = scheduler_config
         self.cache_config = cache_config
@@ -208,7 +209,7 @@ class Scheduler:
 
         self.kv_prepared_seq_group: Dict[str, SequenceGroup] = {}
         
-        self.num_workers: int = 0
+        self.num_workers: int = tensor_parallel_size
         
     @property
     def lora_enabled(self) -> bool:
