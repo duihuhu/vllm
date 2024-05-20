@@ -55,7 +55,8 @@ class TransferWorker:
             elif task_type == TaskType.TRANSFER_CHECK_FINISHED:
                 send_blocks_finished = self.comm_engine.check_send_finished_events()
                 recv_request_id_finished, recv_blocks_finished = self.comm_engine.check_recv_finished_events()
-                self.result_queue_child.send((send_blocks_finished, recv_request_id_finished, recv_blocks_finished))
+                if send_blocks_finished or recv_request_id_finished or recv_blocks_finished:
+                    self.result_queue_child.send((send_blocks_finished, recv_request_id_finished, recv_blocks_finished))
             else:
                 raise RuntimeError("invalid task_type.")
 
@@ -66,6 +67,7 @@ class TransferWorker:
         finished_tasks = []
         while self.result_queue_parent.poll():
             finished_tasks.append(self.result_queue_parent.recv())
+            print("get_batch_finished_task finished_tasks ", finished_tasks)
         return finished_tasks
     
     def get_finished_task(self):

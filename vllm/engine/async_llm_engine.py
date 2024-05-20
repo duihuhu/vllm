@@ -456,7 +456,7 @@ class _AsyncLLMEngine(LLMEngine):
         finished_tasks = []
         for i in range(self.parallel_config.tensor_parallel_size):
             finished_tasks.append(self.transfer_workers[i].get_batch_finished_task())
-            
+
         for worker_finished_tasks in finished_tasks:
             for worker_finished_task in worker_finished_tasks:
                 real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_task)
