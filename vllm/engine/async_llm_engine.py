@@ -650,7 +650,7 @@ class AsyncLLMEngine:
         return engine_class(*args, **kwargs)
 
     async def transfer_step(self) -> bool: 
-        # print("transfer_step in ")
+        print("transfer_step in ")
         #kv_responses in 
         kv_responses = self._request_tracker.get_kv_responses()
         for kv_response in kv_responses:
@@ -682,7 +682,7 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step_aysnc()
             
         self.engine.scheduler._check_tranfer_finished_req(self._request_tracker)
-        # print("transfer_step out ")
+        print("transfer_step out ")
                 
     async def engine_step(self) -> bool:
         # print("engine_step in ")
