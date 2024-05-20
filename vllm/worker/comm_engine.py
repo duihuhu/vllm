@@ -171,9 +171,10 @@ class CommEngine:
                     recv_request_id_finished.append(TransferTaskMeta(channel, finished_request_id))
                     #删除request_tensor
                     del self.recv_waiting_request_ids[channel]
-                    print("finshed check_recv_finished_events ", channel, finished_request_id)
+                    print("finshed request id check_recv_finished_events ", channel, finished_request_id)
                 else:
                     recv_blocks_finished.append(TransferTaskMeta(channel,request_id))
+                    print("finshed blocks check_recv_finished_events ", channel)
                     # gpu_ops.HandleNcclCommDestroy()
         # release recv events
         for channel in recv_finished_events:
