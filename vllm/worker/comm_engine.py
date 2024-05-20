@@ -135,19 +135,24 @@ class CommEngine:
         send_finished_events: List[Tuple[str, List[int]]] = []
         send_blocks_finished: List[TransferTaskMeta] = []
         for channel, request_ids_and_events in self.send_events.items():
-            for idx, (request_id, event) in enumerate(request_ids_and_events):
+            num_finished_events = 0
+            for request_id, event in request_ids_and_events:
                 print("query request check_send_finished_events ", channel, request_id)
                 if event.query():
                     send_blocks_finished.append(TransferTaskMeta(channel, request_id))
-                    send_finished_events.append((channel, idx))
-                    # request_tensor = self.remote_recv_waiting_request_ids[request_id]
+                    # 删除request tensor
                     del self.send_waiting_request_ids[request_id]
+                    num_finished_events += 1
                 else:
                     break
-        for channel, idx in send_finished_events:
-            print("finshed check_send_finished_events ", channel, idx)
-            self.send_events[channel].pop(idx)
-            
+            send_finished_events.append((channel, num_finished_events))
+
+        for channel, num_finished_events in send_finished_events:
+            while num_finished_events != 0:
+                print("finishd  check_send_finished_events ", channel)
+                self.send_events[channel].pop(0)
+                num_finished_events -= 1
+        
         return send_blocks_finished
     
     def check_recv_finished_events(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta]]:
