@@ -283,8 +283,9 @@ class LlamaModel(nn.Module):
                 residual,
             )
             print("blocks_to_send_remote ", blocks_to_send_remote)
-            for request_id, block_info in blocks_to_send_remote.items():
-                gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], cache_size_per_block, block_info[-2])
+            if blocks_to_send_remote:
+                for request_id, block_info in blocks_to_send_remote.items():
+                    gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], cache_size_per_block, block_info[-2])
         # torch.cuda.synchronize()
         # t3 = time.time()
 
