@@ -646,7 +646,7 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
-        blocks_to_send_remote: Dict[str, List[int, List[int], List[int]]] = None,
+        blocks_to_send_remote: Dict[str, Tuple[int, List[int], List[int]]] = None,
         cache_engine: CacheEngine = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,

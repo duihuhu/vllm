@@ -260,7 +260,7 @@ class LlamaModel(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        blocks_to_send_remote: Optional[Dict[str, List[int, List[int], List[int]]]] = None,
+        blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
         cache_size_per_block: int = 16,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:

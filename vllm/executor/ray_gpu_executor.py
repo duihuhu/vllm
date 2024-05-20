@@ -423,7 +423,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
-        blocks_to_send_remote: Dict[str, Tuple[int, List[int]]],
+        blocks_to_send_remote: Dict[str, Tuple[int, List[int], List[int]]],
     ) -> SamplerOutput:
         all_outputs = await self._run_workers_async(
             "execute_model",
