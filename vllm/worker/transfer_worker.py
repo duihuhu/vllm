@@ -38,7 +38,7 @@ class TransferWorker:
 
     def worker(self):
         self.init_device()
-        if gpu_ops.CreateGlobalNcclComm(self.nccl_local_rank, 4, 0) !=0:
+        if gpu_ops.CreateGlobalNcclComm(self.nccl_local_rank, 2, 0) !=0:
             # print("self.local_rank ", self.get_local_rank)
             raise ValueError("CreateNcclFromRankTable error")
         while True:
