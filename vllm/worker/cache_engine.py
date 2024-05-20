@@ -153,7 +153,7 @@ class CacheEngine:
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
-        print("recv_request_id ", recv_request_id)
+        print("recv_request_id ")
         with torch.cuda.stream(self.recv_streams[channel]):
             tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
                                                dtype=torch.uint8).cuda()
