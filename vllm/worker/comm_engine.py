@@ -172,7 +172,7 @@ class CommEngine:
         for channel in recv_finished_events:
             self.recv_events.pop(channel)
         
-        print("check_send_finished_events ", recv_request_id_finished, recv_blocks_finished)
+        print("check_recv_finished_events ", recv_request_id_finished, recv_blocks_finished)
 
         
         return recv_request_id_finished, recv_blocks_finished

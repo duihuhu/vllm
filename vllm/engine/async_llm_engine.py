@@ -449,6 +449,10 @@ class _AsyncLLMEngine(LLMEngine):
         if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
             return 
         
+        
+        for i in range(self.parallel_config.tensor_parallel_size):
+            self.transfer_workers[i].add_task((TaskType.TRANSFER_CHECK_FINISHED, None))
+        
         finished_tasks = []
         for i in range(self.parallel_config.tensor_parallel_size):
             finished_tasks.append(self.transfer_workers[i].get_batch_finished_task())
