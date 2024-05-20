@@ -372,6 +372,7 @@ class _AsyncLLMEngine(LLMEngine):
                 if seq_group_metadata.request_id in blocks_to_send_remote:
                     for key, value in seq_group_metadata.block_tables.items():
                         blocks_to_send_remote[seq_group_metadata.request_id] = (blocks_to_send_remote[seq_group_metadata.request_id][0], blocks_to_send_remote[seq_group_metadata.request_id][1], value)
+                        self.kv_trans_scheduler.add_kv_request(seq_group_metadata.request_id, blocks_to_send_remote[seq_group_metadata.request_id][1], value)
                     
             # print("scheduler blocks_to_send_remote ", blocks_to_send_remote)
             
