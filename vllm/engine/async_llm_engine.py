@@ -399,17 +399,17 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_separate:
             # print("fetch_prefilled_seq_groups")
             self.scheduler.fetch_prefilled_seq_groups()
-            print("self.prompt_send_waiting ", self.scheduler.prompt_send_waiting)
+            # print("self.prompt_send_waiting ", self.scheduler.prompt_send_waiting)
 
             send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
-            print("send_finished_reqs_ids ", send_finished_reqs_ids)
+            # print("send_finished_reqs_ids ", send_finished_reqs_ids)
             prompt_send_waiting: Deque[SequenceGroup] = deque()
             while self.scheduler.prompt_send_waiting:
                 seq_group = self.scheduler.prompt_send_waiting[0]
                 if seq_group.request_id in send_finished_reqs_ids:
                     #send prefilled token to decode
                     seq = seq_group.get_seqs()[0]
-                    print("send_prefilled_meta ", seq_group.request_id)
+                    # print("send_prefilled_meta ", seq_group.request_id)
                     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
                 else:
                     prompt_send_waiting.append(seq_group)

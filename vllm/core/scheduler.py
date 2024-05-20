@@ -758,6 +758,7 @@ class Scheduler:
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
         finished_request_id = []
+        print("send_finished_req_ids ", self.send_finished_req_ids)
         for request_id in self.send_finished_req_ids[:]:
             if not self.enable_layer:
                 if request_id in self.req_pull_send_transfering:
