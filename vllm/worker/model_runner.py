@@ -685,15 +685,17 @@ class ModelRunner:
         if blocks_to_send_remote:
             for request_id, block_info in blocks_to_send_remote.items():
                 channel = ""
-                if i == 0:
-                        channel = str(block_info[1][0])
-                else:
-                    channel =  channel + "_" + str(block_info[1][i])
+                for i in range(len(block_info[1])):
+                    if i == 0:
+                            channel = str(block_info[1][0])
+                    else:
+                        channel =  channel + "_" + str(block_info[1][i])
                 cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1])
 
         hidden_states = model_executable(**execute_model_kwargs)
         if blocks_to_send_remote:
             for request_id, block_info in blocks_to_send_remote.items():
+                channel = ""
                 for i in range(len(block_info[1])):
                     if i == 0:
                         channel = str(block_info[1][0])
