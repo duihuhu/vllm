@@ -86,6 +86,7 @@ class CommEngine:
         with torch.cuda.stream(self.recv_streams[channel]):
             tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
                                                dtype=torch.uint8).cuda()
+            print("recv_request_id ", channel, opposite_rank)
             gpu_ops.RecvRequest(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
             self.recv_waiting_request_ids[channel] = tensor_of_request_id
             event = torch.cuda.Event()
