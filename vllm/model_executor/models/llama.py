@@ -47,6 +47,7 @@ from vllm.model_executor.weight_utils import (default_weight_loader,
                                               hf_model_weights_iterator)
 from vllm.sequence import SamplerOutput
 import time
+from vllm.worker.cache_engine import CacheEngine
 
 from vllm._C import gpu_ops
 
@@ -261,7 +262,7 @@ class LlamaModel(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
         blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
-        send_streams: Optional[Dict[str, torch.cuda.Stream]] = None,
+        cache_engine: Optional[CacheEngine] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # torch.cuda.synchronize()
@@ -288,7 +289,7 @@ class LlamaModel(nn.Module):
                                 channel = str(block_info[1][0])
                         else:
                             channel =  channel + "_" + str(block_info[1][i])
-                    with torch.cuda.stream(send_streams[channel]):
+                    with torch.cuda.stream(cache_engine.send_streams[channel]):
                         gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], 163840, block_info[-2][0]) #todo destRank
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states

@@ -669,7 +669,7 @@ class ModelRunner:
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
                 "blocks_to_send_remote": blocks_to_send_remote,
-                "send_streams": cache_engine.send_streams,
+                "cache_engine": cache_engine,
             }
         else:
             execute_model_kwargs = {
