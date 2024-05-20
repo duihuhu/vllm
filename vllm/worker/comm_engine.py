@@ -86,9 +86,7 @@ class CommEngine:
         with torch.cuda.stream(self.recv_streams[channel]):
             tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
                                                dtype=torch.uint8).cuda()
-            print("before recv_request_id ", channel, opposite_rank)
             gpu_ops.RecvRequest(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
-            print("after_request_id ", channel, opposite_rank)
             self.recv_waiting_request_ids[channel] = tensor_of_request_id
             event = torch.cuda.Event()
             event.record()
@@ -101,7 +99,10 @@ class CommEngine:
         # gpu_cache_addr = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache_addr]
         
         with torch.cuda.stream(self.recv_streams[channel]):
+            print("before recv blocks ", channel, opposite_rank)
             gpu_ops.RecvBlocks(self.gpu_cache_addr, src_blocks, self.cache_size_per_block, opposite_rank)
+            print("after  recv blocks ", channel, opposite_rank)
+
             event = torch.cuda.Event()
             event.record()
         self.recv_events[channel] = (request_id, event)
