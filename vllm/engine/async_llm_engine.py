@@ -416,13 +416,17 @@ class _AsyncLLMEngine(LLMEngine):
                     prompt_send_waiting.append(seq_group)
                 self.scheduler.prompt_send_waiting.popleft()
             self.scheduler.prompt_send_waiting = prompt_send_waiting
-            
+            recv_finished_id = []
             for request_id , seq_group in  self.scheduler.decode_recv_finished.items():
                 if request_id in self.scheduler.meta_recv_finished:
                     self.scheduler.running.append(seq_group)
+                    print("status " , seq_group.get_seqs()[0].status)
                     self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                     del self.scheduler.meta_recv_finished[seq_group.request_id]
-                    del self.scheduler.decode_recv_finished[request_id]
+                    recv_finished_id.append(request_id)
+            for request_id in recv_finished_id:
+                self.scheduler.decode_recv_finished[request_id]
+                    
                     
                 
         # t4 = time.time()
