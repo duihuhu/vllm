@@ -373,7 +373,7 @@ class _AsyncLLMEngine(LLMEngine):
                     for key, value in seq_group_metadata.block_tables.items():
                         blocks_to_send_remote[seq_group_metadata.request_id] = (blocks_to_send_remote[seq_group_metadata.request_id][0], blocks_to_send_remote[seq_group_metadata.request_id][1], value)
                     
-            print("scheduler blocks_to_send_remote ", blocks_to_send_remote)
+            # print("scheduler blocks_to_send_remote ", blocks_to_send_remote)
             
         # t2 = time.time() 
         if not scheduler_outputs.is_empty():
@@ -403,6 +403,7 @@ class _AsyncLLMEngine(LLMEngine):
                 if seq_group.request_id in send_finished_reqs_ids:
                     #send prefilled token to decode
                     seq = seq_group.get_seqs()[0]
+                    print("send_prefilled_meta ", seq_group.request_id)
                     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
                 else:
                     prompt_send_waiting.append(seq_group)
@@ -758,7 +759,8 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.send_transfering and
                 not self.engine.scheduler.req_pull_send_transfering and
                 not self.engine.scheduler.prompt_send_waiting and 
-                not self.engine.scheduler.decode_recv_finished):
+                not self.engine.scheduler.decode_recv_finished and
+                not self.engine.scheduler.meta_recv_finished):
                 
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
