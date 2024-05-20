@@ -496,24 +496,24 @@ class _AsyncLLMEngine(LLMEngine):
             if real_recv_finished_req_ids:
                 self.scheduler.add_recv_finished(real_recv_finished_req_ids)
                 
-        # scheduler_outputs = self.kv_trans_scheduler.schedule()
-        # if scheduler_outputs.task_for_send_blocks:
-        #     await self.model_executor._run_workers_async(
-        #         "send_blocks",
-        #         scheduler_outputs.task_for_send_blocks
-        #     )
+        scheduler_outputs = self.kv_trans_scheduler.schedule()
+        if scheduler_outputs.task_for_send_blocks:
+            await self.model_executor._run_workers_async(
+                "send_blocks",
+                scheduler_outputs.task_for_send_blocks
+            )
             
-        # if scheduler_outputs.task_for_recv_request_id:
-        #     await self.model_executor._run_workers_async(
-        #         "recv_request_id",
-        #         scheduler_outputs.task_for_recv_request_id
-        #     )
+        if scheduler_outputs.task_for_recv_request_id:
+            await self.model_executor._run_workers_async(
+                "recv_request_id",
+                scheduler_outputs.task_for_recv_request_id
+            )
             
-        # if scheduler_outputs.task_for_recv_blocks:
-        #     await self.model_executor._run_workers_async(
-        #         "recv_blocks",
-        #         scheduler_outputs.task_for_recv_blocks
-        #     )
+        if scheduler_outputs.task_for_recv_blocks:
+            await self.model_executor._run_workers_async(
+                "recv_blocks",
+                scheduler_outputs.task_for_recv_blocks
+            )
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
