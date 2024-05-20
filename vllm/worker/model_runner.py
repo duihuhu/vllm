@@ -698,7 +698,7 @@ class ModelRunner:
                 channel = ""
                 for i in range(len(block_info[1])):
                     if i == 0:
-                        channel = str(block_info[1][0])
+                        channel = str(block_info[1][i])
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
                 cache_engine.set_event(channel=channel, request_id=request_id)
