@@ -663,13 +663,13 @@ class ModelRunner:
         else:
             model_executable = self.model
         if cache_engine:
+            print("cache_engine ",  cache_engine.cache_size_per_block)
             execute_model_kwargs = {
                 "input_ids": input_tokens,
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
                 "blocks_to_send_remote": blocks_to_send_remote,
-                "cache_size_per_block": cache_engine.cache_size_per_block
             }
         else:
             execute_model_kwargs = {
