@@ -176,7 +176,7 @@ class Scheduler:
 
         self.prompt_send_waiting: Deque[SequenceGroup] = deque()
         
-        self.decode_recv_finished: Deque[SequenceGroup] = deque()
+        self.decode_recv_finished: Dict[str, SequenceGroup] = {}
         
         self.meta_recv_finished: Dict[str, SequenceGroup] = {}
         
@@ -805,7 +805,7 @@ class Scheduler:
                 print("decoder append request to running ", seq_group.request_id, time.time())
                 # self.running.append(seq_group)
                 # self.block_manager.move_kv_blocks_meta(seq_group)
-                self.decode_recv_finished.append(seq_group)
+                self.decode_recv_finished[request_id] = seq_group
                 
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
