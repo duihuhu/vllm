@@ -395,8 +395,11 @@ class _AsyncLLMEngine(LLMEngine):
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if self.deploy_config.enable_separate:
+            print("fetch_prefilled_seq_groups")
             self.scheduler.fetch_prefilled_seq_groups()
+            print("self.prompt_send_waiting ", self.prompt_send_waiting)
             send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
+            print("send_finished_reqs_ids ", send_finished_reqs_ids)
             prompt_send_waiting: Deque[SequenceGroup] = deque()
             while self.scheduler.prompt_send_waiting:
                 seq_group = self.scheduler.prompt_send_waiting[0]
