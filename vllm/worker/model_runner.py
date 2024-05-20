@@ -690,7 +690,7 @@ class ModelRunner:
                             channel = str(block_info[1][0])
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
-                cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1])
+                cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1][0]) #todu mul workers
 
         hidden_states = model_executable(**execute_model_kwargs)
         if blocks_to_send_remote:

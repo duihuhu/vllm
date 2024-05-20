@@ -191,7 +191,7 @@ class CacheEngine:
         else:
             self.send_events[channel].append((request_id, event))
     
-    def send_request_id(self, channel: str, request_id: str, opposite_rank: int) -> str: 
+    def send_request_id(self, channel: str, request_id: str, opposite_rank: List[int]) -> str: 
         if channel not in self.send_streams:
             self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         with torch.cuda.stream(self.send_streams[channel]):

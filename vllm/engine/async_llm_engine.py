@@ -371,7 +371,7 @@ class _AsyncLLMEngine(LLMEngine):
             for seq_group_metadata in seq_group_metadata_list:
                 if seq_group_metadata.request_id in blocks_to_send_remote:
                     for key, value in seq_group_metadata.block_tables.items():
-                        blocks_to_send_remote[seq_group_metadata.request_id] = (blocks_to_send_remote[seq_group_metadata.request_id], value)
+                        blocks_to_send_remote[seq_group_metadata.request_id] = (blocks_to_send_remote[seq_group_metadata.request_id][0], blocks_to_send_remote[seq_group_metadata.request_id][1], value)
                     
             print("scheduler blocks_to_send_remote ", blocks_to_send_remote)
             
