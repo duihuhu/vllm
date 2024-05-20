@@ -61,11 +61,11 @@ class CommEngine:
         #channel to request tensor
         
         self.send_streams: Dict[str, torch.cuda.Stream] = {}
-        self.send_events: Dict[str, Tuple[str, torch.cuda.Event]] = {}
+        self.send_events: Dict[str, List[Tuple[str, torch.cuda.Event]]] = {}
         self.send_waiting_request_ids: Dict[str, torch.Tensor] = {}
         
         self.recv_streams: Dict[str, torch.cuda.Stream] = {}
-        self.recv_events: Dict[str, List[Tuple[str, torch.cuda.Event]]] = {}
+        self.recv_events: Dict[str, Tuple[str, torch.cuda.Event]] = {}
         self.recv_waiting_request_ids: Dict[str, torch.Tensor] = {}
         
 
@@ -124,6 +124,7 @@ class CommEngine:
             event = torch.cuda.Event()
             event.record() 
         if channel not in self.send_events:
+            print("send_blocks create channel event ", channel, request_id)
             self.send_events[channel] = [(request_id, event)]
         else:
             self.send_events[channel].append((request_id, event))
