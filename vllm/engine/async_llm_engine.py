@@ -19,7 +19,7 @@ from vllm.sequence import MultiModalData, SequenceStatus, SequenceGroup, Sequenc
 from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 import vllm.entrypoints.entrypoints_config as cfg
-from vllm.entrypoints.server_meta import QueryBlocks
+from vllm.entrypoints.server_meta import QueryBlocks, PrefilledMeta
 from collections import deque
 
 import json
@@ -332,11 +332,12 @@ class _AsyncLLMEngine(LLMEngine):
 
         return layer_blocks
 
-    async def send_prefilled_meta(self, request_id, prefilled_token, output_logprobs):
+    async def send_prefilled_meta(self, request_id, prefilled_token_id, output_logprobs):
         decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
+        prefilled_meta = PrefilledMeta(request_id=request_id, prefilled_token_id=prefilled_token_id, output_logprobs=output_logprobs).__json__()
         data = CommData(
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
-            payload={"request_id": request_id, "prefilled_token": prefilled_token, "output_logprobs": output_logprobs}
+            payload=prefilled_meta
         )
         return await CommEngine.async_send_to(decode_entry_point, "send_prefilled_meta", data)
 

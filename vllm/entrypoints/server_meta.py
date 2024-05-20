@@ -100,3 +100,27 @@ class QueryBlocks:
             "sampling_params": self.sampling_params.__json__(),
             "global_ranks": self.global_ranks
         }
+class PrefilledMeta:
+    def __init__(self, request_id, prefilled_token_id,  output_logprobs) -> None:
+        self.request_id = request_id
+        self.prefilled_token_id = prefilled_token_id
+        self.output_logprobs = output_logprobs
+        
+    def __json__(self) -> Dict:
+        output_logprobs = []
+        if self.output_logprobs != None:
+            for d in self.output_logprobs:
+                if d == None:
+                    output_logprobs.append(d)
+                    continue
+                serialized_d = {}
+                for key, value in d.items():
+                    serialized_value = value.__json__()
+                    serialized_d[key] = serialized_value
+                output_logprobs.append(serialized_d)
+        
+            return {
+            "request_id": self.request_id,
+            "prefilled_token_id": self.prefilled_token_id,
+            "output_logprobs": output_logprobs,
+        }
