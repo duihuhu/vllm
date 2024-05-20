@@ -57,6 +57,7 @@ class TransferWorker:
                 recv_request_id_finished, recv_blocks_finished = self.comm_engine.check_recv_finished_events()
                 self.result_queue_child.send((send_blocks_finished, recv_request_id_finished, recv_blocks_finished))
             else:
+                print("task_type ", task_type)
                 raise RuntimeError("invalid task_type.")
 
     def add_task(self, task):
