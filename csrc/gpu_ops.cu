@@ -348,7 +348,6 @@ void SendBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64
     cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    NCCLCHECK(ncclGroupStart());
     for (int i=0; i < layerNum; i++) {
         std::vector<u_int64_t>& srcKeyCache = srcCaches[i].first;
         std::vector<u_int64_t>& srcValueCache = srcCaches[i].second;
@@ -371,8 +370,7 @@ void SendBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64
             }
         }
     }
-    NCCLCHECK(ncclGroupEnd());
-    // std::cout << "send blocks success" << std::endl;
+    std::cout << "send blocks success" << std::endl;
 }
 
 void RecvBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64_t>>> dstCaches, std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank)
