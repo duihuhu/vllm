@@ -21,6 +21,18 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+@app.post("/send_prefilled_meta")
+async def send_prefilled_meta(response: Request) -> None:
+    payload = await response.json()
+    request_id = payload.pop("request_id")
+    prefilled_token_ids = payload.pop("prefilled_token_ids")
+    output_logprobs = payload.pop("output_logprobs")
+    output_logprobs = cprobs_key_s2i(output_logprobs)
+    await server.engine.add_prefilled_meta(request_id, prefilled_token_ids, output_logprobs)
+    
+    return {"ret": "success"}
+
+
 @app.post("/query_layer_kv_blocks")
 async def query_layer_kv_blocks(response: Request) -> None:
     payload = await response.json()

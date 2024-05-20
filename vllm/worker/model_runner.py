@@ -674,10 +674,8 @@ class ModelRunner:
             execute_model_kwargs.update({"image_input": multi_modal_input})
 
         for request_id, block_info in blocks_to_send_remote.items():
-            tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
-            cache_engine.send_waiting_request_ids[request_id] = tensor_of_request_id
-            gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), cache_engine.request_id_size, block_info[1])
-    
+            channel =  str(block_info[1][0]) + "_" + str(block_info[1][1])
+            cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1])
 
         hidden_states = model_executable(**execute_model_kwargs)
         

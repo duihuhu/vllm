@@ -3,7 +3,7 @@ import os
 import time
 from functools import partial
 from typing import (AsyncIterator, Callable, Dict, Iterable, List, Optional,
-                    Set, Tuple, Type, Union)
+                    Set, Tuple, Type, Union, Deque)
 
 from transformers import PreTrainedTokenizer
 
@@ -20,7 +20,10 @@ from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 import vllm.entrypoints.entrypoints_config as cfg
 from vllm.entrypoints.server_meta import QueryBlocks
+from collections import deque
+
 import json
+
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
     os.environ.get("VLLM_ENGINE_ITERATION_TIMEOUT_S", "60"))
@@ -328,6 +331,14 @@ class _AsyncLLMEngine(LLMEngine):
 
         return layer_blocks
 
+    async def send_prefilled_meta(self, request_id, prefilled_token, output_logprobs):
+        decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
+        data = CommData(
+            headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
+            payload={"request_id": request_id, "prefilled_token": prefilled_token, "output_logprobs": output_logprobs}
+        )
+        return await CommEngine.async_send_to(decode_entry_point, "send_prefilled_meta", data)
+
     async def step_async(self, request_tracker) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
         The workers are ran asynchronously if possible.
@@ -341,14 +352,14 @@ class _AsyncLLMEngine(LLMEngine):
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
-        if scheduler_outputs.is_empty():
-            if self.scheduler.swapping_in or self.scheduler.swapping_out or \
-                self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
-                    logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s",
-                                self.scheduler.send_transfering, self.scheduler.recv_transfering)
-                    time.sleep(0.05)
-            else:
-                return []
+        # if scheduler_outputs.is_empty():
+        #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
+        #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
+        #             logger.info("schedule empty but has swapping or kv transfering event sleep 0.5s",
+        #                         self.scheduler.send_transfering, self.scheduler.recv_transfering)
+        #             time.sleep(0.05)
+        #     else:
+        #         return []
             
         if self.deploy_config.enable_cache_meta and self.deploy_config.role == "prompt":
             if cached_seq_groups:
@@ -383,15 +394,34 @@ class _AsyncLLMEngine(LLMEngine):
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
-        if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
-            prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
-            for seq_group in prefilled_seq_groups:
-                self.scheduler.add_send_transfering(seq_group)
-        
-        if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
-            decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
-            for seq_group in decoded_seq_groups:
-                self.scheduler.add_send_transfering(seq_group)
+        if self.deploy_config.enable_separate:
+            self.scheduler.fetch_prefilled_seq_groups()
+            send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
+            prompt_send_waiting: Deque[SequenceGroup] = deque()
+            while self.scheduler.prompt_send_waiting:
+                seq_group = self.scheduler.prompt_send_waiting[0]
+                if seq_group.request_id in send_finished_reqs_ids:
+                    #send prefilled token to decode
+                    seq = seq_group.get_seqs()[0]
+                    await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
+                else:
+                    prompt_send_waiting.append(seq_group)
+                self.scheduler.prompt_send_waiting.popleft()
+            self.scheduler.prompt_send_waiting = prompt_send_waiting
+            
+            decode_recv_finished: Deque[SequenceGroup] = deque()
+            while self.scheduler.decode_recv_finished:
+                seq_group = self.scheduler.decode_recv_finished[0]
+                if seq_group.request_id in self.scheduler.meta_recv_finished:
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                    del self.scheduler.meta_recv_finished[seq_group.request_id]
+                else:
+                    decode_recv_finished.append(seq_group)
+                self.scheduler.decode_recv_finished.popleft()
+            self.scheduler.decode_recv_finished = decode_recv_finished
+                    
+                
         # t4 = time.time()
         # print("step_async ", t4-t1)
         return processed_outputs
@@ -466,24 +496,24 @@ class _AsyncLLMEngine(LLMEngine):
             if real_recv_finished_req_ids:
                 self.scheduler.add_recv_finished(real_recv_finished_req_ids)
                 
-        scheduler_outputs = self.kv_trans_scheduler.schedule()
-        if scheduler_outputs.task_for_send_blocks:
-            await self.model_executor._run_workers_async(
-                "send_blocks",
-                scheduler_outputs.task_for_send_blocks
-            )
+        # scheduler_outputs = self.kv_trans_scheduler.schedule()
+        # if scheduler_outputs.task_for_send_blocks:
+        #     await self.model_executor._run_workers_async(
+        #         "send_blocks",
+        #         scheduler_outputs.task_for_send_blocks
+        #     )
             
-        if scheduler_outputs.task_for_recv_request_id:
-            await self.model_executor._run_workers_async(
-                "recv_request_id",
-                scheduler_outputs.task_for_recv_request_id
-            )
+        # if scheduler_outputs.task_for_recv_request_id:
+        #     await self.model_executor._run_workers_async(
+        #         "recv_request_id",
+        #         scheduler_outputs.task_for_recv_request_id
+        #     )
             
-        if scheduler_outputs.task_for_recv_blocks:
-            await self.model_executor._run_workers_async(
-                "recv_blocks",
-                scheduler_outputs.task_for_recv_blocks
-            )
+        # if scheduler_outputs.task_for_recv_blocks:
+        #     await self.model_executor._run_workers_async(
+        #         "recv_blocks",
+        #         scheduler_outputs.task_for_recv_blocks
+        #     )
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
@@ -827,6 +857,12 @@ class AsyncLLMEngine:
 
         return stream
 
+    async def add_prefilled_meta(self, request_id: str, prefilled_token_ids, output_logprobs):
+        seq_group = self.engine.scheduler.decode_recv_finished[request_id]
+        for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+            seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
+        self.engine.scheduler.meta_recv_finished[request_id] = self.engine.scheduler.decode_recv_finished[request_id]
+        del self.engine.scheduler.decode_recv_finished[request_id]
     #tmp
     async def prepare_layer_kv_blocks(self,
         request_id: str,
@@ -860,6 +896,8 @@ class AsyncLLMEngine:
         blocks_num = [block.block_number for block in phy_blocks]
         self.engine.scheduler.add_recv_transfering(seq_group)
         self.engine.kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks_num, False)
+        
+        self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
         return len(phy_blocks)
 
     async def pull_kv_blocks(self, query_meta):

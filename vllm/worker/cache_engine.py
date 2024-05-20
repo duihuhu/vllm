@@ -190,6 +190,15 @@ class CacheEngine:
             self.send_events[channel] = [(request_id, event)]
         else:
             self.send_events[channel].append((request_id, event))
+    
+    def send_request_id(self, channel: str, request_id: str, opposite_rank: int) -> str: 
+        if channel not in self.send_streams:
+            self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
+        with torch.cuda.stream(self.send_streams[channel]):
+            tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
+            self.send_waiting_request_ids[request_id] = tensor_of_request_id
+            gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
+
         
     def set_event(self, channel: str, request_id: str):
         with torch.cuda.stream(self.send_streams[channel]):

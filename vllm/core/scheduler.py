@@ -164,6 +164,12 @@ class Scheduler:
 
         self.decode: Deque[SequenceGroup] = deque()
 
+        self.prompt_send_waiting: Deque[SequenceGroup] = deque()
+        
+        self.decode_recv_finished: Deque[SequenceGroup] = deque()
+        
+        self.meta_recv_finished: Dict[str, SequenceGroup] = {}
+        
         # Time at previous scheduling step
         self.prev_time = 0.0
         # Did we schedule a prompt at previous step?
@@ -184,6 +190,8 @@ class Scheduler:
         #for record request id - > data
         self.req_pull_send_transfering: Dict[str, int] = {}
 
+        self.kv_prepared_seq_group: Dict[str, SequenceGroup] = {}
+        
         self.num_workers: int = 0
     @property
     def lora_enabled(self) -> bool:
@@ -274,10 +282,8 @@ class Scheduler:
         return decoded_seq_groups
 
     def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
-        prefilled_seq_groups = []
         while self.running:
-            prefilled_seq_groups.append(self.running.pop())
-        return prefilled_seq_groups
+            self.prompt_send_waiting.append(self.running.pop())
     
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
@@ -300,7 +306,7 @@ class Scheduler:
         # Fix the current time.
         now = time.time()
         
-        self._check_tranfer_finished_req()
+        # self._check_tranfer_finished_req()
         
         # Join waiting sequences if possible.
         if not self.swapped:
@@ -731,6 +737,7 @@ class Scheduler:
 
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
+        checked_send_finished_req_ids = []
         for request_id in self.send_finished_req_ids[:]:
             if request_id in self.req_pull_send_transfering:
                 del self.req_pull_send_transfering[request_id]
@@ -745,6 +752,7 @@ class Scheduler:
             seq = seq_group.get_seqs()[0]
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
+            checked_send_finished_req_ids.append(request_id)
             
             #should free 
             # block_table = self.block_manager.block_tables[seq.seq_id]
@@ -761,8 +769,9 @@ class Scheduler:
             seq_group = self.recv_transfering[request_id]
             if self.deploy_config.role == "decoder":
                 print("decoder append request to running ", seq_group.request_id, time.time())
-                self.running.append(seq_group)
-                self.block_manager.move_kv_blocks_meta(seq_group)
+                # self.running.append(seq_group)
+                # self.block_manager.move_kv_blocks_meta(seq_group)
+                self.decode_recv_finished.append(seq_group)
                 
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
@@ -778,7 +787,8 @@ class Scheduler:
 
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
+
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
-            
+        return checked_send_finished_req_ids
             
 
