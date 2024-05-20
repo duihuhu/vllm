@@ -119,7 +119,6 @@ class CommEngine:
             self.send_waiting_request_ids[request_id] = tensor_of_request_id
             print("before send request ", channel, opposite_rank)
             gpu_ops.SendRequest(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
-            print("before send blocks ", channel, opposite_rank)
             gpu_ops.SendBlocks(self.gpu_cache_addr, dst_blocks, self.cache_size_per_block, opposite_rank)
             print("after send blocks ", channel, opposite_rank)
             event = torch.cuda.Event()
@@ -137,7 +136,6 @@ class CommEngine:
         for channel, request_ids_and_events in self.send_events.items():
             num_finished_events = 0
             for request_id, event in request_ids_and_events:
-                print("query request check_send_finished_events ", channel, request_id)
                 if event.query():
                     send_blocks_finished.append(TransferTaskMeta(channel, request_id))
                     # 删除request tensor
