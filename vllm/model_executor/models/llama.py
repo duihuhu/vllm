@@ -281,6 +281,7 @@ class LlamaModel(nn.Module):
                 residual,
             )
             if blocks_to_send_remote:
+                print("blocks_to_send_remote ", blocks_to_send_remote)
                 blocks_to_send_remote = blocks_to_send_remote[0]
                 cache_engine =  blocks_to_send_remote[1]
                 for request_id, block_info in blocks_to_send_remote.items():
