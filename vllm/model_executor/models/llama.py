@@ -279,7 +279,6 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-            print("blocks_to_send_remote ", blocks_to_send_remote)
             if blocks_to_send_remote:
                 for request_id, block_info in blocks_to_send_remote.items():
                     gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], 163840, block_info[-2])
