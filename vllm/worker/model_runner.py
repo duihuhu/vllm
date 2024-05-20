@@ -672,8 +672,6 @@ class ModelRunner:
         }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        # torch.cuda.synchronize()
-        # start_time = time.time()
 
         for request_id, block_info in blocks_to_send_remote.items():
             tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
@@ -686,11 +684,6 @@ class ModelRunner:
         for request_id, block_info in blocks_to_send_remote.items():
             channel = ""
             cache_engine.set_event(channel=channel, request_id=request_id)
-        # torch.cuda.synchronize()
-        # end_time = time.time()
-        # print("model_executable ", end_time-start_time)
-            #   , execute_model_kwargs["input_ids"],  execute_model_kwargs["positions"],
-            #   execute_model_kwargs["attn_metadata"])
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
