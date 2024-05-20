@@ -702,7 +702,6 @@ class ModelRunner:
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
                 cache_engine.set_event(channel=channel, request_id=request_id)
-        print("after model_executable ")
 
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
