@@ -146,8 +146,7 @@ class CommEngine:
                     break
         for channel, idx in send_finished_events:
             self.send_events[channel].pop(idx)
-        print("check_send_finished_events ", send_blocks_finished)
-
+            
         return send_blocks_finished
     
     def check_recv_finished_events(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta]]:
@@ -173,9 +172,6 @@ class CommEngine:
         # release recv events
         for channel in recv_finished_events:
             self.recv_events.pop(channel)
-        
-        print("check_recv_finished_events ", recv_request_id_finished, recv_blocks_finished)
-
         
         return recv_request_id_finished, recv_blocks_finished
     

@@ -44,7 +44,6 @@ class TransferWorker:
         while True:
             # 接收任务
             task_type, task = self.task_queue_child.recv()
-            print("task type ", task_type)
             if task_type == TaskType.TRANSFER_SEND:
                 task_meta = task.meta
                 self.comm_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
