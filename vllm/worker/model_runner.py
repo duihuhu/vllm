@@ -663,7 +663,6 @@ class ModelRunner:
         else:
             model_executable = self.model
         if cache_engine:
-            print("cache_engine ",  cache_engine.cache_size_per_block)
             execute_model_kwargs = {
                 "input_ids": input_tokens,
                 "positions": input_positions,
@@ -690,6 +689,7 @@ class ModelRunner:
                             channel = str(block_info[1][0])
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
+                print("cache_engine send_request_id ")
                 cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1][0]) #todu mul workers
 
         hidden_states = model_executable(**execute_model_kwargs)
@@ -702,6 +702,8 @@ class ModelRunner:
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
                 cache_engine.set_event(channel=channel, request_id=request_id)
+        print("after model_executable ")
+
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
