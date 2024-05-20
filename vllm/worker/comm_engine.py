@@ -137,6 +137,7 @@ class CommEngine:
         for channel, request_ids_and_events in self.send_events.items():
             for idx, (request_id, event) in enumerate(request_ids_and_events):
                 if event.query():
+                    print("finshed check_send_finished_events ", channel, request_id)
                     send_blocks_finished.append(TransferTaskMeta(channel, request_id))
                     send_finished_events.append((channel, idx))
                     # request_tensor = self.remote_recv_waiting_request_ids[request_id]
@@ -165,6 +166,7 @@ class CommEngine:
                     recv_request_id_finished.append(TransferTaskMeta(channel, finished_request_id))
                     #删除request_tensor
                     del self.recv_waiting_request_ids[channel]
+                    print("finshed check_recv_finished_events ", channel, finished_request_id)
                 else:
                     recv_blocks_finished.append(TransferTaskMeta(channel,request_id))
                     # gpu_ops.HandleNcclCommDestroy()
