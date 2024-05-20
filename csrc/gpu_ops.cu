@@ -361,13 +361,13 @@ void SendBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64
 
             NCCLCHECK(ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
                 g_globalNcclComm, cudaStream));
-            // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
+            std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
             // if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
             //     g_globalNcclComm, cudaStream)) {
             //     std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             // }
 
-            // // std::cout << "start send value cache " << srcValueCachePtr << std::endl;
+            std::cout << "start send value cache " << srcValueCachePtr << std::endl;
 
             // if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
             //     g_globalNcclComm, cudaStream)) {
