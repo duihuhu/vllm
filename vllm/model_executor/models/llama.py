@@ -261,6 +261,7 @@ class LlamaModel(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
         blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
+        send_streams: Optional[Dict[str, torch.cuda.Stream]] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # torch.cuda.synchronize()
@@ -281,7 +282,14 @@ class LlamaModel(nn.Module):
             )
             if blocks_to_send_remote:
                 for request_id, block_info in blocks_to_send_remote.items():
-                    gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], 163840, block_info[-2][0]) #todo destRank
+                    channel = ""
+                    for i in range(len(block_info[1])):
+                        if i == 0:
+                                channel = str(block_info[1][0])
+                        else:
+                            channel =  channel + "_" + str(block_info[1][i])
+                    with torch.cuda.stream(send_streams[channel]):
+                        gpu_ops.SendBlocksOnLayer((kv_caches[i][0], kv_caches[i][1]), block_info[-1], 163840, block_info[-2][0]) #todo destRank
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
 
