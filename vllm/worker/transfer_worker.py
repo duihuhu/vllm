@@ -23,8 +23,8 @@ class TransferWorker:
         self.parallel_config = parallel_config
         self.deploy_config = deploy_config
         
-        self.task_queue = Pipe()
-        self.result_queue = Pipe()
+        self.task_queue_parent, self.task_queue_child = Pipe()
+        self.result_queue_parent, self.result_queue_child = Pipe()
         self.rank = rank
         self.local_rank = local_rank
         self.nccl_local_rank = nccl_local_rank
@@ -43,8 +43,7 @@ class TransferWorker:
             raise ValueError("CreateNcclFromRankTable error")
         while True:
             # 接收任务
-            task_info = self.task_queue.recv()
-            task_type, task = task_info[0], task_info[1]
+            task_type, task = self.task_queue_child.recv()
             if task_type == TaskType.TRANSFER_SEND:
                 task_meta = task.meta
                 self.comm_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
@@ -56,20 +55,20 @@ class TransferWorker:
             elif task_type == TaskType.TRANSFER_CHECK_FINISHED:
                 send_blocks_finished = self.comm_engine.check_send_finished_events()
                 recv_request_id_finished, recv_blocks_finished = self.comm_engine.check_recv_finished_events()
-                self.result_queue.send((send_blocks_finished, recv_request_id_finished, recv_blocks_finished))
+                self.result_queue_child.send((send_blocks_finished, recv_request_id_finished, recv_blocks_finished))
             else:
                 raise RuntimeError("invalid task_type.")
 
     def add_task(self, task):
-        self.task_queue.send(task)
+        self.task_queue_parent.send(task)
 
     def get_batch_finished_task(self):
         finished_tasks = []
-        while self.result_queue.poll():
-            finished_tasks.append(self.result_queue.recv())
+        while self.result_queue_parent.poll():
+            finished_tasks.append(self.result_queue_parent.recv())
         return finished_tasks
     
     def get_finished_task(self):
-        if self.result_queue.poll():
-            return self.result_queue.recv()
+        if self.result_queue_parent.poll():
+            return self.result_queue_parent.recv()
         return None
