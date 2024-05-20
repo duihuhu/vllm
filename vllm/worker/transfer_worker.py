@@ -4,12 +4,12 @@ from vllm.worker.comm_engine import CommEngine
 import enum
 from vllm._C import gpu_ops 
 import torch 
-class TaskType:
+class TaskType(enum.Enum):
     # CREATE_NCCL = enum.auto()
     TRANSFER_SEND = enum.auto()
-    TRANSFER_RECV_ID = enum.auto() 
-    TRANSFER_RECV_BLOCKS = enum.auto() 
-    TRANSFER_CHECK_FINISHED = enum.auto() 
+    TRANSFER_RECV_ID = enum.auto()
+    TRANSFER_RECV_BLOCKS = enum.auto()
+    TRANSFER_CHECK_FINISHED = enum.auto()
 
 class TransferWorker:
     def __init__(self, gpu_cache_addr, cache_config, model_config, parallel_config, deploy_config, rank, local_rank, nccl_local_rank) -> None:
