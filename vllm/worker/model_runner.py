@@ -682,7 +682,7 @@ class ModelRunner:
         hidden_states = model_executable(**execute_model_kwargs)
         
         for request_id, block_info in blocks_to_send_remote.items():
-            channel = ""
+            channel =  str(block_info[1][0]) + "_" + str(block_info[1][1])
             cache_engine.set_event(channel=channel, request_id=request_id)
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
