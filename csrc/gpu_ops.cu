@@ -356,18 +356,23 @@ void SendBlocks(std::vector<std::pair<std::vector<u_int64_t>, std::vector<uint64
             int blockIdx = srcBlocks[j];
             void *srcKeyCachePtr = (void *)srcKeyCache[blockIdx];
             void *srcValueCachePtr = (void *)srcValueCache[blockIdx];
+            NCCLCHECK(ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
+                g_globalNcclComm, cudaStream));
+
+            NCCLCHECK(ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
+                g_globalNcclComm, cudaStream));
             // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
-            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
-                g_globalNcclComm, cudaStream)) {
-                std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
-            }
+            // if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
+            //     g_globalNcclComm, cudaStream)) {
+            //     std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
+            // }
 
-            // std::cout << "start send value cache " << srcValueCachePtr << std::endl;
+            // // std::cout << "start send value cache " << srcValueCachePtr << std::endl;
 
-            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
-                g_globalNcclComm, cudaStream)) {
-                std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
-            }
+            // if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
+            //     g_globalNcclComm, cudaStream)) {
+            //     std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
+            // }
         }
     }
     std::cout << "send blocks success" << std::endl;
