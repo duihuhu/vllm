@@ -782,7 +782,7 @@ class Scheduler:
                 if trans_seq_group.num_transfer_workers == 0:
                     print("trans_seq_group.num_transfer_workers ", trans_seq_group.num_transfer_workers)
                     finished_request_id.append(request_id)
-                    seq_group = self.send_transfering[request_id]
+                    seq_group = self.send_transfering[request_id].seq_group
                     seq = seq_group.get_seqs()[0]
                     self.free_seq(seq)
                     del self.send_transfering[request_id]
