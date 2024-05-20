@@ -91,6 +91,7 @@ class CommEngine:
             event = torch.cuda.Event()
             event.record()
         self.recv_events[channel] = (None, event)
+        print("recv_request_id", channel, opposite_rank)
         
     def recv_blocks(self, channel: str, request_id: str, src_blocks: List[int], opposite_rank: int) -> None:      
         if channel not in self.recv_streams:
