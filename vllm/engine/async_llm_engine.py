@@ -332,9 +332,9 @@ class _AsyncLLMEngine(LLMEngine):
 
         return layer_blocks
 
-    async def send_prefilled_meta(self, request_id, prefilled_token_id, output_logprobs):
+    async def send_prefilled_meta(self, request_id, prefilled_token_ids, output_logprobs):
         decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
-        prefilled_meta = PrefilledMeta(request_id=request_id, prefilled_token_id=prefilled_token_id, output_logprobs=output_logprobs).__json__()
+        prefilled_meta = PrefilledMeta(request_id=request_id, prefilled_token_ids=prefilled_token_ids, output_logprobs=output_logprobs).__json__()
         data = CommData(
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
             payload=prefilled_meta
