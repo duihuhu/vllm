@@ -295,9 +295,11 @@ class LlamaModel(nn.Module):
                     with torch.cuda.stream(cache_engine.send_streams[channel]):
                         t1 = time.time()
                         for block_num in block_info[-1]:
+                            t3 = time.time()
                             k_addr = k_cache[block_num].data_ptr()
                             v_addr = v_cache[block_num].data_ptr()
-                            print(type(k_addr), type(v_addr), type(cache_engine.cache_size_per_block), type(block_info[-2][0]))
+                            t4 = time.time()
+                            print("forward t4-t3 ", t4-t3)
                             gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
                         t2 = time.time()
                         print("forward ", t2-t1)
