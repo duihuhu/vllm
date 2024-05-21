@@ -320,6 +320,9 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
+    auto begin = std::chrono::steady_clock::now();
+    auto timestamp_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(begin.time_since_epoch()).count();
+
     // int deviceId = 0;
     // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
@@ -328,8 +331,6 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
 
     at::Tensor srcKeyCache = srcCaches.first;
     at::Tensor srcValueCache = srcCaches.second;
-    auto begin = std::chrono::steady_clock::now();
-    auto timestamp_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(begin.time_since_epoch()).count();
 
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
