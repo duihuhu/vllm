@@ -23,4 +23,5 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
 
 void SendBlockOnLayer(uint64_t k_addr, uint64_t v_addr, uint32_t cacheSize, uint32_t destRank);
 
+void SendBlockOnLayerAddress(std::vector<uint64_t> k_address, std::vector<uint64_t> v_address, uint32_t cacheSize, uint32_t destRank);
 void HandleNcclCommDestroy();
