@@ -664,7 +664,7 @@ class ModelRunner:
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         # torch.cuda.synchronize()
-        # start_time = time.time()
+        t1 = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
         # torch.cuda.synchronize()
         # end_time = time.time()
@@ -682,6 +682,8 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
+        t2 = time.time()
+        print("execute model ", t2-t1)
         return output
 
     @torch.inference_mode()
