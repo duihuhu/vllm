@@ -320,6 +320,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
+    auto start = std::chrono::steady_clock::now();
     // int deviceId = 0;
     // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
@@ -353,7 +354,7 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
 
     }
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(begin1 - begin).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(begin2 - begin1).count() << " ms" << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin2).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
+    std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(begin1 - begin).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(begin2 - begin1).count() << " ms" << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin2).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
 
     // NCCLCHECK(ncclGroupEnd());
     // std::cout << "send blocks success" << std::endl;
