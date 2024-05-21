@@ -10,6 +10,7 @@
 #include "nccl.h"
 #include <cuda_runtime.h>
 #include <c10/cuda/CUDAStream.h>
+#include <chrono>
 
 using namespace torch::indexing;
 using namespace at; 
@@ -310,12 +311,13 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             }
         }
     }
+
     // NCCLCHECK(ncclGroupEnd());
     // std::cout << "recv blocks success" << std::endl;
 }
 
 
-void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> *srcCaches, \
+void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
     // int deviceId = 0;
@@ -324,8 +326,10 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> *srcCaches, \
     auto cudaStream = gpuStream.stream();
     // NCCLCHECK(ncclGroupStart());
 
-    at::Tensor srcKeyCache = srcCaches->first;
-    at::Tensor srcValueCache = srcCaches->second;
+    at::Tensor srcKeyCache = srcCaches.first;
+    at::Tensor srcValueCache = srcCaches.second;
+    auto begin = std::chrono::steady_clock::now();
+    auto timestamp_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(begin.time_since_epoch()).count();
 
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
@@ -344,6 +348,8 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> *srcCaches, \
             std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
         }
     }
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " us" << std::endl;
     // NCCLCHECK(ncclGroupEnd());
     // std::cout << "send blocks success" << std::endl;
 }
