@@ -760,7 +760,6 @@ class Scheduler:
     def _check_tranfer_finished_req(self) -> None:
         finished_request_id = []
         for request_id in self.send_finished_req_ids[:]:
-            print("send_finished_req_ids request_id ", request_id)
             if not self.enable_layer:
                 if request_id in self.req_pull_send_transfering:
                     del self.req_pull_send_transfering[request_id]

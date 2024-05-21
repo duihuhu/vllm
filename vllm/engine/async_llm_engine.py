@@ -352,6 +352,7 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
+        self.scheduler._check_tranfer_finished_req()
         if self.deploy_config.enable_separate and self.deploy_config.role=="decoder" and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
             meta_recv_finished_id = []
             for request_id, seq_group in self.scheduler.meta_recv_finished.items():
@@ -375,7 +376,7 @@ class _AsyncLLMEngine(LLMEngine):
     
         print("schedule empty but has swapping or kv transfering event sleep 0.5s",
                                 self.scheduler.meta_recv_finished, self.scheduler.decode_recv_finished, self.scheduler.kv_prepared_seq_group, 
-                                self.scheduler.prompt_send_waiting)
+                                self.scheduler.prompt_send_waiting,  self.scheduler.recv_transfering, self.scheduler.send_transfering)
         time.sleep(0.1)
         if self.deploy_config.enable_cache_meta and self.deploy_config.role == "prompt":
             if cached_seq_groups:
