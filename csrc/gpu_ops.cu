@@ -385,7 +385,7 @@ void SendBlockOnLayerAddress(std::vector<uint64_t> k_address, std::vector<uint64
 
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    for (int i = 0; i < k_address.size(); j++) {
+    for (int i = 0; i < k_address.size(); i++) {
         void *srcKeyCachePtr = (void *)k_address[i];
         void *srcValueCachePtr = (void *)v_address[i];
 
