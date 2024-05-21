@@ -50,8 +50,8 @@ import time
 from vllm.worker.cache_engine import CacheEngine
 
 from vllm._C import gpu_ops
-import threading
 import concurrent.futures
+import asyncio
 
 class LlamaMLP(nn.Module):
 
@@ -274,8 +274,12 @@ class LlamaModel(nn.Module):
                 for block_num in block_info[-1]:
                     k_addr = k_cache[block_num].data_ptr()
                     v_addr = v_cache[block_num].data_ptr()
-                    await gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
-                
+                    gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
+    
+    def run_async_task(self, kv_cache, blocks_to_send):
+        # 在新的事件循环中运行协程
+        asyncio.run(self.send_layer_block(kv_cache, blocks_to_send))    
+            
     def forward(
         self,
         input_ids: Optional[torch.Tensor],
@@ -303,7 +307,7 @@ class LlamaModel(nn.Module):
             )
             if blocks_to_send_remote:
                 t1 = time.time()
-                self.executor.submit(self.send_layer_block,kv_caches[i], blocks_to_send_remote)
+                self.executor.submit(self.run_async_task, kv_caches[i], blocks_to_send_remote)
                 t2 = time.time()
                 print("time ", t2-t1)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
