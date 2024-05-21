@@ -129,10 +129,11 @@ class RequestTracker:
         """Process a request output from the engine."""
         request_id = request_output.request_id
         request_output.global_ranks = global_ranks
+        print("request_output ", request_output)
         self._request_streams[request_id].put(request_output)
         if is_prefill or request_output.finished:
-            # if verbose:
-                # logger.info(f"Finished request {request_id}.")
+            if verbose:
+                logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
 
     def process_kv_response(self,
@@ -398,7 +399,6 @@ class _AsyncLLMEngine(LLMEngine):
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if self.deploy_config.enable_separate:
-            print("fetch_prefilled_seq_groups")
             self.scheduler.fetch_prefilled_seq_groups()
             # print("self.prompt_send_waiting ", self.scheduler.prompt_send_waiting)
             send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
