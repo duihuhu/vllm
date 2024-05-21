@@ -352,9 +352,16 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
+        if self.deploy_config.enable_separate and self.scheduler.meta_recv_finished and self.deploy_config.role=="decoder":
+            meta_recv_finished_id = []
+            for request_id , seq_group in self.scheduler.meta_recv_finished.items():
+                self.scheduler.running.append(seq_group)
+                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                meta_recv_finished_id.append(request_id)
+            for request_id in meta_recv_finished_id:
+                del self.scheduler.meta_recv_finished[request_id]
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
-        print("running ", len(self.scheduler.running))
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
         #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
@@ -416,16 +423,7 @@ class _AsyncLLMEngine(LLMEngine):
                     prompt_send_waiting.append(seq_group)
                 self.scheduler.prompt_send_waiting.popleft()
             self.scheduler.prompt_send_waiting = prompt_send_waiting
-            meta_recv_finished_id = []
-            for request_id , seq_group in self.scheduler.meta_recv_finished.items():
-                self.scheduler.running.append(seq_group)
-                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
-                meta_recv_finished_id.append(request_id)
-            for request_id in meta_recv_finished_id:
-                del self.scheduler.meta_recv_finished[request_id]
                     
-                    
-                
         # t4 = time.time()
         # print("step_async ", t4-t1)
         return processed_outputs
