@@ -299,7 +299,7 @@ class LlamaModel(nn.Module):
                             k_addr = k_cache[block_num].data_ptr()
                             v_addr = v_cache[block_num].data_ptr()
                             t4 = time.time()
-                            print("forward t4-t3 ", t4-t3)
+                            print("forward t4-t3 ", t4-t3, block_num)
                             gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
                         t2 = time.time()
                         print("forward ", t2-t1)
