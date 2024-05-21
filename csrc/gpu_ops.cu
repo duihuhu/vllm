@@ -332,7 +332,6 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
     auto begin1 = NULL;
     auto begin2 = NULL;
     auto begin = NULL;
-    auto timestamp_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(begin.time_since_epoch()).count();
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
         begin = std::chrono::steady_clock::now();
