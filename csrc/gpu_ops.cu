@@ -362,7 +362,7 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
 
 
 
-void SendBlockOnLayer(uint32_t k_addr, uint32_t v_addr, uint32_t cacheSize, uint32_t destRank)
+void SendBlockOnLayer(uint64_t k_addr, uint64_t v_addr, uint32_t cacheSize, uint32_t destRank)
 {
     auto start = std::chrono::steady_clock::now();
 
