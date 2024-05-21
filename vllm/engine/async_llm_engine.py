@@ -364,6 +364,7 @@ class _AsyncLLMEngine(LLMEngine):
                 del self.scheduler.decode_recv_finished[request_id]
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
+        print("running len " , len(self.scheduler.running))
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
         #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
