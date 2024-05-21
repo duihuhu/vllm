@@ -312,11 +312,7 @@ class LlamaModel(nn.Module):
                 v_cache = kv_caches[i][1]
                 k_address = []
                 v_address = []
-                for block_num in block_info[-1]:
-                    k_addr = k_cache[block_num].data_ptr()
-                    v_addr = v_cache[block_num].data_ptr()
-                    k_address.append(k_addr)
-                    v_address.append(v_addr)
+
                 channel = ""
                 for request_id, block_info in use_blocks_to_send_remote.items():
                     for i in range(len(block_info[1])):
@@ -324,6 +320,11 @@ class LlamaModel(nn.Module):
                                 channel = str(block_info[1][0])
                         else:
                             channel =  channel + "_" + str(block_info[1][i])
+                    for block_num in block_info[-1]:
+                        k_addr = k_cache[block_num].data_ptr()
+                        v_addr = v_cache[block_num].data_ptr()
+                        k_address.append(k_addr)
+                        v_address.append(v_addr)
                 with torch.cuda.stream(cache_engine.send_streams[channel]):
                     gpu_ops.SendBlockOnLayerAddress(k_address, v_address, cache_engine.cache_size_per_block, block_info[-2][0])
                 # t1 = time.time()
