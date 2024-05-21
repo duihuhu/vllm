@@ -328,9 +328,9 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
 
     at::Tensor srcKeyCache = srcCaches.first;
     at::Tensor srcValueCache = srcCaches.second;
-    auto begin1 = std::chrono::steady_clock::now();
-    auto begin2 = std::chrono::steady_clock::now();
-    auto begin = std::chrono::steady_clock::now();
+    auto begin1 = NULL;
+    auto begin2 = NULL;
+    auto begin = NULL;
     auto timestamp_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(begin.time_since_epoch()).count();
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
@@ -353,7 +353,7 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
 
     }
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(begin1 - begin).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(begin2 - begin1).count() << " ms" << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin1).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
+    std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(begin1 - begin).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(begin2 - begin1).count() << " ms" << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin2).count()  << " ms"  << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
 
     // NCCLCHECK(ncclGroupEnd());
     // std::cout << "send blocks success" << std::endl;
