@@ -308,8 +308,8 @@ class LlamaModel(nn.Module):
             if blocks_to_send_remote:
                 use_blocks_to_send_remote = blocks_to_send_remote[0]
                 cache_engine =  blocks_to_send_remote[1]
-                k_cache = kv_caches[0]
-                v_cache = kv_caches[1]
+                k_cache = kv_caches[i][0]
+                v_cache = kv_caches[i][1]
                 for request_id, block_info in use_blocks_to_send_remote.items():
                     channel = ""
                     for i in range(len(block_info[1])):
