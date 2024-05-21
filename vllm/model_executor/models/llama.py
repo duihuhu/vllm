@@ -332,7 +332,7 @@ class LlamaModel(nn.Module):
                 #     gpu_ops.SendBlockOnLayerAddress(k_address, v_address, cache_engine.cache_size_per_block, block_info[-2][0])
                 t1 = time.time()
                 print("start submit ", t1)
-                self.send_layer_block(kv_caches[i], blocks_to_send_remote))
+                self.send_layer_block(kv_caches[i], blocks_to_send_remote)
                 # self.executor.submit(self.send_layer_block, kv_caches[i], blocks_to_send_remote)
                 t2 = time.time()
                 print("end submit time ", t2-t1, t2)
