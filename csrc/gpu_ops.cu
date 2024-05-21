@@ -335,13 +335,11 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
         // void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
         void *srcKeyCachePtr = srcKeyCache[blockIdx].data_ptr();
         void *srcValueCachePtr = srcValueCache[blockIdx].data_ptr();
-        begin1 = std::chrono::steady_clock::now();
         // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
         if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
             g_globalNcclComm, cudaStream)) {
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
         }
-        begin2 = std::chrono::steady_clock::now();
         // std::cout << "start send value cache " << srcValueCachePtr << std::endl;
 
         if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
