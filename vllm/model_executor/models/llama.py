@@ -300,11 +300,11 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-            if blocks_to_send_remote:
-                t1 = time.time()
-                self.executor.submit(self.send_layer_block,kv_caches[i], blocks_to_send_remote)
-                t2 = time.time()
-                print("time ", t2-t1)
+            # if blocks_to_send_remote:
+            #     t1 = time.time()
+            #     self.executor.submit(self.send_layer_block,kv_caches[i], blocks_to_send_remote)
+            #     t2 = time.time()
+            #     print("time ", t2-t1)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
