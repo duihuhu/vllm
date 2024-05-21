@@ -398,10 +398,9 @@ class _AsyncLLMEngine(LLMEngine):
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if self.deploy_config.enable_separate:
-            # print("fetch_prefilled_seq_groups")
+            print("fetch_prefilled_seq_groups")
             self.scheduler.fetch_prefilled_seq_groups()
             # print("self.prompt_send_waiting ", self.scheduler.prompt_send_waiting)
-
             send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
             # print("send_finished_reqs_ids ", send_finished_reqs_ids)
             prompt_send_waiting: Deque[SequenceGroup] = deque()
@@ -416,16 +415,15 @@ class _AsyncLLMEngine(LLMEngine):
                     prompt_send_waiting.append(seq_group)
                 self.scheduler.prompt_send_waiting.popleft()
             self.scheduler.prompt_send_waiting = prompt_send_waiting
-            recv_finished_id = []
-            for request_id , seq_group in  self.scheduler.decode_recv_finished.items():
-                if request_id in self.scheduler.meta_recv_finished:
-                    self.scheduler.running.append(seq_group)
-                    print("status " , seq_group.get_seqs()[0].status)
-                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
-                    del self.scheduler.meta_recv_finished[seq_group.request_id]
-                    recv_finished_id.append(request_id)
-            for request_id in recv_finished_id:
-                self.scheduler.decode_recv_finished[request_id]
+            meta_recv_finished_id = []
+            print("fetch_prefilled_seq_groups")
+            for request_id , seq_group in self.scheduler.meta_recv_finished.items():
+                self.scheduler.running.append(seq_group)
+                print("status " , seq_group.get_seqs()[0].status)
+                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                meta_recv_finished_id.append(request_id)
+            for request_id in meta_recv_finished_id:
+                del self.scheduler.meta_recv_finished[request_id]
                     
                     
                 

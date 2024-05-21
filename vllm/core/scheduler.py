@@ -778,9 +778,7 @@ class Scheduler:
             else:
                 trans_seq_group = self.send_transfering[request_id] 
                 trans_seq_group.num_transfer_workers = trans_seq_group.num_transfer_workers - 1
-                print("before trans_seq_group.num_transfer_workers ", trans_seq_group.num_transfer_workers)
                 if trans_seq_group.num_transfer_workers == 0:
-                    print("trans_seq_group.num_transfer_workers ", trans_seq_group.num_transfer_workers)
                     finished_request_id.append(request_id)
                     seq_group = self.send_transfering[request_id].seq_group
                     seq = seq_group.get_seqs()[0]
