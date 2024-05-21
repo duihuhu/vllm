@@ -315,7 +315,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 }
 
 
-void SendBlocksOnLayer(const std::pair<at::Tensor, at::Tensor> &srcCaches, \
+void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> *srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
     // int deviceId = 0;
@@ -324,8 +324,8 @@ void SendBlocksOnLayer(const std::pair<at::Tensor, at::Tensor> &srcCaches, \
     auto cudaStream = gpuStream.stream();
     // NCCLCHECK(ncclGroupStart());
 
-    at::Tensor srcKeyCache = srcCaches.first;
-    at::Tensor srcValueCache = srcCaches.second;
+    at::Tensor srcKeyCache = srcCaches->first;
+    at::Tensor srcValueCache = srcCaches->second;
 
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
