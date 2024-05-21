@@ -258,27 +258,27 @@ class LlamaModel(nn.Module):
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.embed_tokens(input_ids)
 
-    # async def send_layer_block(self, kv_caches, blocks_to_send_remote):
-    #     use_blocks_to_send_remote = blocks_to_send_remote[0]
-    #     cache_engine =  blocks_to_send_remote[1]
-    #     k_cache = kv_caches[0]
-    #     v_cache = kv_caches[1]
-    #     for request_id, block_info in use_blocks_to_send_remote.items():
-    #         channel = ""
-    #         for i in range(len(block_info[1])):
-    #             if i == 0:
-    #                     channel = str(block_info[1][0])
-    #             else:
-    #                 channel =  channel + "_" + str(block_info[1][i])
-    #         with torch.cuda.stream(cache_engine.send_streams[channel]):
-    #             for block_num in block_info[-1]:
-    #                 k_addr = k_cache[block_num].data_ptr()
-    #                 v_addr = v_cache[block_num].data_ptr()
-    #                 gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
+    def send_layer_block(self, kv_caches, blocks_to_send_remote):
+        use_blocks_to_send_remote = blocks_to_send_remote[0]
+        cache_engine =  blocks_to_send_remote[1]
+        k_cache = kv_caches[0]
+        v_cache = kv_caches[1]
+        for request_id, block_info in use_blocks_to_send_remote.items():
+            channel = ""
+            for i in range(len(block_info[1])):
+                if i == 0:
+                        channel = str(block_info[1][0])
+                else:
+                    channel =  channel + "_" + str(block_info[1][i])
+            with torch.cuda.stream(cache_engine.send_streams[channel]):
+                for block_num in block_info[-1]:
+                    k_addr = k_cache[block_num].data_ptr()
+                    v_addr = v_cache[block_num].data_ptr()
+                    gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
     
-    # def run_async_task(self, kv_cache, blocks_to_send):
-    #     # 在新的事件循环中运行协程
-    #     asyncio.run(self.send_layer_block(kv_cache, blocks_to_send))    
+    def run_async_task(self, kv_cache, blocks_to_send):
+        # 在新的事件循环中运行协程
+        asyncio.run(self.send_layer_block(kv_cache, blocks_to_send))    
             
     def forward(
         self,
@@ -306,30 +306,30 @@ class LlamaModel(nn.Module):
                 residual,
             )
             if blocks_to_send_remote:
-                use_blocks_to_send_remote = blocks_to_send_remote[0]
-                cache_engine =  blocks_to_send_remote[1]
-                k_cache = kv_caches[i][0]
-                v_cache = kv_caches[i][1]
-                k_address = []
-                v_address = []
+                # use_blocks_to_send_remote = blocks_to_send_remote[0]
+                # cache_engine =  blocks_to_send_remote[1]
+                # k_cache = kv_caches[i][0]
+                # v_cache = kv_caches[i][1]
+                # k_address = []
+                # v_address = []
 
-                channel = ""
-                for request_id, block_info in use_blocks_to_send_remote.items():
-                    for i in range(len(block_info[1])):
-                        if i == 0:
-                                channel = str(block_info[1][0])
-                        else:
-                            channel =  channel + "_" + str(block_info[1][i])
-                    for block_num in block_info[-1]:
-                        k_addr = k_cache[block_num].data_ptr()
-                        v_addr = v_cache[block_num].data_ptr()
-                        k_address.append(k_addr)
-                        v_address.append(v_addr)
-                with torch.cuda.stream(cache_engine.send_streams[channel]):
-                    print("k_address ", len(k_address))
-                    gpu_ops.SendBlockOnLayerAddress(k_address, v_address, cache_engine.cache_size_per_block, block_info[-2][0])
+                # channel = ""
+                # for request_id, block_info in use_blocks_to_send_remote.items():
+                #     for i in range(len(block_info[1])):
+                #         if i == 0:
+                #                 channel = str(block_info[1][0])
+                #         else:
+                #             channel =  channel + "_" + str(block_info[1][i])
+                #     for block_num in block_info[-1]:
+                #         k_addr = k_cache[block_num].data_ptr()
+                #         v_addr = v_cache[block_num].data_ptr()
+                #         k_address.append(k_addr)
+                #         v_address.append(v_addr)
+                # with torch.cuda.stream(cache_engine.send_streams[channel]):
+                #     print("k_address ", len(k_address))
+                #     gpu_ops.SendBlockOnLayerAddress(k_address, v_address, cache_engine.cache_size_per_block, block_info[-2][0])
                 # t1 = time.time()
-                # self.executor.submit(self.run_async_task, kv_caches[i], blocks_to_send_remote)
+                self.executor.submit(self.run_async_task, kv_caches[i], blocks_to_send_remote)
                 # t2 = time.time()
                 # print("time ", t2-t1)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
