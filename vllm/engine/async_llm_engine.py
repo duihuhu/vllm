@@ -352,7 +352,7 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        if self.deploy_config.enable_separate and self.scheduler.meta_recv_finished and self.deploy_config.role=="decoder" and self.scheduler.decode_recv_finished:
+        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder" and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
             meta_recv_finished_id = []
             for request_id, seq_group in self.scheduler.meta_recv_finished.items():
                 if request_id in self.scheduler.decode_recv_finished:
@@ -364,7 +364,6 @@ class _AsyncLLMEngine(LLMEngine):
                 del self.scheduler.decode_recv_finished[request_id]
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
-        print("running len " , len(self.scheduler.running))
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
         #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
@@ -373,7 +372,11 @@ class _AsyncLLMEngine(LLMEngine):
         #             time.sleep(0.05)
             # else:
             #     return []
-            
+    
+        print("schedule empty but has swapping or kv transfering event sleep 0.5s",
+                                self.scheduler.meta_recv_finished, self.scheduler.decode_recv_finished, self.scheduler.kv_prepared_seq_group, 
+                                self.scheduler.prompt_send_waiting)
+        time.sleep(0.1)
         if self.deploy_config.enable_cache_meta and self.deploy_config.role == "prompt":
             if cached_seq_groups:
                 for seq_group in cached_seq_groups:
@@ -411,16 +414,16 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_separate:
             if self.deploy_config.role == "prompt":
                 self.scheduler.fetch_prefilled_seq_groups()
-            # print("self.prompt_send_waiting ", self.scheduler.prompt_send_waiting)
-            # send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
-            # print("send_finished_reqs_ids ", send_finished_reqs_ids)
-            while self.scheduler.prompt_send_waiting:
-                seq_group = self.scheduler.prompt_send_waiting[0]
-                #send prefilled token to decode
-                seq = seq_group.get_seqs()[0]
-                # print("send_prefilled_meta ", seq_group.request_id)
-                await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
-                self.scheduler.prompt_send_waiting.popleft()
+                # print("self.prompt_send_waiting ", self.scheduler.prompt_send_waiting)
+                # send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
+                # print("send_finished_reqs_ids ", send_finished_reqs_ids)
+                while self.scheduler.prompt_send_waiting:
+                    seq_group = self.scheduler.prompt_send_waiting[0]
+                    #send prefilled token to decode
+                    seq = seq_group.get_seqs()[0]
+                    # print("send_prefilled_meta ", seq_group.request_id)
+                    await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
+                    self.scheduler.prompt_send_waiting.popleft()
                     
         # t4 = time.time()
         # print("step_async ", t4-t1)
