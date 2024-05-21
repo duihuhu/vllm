@@ -51,7 +51,7 @@ from vllm.worker.cache_engine import CacheEngine
 
 from vllm._C import gpu_ops
 import threading
-import asyncio
+import concurrent.futures
 
 class LlamaMLP(nn.Module):
 
@@ -254,6 +254,7 @@ class LlamaModel(nn.Module):
         ])
         self.norm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
+        self.executor =  concurrent.futures.ThreadPoolExecutor(max_workers=40)
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.embed_tokens(input_ids)
 
@@ -301,7 +302,7 @@ class LlamaModel(nn.Module):
             )
             if blocks_to_send_remote:
                 t1 = time.time()
-                threading.Thread(target=self.send_layer_block, args=(kv_caches[i], blocks_to_send_remote)).start()
+                self.executor.submit(target=self.send_layer_block, args=(kv_caches[i], blocks_to_send_remote))
                 t2 = time.time()
                 print("time ", t2-t1)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
