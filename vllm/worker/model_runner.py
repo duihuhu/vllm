@@ -681,7 +681,6 @@ class ModelRunner:
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         
-        t1 = time.time()
         if blocks_to_send_remote:
             for request_id, block_info in blocks_to_send_remote.items():
                 channel = ""
@@ -691,7 +690,8 @@ class ModelRunner:
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
                 cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1][0]) #todu mul workers
-
+        t1 = time.time()
+        print("before model execute ", t1)
         hidden_states = model_executable(**execute_model_kwargs)
         if blocks_to_send_remote:
             for request_id, block_info in blocks_to_send_remote.items():
@@ -715,7 +715,7 @@ class ModelRunner:
             sampling_metadata=sampling_metadata,
         )
         t2 = time.time()
-        print("execute model ", t2-t1)
+        print("end execute model ", t2-t1, t2)
         return output
 
     @torch.inference_mode()

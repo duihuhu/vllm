@@ -259,6 +259,7 @@ class LlamaModel(nn.Module):
         return self.embed_tokens(input_ids)
 
     def send_layer_block(self, kv_caches, blocks_to_send_remote):
+        print("start send_layer_block ", time.time())
         use_blocks_to_send_remote = blocks_to_send_remote[0]
         cache_engine =  blocks_to_send_remote[1]
         k_cache = kv_caches[0]
@@ -275,7 +276,8 @@ class LlamaModel(nn.Module):
                     k_addr = k_cache[block_num].data_ptr()
                     v_addr = v_cache[block_num].data_ptr()
                     gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
-    
+        print("end send_layer_block ", time.time())
+
     def run_async_task(self, kv_cache, blocks_to_send):
         # 在新的事件循环中运行协程
         asyncio.run(self.send_layer_block(kv_cache, blocks_to_send))    
@@ -328,10 +330,11 @@ class LlamaModel(nn.Module):
                 # with torch.cuda.stream(cache_engine.send_streams[channel]):
                 #     print("k_address ", len(k_address))
                 #     gpu_ops.SendBlockOnLayerAddress(k_address, v_address, cache_engine.cache_size_per_block, block_info[-2][0])
-                # t1 = time.time()
-                self.executor.submit(self.run_async_task, kv_caches[i], blocks_to_send_remote)
-                # t2 = time.time()
-                # print("time ", t2-t1)
+                t1 = time.time()
+                print("start submit ", t1)
+                self.executor.submit(target=self.send_layer_block, args=(kv_caches[i], blocks_to_send_remote))
+                t2 = time.time()
+                print("end submit time ", t2-t1, t2)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
