@@ -274,7 +274,8 @@ class LlamaModel(nn.Module):
                 for block_num in block_info[-1]:
                     k_addr = k_cache[block_num].data_ptr()
                     v_addr = v_cache[block_num].data_ptr()
-                    gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
+                    await gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][0])
+                
     def forward(
         self,
         input_ids: Optional[torch.Tensor],
@@ -304,7 +305,7 @@ class LlamaModel(nn.Module):
                 t1 = time.time()
                 self.executor.submit(self.send_layer_block,kv_caches[i], blocks_to_send_remote)
                 t2 = time.time()
-            #     print("time ", t2-t1)
+                print("time ", t2-t1)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
