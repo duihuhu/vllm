@@ -129,7 +129,6 @@ class RequestTracker:
         """Process a request output from the engine."""
         request_id = request_output.request_id
         request_output.global_ranks = global_ranks
-        print("request_output ", request_output)
         self._request_streams[request_id].put(request_output)
         if is_prefill or request_output.finished:
             if verbose:
@@ -382,6 +381,7 @@ class _AsyncLLMEngine(LLMEngine):
             
         # t2 = time.time() 
         if not scheduler_outputs.is_empty():
+            print("seq_group_metadata_list ", seq_group_metadata_list)
             # Execute the model.
             all_outputs = await self.model_executor.execute_model_async(
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
