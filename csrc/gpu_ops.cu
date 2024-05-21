@@ -336,8 +336,8 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
         int blockIdx = srcBlocks[j];
         // void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
         // void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
-        void *srcKeyCachePtr = srcKeyCache.index([blockIdx]).data_ptr();
-        void *srcValueCachePtr = srcValueCache.index([blockIdx]).data_ptr();
+        void *srcKeyCachePtr = srcKeyCache[blockIdx].data_ptr();
+        void *srcValueCachePtr = srcValueCache[blockIdx].data_ptr();
         begin1 = std::chrono::steady_clock::now();
         // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
         if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
