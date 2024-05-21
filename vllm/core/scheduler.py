@@ -207,7 +207,7 @@ class Scheduler:
         #for record request id - > data
         self.req_pull_send_transfering: Dict[str, int] = {}
 
-        self.kv_prepared_seq_group: Dict[str, SequenceGroup] = {}
+        # self.kv_prepared_seq_group: Dict[str, SequenceGroup] = {}
         
         self.num_workers: int = tensor_parallel_size
         

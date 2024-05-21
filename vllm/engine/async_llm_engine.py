@@ -352,14 +352,16 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        if self.deploy_config.enable_separate and self.scheduler.meta_recv_finished and self.deploy_config.role=="decoder":
+        if self.deploy_config.enable_separate and self.scheduler.meta_recv_finished and self.deploy_config.role=="decoder" and self.scheduler.decode_recv_finished:
             meta_recv_finished_id = []
-            for request_id , seq_group in self.scheduler.meta_recv_finished.items():
-                self.scheduler.running.append(seq_group)
-                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
-                meta_recv_finished_id.append(request_id)
+            for request_id, seq_group in self.scheduler.meta_recv_finished.items():
+                if request_id in self.scheduler.decode_recv_finished:
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                    meta_recv_finished_id.append(request_id)
             for request_id in meta_recv_finished_id:
                 del self.scheduler.meta_recv_finished[request_id]
+                del self.scheduler.decode_recv_finished[request_id]
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
         # if scheduler_outputs.is_empty():
@@ -409,20 +411,15 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.role == "prompt":
                 self.scheduler.fetch_prefilled_seq_groups()
             # print("self.prompt_send_waiting ", self.scheduler.prompt_send_waiting)
-            send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
+            # send_finished_reqs_ids = self.scheduler._check_tranfer_finished_req()
             # print("send_finished_reqs_ids ", send_finished_reqs_ids)
-            prompt_send_waiting: Deque[SequenceGroup] = deque()
             while self.scheduler.prompt_send_waiting:
                 seq_group = self.scheduler.prompt_send_waiting[0]
-                if seq_group.request_id in send_finished_reqs_ids:
-                    #send prefilled token to decode
-                    seq = seq_group.get_seqs()[0]
-                    # print("send_prefilled_meta ", seq_group.request_id)
-                    await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
-                else:
-                    prompt_send_waiting.append(seq_group)
+                #send prefilled token to decode
+                seq = seq_group.get_seqs()[0]
+                # print("send_prefilled_meta ", seq_group.request_id)
+                await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
                 self.scheduler.prompt_send_waiting.popleft()
-            self.scheduler.prompt_send_waiting = prompt_send_waiting
                     
         # t4 = time.time()
         # print("step_async ", t4-t1)
@@ -863,11 +860,11 @@ class AsyncLLMEngine:
         return stream
 
     async def add_prefilled_meta(self, request_id: str, prefilled_token_ids, output_logprobs):
-        seq_group = self.engine.scheduler.decode_recv_finished[request_id]
+        seq_group = self.engine.scheduler.kv_prepared_seq_group[request_id]
         for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
             seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
-        self.engine.scheduler.meta_recv_finished[request_id] = self.engine.scheduler.decode_recv_finished[request_id]
-        del self.engine.scheduler.decode_recv_finished[request_id]
+        self.engine.scheduler.meta_recv_finished[request_id] = self.engine.scheduler.kv_prepared_seq_group[request_id]
+        del self.engine.scheduler.kv_prepared_seq_group[request_id]
     #tmp
     async def prepare_layer_kv_blocks(self,
         request_id: str,
