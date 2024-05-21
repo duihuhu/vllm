@@ -357,7 +357,7 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
 
 void SendBlockOnLayer(uint64_t k_addr, uint64_t v_addr, uint32_t cacheSize, uint32_t destRank)
 {
-    auto start = std::chrono::steady_clock::now();
+    // auto start = std::chrono::steady_clock::now();
 
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
@@ -374,8 +374,8 @@ void SendBlockOnLayer(uint64_t k_addr, uint64_t v_addr, uint32_t cacheSize, uint
         g_globalNcclComm, cudaStream)) {
         std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
     }
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()  << " us"  << std::endl;
+    // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    // std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()  << " us"  << std::endl;
 
 }
 
