@@ -479,7 +479,7 @@ class _AsyncLLMEngine(LLMEngine):
     async def trans_kv_step_aysnc(self) -> None:
         if not self.deploy_config.enable_separate:
             return
-        if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering and not self.scheduler.prompt_send_waiting and not self.scheduler.meta_recv_finished and not self.scheduler.decode_recv_finished:
+        if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering and not self.scheduler.prompt_send_waiting and not self.scheduler.meta_recv_finished and not self.scheduler.decode_recv_finished and not self.scheduler.kv_prepared_seq_group:
             return 
         
         # print("trans_kv_step_aysnc ")
@@ -758,7 +758,8 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.req_pull_send_transfering and
                 not self.engine.scheduler.prompt_send_waiting and 
                 not self.engine.scheduler.decode_recv_finished and
-                not self.engine.scheduler.meta_recv_finished):
+                not self.engine.scheduler.meta_recv_finished and
+                not self.engine.scheduler.kv_prepared_seq_group):
                 
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
