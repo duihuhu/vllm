@@ -300,8 +300,11 @@ class LlamaModel(nn.Module):
                 residual,
             )
             if blocks_to_send_remote:
-                # threading.Thread(target=self.send_layer_block, args=(kv_caches[i], blocks_to_send_remote)).start()
-                asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
+                t1 = time.time()
+                threading.Thread(target=self.send_layer_block, args=(kv_caches[i], blocks_to_send_remote)).start()
+                t2 = time.time()
+                print("time ", t2-t1)
+                # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
 
