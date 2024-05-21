@@ -326,6 +326,7 @@ class LlamaModel(nn.Module):
                         k_address.append(k_addr)
                         v_address.append(v_addr)
                 with torch.cuda.stream(cache_engine.send_streams[channel]):
+                    print("k_address ", len(k_address))
                     gpu_ops.SendBlockOnLayerAddress(k_address, v_address, cache_engine.cache_size_per_block, block_info[-2][0])
                 # t1 = time.time()
                 # self.executor.submit(self.run_async_task, kv_caches[i], blocks_to_send_remote)
