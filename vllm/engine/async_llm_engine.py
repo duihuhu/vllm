@@ -251,6 +251,7 @@ class RequestTracker:
                 stream.finish()
                 continue
             self._request_streams[stream.request_id] = stream
+            
             new_requests.append(new_request)
             
         return new_requests, finished_requests
@@ -917,7 +918,9 @@ class AsyncLLMEngine:
                     "error that caused the background loop to stop "
                     "(AsyncEngineDeadError).")
         self._request_tracker.new_requests_event.set()
-        
+        stream = AsyncStream(request_id)
+        self._request_tracker._request_streams[stream.request_id] = stream
+
         return len(phy_blocks)
 
     async def pull_kv_blocks(self, query_meta):
