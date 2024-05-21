@@ -417,7 +417,6 @@ class _AsyncLLMEngine(LLMEngine):
                 self.scheduler.prompt_send_waiting.popleft()
             self.scheduler.prompt_send_waiting = prompt_send_waiting
             meta_recv_finished_id = []
-            print("fetch_prefilled_seq_groups")
             for request_id , seq_group in self.scheduler.meta_recv_finished.items():
                 self.scheduler.running.append(seq_group)
                 print("status " , seq_group.get_seqs()[0].status)
