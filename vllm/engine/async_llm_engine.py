@@ -354,7 +354,7 @@ class _AsyncLLMEngine(LLMEngine):
         """
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
-
+        print("running ", len(self.scheduler.running))
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
         #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
@@ -419,7 +419,6 @@ class _AsyncLLMEngine(LLMEngine):
             meta_recv_finished_id = []
             for request_id , seq_group in self.scheduler.meta_recv_finished.items():
                 self.scheduler.running.append(seq_group)
-                print("status " , seq_group.get_seqs()[0].status)
                 self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 meta_recv_finished_id.append(request_id)
             for request_id in meta_recv_finished_id:
