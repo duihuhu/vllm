@@ -302,7 +302,7 @@ class LlamaModel(nn.Module):
             )
             if blocks_to_send_remote:
                 t1 = time.time()
-                self.executor.submit(target=self.send_layer_block, args=(kv_caches[i], blocks_to_send_remote))
+                self.executor.submit(self.send_layer_block,kv_caches[i], blocks_to_send_remote)
                 t2 = time.time()
                 print("time ", t2-t1)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
