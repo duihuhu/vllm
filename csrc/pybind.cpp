@@ -150,6 +150,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &SendBlocksOnLayer,
     "SendBlocksOnLayer");
 
+  gpu_ops.def(
+    "SendBlockOnLayer",
+    &SendBlockOnLayer,
+    "SendBlockOnLayer");
+
 #ifndef USE_ROCM
   // Custom all-reduce kernels
   pybind11::module custom_ar = m.def_submodule("custom_ar", "custom allreduce");
