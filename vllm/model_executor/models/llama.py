@@ -330,6 +330,7 @@ class LlamaModel(nn.Module):
                 # with torch.cuda.stream(cache_engine.send_streams[channel]):
                 #     print("k_address ", len(k_address))
                 #     gpu_ops.SendBlockOnLayerAddress(k_address, v_address, cache_engine.cache_size_per_block, block_info[-2][0])
+                print("blocks_to_send_remote ", blocks_to_send_remote)
                 t1 = time.time()
                 print("start submit ", t1)
                 self.send_layer_block(kv_caches[i], blocks_to_send_remote)
