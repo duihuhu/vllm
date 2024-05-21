@@ -254,7 +254,7 @@ class LlamaModel(nn.Module):
         ])
         self.norm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
-        self.executor =  concurrent.futures.ThreadPoolExecutor(max_workers=5)
+        self.executor =  concurrent.futures.ThreadPoolExecutor(max_workers=40)
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.embed_tokens(input_ids)
 
@@ -307,7 +307,7 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-            if blocks_to_send_remote:
+            if blocks_to_send_remote[0]:
                 # use_blocks_to_send_remote = blocks_to_send_remote[0]
                 # cache_engine =  blocks_to_send_remote[1]
                 # k_cache = kv_caches[i][0]
