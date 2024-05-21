@@ -315,7 +315,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 }
 
 
-void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
+void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> &srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
     // int deviceId = 0;
