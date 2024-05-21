@@ -245,11 +245,11 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
 {
     int layerNum = srcCaches.size();
 
-    int deviceId = 0;
-    cudaGetDevice(&deviceId);
+    // int deviceId = 0;
+    // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    NCCLCHECK(ncclGroupStart());
+    // NCCLCHECK(ncclGroupStart());
     for (int i=0; i < layerNum; i++) {
         at::Tensor srcKeyCache = srcCaches[i].first;
         at::Tensor srcValueCache = srcCaches[i].second;
@@ -272,7 +272,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             }
         }
     }
-    NCCLCHECK(ncclGroupEnd());
+    // NCCLCHECK(ncclGroupEnd());
     // std::cout << "send blocks success" << std::endl;
 }
 
@@ -286,7 +286,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
     auto cudaStream = gpuStream.stream();
-    NCCLCHECK(ncclGroupStart());
+    // NCCLCHECK(ncclGroupStart());
 
     for (int i=0; i < layerNum; i++) {
         at::Tensor dstKeyCache = dstCaches[i].first;
@@ -310,7 +310,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             }
         }
     }
-    NCCLCHECK(ncclGroupEnd());
+    // NCCLCHECK(ncclGroupEnd());
     // std::cout << "recv blocks success" << std::endl;
 }
 
@@ -318,11 +318,11 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
-    int deviceId = 0;
-    cudaGetDevice(&deviceId);
+    // int deviceId = 0;
+    // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    NCCLCHECK(ncclGroupStart());
+    // NCCLCHECK(ncclGroupStart());
 
     at::Tensor srcKeyCache = srcCaches.first;
     at::Tensor srcValueCache = srcCaches.second;
@@ -344,7 +344,7 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
             std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
         }
     }
-    NCCLCHECK(ncclGroupEnd());
+    // NCCLCHECK(ncclGroupEnd());
     // std::cout << "send blocks success" << std::endl;
 }
 
