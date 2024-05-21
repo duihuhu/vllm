@@ -320,9 +320,6 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
-    auto begin = std::chrono::steady_clock::now();
-    auto timestamp_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(begin.time_since_epoch()).count();
-
     // int deviceId = 0;
     // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
@@ -336,6 +333,8 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
         int blockIdx = srcBlocks[j];
         void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
         void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
+        auto begin = std::chrono::steady_clock::now();
+        auto timestamp_seconds = std::chrono::duration_cast<std::chrono::milliseconds>(begin.time_since_epoch()).count();
         // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
         if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
             g_globalNcclComm, cudaStream)) {
@@ -348,9 +347,10 @@ void SendBlocksOnLayer(std::pair<at::Tensor, at::Tensor> srcCaches, \
             g_globalNcclComm, cudaStream)) {
             std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
         }
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << std::endl;
     }
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Send Copying time for buffer " << ": " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " us" << std::endl;
+
     // NCCLCHECK(ncclGroupEnd());
     // std::cout << "send blocks success" << std::endl;
 }
