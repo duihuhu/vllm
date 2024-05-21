@@ -258,7 +258,7 @@ class LlamaModel(nn.Module):
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.embed_tokens(input_ids)
 
-    def send_layer_block(self, kv_caches, blocks_to_send_remote):
+    async def send_layer_block(self, kv_caches, blocks_to_send_remote):
         use_blocks_to_send_remote = blocks_to_send_remote[0]
         cache_engine =  blocks_to_send_remote[1]
         k_cache = kv_caches[0]
@@ -300,10 +300,10 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-            # if blocks_to_send_remote:
-            #     t1 = time.time()
-            #     self.executor.submit(self.send_layer_block,kv_caches[i], blocks_to_send_remote)
-            #     t2 = time.time()
+            if blocks_to_send_remote:
+                t1 = time.time()
+                self.executor.submit(self.send_layer_block,kv_caches[i], blocks_to_send_remote)
+                t2 = time.time()
             #     print("time ", t2-t1)
                 # asyncio.create_task(self.send_layer_block(kv_caches[i], blocks_to_send_remote))
         hidden_states, _ = self.norm(hidden_states, residual)
