@@ -374,10 +374,6 @@ class _AsyncLLMEngine(LLMEngine):
             # else:
             #     return []
     
-        print("schedule empty but has swapping or kv transfering event sleep 0.5s",
-                                self.scheduler.meta_recv_finished, self.scheduler.decode_recv_finished, self.scheduler.kv_prepared_seq_group, 
-                                self.scheduler.prompt_send_waiting,  self.scheduler.recv_transfering, self.scheduler.send_transfering)
-        time.sleep(0.1)
         if self.deploy_config.enable_cache_meta and self.deploy_config.role == "prompt":
             if cached_seq_groups:
                 for seq_group in cached_seq_groups:
