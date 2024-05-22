@@ -21,6 +21,31 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+@app.post("/send_prefilled_meta")
+async def send_prefilled_meta(response: Request) -> None:
+    payload = await response.json()
+    request_id = payload.pop("request_id")
+    prefilled_token_ids = payload.pop("prefilled_token_ids")
+    output_logprobs = payload.pop("output_logprobs")
+    output_logprobs = cprobs_key_s2i(output_logprobs)
+    await server.engine.add_prefilled_meta(request_id, prefilled_token_ids, output_logprobs)
+    
+    return {"ret": "success"}
+
+
+@app.post("/query_layer_kv_blocks")
+async def query_layer_kv_blocks(response: Request) -> None:
+    payload = await response.json()
+    request_id = payload.pop("request_id")
+    prompt_token_ids = payload.pop("prompt_token_ids")
+    global_ranks =  payload.pop("global_ranks")
+    sampling_params_json = payload.pop("sampling_params")
+    sampling_params =  SamplingParams(**sampling_params_json)
+    blocks_num = await server.engine.prepare_layer_kv_blocks(prompt=None, request_id=request_id, sampling_params=sampling_params, \
+        prompt_token_ids=prompt_token_ids, global_ranks=global_ranks)
+    return {"blocks_num": blocks_num, "global_ranks": server.global_ranks}
+    
+
 @app.post("/pull_kv_cache")
 async def pull_kv_cache(response: Request) -> None:
     payload = await response.json()

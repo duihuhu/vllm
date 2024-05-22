@@ -27,6 +27,9 @@ from vllm.utils import (CudaMemoryProfiler, async_tensor_h2d,
                         is_pin_memory_available, make_tensor_with_pad,
                         maybe_expand_dim)
 
+from vllm.worker.cache_engine import CacheEngine
+
+
 logger = init_logger(__name__)
 
 _PAD_SLOT_ID = -1
@@ -641,6 +644,8 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
+        blocks_to_send_remote: Dict[str, Tuple[int, List[int], List[int]]] = None,
+        cache_engine: CacheEngine = None,
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
@@ -655,22 +660,47 @@ class ModelRunner:
             model_executable = self.graph_runners[graph_batch_size]
         else:
             model_executable = self.model
-        execute_model_kwargs = {
-            "input_ids": input_tokens,
-            "positions": input_positions,
-            "kv_caches": kv_caches,
-            "attn_metadata": attn_metadata,
-        }
+            
+        if cache_engine:
+            execute_model_kwargs = {
+                "input_ids": input_tokens,
+                "positions": input_positions,
+                "kv_caches": kv_caches,
+                "attn_metadata": attn_metadata,
+                "blocks_to_send_remote": (blocks_to_send_remote, cache_engine),
+            }
+        else:
+            execute_model_kwargs = {
+                "input_ids": input_tokens,
+                "positions": input_positions,
+                "kv_caches": kv_caches,
+                "attn_metadata": attn_metadata,
+            }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        # torch.cuda.synchronize()
+        
+        if blocks_to_send_remote:
+            for request_id, block_info in blocks_to_send_remote.items():
+                channel = ""
+                for i in range(len(block_info[1])):
+                    if i == 0:
+                            channel = str(block_info[1][0])
+                    else:
+                        channel =  channel + "_" + str(block_info[1][i])
+                cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1][cache_engine.worker_rank])
+        
         hidden_states = model_executable(**execute_model_kwargs)
-        # torch.cuda.synchronize()
-        # end_time = time.time()
-        # print("model_executable ", end_time-start_time)
-            #   , execute_model_kwargs["input_ids"],  execute_model_kwargs["positions"],
-            #   execute_model_kwargs["attn_metadata"])
-        # Compute the logits.
+
+        if blocks_to_send_remote:
+            for request_id, block_info in blocks_to_send_remote.items():
+                channel = ""
+                for i in range(len(block_info[1])):
+                    if i == 0:
+                        channel = str(block_info[1][i])
+                    else:
+                        channel =  channel + "_" + str(block_info[1][i])
+                cache_engine.set_event(channel=channel, request_id=request_id)
+
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
         # Only perform sampling in the driver worker.

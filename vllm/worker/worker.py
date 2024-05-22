@@ -186,7 +186,7 @@ class Worker:
     def init_cache_engine(self, cache_config: CacheConfig) -> None:
         self.cache_config = cache_config
         self.cache_engine = CacheEngine(self.cache_config, self.model_config,
-                                        self.parallel_config, self.deploy_config)
+                                        self.parallel_config, self.deploy_config, self.rank)
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
 
@@ -219,6 +219,7 @@ class Worker:
         blocks_to_swap_in: Optional[Dict[int, int]] = None,
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
+        blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
         wait_for_swap_out: List[str] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
@@ -232,6 +233,7 @@ class Worker:
                 "blocks_to_swap_in": blocks_to_swap_in,
                 "blocks_to_swap_out": blocks_to_swap_out,
                 "blocks_to_copy": blocks_to_copy,
+                "blocks_to_send_remote": blocks_to_send_remote,
             }
             broadcast_tensor_dict(data, src=0)
         else:
@@ -240,6 +242,7 @@ class Worker:
             blocks_to_swap_in = data["blocks_to_swap_in"]
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
+            blocks_to_send_remote = data["blocks_to_send_remote"]
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
@@ -257,7 +260,7 @@ class Worker:
             return {}
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache)
+                                                 self.gpu_cache, blocks_to_send_remote, self.cache_engine)
         
         swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)

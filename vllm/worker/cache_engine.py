@@ -31,6 +31,7 @@ class CacheEngine:
         model_config: ModelConfig,
         parallel_config: ParallelConfig,
         deploy_config: DeployConfig,
+        worker_rank: int,
         request_id_size: int = 32,
     ) -> None:
         self.cache_config = cache_config
@@ -47,6 +48,7 @@ class CacheEngine:
 
         self.deploy_config = deploy_config
         
+        self.worker_rank = worker_rank
         if cache_config.cache_dtype == "auto":
             self.dtype = model_config.dtype
         else:
@@ -191,6 +193,25 @@ class CacheEngine:
         else:
             self.send_events[channel].append((request_id, event))
             
+    def send_request_id(self, channel: str, request_id: str, opposite_rank: List[int]) -> str: 
+        if channel not in self.send_streams:
+            self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
+        with torch.cuda.stream(self.send_streams[channel]):
+            tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
+            self.send_waiting_request_ids[request_id] = tensor_of_request_id
+            gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
+
+        
+    def set_event(self, channel: str, request_id: str):
+        with torch.cuda.stream(self.send_streams[channel]):
+            event = torch.cuda.Event()
+            event.record() 
+        if channel not in self.send_events:
+            self.send_events[channel] = [(request_id, event)]
+        else:
+            self.send_events[channel].append((request_id, event))
+            
+
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         self.attn_backend.copy_blocks(self.gpu_cache, src_to_dsts)
 

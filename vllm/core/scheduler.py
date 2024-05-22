@@ -43,6 +43,15 @@ class ScheduledSequenceGroup:
     # chunked, it can be smaller than that.
     token_chunk_size: int
 
+class TransferSequenceGroup:
+    def __init__(
+        self,
+        seq_group: SequenceGroup,
+        num_transfer_workers: int,
+        ) -> None:
+            self.seq_group = seq_group
+            self.num_transfer_workers = num_transfer_workers
+
 
 class SchedulerOutputs:
 
@@ -126,6 +135,7 @@ class Scheduler:
         cache_config: CacheConfig,
         deploy_config: DeployConfig, 
         lora_config: Optional[LoRAConfig],
+        tensor_parallel_size: Optional[int],
     ) -> None:
         self.scheduler_config = scheduler_config
         self.cache_config = cache_config
@@ -178,13 +188,24 @@ class Scheduler:
         self.send_finished_req_ids: List[str] = []
         self.recv_finished_req_ids: List[str] = []
         
-        self.send_transfering: Dict[str, SequenceGroup] = {}
+        if not deploy_config.enable_layer:
+            self.send_transfering: Dict[str, SequenceGroup] = {}
+        else:
+            self.send_transfering: Dict[str, TransferSequenceGroup] = {}
+            
         self.recv_transfering: Dict[str, SequenceGroup] = {}
         
         self.req_pull_send_transfering: Dict[str, int] = {}
 
-        self.num_workers: int = 0
-
+        self.num_workers: int = tensor_parallel_size
+        
+        #for layer data pass
+        self.enable_layer =  deploy_config.enable_layer
+        self.kv_prepared_seq_group: Dict[str, SequenceGroup] = {}
+        self.prompt_send_waiting: Deque[SequenceGroup] = deque()
+        self.decode_recv_finished: Dict[str, SequenceGroup] = {}
+        self.meta_recv_finished: Dict[str, SequenceGroup] = {}
+        
     @property
     def lora_enabled(self) -> bool:
         return bool(self.lora_config)
@@ -203,8 +224,11 @@ class Scheduler:
     def add_send_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the send transfering map.
         print("add send transfering ", seq_group.request_id, time.time())
-        self.send_transfering[seq_group.request_id] = seq_group
-    
+        if not self.enable_layer:
+            self.send_transfering[seq_group.request_id] = seq_group
+        else:
+            self.send_transfering[seq_group.request_id] = TransferSequenceGroup(seq_group, self.num_workers)
+            
     #todo check free_seq
     #del_send_transfering: 分配block失败的时候删除
     def del_send_transfering(self, request_id: str) -> None:
@@ -300,7 +324,7 @@ class Scheduler:
         # Fix the current time.
         now = time.time()
         
-        self._check_tranfer_finished_req()
+        # self._check_tranfer_finished_req()
         
         # Join waiting sequences if possible.
         if not self.swapped:
@@ -731,31 +755,41 @@ class Scheduler:
 
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
+        finished_request_id = []
         for request_id in self.send_finished_req_ids[:]:
-            if request_id in self.req_pull_send_transfering:
-                del self.req_pull_send_transfering[request_id]
-                blocks = self.block_manager.req_pull_block_tables[request_id]
-                for block in blocks:
-                    block.ref_count = block.ref_count - 1
-                del self.block_manager.req_pull_block_tables[request_id]
+            if not self.enable_layer:
+                if request_id in self.req_pull_send_transfering:
+                    del self.req_pull_send_transfering[request_id]
+                    blocks = self.block_manager.req_pull_block_tables[request_id]
+                    for block in blocks:
+                        block.ref_count = block.ref_count - 1
+                    del self.block_manager.req_pull_block_tables[request_id]
+                    self.send_finished_req_ids.remove(request_id)
+                    continue
+                
+                seq_group = self.send_transfering[request_id]
+                seq = seq_group.get_seqs()[0]
+                del self.send_transfering[request_id]
                 self.send_finished_req_ids.remove(request_id)
-                continue
-            
-            seq_group = self.send_transfering[request_id]
-            seq = seq_group.get_seqs()[0]
-            del self.send_transfering[request_id]
-            self.send_finished_req_ids.remove(request_id)
-            
+            else:
+                trans_seq_group = self.send_transfering[request_id] 
+                trans_seq_group.num_transfer_workers = trans_seq_group.num_transfer_workers - 1
+                if trans_seq_group.num_transfer_workers == 0:
+                    finished_request_id.append(request_id)
+                    seq_group = self.send_transfering[request_id].seq_group
+                    seq = seq_group.get_seqs()[0]
+                    self.free_seq(seq)
+                    del self.send_transfering[request_id]
+                self.send_finished_req_ids.remove(request_id)
             #should free 
             # block_table = self.block_manager.block_tables[seq.seq_id]
             if self.block_manager.enable_radix_caching:
-                # for bkt in block_table:
-                #     self.block_manager.gpu_allocator.free_radix_cache(bkt)
                 for seq in seq_group.get_seqs():
                     self.block_manager.free(seq)    
                 del self.block_manager.block_tables[seq.seq_id]
             else:
-                self.free_seq(seq)
+                if not self.enable_layer:
+                    self.free_seq(seq)
             
         for request_id in self.recv_finished_req_ids[:]:
             seq_group = self.recv_transfering[request_id]
@@ -779,6 +813,5 @@ class Scheduler:
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
-            
-            
+        return finished_request_id
 
