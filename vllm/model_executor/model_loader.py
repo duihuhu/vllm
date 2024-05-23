@@ -52,7 +52,7 @@ def get_model(model_config: ModelConfig, device_config: DeviceConfig,
     lora_config = kwargs.get("lora_config", None)
     vision_language_config = kwargs.get("vision_language_config", None)
     model_class = _get_model_architecture(model_config)[0]
-
+    print("model class ", model_class)
     # Get the (maybe quantized) linear method.
     linear_method = None
     if model_config.quantization is not None:
