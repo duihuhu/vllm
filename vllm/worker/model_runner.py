@@ -675,6 +675,7 @@ class ModelRunner:
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
+                "blocks_to_send_remote": None,
             }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
