@@ -268,7 +268,7 @@ class SendKvTransferScheduler:
         return scheduled_transfer_tasks
     
     def schedule(self) -> List[TransferTask]:
-        return self._get_task_for_send_blocks
+        return self._get_task_for_send_blocks()
     
     def _process_send_blocks_finished(
         self,
