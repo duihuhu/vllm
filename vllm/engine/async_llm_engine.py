@@ -567,7 +567,7 @@ class AsyncLLMEngine:
         self.start_engine_loop = start_engine_loop
         self._request_tracker: Optional[RequestTracker] = None
         self._errored_with: Optional[BaseException] = None
-
+        self.engine_time = 0
     @classmethod
     def from_engine_args(
         cls,
@@ -727,9 +727,11 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
         else:
-            # t2 = time.time()
+            t2 = time.time()
             await self.engine.trans_kv_step_aysnc()
-            # t3 = time.time()
+            t3 = time.time()
+            self.engine_time = self.engine_time + t3 - t2
+            print("engine step ",  self.engine_time, t3 - t2)
             request_outputs = await self.engine.step_async(self._request_tracker)
             # t4 = time.time()
             # print("engine step ", t4-t1, t4-t3, t3-t2, t2-t1)
