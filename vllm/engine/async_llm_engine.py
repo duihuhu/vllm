@@ -503,6 +503,8 @@ class _AsyncLLMEngine(LLMEngine):
         #     # get_all_outputs=True
         # )
         
+        print("send_finished_tasks ", send_finished_tasks)
+        print("recv_finished_tasks ", recv_finished_tasks)
         for worker_finished_tasks in send_finished_tasks:
             real_send_finished_req_ids, real_recv_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
             if real_send_finished_req_ids:
