@@ -45,8 +45,8 @@ using namespace at;
 } while(0)
 
 ncclComm_t g_globalNcclComm = nullptr;
-int index_time = 0;
-int send_time = 0;
+long long index_time = 0;
+long long send_time = 0;
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 32) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
