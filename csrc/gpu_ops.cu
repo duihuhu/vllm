@@ -259,10 +259,10 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
 
         for (int j = 0; j < srcBlocks.size(); j++) {
             int blockIdx = srcBlocks[j];
-            int start_time = std::chrono::steady_clock::now();
+            auto start_time = std::chrono::steady_clock::now();
             void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
-            int end_time = std::chrono::steady_clock::now();
+            auto end_time = std::chrono::steady_clock::now();
             index_time = index_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
             start_time = std::chrono::steady_clock::now();
             // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
