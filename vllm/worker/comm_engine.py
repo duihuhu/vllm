@@ -138,10 +138,6 @@ class CommEngine:
 
         for channel, num_finished_events in recv_finished_events:
             while num_finished_events != 0:
-                self.recv_events[channel].pop(0)
-                num_finished_events -= 1
-        for channel, num_finished_events in recv_finished_events:
-            while num_finished_events != 0:
                 print("finishd  check_recv_finished_events ", channel)
                 self.recv_events[channel].pop(0)
                 num_finished_events -= 1

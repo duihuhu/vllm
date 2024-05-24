@@ -518,7 +518,8 @@ class _AsyncLLMEngine(LLMEngine):
         if send_tasks or recv_tasks:
             await self.model_executor._run_workers_async(
                 "trans_blocks",
-                (send_tasks, recv_tasks)
+                send_tasks=send_tasks,
+                recv_tasks=recv_tasks
             )
 
 class AsyncLLMEngine:
