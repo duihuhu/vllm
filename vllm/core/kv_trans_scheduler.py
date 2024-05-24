@@ -218,7 +218,8 @@ class KvTransScheduler:
     
 class SendKvTransferScheduler:
     def __init__(self,
-                 num_workers) -> None:
+                 num_workers,
+                 enable_layer) -> None:
         self.channel_request_ids: Dict[str, List[PriorityRequest]] = {}
         
         self.finished_worker_count: Dict[str, int]  = {}
@@ -228,6 +229,8 @@ class SendKvTransferScheduler:
         self.opposite_ranks = list(range(num_workers, num_workers * 2))
         
         self.channel_transfer_tag: Dict[str, int] = {}
+        
+        self.enable_layer = enable_layer
     
     def add_kv_request(
         self,
@@ -289,7 +292,8 @@ class SendKvTransferScheduler:
     
 class RecvKvTransScheduler:
     def __init__(self,
-                num_workers) -> None:
+                num_workers,
+                enable_layer) -> None:
         self.channel_request_ids: Dict[str, List[str]] = {}
         
         self.finished_worker_count: Dict[str, int]  = {}
@@ -299,7 +303,7 @@ class RecvKvTransScheduler:
         self.opposite_ranks = list(range(0, num_workers * 2))
         
         self.channel_transfer_tag: Dict[str, int] = {}
-
+        self.enable_layer = enable_layer
     def add_kv_request(
         self,
         request_id: str,
