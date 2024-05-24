@@ -316,6 +316,7 @@ class _AsyncLLMEngine(LLMEngine):
         meta_recv_finished_id = []
         for request_id, seq_group in self.scheduler.meta_recv_finished.items():
             if request_id in self.scheduler.decode_recv_finished:
+                print("check_deocde_recv_meta running " , time.time())
                 self.scheduler.running.append(seq_group)
                 self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 meta_recv_finished_id.append(request_id)
