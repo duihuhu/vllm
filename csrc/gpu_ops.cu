@@ -49,6 +49,7 @@ ncclComm_t g_globalNcclComm = nullptr;
 long long index_time = 0;
 long long send_time = 0;
 long long nccl_time = 0;
+long long nccl_num = 0;
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 32) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
@@ -252,11 +253,12 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
     auto end_time = std::chrono::steady_clock::now();
     int layerNum = srcCaches.size();
 
+    nccl_num = nccl_num + layerNum * srcBlocks.size();
     // int deviceId = 0;
     // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    // NCCLCHECK(ncclGroupStart());
+    NCCLCHECK(ncclGroupStart());
     for (int i=0; i < layerNum; i++) {
         at::Tensor srcKeyCache = srcCaches[i].first;
         at::Tensor srcValueCache = srcCaches[i].second;
@@ -285,10 +287,11 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             nccl_time = nccl_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
         }
     }
-    // NCCLCHECK(ncclGroupEnd());
+    NCCLCHECK(ncclGroupEnd());
     end_time = std::chrono::steady_clock::now();
     send_time = send_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - init_start_time).count();
     std::cout << "send blocks time " << "  " << index_time << " " << nccl_time << " "  << send_time <<std::endl;
+    std::cout << "nccl num " << nccl_num <<std::endl;
 }
 
 void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
@@ -298,13 +301,14 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     auto start_time = std::chrono::steady_clock::now();
     auto end_time = std::chrono::steady_clock::now();
     int layerNum = dstCaches.size();
+    nccl_num = nccl_num + layerNum * srcBlocks.size();
 
     // int deviceId = 0;
     // cudaGetDevice(&deviceId);
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
     auto cudaStream = gpuStream.stream();
-    // NCCLCHECK(ncclGroupStart());
+    NCCLCHECK(ncclGroupStart());
 
     for (int i=0; i < layerNum; i++) {
         at::Tensor dstKeyCache = dstCaches[i].first;
@@ -334,10 +338,11 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             nccl_time = nccl_time + std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
         }
     }
-    // NCCLCHECK(ncclGroupEnd());
+    NCCLCHECK(ncclGroupEnd());
     end_time = std::chrono::steady_clock::now();
     send_time = send_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - init_start_time).count();
     std::cout << "send blocks time " << "  " << index_time << " " << nccl_time << " "  << send_time <<std::endl;
+    std::cout << "send nccl num " << nccl_num <<std::endl;
 
 }
 
