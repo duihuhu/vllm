@@ -298,11 +298,11 @@ class Worker:
         self,
         task: Tuple[List[TransferTask], List[TransferTask]]
     ) -> None:
+        print("task ", task, type(task))
         send_tasks = task[0]
         for task in send_tasks:
             task_meta = task.meta
             self.common_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
-            
         recv_tasks = task[1]
         for task in recv_tasks:
             task_meta = task.meta

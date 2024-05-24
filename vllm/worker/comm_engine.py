@@ -79,7 +79,7 @@ class CommEngine:
             event = torch.cuda.Event()
             event.record()
         if channel not in self.recv_events:
-            self.recv_events[channel] = (request_id, event)
+            self.recv_events[channel] = [(request_id, event)]
         else:
             self.recv_events[channel].append((request_id, event))
 
@@ -124,7 +124,7 @@ class CommEngine:
     
     def check_recv_finished_events(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta]]:
         #process recv events
-        recv_finished_events: List[str] = []
+        recv_finished_events:  List[Tuple[str, List[int]]] = []
         recv_blocks_finished: List[TransferTaskMeta] = []
         for channel, request_ids_and_events in self.recv_events.items():
             num_finished_events = 0
