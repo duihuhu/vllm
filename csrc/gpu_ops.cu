@@ -45,7 +45,8 @@ using namespace at;
 } while(0)
 
 ncclComm_t g_globalNcclComm = nullptr;
-
+int index_time = 0;
+int send_time = 0;
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 32) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
@@ -257,8 +258,12 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
 
         for (int j = 0; j < srcBlocks.size(); j++) {
             int blockIdx = srcBlocks[j];
+            int start_time = std::chrono::steady_clock::now();
             void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
+            int end_time = std::chrono::steady_clock::now();
+            index_time = index_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+            start_time = std::chrono::steady_clock::now();
             // std::cout << "start send key cache: " << srcKeyCachePtr << std::endl;
             if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
                 g_globalNcclComm, cudaStream)) {
@@ -271,10 +276,12 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
                 g_globalNcclComm, cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
+            end_time = std::chrono::steady_clock::now();
+            send_time = send_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
         }
     }
     NCCLCHECK(ncclGroupEnd());
-    // std::cout << "send blocks success" << std::endl;
+    std::cout << "send blocks time " << index_time  << "  "<< send_time <<std::endl;
 }
 
 void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
@@ -294,9 +301,13 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
         at::Tensor dstValueCache = dstCaches[i].second;
 
         for (int j = 0; j < dstBlocks.size(); j++) {
+            int start_time = std::chrono::steady_clock::now();
             int blockIdx = dstBlocks[j];
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
+            int end_time = std::chrono::steady_clock::now();
+            index_time = index_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
+            start_time = std::chrono::steady_clock::now();
             // std::cout << "start recv key cache: " << dstKeyCachePtr << std::endl;
             if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt, srcRank,\
                 g_globalNcclComm, cudaStream)) {
@@ -309,10 +320,13 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
                 g_globalNcclComm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
+            end_time = std::chrono::steady_clock::now();
+            send_time = send_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
         }
     }
     NCCLCHECK(ncclGroupEnd());
-    // std::cout << "recv blocks success" << std::endl;
+    std::cout << "recv blocks time " << index_time << "  "<< send_time <<std::endl;
+
 }
 
 void SendBlockOnLayer(uint64_t k_addr, uint64_t v_addr, uint32_t cacheSize, uint32_t destRank)
