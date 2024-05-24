@@ -73,9 +73,9 @@ class CommEngine:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         # print("recv_blocks ", len(src_blocks))
         # gpu_cache_addr = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache_addr]
-        
+        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         with torch.cuda.stream(self.recv_streams[channel]):
-            gpu_ops.RecvBlocksRemote(self.gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
+            gpu_ops.RecvBlocksRemote(gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
             event = torch.cuda.Event()
             event.record()
         if channel not in self.recv_events:
@@ -87,10 +87,10 @@ class CommEngine:
         if channel not in self.send_streams:
             self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         # print("send_blocks ", len(dst_blocks))
-        # gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         
         with torch.cuda.stream(self.send_streams[channel]):
-            gpu_ops.SendBlocksRemote(self.gpu_cache,  dst_blocks, self.cache_size_per_block, opposite_rank)
+            gpu_ops.SendBlocksRemote(gpu_cache,  dst_blocks, self.cache_size_per_block, opposite_rank)
             print("after send blocks ", channel, opposite_rank)
             event = torch.cuda.Event()
             event.record() 
