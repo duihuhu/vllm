@@ -120,7 +120,7 @@ class LLMEngine:
                                              device_config, deploy_config, lora_config,
                                              vision_language_config)
 
-        self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.tensor_parallel_size)
+        self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
         
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
