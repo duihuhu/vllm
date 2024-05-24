@@ -318,6 +318,15 @@ void SendBlockOnLayer(uint64_t k_addr, uint64_t v_addr, uint32_t cacheSize, uint
 {
     auto start = std::chrono::steady_clock::now();
 
+    // 获取当前时间点到 epoch 时间的 duration
+    auto duration = start.time_since_epoch();
+
+    // 将 duration 转换为秒，并包含小数部分
+    auto seconds = std::chrono::duration_cast<std::chrono::duration<double>>(duration).count();
+
+    // 打印时间戳，设置高精度
+    std::cout << "timestamp in sendblock on layer " << std::fixed << std::setprecision(6) << seconds << std::endl;
+
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
 
