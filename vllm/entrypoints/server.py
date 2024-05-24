@@ -188,9 +188,10 @@ async def generate_decode(request: Request) -> Response:
     async def stream_results() -> AsyncGenerator[bytes, None]:
         last_time = start_time
         #response to p
-        async for kv_response in results_generator:
-            yield (json.dumps(kv_response.__json__()) + "\0").encode("utf-8")
-            break
+        if not server.engine.engine.deploy_config.enable_layer:
+            async for kv_response in results_generator:
+                yield (json.dumps(kv_response.__json__()) + "\0").encode("utf-8")
+                break
         
         #response to decode
         async for request_output in results_generator:
