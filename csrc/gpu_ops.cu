@@ -11,6 +11,7 @@
 #include <cuda_runtime.h>
 #include <c10/cuda/CUDAStream.h>
 #include <sys/time.h>
+#include <chrono>
 
 using namespace torch::indexing;
 using namespace at; 
