@@ -6,7 +6,6 @@ from typing import (AsyncIterator, Callable, Dict, Iterable, List, Optional,
                     Set, Tuple, Type, Union)
 
 from transformers import PreTrainedTokenizer
-
 from vllm.config import ModelConfig
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.engine.llm_engine import LLMEngine
@@ -85,7 +84,7 @@ class AsyncStream:
 class RequestTracker:
     """Synchronous abstraction for tracking requests."""
 
-    def __init__(self) -> None:
+    def __init__(self, enable_layer) -> None:
         self._request_streams: Dict[str, AsyncStream] = {}
         self._finished_requests: asyncio.Queue[str] = asyncio.Queue()
         self._new_requests: asyncio.Queue[Tuple[AsyncStream,
@@ -99,6 +98,7 @@ class RequestTracker:
         self._kv_results_requests: asyncio.Queue[Tuple[AsyncStream,
                                     dict]] = asyncio.Queue()
 
+        self.enable_layer = enable_layer
     def __contains__(self, item):
         return item in self._request_streams
 
@@ -183,9 +183,10 @@ class RequestTracker:
                     **engine_add_request_kwargs) -> AsyncStream:
         """Add a request to be sent to the engine on the next background
         loop iteration."""
+        if request_id in self._request_streams and self.enable_layer:
+            return self._request_streams[request_id] 
         if request_id in self._request_streams:
             raise KeyError(f"Request {request_id} already exists.")
-
         stream = AsyncStream(request_id)
         self._new_requests.put_nowait((stream, {
             "request_id": request_id,
@@ -648,7 +649,7 @@ class AsyncLLMEngine:
         if self.is_running:
             raise RuntimeError("Background loop is already running.")
         # Initialize the RequestTracker here so it uses the right event loop.
-        self._request_tracker = RequestTracker()
+        self._request_tracker = RequestTracker(self.engine.deploy_config.enable_layer)
 
         self._background_loop_unshielded = asyncio.get_event_loop(
         ).create_task(self.run_engine_loop())
