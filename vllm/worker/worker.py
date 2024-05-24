@@ -192,7 +192,7 @@ class Worker:
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
 
-    def init_common_engine(self):
+    def init_comm_engine(self):
         self.common_engine = CommEngine(self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.gpu_cache)
         
     def warm_up_model(self) -> None:

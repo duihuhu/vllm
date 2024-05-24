@@ -66,6 +66,8 @@ class RayGPUExecutor(ExecutorBase):
         # Profile the memory usage and initialize the cache.
         self._init_cache()
 
+        self._init_comm_engine()
+        
         self.forward_dag = None
         if USE_RAY_COMPILED_DAG:
             self.forward_dag = self._compiled_ray_dag()
@@ -260,6 +262,9 @@ class RayGPUExecutor(ExecutorBase):
         # Warm up the model. This includes capturing the model into CUDA graph
         # if enforce_eager is False.
         self._run_workers("warm_up_model")
+
+    def _init_comm_engine(self) -> None:
+        self._run_workers("init_comm_engine")
 
     def execute_model(self,
                       seq_group_metadata_list: List[SequenceGroupMetadata],

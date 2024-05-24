@@ -171,6 +171,7 @@ class KvPreparedResponse:
             "error": self.error,
             "error_msg": self.error_msg,
             "computed_blocks": self.computed_blocks,
+            "transfer_tag": self.transfer_tag,
         }
 
 class VLLMLoadInfo:
