@@ -302,11 +302,11 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
         at::Tensor dstValueCache = dstCaches[i].second;
 
         for (int j = 0; j < dstBlocks.size(); j++) {
-            int start_time = std::chrono::steady_clock::now();
+            auto start_time = std::chrono::steady_clock::now();
             int blockIdx = dstBlocks[j];
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
-            int end_time = std::chrono::steady_clock::now();
+            auto end_time = std::chrono::steady_clock::now();
             index_time = index_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count();
             start_time = std::chrono::steady_clock::now();
             // std::cout << "start recv key cache: " << dstKeyCachePtr << std::endl;
