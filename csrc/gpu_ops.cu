@@ -301,7 +301,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
     auto start_time = std::chrono::steady_clock::now();
     auto end_time = std::chrono::steady_clock::now();
     int layerNum = dstCaches.size();
-    nccl_num = nccl_num + layerNum * srcBlocks.size();
+    nccl_num = nccl_num + layerNum * dstBlocks.size();
 
     // int deviceId = 0;
     // cudaGetDevice(&deviceId);
