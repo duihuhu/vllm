@@ -689,9 +689,10 @@ class ModelRunner:
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
                 cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1][cache_engine.worker_rank])
-        
+        t1 = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
-
+        t2 = time.time()
+        
         if blocks_to_send_remote:
             for request_id, block_info in blocks_to_send_remote.items():
                 channel = ""

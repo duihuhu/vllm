@@ -304,13 +304,12 @@ class LlamaModel(nn.Module):
             )
             if blocks_to_send_remote:
                 if blocks_to_send_remote[0]:
-                    print("blocks_to_send_remote ", blocks_to_send_remote)
                     t1 = time.time()
-                    print("start submit ", t1)
+                    # print("start submit ", t1)
                     self.send_layer_block(kv_caches[i], blocks_to_send_remote)
                     # self.executor.submit(self.send_layer_block, kv_caches[i], blocks_to_send_remote)
                     t2 = time.time()
-                    print("end submit time ", t2-t1, t2)
+                    # print("end submit time ", t2-t1, t2)
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
 
