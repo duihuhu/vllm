@@ -491,13 +491,8 @@ class _AsyncLLMEngine(LLMEngine):
             return 
         
         # print("trans_kv_step_aysnc ")
-        send_finished_tasks = await self.model_executor._run_workers_async(
-            "check_send_finished_transfer_task",
-            # get_all_outputs=True
-        )
-        
-        recv_finished_tasks = await self.model_executor._run_workers_async(
-            "check_recv_finished_transfer_task",
+        send_finished_tasks, recv_finished_tasks = await self.model_executor._run_workers_async(
+            "check_finished_transfer_task",
             # get_all_outputs=True
         )
         
@@ -513,17 +508,11 @@ class _AsyncLLMEngine(LLMEngine):
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
-        if send_tasks:
+        if send_tasks or recv_tasks:
             await self.model_executor._run_workers_async(
-                "send_blocks",
-                send_tasks
+                "trans_blocks",
+                (send_tasks, recv_tasks)
             )
-        
-        if recv_tasks:
-            await self.model_executor._run_workers_async(
-                "recv_blocks",
-                recv_tasks
-            ) 
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.

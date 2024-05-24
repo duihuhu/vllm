@@ -278,34 +278,7 @@ class Worker:
 
     def list_loras(self) -> Set[int]:
         return self.model_runner.list_loras()
-
-    def recv_request_id(
-        self,
-        task: TransferRequestIdTask
-    ) -> str:
-        self.cache_engine.recv_request_id(task.channel, task.opposite_ranks[self.rank])
     
-    def send_blocks(
-        self,
-        task: TransferBlocksTask
-    ) -> None:
-        task_meta = task.meta
-        self.cache_engine.send_blocks(task_meta.channel, task_meta.request_id,
-                                      task.blocks, task.opposite_ranks[self.rank])
-    
-    def recv_blocks(
-        self,
-        task: TransferBlocksTask
-    ) -> None:
-        task_meta = task.meta
-        self.cache_engine.recv_blocks(task_meta.channel, task_meta.request_id,
-                                      task.blocks, task.opposite_ranks[self.rank])
-        
-    def check_finished_transfer_task(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta], List[TransferTaskMeta]]:
-        send_blocks_finished = self.cache_engine.check_send_finished_events()
-        recv_request_id_finished, recv_blocks_finished = self.cache_engine.check_recv_finished_events()
-        return send_blocks_finished, recv_request_id_finished, recv_blocks_finished
-
     @property
     def max_model_len(self) -> int:
         return self.model_config.max_model_len
@@ -321,30 +294,25 @@ class Worker:
         return CacheEngine.get_cache_block_size(block_size, cache_dtype,
                                                 self.model_config,
                                                 self.parallel_config)
-
-    def prefill_send_blocks(
+    def trans_blocks(
         self,
-        tasks: List[TransferTask]
+        task: Tuple[List[TransferTask], List[TransferTask]]
     ) -> None:
-        for task in tasks:
+        send_tasks = task[0]
+        for task in send_tasks:
             task_meta = task.meta
             self.common_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
-
-    def decode_recv_blocks(
-        self,
-        tasks: List[TransferTask]
-    ) -> None:
-        for task in tasks:
+            
+        recv_tasks = task[1]
+        for task in recv_tasks:
             task_meta = task.meta
-            self.common_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])       
+            self.common_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
+
     
-    def check_send_finished_transfer_task(self) -> List[TransferTaskMeta]:
+    def check_finished_transfer_task(self) -> List[TransferTaskMeta]:
         send_blocks_finished = self.common_engine.check_send_finished_events()
-        return send_blocks_finished
-    
-    def check_recv_finished_transfer_task(self) -> List[TransferTaskMeta]:
-        recv_blocks_finished = self.common_engine.check_recv_finished_events()
-        return recv_blocks_finished   
+        recv_blocks_finished = self.common_engine.check_send_finished_events()
+        return send_blocks_finished, recv_blocks_finished
                 
 def init_distributed_environment(
     parallel_config: ParallelConfig,
