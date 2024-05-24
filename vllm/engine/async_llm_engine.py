@@ -504,12 +504,12 @@ class _AsyncLLMEngine(LLMEngine):
         # )
         
         for worker_finished_tasks in send_finished_tasks:
-            real_send_finished_req_ids, real_recv_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(worker_finished_tasks, None)
+            real_send_finished_req_ids, real_recv_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
             if real_send_finished_req_ids:
                 self.scheduler.add_send_finished(real_send_finished_req_ids)
 
         for worker_finished_tasks in recv_finished_tasks:
-            real_send_finished_req_ids, real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(None, worker_finished_tasks)
+            real_send_finished_req_ids, real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(worker_finished_tasks)
             if real_recv_finished_req_ids:
                 self.scheduler.add_recv_finished(real_recv_finished_req_ids)
 
