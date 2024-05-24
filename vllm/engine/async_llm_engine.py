@@ -491,6 +491,11 @@ class _AsyncLLMEngine(LLMEngine):
             return 
         
         # print("trans_kv_step_aysnc ")
+        finished_tasks = await self.model_executor._run_workers_async(
+            "check_finished_transfer_task",
+            # get_all_outputs=True
+        )
+        print("finished_tasks ", finished_tasks)
         send_finished_tasks, recv_finished_tasks = await self.model_executor._run_workers_async(
             "check_finished_transfer_task",
             # get_all_outputs=True
