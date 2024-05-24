@@ -794,10 +794,12 @@ class Scheduler:
         for request_id in self.recv_finished_req_ids[:]:
             seq_group = self.recv_transfering[request_id]
             if self.deploy_config.role == "decoder":
-                print("decoder append request to running ", seq_group.request_id, time.time())
-                self.running.append(seq_group)
-                self.block_manager.move_kv_blocks_meta(seq_group)
-                
+                if not self.enable_layer:
+                    print("decoder append request to running ", seq_group.request_id, time.time())
+                    self.running.append(seq_group)
+                    self.block_manager.move_kv_blocks_meta(seq_group)
+                else:
+                    self.decode_recv_finished[request_id] = seq_group
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
                     self.block_manager.move_kv_blocks_meta(seq_group)
