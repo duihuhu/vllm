@@ -31,7 +31,7 @@ import socket
 #no TransferRequestIdTask, TransferBlocksTask
 from vllm.core.kv_trans_scheduler import TransferTaskMeta,  TransferRequestIdTask, TransferBlocksTask, TransferTask
 from vllm.worker.comm_engine import CommEngine
-
+import time
 logger = init_logger(__name__)
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
@@ -91,7 +91,7 @@ class Worker:
         self.cache_engine = None
         self.gpu_cache = None
 
-
+        self.trans_blocks_time = 0
     def init_device(self) -> None:
         if self.device_config.device.type == "cuda":
             # torch.distributed.all_reduce does not free the input tensor until
@@ -299,12 +299,16 @@ class Worker:
         send_tasks: List[TransferTask],
         recv_tasks: List[TransferTask]
     ) -> None:
+        t1 = time.time()
         for task in send_tasks:
             task_meta = task.meta
             self.common_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
         for task in recv_tasks:
             task_meta = task.meta
             self.common_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
+        t2 = time.time()
+        self.trans_blocks_time = self.trans_blocks_time + t2 - t1
+        print("trans_blocks time ", self.trans_blocks_time)
 
     
     def check_finished_transfer_task(self) -> List[TransferTaskMeta]:
