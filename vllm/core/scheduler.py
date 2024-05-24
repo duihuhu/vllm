@@ -222,7 +222,7 @@ class Scheduler:
     
     def add_send_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the send transfering map.
-        print("add send transfering ", seq_group.request_id, time.time())
+        # print("add send transfering ", seq_group.request_id, time.time())
         if not self.enable_layer:
             self.send_transfering[seq_group.request_id] = seq_group
         else:

@@ -116,7 +116,7 @@ class CommEngine:
 
         for channel, num_finished_events in send_finished_events:
             while num_finished_events != 0:
-                print("finishd  check_send_finished_events ", channel)
+                # print("finishd  check_send_finished_events ", channel)
                 self.send_events[channel].pop(0)
                 num_finished_events -= 1
         

@@ -689,7 +689,7 @@ class ModelRunner:
                     else:
                         channel =  channel + "_" + str(block_info[1][i])
                 cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1][cache_engine.worker_rank])
-        t1 = time.time()
+        # t1 = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
 
         if blocks_to_send_remote:
@@ -712,8 +712,8 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-        t2 = time.time()
-        print("model_executable time ", t2, t2-t1)
+        # t2 = time.time()
+        # print("model_executable time ", t2, t2-t1)
         return output
 
     @torch.inference_mode()
