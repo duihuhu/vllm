@@ -495,8 +495,9 @@ class _AsyncLLMEngine(LLMEngine):
             "check_finished_transfer_task",
             get_all_outputs=True
         )
-        send_finished_tasks = finished_tasks[0][0]
-        recv_finished_tasks = finished_tasks[0][1]
+        print("finished_tasks ", finished_tasks)
+        send_finished_tasks = finished_tasks[0]
+        recv_finished_tasks = finished_tasks[1]
 
         # send_finished_tasks, recv_finished_tasks = await self.model_executor._run_workers_async(
         #     "check_finished_transfer_task",
