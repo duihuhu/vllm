@@ -258,7 +258,7 @@ class SendKvTransferScheduler:
                     request_id = request[1]
                     scheduled_transfer_tasks.append(TransferTask(
                         meta=TransferTaskMeta(channel, request_id),
-                        opposite_rank=self.opposite_ranks,
+                        opposite_ranks=self.opposite_ranks,
                         blocks=self.block_ids[request_id]
                     ))
                     self.channel_transfer_tag[channel] += 1
@@ -328,7 +328,7 @@ class RecvKvTransScheduler:
                 request_id = request_ids.pop(0)
                 scheduled_transfer_tasks.append(TransferTask(
                     meta=TransferTaskMeta(channel, request_id),
-                    opposite_rank=self.opposite_ranks,
+                    opposite_ranks=self.opposite_ranks,
                     blocks=self.block_ids[request_id]
                 ))
         return scheduled_transfer_tasks 
