@@ -15,11 +15,11 @@ class TransferTask:
     def __init__(
         self,
         meta: TransferTaskMeta,
-        opposite_rank: List[int],
+        opposite_ranks: List[int],
         blocks: List[int]
     ):
         self.meta = meta
-        self.opposite_rank = opposite_rank
+        self.opposite_ranks = opposite_ranks
         self.blocks = blocks
         
 PriorityRequest = Tuple[int, int ]       
