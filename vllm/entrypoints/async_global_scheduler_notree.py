@@ -183,7 +183,7 @@ async def add_request(request: Request) -> Response:
                 async for resp in decode_response:
                     resp = resp.decode('utf-8')
                     resp = json.loads(resp)
-                    if n ==0:
+                    if n ==0 and not args.enable_layer:
                         kv_prepared = await asyc_forward_request_resp(resp, cfg.forward_eprefill_res_url % 
                                                     (eprefill_host, eprefill_port))  
                     else:
@@ -219,6 +219,8 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
     parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
     parser.add_argument("--enable-separate",  action="store_true")
+    parser.add_argument("--enable-layer",  action="store_true")
+
     args = parser.parse_args()
     if args.tokenizer is None:
         args.tokenizer = args.model
