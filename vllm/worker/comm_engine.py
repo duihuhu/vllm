@@ -12,7 +12,7 @@ from vllm.utils import STR_DTYPE_TO_TORCH_DTYPE, is_pin_memory_available
 from vllm._C import gpu_ops
 
 from vllm.core.kv_trans_scheduler import TransferTaskMeta
-
+import time
 logger = init_logger(__name__)
 
 class CommEngine:
@@ -67,13 +67,17 @@ class CommEngine:
         self.recv_streams: Dict[str, torch.cuda.Stream] = {}
         self.recv_events: Dict[str, Tuple[str, torch.cuda.Event]] = {}
         
+        self.cache_time = 0 
+        self.tran_pass_time = 0
         # self.comm_handles: Dict = {}
     def recv_blocks(self, channel: str, request_id: str, src_blocks: List[int], opposite_rank: int) -> None:      
+        t1 = time.time()
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         # print("recv_blocks ", len(src_blocks))
         # gpu_cache_addr = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache_addr]
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+        t2 = time.time()
         with torch.cuda.stream(self.recv_streams[channel]):
             gpu_ops.RecvBlocksRemote(gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
             event = torch.cuda.Event()
@@ -82,13 +86,17 @@ class CommEngine:
             self.recv_events[channel] = [(request_id, event)]
         else:
             self.recv_events[channel].append((request_id, event))
-
+        t3 = time.time()
+        self.cache_time = self.cache_time + t2 - t1
+        self.tran_pass_time = self.tran_pass_time + t3 - t2
+        print(" recv_blocks cache time, tran_pass_time ", self.cache_time, self.tran_pass_time)
     def send_blocks(self, channel: str, request_id: str, dst_blocks: List[int], opposite_rank: int) -> str: 
+        t1 = time.time()
         if channel not in self.send_streams:
             self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         # print("send_blocks ", len(dst_blocks))
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        
+        t2 = time.time()
         with torch.cuda.stream(self.send_streams[channel]):
             gpu_ops.SendBlocksRemote(gpu_cache,  dst_blocks, self.cache_size_per_block, opposite_rank)
             # print("after send blocks ", channel, opposite_rank)
@@ -98,7 +106,10 @@ class CommEngine:
             self.send_events[channel] = [(request_id, event)]
         else:
             self.send_events[channel].append((request_id, event))
-
+        t3 = time.time()
+        self.cache_time = self.cache_time + t2 - t1
+        self.tran_pass_time = self.tran_pass_time + t3 - t2
+        print(" send_blocks cache time, tran_pass_time ", self.cache_time, self.tran_pass_time)
     #todo Tuple
     def check_send_finished_events(self) -> List[TransferTaskMeta]:
         #process send events
