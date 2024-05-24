@@ -713,7 +713,7 @@ class ModelRunner:
             sampling_metadata=sampling_metadata,
         )
         t2 = time.time()
-        print("model_executable time ", t2-t1)
+        print("model_executable time ", t2, t2-t1)
         return output
 
     @torch.inference_mode()
