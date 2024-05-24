@@ -310,8 +310,6 @@ class Worker:
     def check_finished_transfer_task(self) -> List[TransferTaskMeta]:
         send_blocks_finished = self.common_engine.check_send_finished_events()
         recv_blocks_finished = self.common_engine.check_recv_finished_events()
-        print("send_blocks_finished ", send_blocks_finished)
-        print("recv_blocks_finished ", recv_blocks_finished)
         return send_blocks_finished, recv_blocks_finished
                 
 def init_distributed_environment(
