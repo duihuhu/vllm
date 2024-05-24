@@ -259,6 +259,8 @@ class LlamaModel(nn.Module):
         cache_engine :CacheEngine =  blocks_to_send_remote[1]
         k_cache = kv_caches[0]
         v_cache = kv_caches[1]
+        t1 = time.time()
+        print("start in SendBlockOnLayer ", t1)
         for request_id, block_info in use_blocks_to_send_remote.items():
             channel = ""
             for i in range(len(block_info[1])):
@@ -270,11 +272,9 @@ class LlamaModel(nn.Module):
                 for block_num in block_info[-1]:
                     k_addr = k_cache[block_num].data_ptr()
                     v_addr = v_cache[block_num].data_ptr()
-                    t1 = time.time()
-                    print("start in SendBlockOnLayer ", t1)
                     gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][cache_engine.worker_rank])
-                    t2 = time.time()
-                    print("end in SendBlockOnLayer ", t2, t2-t1)
+        t2 = time.time()
+        print("end in SendBlockOnLayer ", t2, t2-t1)
 
     def forward(
         self,
