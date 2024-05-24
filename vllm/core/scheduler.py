@@ -202,7 +202,6 @@ class Scheduler:
         #for layer data pass
         self.enable_layer =  deploy_config.enable_layer
         self.kv_prepared_seq_group: Dict[str, SequenceGroup] = {}
-        self.prompt_send_waiting: Deque[SequenceGroup] = deque()
         self.decode_recv_finished: Dict[str, SequenceGroup] = {}
         self.meta_recv_finished: Dict[str, SequenceGroup] = {}
         

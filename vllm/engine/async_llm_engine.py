@@ -426,12 +426,10 @@ class _AsyncLLMEngine(LLMEngine):
                     self.scheduler.add_send_transfering(seq_group)
         else:
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
-                self.scheduler.fetch_prefilled_seq_groups()
-                while self.scheduler.prompt_send_waiting:
-                    seq_group = self.scheduler.prompt_send_waiting[0]
+                prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
+                for seq_group in prefilled_seq_groups:
                     seq = seq_group.get_seqs()[0]
                     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
-                    self.scheduler.prompt_send_waiting.popleft()
 
         return processed_outputs
 
@@ -766,7 +764,6 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.recv_transfering and
                 not self.engine.scheduler.send_transfering and
                 not self.engine.scheduler.req_pull_send_transfering and
-                not self.engine.scheduler.prompt_send_waiting and 
                 not self.engine.scheduler.decode_recv_finished and
                 not self.engine.scheduler.meta_recv_finished and
                 not self.engine.scheduler.kv_prepared_seq_group):
