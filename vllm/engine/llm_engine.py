@@ -25,7 +25,7 @@ from vllm.transformers_utils.tokenizer_group import (BaseTokenizerGroup,
 from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter
-from vllm.core.kv_trans_scheduler import KvTransScheduler
+from vllm.core.kv_trans_scheduler import KvTransScheduler, SendKvTransferScheduler, RecvKvTransScheduler
 from vllm.entrypoints.comm import CacheMeta
 from vllm.core.interfaces import AllocStatus
 
@@ -120,8 +120,9 @@ class LLMEngine:
                                              device_config, deploy_config, lora_config,
                                              vision_language_config)
 
-        self.kv_trans_scheduler = KvTransScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
+        self.send_kv_trans_scheduler = SendKvTransferScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
         
+        self.recv_kv_trans_scheduler = RecvKvTransScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
             usage_message.report_usage(
@@ -312,7 +313,7 @@ class LLMEngine:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         if len(blocks) > response.computed_blocks:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
-            self.kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], True)
+            self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
         else:
             self.scheduler.del_send_transfering(request_id)
 
@@ -442,17 +443,19 @@ class LLMEngine:
                 # if not phy_blocks:
                 #     kv_response = KvPreparedResponse(seq_group.request_id, -1, "opp device has not enough memory", 0)
                 # else:
-                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
+                
+                # kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
                 if blocks:
                     # if seq_group.request_id in self.scheduler.recv_transfering:
                     print("test for vllm d allocate seq request id ", seq_group.request_id, time.time())
                     self.scheduler.add_recv_transfering(seq_group)
-                    self.kv_trans_scheduler.add_kv_request(seq_group.request_id,
-                                                                prefill_request_output.global_ranks, blocks, False)
+                    transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id,
+                                                                prefill_request_output.global_ranks, blocks)
+                    kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), transfer_tag))
                 else:
                     self.scheduler.running.append(seq_group)
                     self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
-                kv_responses.append(kv_response)
+
             else:
                 break
         return kv_responses

@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 from enum import Enum
 import threading
-
+import heapq
 class TransferTaskMeta:
     def __init__(
         self,
@@ -10,7 +10,20 @@ class TransferTaskMeta:
     ) -> None:
         self.channel = channel
         self.request_id = request_id
+
+class TransferTask:
+    def __init__(
+        self,
+        meta: TransferTaskMeta,
+        opposite_rank: List[int],
+        blocks: List[int]
+    ):
+        self.meta = meta
+        self.opposite_rank = opposite_rank
+        self.blocks = blocks
         
+PriorityRequest = Tuple[int, int ]       
+ 
 class TransferRequestIdTask:
     def __init__(
         self,
@@ -197,10 +210,145 @@ class KvTransScheduler:
     def add_finished_tasks(
         self,
         send_blocks_finished: List[TransferTaskMeta],
-        recv_request_id_finished: List[TransferTaskMeta],
         recv_blocks_finished: List[TransferTaskMeta]
     ) -> Tuple[List[str], List[str]]:
         real_send_finished_req_ids = self._process_send_blocks_finished(send_blocks_finished)
-        self._process_recv_request_id_finished(recv_request_id_finished)
         real_recv_finished_req_ids = self._process_recv_blocks_finished(recv_blocks_finished)
         return real_send_finished_req_ids, real_recv_finished_req_ids
+    
+class SendKvTransferScheduler:
+    def __init__(self,
+                 num_workers) -> None:
+        self.channel_request_ids: Dict[str, List[PriorityRequest]] = {}
+        
+        self.finished_worker_count: Dict[str, int]  = {}
+        self.block_ids: Dict[str, List[int]] = {}
+        self.num_workers = num_workers
+        
+        self.opposite_ranks = list(range(num_workers, num_workers * 2))
+        
+        self.channel_transfer_tag: Dict[str, int] = {}
+    
+    def add_kv_request(
+        self,
+        request_id: str,
+        global_ranks: List[int],
+        blocks: List[int],
+        transfer_tag: int
+    ) -> None:
+        channel = "_".join([str(rank) for rank in global_ranks])
+        self.block_ids[request_id] = blocks
+        self.finished_worker_count[request_id] = self.num_workers
+        if channel not in self.channel_request_ids:
+            self.channel_request_ids[channel] = []
+            self.channel_transfer_tag[channel] = 0
+        heapq.heappush(self.channel_request_ids[channel], (transfer_tag, request_id))
+    
+
+    def _get_task_for_send_blocks(self) -> List[TransferTask]:
+        scheduled_transfer_tasks: List[TransferTask] = []
+        for channel, priority_request in self.channel_request_ids.items():
+            while priority_request:
+                head_req_tag = priority_request[0][0]
+                if head_req_tag == self.channel_transfer_tag[channel]:
+                    request: PriorityRequest = heapq.heappop(priority_request)
+                    request_id = request[1]
+                    scheduled_transfer_tasks.append(TransferTask(
+                        meta=TransferTaskMeta(channel, request_id),
+                        opposite_rank=self.opposite_ranks,
+                        blocks=self.block_ids[request_id]
+                    ))
+                    self.channel_transfer_tag[channel] += 1
+                else:
+                    break
+        
+        return scheduled_transfer_tasks
+    
+    def schedule(self) -> List[TransferTask]:
+        return self._get_task_for_send_blocks
+    
+    def _process_send_blocks_finished(
+        self,
+        send_finished_taks: List[TransferTaskMeta]
+    ) -> List[str]:
+        real_finished_req_ids = []
+        for task_meta in send_finished_taks:
+            self.finished_worker_count[task_meta.request_id] -=1
+            if self.finished_worker_count[task_meta.request_id] == 0:
+                del self.block_ids[task_meta.request_id]
+                del self.finished_worker_count[task_meta.request_id]
+                real_finished_req_ids.append(task_meta.request_id)
+                
+        return real_finished_req_ids
+    
+    def add_finished_tasks(
+        self,
+        send_finished_tasks: List[TransferTaskMeta],
+    ) -> List[str]:
+        return self._process_send_blocks_finished(send_finished_tasks)
+    
+class RecvKvTransScheduler:
+    def __init__(self,
+                num_workers) -> None:
+        self.channel_request_ids: Dict[str, List[str]] = {}
+        
+        self.finished_worker_count: Dict[str, int]  = {}
+        self.block_ids: Dict[str, List[int]] = {}
+        self.num_workers = num_workers
+        
+        self.opposite_ranks = list(range(0, num_workers * 2))
+        
+        self.channel_transfer_tag: Dict[str, int] = {}
+
+    def add_kv_request(
+        self,
+        request_id: str,
+        global_ranks: List[int],
+        blocks: List[int],
+    ) -> None:
+        channel = "_".join([str(rank) for rank in global_ranks])
+        self.block_ids[request_id] = blocks
+        self.finished_worker_count[request_id] = self.num_workers
+        if channel not in self.channel_request_ids:
+            self.channel_request_ids[channel] = []
+            self.channel_transfer_tag[channel] = 0
+        self.channel_request_ids[channel].append(request_id)
+        current_transfer_tag = self.channel_transfer_tag[channel]
+        self.channel_transfer_tag[channel] += 1
+        return current_transfer_tag
+    
+    def _get_task_for_recv_blocks(self) -> List[TransferTask]:
+        scheduled_transfer_tasks: List[TransferTask] = []
+        for channel, request_ids in self.channel_request_ids.items():
+            while request_ids:
+                request_id = request_ids.pop(0)
+                scheduled_transfer_tasks.append(TransferTask(
+                    meta=TransferTaskMeta(channel, request_id),
+                    opposite_rank=self.opposite_ranks,
+                    blocks=self.block_ids[request_id]
+                ))
+        return scheduled_transfer_tasks 
+
+    def schedule(self) -> List[TransferTask]:
+        return self._get_task_for_recv_blocks()
+    
+
+    def _process_recv_blocks_finished(
+        self,
+        recv_finished_taks: List[TransferTaskMeta]
+    ) -> List[str]:
+        real_finished_req_ids = []
+        for task_meta in recv_finished_taks:
+            self.finished_worker_count[task_meta.request_id] -=1
+            if self.finished_worker_count[task_meta.request_id] == 0:
+                del self.block_ids[task_meta.request_id]
+                del self.finished_worker_count[task_meta.request_id]
+                real_finished_req_ids.append(task_meta.request_id)
+                
+        return real_finished_req_ids
+    
+    def add_finished_tasks(
+        self,
+        recv_finished_tasks: List[TransferTaskMeta],
+    ) -> List[str]:
+        return self._process_recv_blocks_finished(recv_finished_tasks)

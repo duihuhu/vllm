@@ -28,7 +28,9 @@ from vllm.logger import init_logger
 import ray
 import json
 import socket
-from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferRequestIdTask, TransferBlocksTask
+#no TransferRequestIdTask, TransferBlocksTask
+from vllm.core.kv_trans_scheduler import TransferTaskMeta,  TransferRequestIdTask, TransferBlocksTask, TransferTask
+from vllm.worker.comm_engine import CommEngine
 
 logger = init_logger(__name__)
 class Worker:
@@ -190,6 +192,9 @@ class Worker:
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
 
+    def init_common_engine(self):
+        self.common_engine = CommEngine(self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.gpu_cache)
+        
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
             self.model_runner.capture_model(self.gpu_cache)
@@ -317,7 +322,30 @@ class Worker:
                                                 self.model_config,
                                                 self.parallel_config)
 
+    def prefill_send_blocks(
+        self,
+        tasks: List[TransferTask]
+    ) -> None:
+        for task in tasks:
+            task_meta = task.meta
+            self.common_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
 
+    def decode_recv_blocks(
+        self,
+        tasks: List[TransferTask]
+    ) -> None:
+        for task in tasks:
+            task_meta = task.meta
+            self.common_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])       
+    
+    def check_send_finished_transfer_task(self) -> List[TransferTaskMeta]:
+        send_blocks_finished = self.common_engine.check_send_finished_events()
+        return send_blocks_finished
+    
+    def check_recv_finished_transfer_task(self) -> List[TransferTaskMeta]:
+        recv_blocks_finished = self.common_engine.check_recv_finished_events()
+        return recv_blocks_finished   
+                
 def init_distributed_environment(
     parallel_config: ParallelConfig,
     rank: int,
@@ -385,3 +413,4 @@ def _check_if_gpu_supports_dtype(torch_dtype: torch.dtype):
                 f"{compute_capability[0]}.{compute_capability[1]}. "
                 "You can use float16 instead by explicitly setting the"
                 "`dtype` flag in CLI, for example: --dtype=half.")
+

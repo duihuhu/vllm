@@ -304,7 +304,7 @@ class _AsyncLLMEngine(LLMEngine):
         else:
             self.scheduler.add_recv_transfering(seq_group)
             phy_blocks_num = [phy_block.block_number for phy_block in phy_blocks]
-            self.kv_trans_scheduler.add_kv_request(seq_group.request_id, seq_group.cache_meta.cmeta_ranks, 
+            self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id, seq_group.cache_meta.cmeta_ranks, 
                                                     phy_blocks_num[len(computed_blocks
                                                                        ): resp_cached_len], False)
             pull_response = await self._pull_cache_signal(seq_group.cache_meta, seq_group.request_id, seq_group.prompt_token_ids)
@@ -491,36 +491,39 @@ class _AsyncLLMEngine(LLMEngine):
             return 
         
         # print("trans_kv_step_aysnc ")
-        finished_tasks = await self.model_executor._run_workers_async(
-            "check_finished_transfer_task",
+        send_finished_tasks = await self.model_executor._run_workers_async(
+            "check_send_finished_transfer_task",
             # get_all_outputs=True
         )
         
-        for worker_finished_tasks in finished_tasks:
-            real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
+        recv_finished_tasks = await self.model_executor._run_workers_async(
+            "check_recv_finished_transfer_task",
+            # get_all_outputs=True
+        )
+        
+        for worker_finished_tasks in send_finished_tasks:
+            real_send_finished_req_ids, real_recv_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(worker_finished_tasks, None)
             if real_send_finished_req_ids:
                 self.scheduler.add_send_finished(real_send_finished_req_ids)
+
+        for worker_finished_tasks in recv_finished_tasks:
+            real_send_finished_req_ids, real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(None, worker_finished_tasks)
             if real_recv_finished_req_ids:
                 self.scheduler.add_recv_finished(real_recv_finished_req_ids)
-                
-        scheduler_outputs = self.kv_trans_scheduler.schedule()
-        if scheduler_outputs.task_for_send_blocks:
+
+        send_tasks = self.send_kv_trans_scheduler.schedule()
+        recv_tasks = self.recv_kv_trans_scheduler.schedule()
+        if send_tasks:
             await self.model_executor._run_workers_async(
                 "send_blocks",
-                scheduler_outputs.task_for_send_blocks
+                send_tasks
             )
-            
-        if scheduler_outputs.task_for_recv_request_id:
-            await self.model_executor._run_workers_async(
-                "recv_request_id",
-                scheduler_outputs.task_for_recv_request_id
-            )
-            
-        if scheduler_outputs.task_for_recv_blocks:
+        
+        if recv_tasks:
             await self.model_executor._run_workers_async(
                 "recv_blocks",
-                scheduler_outputs.task_for_recv_blocks
-            )
+                recv_tasks
+            ) 
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.

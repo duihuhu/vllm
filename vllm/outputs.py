@@ -155,12 +155,14 @@ class KvPreparedResponse:
         error: int,
         error_msg: str,
         computed_blocks: int,
+        transfer_tag: str
     ) -> None:
         self.request_id = request_id
         self.error = error
         self.error_msg = error_msg
         self.computed_blocks = computed_blocks
         self.global_ranks = None
+        self.transfer_tag = transfer_tag
         
     def __json__(self) -> Dict:
         return {
