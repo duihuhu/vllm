@@ -91,7 +91,7 @@ class CommEngine:
         
         with torch.cuda.stream(self.send_streams[channel]):
             gpu_ops.SendBlocksRemote(gpu_cache,  dst_blocks, self.cache_size_per_block, opposite_rank)
-            print("after send blocks ", channel, opposite_rank)
+            # print("after send blocks ", channel, opposite_rank)
             event = torch.cuda.Event()
             event.record() 
         if channel not in self.send_events:
@@ -138,7 +138,7 @@ class CommEngine:
 
         for channel, num_finished_events in recv_finished_events:
             while num_finished_events != 0:
-                print("finishd  check_recv_finished_events ", channel)
+                # print("finishd  check_recv_finished_events ", channel)
                 self.recv_events[channel].pop(0)
                 num_finished_events -= 1
 
