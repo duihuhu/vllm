@@ -311,7 +311,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
         at::Tensor dstValueCache = dstCaches[i].second;
 
         for (int j = 0; j < dstBlocks.size(); j++) {
-            // auto start_time = std::chrono::steady_clock::now();
+            start_time = std::chrono::steady_clock::now();
             int blockIdx = dstBlocks[j];
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
@@ -335,7 +335,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
         }
     }
     // NCCLCHECK(ncclGroupEnd());
-    auto end_time = std::chrono::steady_clock::now();
+    end_time = std::chrono::steady_clock::now();
     send_time = send_time +  std::chrono::duration_cast<std::chrono::microseconds>(end_time - init_start_time).count();
     std::cout << "send blocks time " << "  " << index_time << " " << nccl_time << " "  << send_time <<std::endl;
 
