@@ -728,15 +728,15 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
         else:
-            t2 = time.time()
+            # t2 = time.time()
             await self.engine.trans_kv_step_aysnc()
-            t3 = time.time()
-            self.transfer_time = self.transfer_time + t3 - t2
-            print("transfer step ",  self.transfer_time)
+            # t3 = time.time()
+            # self.transfer_time = self.transfer_time + t3 - t2
+            # print("transfer step ",  self.transfer_time)
             request_outputs = await self.engine.step_async(self._request_tracker)
-            t4 = time.time()
-            self.engine_time = self.engine_time + t4 - t2
-            print("engine step ", self.engine_time, t4-t2, t3-t2)
+            # t4 = time.time()
+            # self.engine_time = self.engine_time + t4 - t2
+            # print("engine step ", self.engine_time, t4-t2, t3-t2)
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
