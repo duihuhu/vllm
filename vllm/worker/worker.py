@@ -299,7 +299,6 @@ class Worker:
         send_tasks: List[TransferTask],
         recv_tasks: List[TransferTask]
     ) -> None:
-        print("task ", task, type(task))
         for task in send_tasks:
             task_meta = task.meta
             self.common_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
