@@ -692,7 +692,7 @@ class ModelRunner:
         t1 = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
         t2 = time.time()
-        
+        print("model_executable time ", t2-t1)
         if blocks_to_send_remote:
             for request_id, block_info in blocks_to_send_remote.items():
                 channel = ""
