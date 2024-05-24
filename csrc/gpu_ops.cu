@@ -10,6 +10,7 @@
 #include "nccl.h"
 #include <cuda_runtime.h>
 #include <c10/cuda/CUDAStream.h>
+#include <sys/time.h>
 
 using namespace torch::indexing;
 using namespace at; 
@@ -316,17 +317,17 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 
 void SendBlockOnLayer(uint64_t k_addr, uint64_t v_addr, uint32_t cacheSize, uint32_t destRank)
 {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    // 获取当前时间的秒和微秒
+    long seconds = tv.tv_sec;
+    long microseconds = tv.tv_usec;
+
+    // 打印时间戳，格式为：seconds.microseconds
+    printf("timestamp in SendBlockOnLayer %ld.%06ld\n", seconds, microseconds);
+
     auto start = std::chrono::steady_clock::now();
-
-    // 获取当前时间点到 epoch 时间的 duration
-    auto duration = start.time_since_epoch();
-
-    // 将 duration 转换为秒，并包含小数部分
-    auto seconds = std::chrono::duration_cast<std::chrono::duration<double>>(duration).count();
-
-    // 打印时间戳，设置高精度
-    std::cout << "timestamp in sendblock on layer " << std::fixed << std::setprecision(6) << seconds << std::endl;
-
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
 
