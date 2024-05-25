@@ -783,7 +783,7 @@ class AsyncLLMEngine:
                     trans_blocks_time = await self.engine.model_executor._run_workers_async(
                         "get_trans_blocks_time",
                     )
-                    print("transfer time, engine time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time)
+                    print("trans block time, transfer time, engine time, last time", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, time.time())
 
             except asyncio.TimeoutError as exc:
                 logger.error(
@@ -838,6 +838,7 @@ class AsyncLLMEngine:
 
         if not self.is_running:
             if self.start_engine_loop:
+                print("first reqs start time ", time.time())
                 self.start_background_loop()
             else:
                 raise AsyncEngineDeadError(
