@@ -299,16 +299,16 @@ class Worker:
         send_tasks: List[TransferTask],
         recv_tasks: List[TransferTask]
     ) -> None:
-        # t1 = time.time()
+        t1 = time.time()
         for task in send_tasks:
             task_meta = task.meta
             self.common_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
         for task in recv_tasks:
             task_meta = task.meta
             self.common_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
-        # t2 = time.time()
-        # self.trans_blocks_time = self.trans_blocks_time + t2 - t1
-        # print("trans_blocks time ", self.trans_blocks_time)
+        t2 = time.time()
+        self.trans_blocks_time = self.trans_blocks_time + t2 - t1
+        print("trans_blocks time ", self.trans_blocks_time)
 
     
     def check_finished_transfer_task(self) -> List[TransferTaskMeta]:

@@ -316,7 +316,7 @@ class _AsyncLLMEngine(LLMEngine):
         meta_recv_finished_id = []
         for request_id, seq_group in self.scheduler.meta_recv_finished.items():
             if request_id in self.scheduler.decode_recv_finished:
-                print("check_deocde_recv_meta running " , time.time())
+                # print("check_deocde_recv_meta running " , time.time())
                 self.scheduler.running.append(seq_group)
                 self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 meta_recv_finished_id.append(request_id)
@@ -686,6 +686,7 @@ class AsyncLLMEngine:
                 if self.engine_use_ray:
                     await self.engine.add_request.remote(**new_request)
                 else:
+                    print("add request time ", time.time())
                     await self.engine.add_request_async(**new_request)
             except ValueError as e:
                 # TODO: use a vLLM specific error for failed validation
@@ -728,15 +729,15 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
         else:
-            # t2 = time.time()
+            t2 = time.time()
             await self.engine.trans_kv_step_aysnc()
-            # t3 = time.time()
-            # self.transfer_time = self.transfer_time + t3 - t2
-            # print("transfer step ",  self.transfer_time)
+            t3 = time.time()
+            self.transfer_time = self.transfer_time + t3 - t2
+            print("transfer step ",  self.transfer_time)
             request_outputs = await self.engine.step_async(self._request_tracker)
-            # t4 = time.time()
-            # self.engine_time = self.engine_time + t4 - t2
-            # print("engine step ", self.engine_time, t4-t2, t3-t2)
+            t4 = time.time()
+            self.engine_time = self.engine_time + t4 - t2
+            print("engine step ", self.engine_time, t4-t2, t3-t2)
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
