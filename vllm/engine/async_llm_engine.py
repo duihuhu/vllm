@@ -733,11 +733,11 @@ class AsyncLLMEngine:
             await self.engine.trans_kv_step_aysnc()
             t3 = time.time()
             self.transfer_time = self.transfer_time + t3 - t2
-            print("transfer step ",  self.transfer_time)
+            # print("transfer step ",  self.transfer_time)
             request_outputs = await self.engine.step_async(self._request_tracker)
             t4 = time.time()
             self.engine_time = self.engine_time + t4 - t2
-            print("engine step ", self.engine_time, t4-t2, t3-t2)
+            # print("engine step ", self.engine_time, t4-t2, t3-t2)
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
@@ -775,6 +775,20 @@ class AsyncLLMEngine:
             try:
                 has_requests_in_progress = await asyncio.wait_for(
                     self.engine_step(), ENGINE_ITERATION_TIMEOUT_S)
+                if (not has_requests_in_progress and
+                    not self.engine.scheduler.swapping_in and
+                    not self.engine.scheduler.swapping_out and
+                    not self.engine.scheduler.recv_transfering and
+                    not self.engine.scheduler.send_transfering and
+                    not self.engine.scheduler.req_pull_send_transfering and
+                    not self.engine.scheduler.decode_recv_finished and
+                    not self.engine.scheduler.meta_recv_finished and
+                    not self.engine.scheduler.kv_prepared_seq_group):
+                    trans_blocks_time = await self.engine.model_executor._run_workers_async(
+                        "get_trans_blocks_time",
+                    )
+                    print("transfer time, engine time ", trans_blocks_time, self.transfer_time, self.engine_time)
+
             except asyncio.TimeoutError as exc:
                 logger.error(
                     "Engine iteration timed out. This should never happen!")

@@ -308,8 +308,12 @@ class Worker:
             self.common_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
         t2 = time.time()
         self.trans_blocks_time = self.trans_blocks_time + t2 - t1
-        print("trans_blocks time ", self.trans_blocks_time)
+        # print("trans_blocks time ", self.trans_blocks_time)
 
+    def get_trans_blocks_time(
+        self,
+    ) -> None:
+        return self.trans_blocks_time
     
     def check_finished_transfer_task(self) -> List[TransferTaskMeta]:
         send_blocks_finished = self.common_engine.check_send_finished_events()
