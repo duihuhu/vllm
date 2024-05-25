@@ -664,6 +664,7 @@ class Scheduler:
         blocks_to_swap_out: Dict[int, int],
         preemption_mode: Optional[PreemptionMode] = None,
     ) -> None:
+        print("_preempt _preempt _preempt", )
         # If preemption mode is not specified, we determine the mode as follows:
         # We use recomputation by default since it incurs lower overhead than
         # swapping. However, when the sequence group has multiple sequences
