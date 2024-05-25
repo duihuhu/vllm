@@ -123,6 +123,9 @@ class LLMEngine:
         self.send_kv_trans_scheduler = SendKvTransferScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
         
         self.recv_kv_trans_scheduler = RecvKvTransScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
+        self.trans_checked_time = 0
+        self.trans_running_time = 0
+
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
             usage_message.report_usage(

@@ -490,6 +490,7 @@ class _AsyncLLMEngine(LLMEngine):
         if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
             return 
         
+        t1 = time.time()
         # print("trans_kv_step_aysnc ")
         finished_tasks = await self.model_executor._run_workers_async(
             "check_finished_transfer_task",
@@ -509,12 +510,16 @@ class _AsyncLLMEngine(LLMEngine):
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
+        t2 = time.time()   
         if send_tasks or recv_tasks:
             await self.model_executor._run_workers_async(
                 "trans_blocks",
                 send_tasks=send_tasks,
                 recv_tasks=recv_tasks
             )
+        t3 = time.time()
+        self.trans_checked_time = self.trans_checked_time + t2 - t1
+        self.trans_running_time = self.trans_running_time + t3 - t2
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
@@ -784,7 +789,7 @@ class AsyncLLMEngine:
                     trans_blocks_time = await self.engine.model_executor._run_workers_async(
                         "get_trans_blocks_time",
                     )
-                    print("trans block time, transfer time, engine time, last time", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time)
+                    print("trans block time, transfer time, engine time, trans_checked_time, trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_running_time)
 
             except asyncio.TimeoutError as exc:
                 logger.error(
