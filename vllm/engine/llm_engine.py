@@ -313,7 +313,7 @@ class LLMEngine:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         if len(blocks) > response.computed_blocks:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
-            print("add_kv_response ", request_id, time.time())
+            # print("add_kv_response ", request_id, time.time())
             self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
         else:
             self.scheduler.del_send_transfering(request_id)

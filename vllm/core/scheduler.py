@@ -793,7 +793,7 @@ class Scheduler:
             seq_group = self.recv_transfering[request_id]
             if self.deploy_config.role == "decoder":
                 if not self.enable_layer:
-                    print("decoder append request to running ", seq_group.request_id, time.time())
+                    # print("decoder append request to running ", seq_group.request_id, time.time())
                     self.running.append(seq_group)
                     self.block_manager.move_kv_blocks_meta(seq_group)
                 else:
