@@ -779,15 +779,11 @@ class AsyncLLMEngine:
                     not self.engine.scheduler.swapping_in and
                     not self.engine.scheduler.swapping_out and
                     not self.engine.scheduler.recv_transfering and
-                    not self.engine.scheduler.send_transfering and
-                    not self.engine.scheduler.req_pull_send_transfering and
-                    not self.engine.scheduler.decode_recv_finished and
-                    not self.engine.scheduler.meta_recv_finished and
-                    not self.engine.scheduler.kv_prepared_seq_group):
+                    not self.engine.scheduler.send_transfering):
                     trans_blocks_time = await self.engine.model_executor._run_workers_async(
                         "get_trans_blocks_time",
                     )
-                    print("transfer time, engine time ", trans_blocks_time, self.transfer_time, self.engine_time)
+                    print("transfer time, engine time ", trans_blocks_time[0], self.transfer_time, self.engine_time)
 
             except asyncio.TimeoutError as exc:
                 logger.error(
