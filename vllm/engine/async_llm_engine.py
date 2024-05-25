@@ -692,7 +692,6 @@ class AsyncLLMEngine:
                 if self.engine_use_ray:
                     await self.engine.add_request.remote(**new_request)
                 else:
-                    print("add request time ", time.time())
                     await self.engine.add_request_async(**new_request)
             except ValueError as e:
                 # TODO: use a vLLM specific error for failed validation
@@ -789,7 +788,7 @@ class AsyncLLMEngine:
                     trans_blocks_time = await self.engine.model_executor._run_workers_async(
                         "get_trans_blocks_time",
                     )
-                    print("trans block time, transfer time, engine time, trans_checked_time, trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_running_time)
+                    # print("trans block time, transfer time, engine time, trans_checked_time, trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_running_time)
 
             except asyncio.TimeoutError as exc:
                 logger.error(
