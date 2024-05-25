@@ -784,7 +784,7 @@ class AsyncLLMEngine:
                     trans_blocks_time = await self.engine.model_executor._run_workers_async(
                         "get_trans_blocks_time",
                     )
-                    print("trans block time, transfer time, engine time, last time", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.start_engine_time, time.time())
+                    print("trans block time, transfer time, engine time, last time", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.start_engine_time, time.time()-self.start_engine_time)
 
             except asyncio.TimeoutError as exc:
                 logger.error(
