@@ -73,51 +73,51 @@ class CommEngine:
 
         # self.comm_handles: Dict = {}
     def recv_blocks(self, channel: str, request_id: str, src_blocks: List[int], opposite_rank: int) -> None:      
-        t1 = time.time()
+        # t1 = time.time()
         if channel not in self.recv_streams:
             self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         # print("recv_blocks ", len(src_blocks))
         # gpu_cache_addr = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache_addr]
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        t2 = time.time()
+        # t2 = time.time()
         with torch.cuda.stream(self.recv_streams[channel]):
-            t4 = time.time()
+            # t4 = time.time()
             gpu_ops.RecvBlocksRemote(gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
             event = torch.cuda.Event()
             event.record()
-            t5 = time.time()
-            self.real_tran_pass_time = self.real_tran_pass_time + t5 - t4 
+            # t5 = time.time()
+            # self.real_tran_pass_time = self.real_tran_pass_time + t5 - t4 
         if channel not in self.recv_events:
             self.recv_events[channel] = [(request_id, event)]
         else:
             self.recv_events[channel].append((request_id, event))
-        t3 = time.time()
-        self.cache_time = self.cache_time + t2 - t1
-        self.tran_pass_time = self.tran_pass_time + t3 - t2
-        print(" recv_blocks cache time, tran_pass_time, real RecvBlocksRemote  ", self.cache_time, self.tran_pass_time, self.real_tran_pass_time)
+        # t3 = time.time()
+        # self.cache_time = self.cache_time + t2 - t1
+        # self.tran_pass_time = self.tran_pass_time + t3 - t2
+        # print(" recv_blocks cache time, tran_pass_time, real RecvBlocksRemote  ", self.cache_time, self.tran_pass_time, self.real_tran_pass_time)
     def send_blocks(self, channel: str, request_id: str, dst_blocks: List[int], opposite_rank: int) -> str: 
-        t1 = time.time()
+        # t1 = time.time()
         if channel not in self.send_streams:
             self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
         # print("send_blocks ", len(dst_blocks))
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        t2 = time.time()
+        # t2 = time.time()
         with torch.cuda.stream(self.send_streams[channel]):
-            t4 = time.time()
+            # t4 = time.time()
             gpu_ops.SendBlocksRemote(gpu_cache,  dst_blocks, self.cache_size_per_block, opposite_rank)
             # print("after send blocks ", channel, opposite_rank)
             event = torch.cuda.Event()
             event.record() 
-            t5 = time.time()
-            self.real_tran_pass_time = self.real_tran_pass_time + t5 - t4 
+            # t5 = time.time()
+            # self.real_tran_pass_time = self.real_tran_pass_time + t5 - t4 
         if channel not in self.send_events:
             self.send_events[channel] = [(request_id, event)]
         else:
             self.send_events[channel].append((request_id, event))
-        t3 = time.time()
-        self.cache_time = self.cache_time + t2 - t1
-        self.tran_pass_time = self.tran_pass_time + t3 - t2
-        print(" send_blocks cache time, tran_pass_time, real RecvBlocksRemote ", self.cache_time, self.tran_pass_time, self.real_tran_pass_time)
+        # t3 = time.time()
+        # self.cache_time = self.cache_time + t2 - t1
+        # self.tran_pass_time = self.tran_pass_time + t3 - t2
+        # print(" send_blocks cache time, tran_pass_time, real RecvBlocksRemote ", self.cache_time, self.tran_pass_time, self.real_tran_pass_time)
     #todo Tuple
     def check_send_finished_events(self) -> List[TransferTaskMeta]:
         #process send events
