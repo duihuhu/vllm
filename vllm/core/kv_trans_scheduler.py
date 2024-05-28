@@ -304,6 +304,7 @@ class RecvKvTransScheduler:
         
         self.channel_transfer_tag: Dict[str, int] = {}
         self.enable_layer = enable_layer
+        
     def add_kv_request(
         self,
         request_id: str,

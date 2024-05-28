@@ -15,7 +15,9 @@ import time
 import json
 from vllm.outputs import KvPreparedResponse, VLLMLoadInfo, RequestOutput, CompletionOutput
 from vllm.sequence import Logprob
+import aiohttp
 
+AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5
 ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
@@ -219,7 +221,24 @@ async def generate_decode(request: Request) -> Response:
     
     return StreamingResponse(stream_results())
     
-    
+
+async def asyc_forward_request(request_dict, api_url):
+    headers = {"User-Agent": "Test Client"}
+    # print("request info ", request_dict["request_id"], time.time())
+    async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
+        async with session.post(url=api_url, json=request_dict,
+                                headers=headers) as response:
+            if response.status == 200:
+                delimiter=b"\0"
+                buffer = b''  # 用于缓存数据块中的部分消息
+                async for chunk in response.content.iter_any():
+                    buffer += chunk  # 将新的数据块添加到缓冲区中
+                    while delimiter in buffer:
+                        index = buffer.index(delimiter)  # 查找分隔符在缓冲区中的位置
+                        message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
+                        yield message.strip()  # 返回提取的消息
+                        buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
+
 @app.post("/generate_prefill")
 async def generate_prefill(request: Request) -> Response:
     """Generate completion for request
@@ -277,8 +296,25 @@ async def generate_prefill(request: Request) -> Response:
             )
             last_time = end_time
             n = n + 1
+            if infer_results["finished"] != True:
+                decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
+                                                            (cfg.edecode_host, cfg.edecode_port))
+                d_num = 0
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
-
+            
+        async for resp in decode_response:
+            resp = resp.decode('utf-8')
+            resp = json.loads(resp)
+            if d_num == 0:
+                payload = await resp.json()
+                global_ranks = payload.pop("global_ranks")
+                kv_response = KvPreparedResponse(**payload)
+                print("response_kv_result ", kv_response.computed_blocks)
+                kv_response.global_ranks = global_ranks
+                await server.engine.add_kv_response(kv_response)
+            else:
+                yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
+            d_num = d_num + 1
     return StreamingResponse(stream_results())
 
 
