@@ -386,8 +386,8 @@ class Server:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local-host", type=str)
-    parser.add_argument("--local-port", type=int)
+    parser.add_argument("--local_host", type=str)
+    parser.add_argument("--local_port", type=int)
     parser.add_argument("--enable-gs", action="store_true")
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
