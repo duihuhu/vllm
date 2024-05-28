@@ -296,7 +296,7 @@ async def generate_prefill(request: Request) -> Response:
             )
             last_time = end_time
             n = n + 1
-            if infer_results["finished"] != True:
+            if infer_results.finished != True:
                 decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
                                                             (cfg.edecode_host, cfg.edecode_port))
                 d_num = 0
