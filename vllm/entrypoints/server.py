@@ -296,24 +296,25 @@ async def generate_prefill(request: Request) -> Response:
             )
             last_time = end_time
             n = n + 1
-            if infer_results.finished != True:
-                decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
-                                                            (cfg.edecode_host, cfg.edecode_port))
-                d_num = 0
+            if args.enable_gs:
+                if infer_results.finished != True:
+                    decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
+                                                                (cfg.edecode_host, cfg.edecode_port))
+                    d_num = 0
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
-            
-        async for resp in decode_response:
-            resp = resp.decode('utf-8')
-            payload = json.loads(resp)
-            if d_num == 0:
-                global_ranks = payload.pop("global_ranks")
-                kv_response = KvPreparedResponse(**payload)
-                print("response_kv_result ", kv_response.computed_blocks)
-                kv_response.global_ranks = global_ranks
-                await server.engine.add_kv_response(kv_response)
-            else:
-                yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
-            d_num = d_num + 1
+        if args.enable_gs: 
+            async for resp in decode_response:
+                resp = resp.decode('utf-8')
+                payload = json.loads(resp)
+                if d_num == 0:
+                    global_ranks = payload.pop("global_ranks")
+                    kv_response = KvPreparedResponse(**payload)
+                    # print("response_kv_result ", kv_response.computed_blocks)
+                    kv_response.global_ranks = global_ranks
+                    await server.engine.add_kv_response(kv_response)
+                else:
+                    yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
+                d_num = d_num + 1
     return StreamingResponse(stream_results())
 
 
@@ -385,8 +386,9 @@ class Server:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_host", type=str)
-    parser.add_argument("--local_port", type=int)
+    parser.add_argument("--local-host", type=str)
+    parser.add_argument("--local-port", type=int)
+    parser.add_argument("--enable-gs", action="store_true")
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)
