@@ -51,7 +51,7 @@ public:
 // TransEngine类，负责管理KV缓存并执行发送和接收操作
 class TransEngine {
 public:
-    TransEngine(const TransConfig& trans_config, const std::vector<torch::Tensor>& gpu_cache);
+    TransEngine(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
 
     void recv_blocks(const std::string& channel, const std::string& request_id,
                      const std::vector<int>& src_blocks, int opposite_rank);
@@ -61,7 +61,7 @@ public:
     std::vector<TransferTaskMeta> check_recv_finished_events();
 private:
     TransConfig trans_config; // Add this member variable
-    std::vector<torch::Tensor> gpu_cache; // Add this member variable
+    std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
 
     int cache_size_per_block;
 
@@ -74,7 +74,7 @@ private:
 
 class TransWorker {
 public:
-    TransWorker(const TransConfig& trans_config, const std::vector<torch::Tensor>& gpu_cache,
+    TransWorker(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache,
                 int rank, int local_rank, int nccl_local_rank);
     ~TransWorker();
 

@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 
-TransEngine::TransEngine(const TransConfig& trans_config, const std::vector<torch::Tensor>& gpu_cache)
+TransEngine::TransEngine(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
     : trans_config(trans_config), gpu_cache(gpu_cache){
     // Initialize parameters from config dictionaries
 }
@@ -13,12 +13,7 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
         c10::cuda::CUDAStream* stream = new c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
         recv_streams[channel] = stream;
     }
-
-    // std::vector<std::pair<void*, void*>> gpu_cache_list;
-    // for (const auto& kv_cache : gpu_cache) {
-        // gpu_cache_list.emplace_back(kv_cache.first, kv_cache.second);
-    // }
-
+    
     c10::cuda::CUDAStreamGuard guard(recv_streams[channel]);
     RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
@@ -40,11 +35,6 @@ void TransEngine::send_blocks(const std::string& channel, const std::string& req
         c10::cuda::CUDAStream* stream = new c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
         send_streams[channel] = stream;
     }
-
-    // std::vector<std::pair<void*, void*>> gpu_cache_list;
-    // for (const auto& kv_cache : gpu_cache) {
-    //     gpu_cache_list.emplace_back(kv_cache.first, kv_cache.second);
-    // }
 
     c10::cuda::CUDAStreamGuard guard(send_streams[channel]);
     SendBlocksRemote(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank);
