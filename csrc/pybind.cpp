@@ -175,8 +175,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
           py::arg("head_size"), py::arg("num_heads"), py::arg("dtype"), py::arg("cache_size_per_block"))
     .def(py::init<const TransConfig&>(),  // 拷贝构造函数
           py::arg("other"))
-    .def(py::init<TransConfig&&>(),  // 移动构造函数
-          py::arg("other"))
     .def_readwrite("head_size", &TransConfig::head_size)
     .def_readwrite("num_heads", &TransConfig::num_heads)
     .def_readwrite("dtype", &TransConfig::dtype)

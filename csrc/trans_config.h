@@ -32,16 +32,7 @@ public:
     // 拷贝构造函数
     TransConfig(const TransConfig& other)
         : head_size(other.head_size), num_heads(other.num_heads), dtype(other.dtype), cache_size_per_block(other.cache_size_per_block) {}
-
-    // 移动构造函数
-    TransConfig(TransConfig&& other) noexcept
-        : head_size(other.head_size), num_heads(other.num_heads), dtype(other.dtype), cache_size_per_block(other.cache_size_per_block) {
-        other.head_size = 0;
-        other.num_heads = 0;
-        other.dtype = torch::kFloat32;
-        other.cache_size_per_block = 0;
-    }
-
+        
     // 拷贝赋值运算符
     TransConfig& operator=(const TransConfig& other) {
         if (this == &other) {
