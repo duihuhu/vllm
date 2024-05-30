@@ -361,6 +361,7 @@ trans_module = Pybind11Extension(
         extra_compile_args=['-std=c++17'],
         libraries=['torch', 'c10'],
         library_dirs=[*library_paths() , "/usr/local/cuda/lib64"],
+        
 )
 
 setup(
