@@ -1,8 +1,4 @@
 #include "trans_config.h"
-TransWorker::TransWorker()
-    : trans_engine(gpu_cache){
-    execute = std::thread(&TransWorker::worker, this);
-}
 
 TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank)
     : trans_engine(cache_size_per_block, gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank) {
