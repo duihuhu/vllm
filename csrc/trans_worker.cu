@@ -30,9 +30,11 @@ void TransWorker::worker() {
             auto task_meta = task.meta;
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
+                    std::cout<<"task_queue is not empty send " <<std::endl;
                     trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank]);
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
+                    std::cout<<"task_queue is not empty recv " <<std::endl;
                     trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank]);
                     break;
                 default:
