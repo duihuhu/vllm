@@ -45,7 +45,7 @@ void TransWorker::worker() {
         std::cout<<"task_queue is empty ";
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
-        if (send_blocks_finished || recv_blocks_finished)
+        if (!send_blocks_finished.empty() || !recv_blocks_finished.empty())
             transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
     }
 }
