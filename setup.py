@@ -353,8 +353,8 @@ if os.environ.get("VLLM_USE_PRECOMPILED"):
     package_data["vllm"].append("*.so")
 
 trans_module = Pybind11Extension(
-        "trans",
-        ["csrc/trans_worker/trans_engine.cc", "csrc/trans_worker/trans_config.cc", "csrc/trans_worker/trans_worker.cc", "csrc/trans_worker/binding.cc"],
+        name="trans",
+        sources=["csrc/trans_worker/trans_engine.cc", "csrc/trans_worker/trans_config.cc", "csrc/trans_worker/trans_worker.cc", "csrc/trans_worker/binding.cc"],
         include_dirs=[pybind11.get_include(), 
             *include_paths(), 
             "/usr/local/cuda-12.2/targets/x86_64-linux/include/"],
