@@ -178,8 +178,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   py::class_<TransferTask>(trans_ops, "TransferTask")
       // .def(py::init<const TransferTaskMeta&, const std::vector<uint32_t>&, const std::vector<int>&, TaskType>())
       .def(py::init<const std::string& ,const std::string& ,const std::vector<uint32_t>& ,const std::vector<int>& ,int>())
-      .def_readwrite("channel", &TransferTask::channel)
-      .def_readwrite("request_id", &TransferTask::request_id)
+      .def_readwrite("meta", &TransferTask::meta)
       .def_readwrite("blocks", &TransferTask::blocks)
       .def_readwrite("opposite_ranks", &TransferTask::opposite_ranks)
       .def_readwrite("type", &TransferTask::type);
