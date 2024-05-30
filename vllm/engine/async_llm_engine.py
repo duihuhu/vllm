@@ -370,7 +370,7 @@ class _AsyncLLMEngine(LLMEngine):
             and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
             self.check_deocde_recv_meta()
 
-        
+        print("step_async ")
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
