@@ -256,16 +256,18 @@ class SendKvTransferScheduler:
         heapq.heappush(self.channel_request_ids[channel], (transfer_tag, request_id))
     
 
-    def _get_task_for_send_blocks(self) -> List[TransferTask]:
-        scheduled_transfer_tasks: List[TransferTask] = []
+    def _get_task_for_send_blocks(self) -> List[trans_ops.TransferTask]:
+        scheduled_transfer_tasks: List[trans_ops.TransferTask] = []
         for channel, priority_request in self.channel_request_ids.items():
             while priority_request:
                 head_req_tag = priority_request[0][0]
                 if head_req_tag == self.channel_transfer_tag[channel]:
                     request: PriorityRequest = heapq.heappop(priority_request)
                     request_id = request[1]
+                    meta=trans_ops.TransferTaskMeta(channel, request_id)
+                    print("send meta ")
                     scheduled_transfer_tasks.append(trans_ops.TransferTask(
-                        meta=trans_ops.TransferTaskMeta(channel, request_id),
+                        meta=meta,
                         opposite_ranks=self.opposite_ranks,
                         blocks=self.block_ids[request_id],
                         type=trans_ops.TaskType.TRANSFER_SEND_BLOCKS
@@ -336,6 +338,8 @@ class RecvKvTransScheduler:
         for channel, request_ids in self.channel_request_ids.items():
             while request_ids:
                 request_id = request_ids.pop(0)
+                meta=trans_ops.TransferTaskMeta(channel, request_id)
+                print("recv meta ")
                 scheduled_transfer_tasks.append(trans_ops.TransferTask(
                     meta=trans_ops.TransferTaskMeta(channel, request_id),
                     opposite_ranks=self.opposite_ranks,
