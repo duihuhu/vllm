@@ -44,7 +44,7 @@ void TransEngine::send_blocks(const std::string& channel, const std::string& req
 
     if (send_events.find(channel) == send_events.end()) {
         send_events[channel] = std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>();
-        recv_events[channel].push_back(std::make_pair(request_id, event));
+        send_events[channel].push_back(std::make_pair(request_id, event));
     } else
         send_events[channel].push_back(std::make_pair(request_id, event));
 }
