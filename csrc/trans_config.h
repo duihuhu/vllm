@@ -32,16 +32,16 @@ public:
 
 class TransferTask {
 public:
-    TransferTask(const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type)
-        : blocks(blocks), opposite_ranks(opposite_ranks), type(type) {}
-    TransferTask(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type)
+    // TransferTask(const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type)
+    //     : blocks(blocks), opposite_ranks(opposite_ranks), type(type) {}
+    TransferTask(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, int type)
         : meta(channel, request_id), blocks(blocks), opposite_ranks(opposite_ranks), type(type) {}
-    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type)
-        : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks), type(type) {}
+    // TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type)
+    //     : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks), type(type) {}
     TransferTaskMeta meta;
     std::vector<uint32_t> blocks;
     std::vector<int> opposite_ranks;
-    TaskType type;
+    int type;
 };
 
 
