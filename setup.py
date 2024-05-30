@@ -352,18 +352,6 @@ package_data = {
 if os.environ.get("VLLM_USE_PRECOMPILED"):
     package_data["vllm"].append("*.so")
 
-trans_module = Pybind11Extension(
-        name="trans",
-        sources=["csrc/trans_worker/trans_engine.cc", "csrc/trans_worker/trans_config.cc", "csrc/trans_worker/trans_worker.cc", "csrc/trans_worker/binding.cc"],
-        include_dirs=[pybind11.get_include(), 
-            *include_paths(), 
-            "/usr/local/cuda-12.2/targets/x86_64-linux/include/"],
-        extra_compile_args=['-std=c++17'],
-        libraries=['torch', 'c10'],
-        library_dirs=[*library_paths() , "/usr/local/cuda/lib64"],
-        
-)
-
 setup(
     name="vllm",
     version=get_vllm_version(),
@@ -390,7 +378,7 @@ setup(
                                     "tests")),
     python_requires=">=3.8",
     install_requires=get_requirements(),
-    ext_modules=[ext_modules, trans_module],
+    ext_modules=ext_modules,
     cmdclass={"build_ext": cmake_build_ext} if not _is_neuron() else {},
     package_data=package_data,
 )

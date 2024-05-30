@@ -2,6 +2,7 @@
 #include "cuda_utils.h"
 #include "gpu_ops.h"
 #include "ops.h"
+#include "trans_config.h"
 #include <torch/extension.h>
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -150,7 +151,45 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &SendBlockOnLayer,
     "SendBlockOnLayer");
 
+  pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
+  py::class_<TransEngine>(trans_ops, "TransEngine")
+      .def(py::init<const TransConfig&, const std::vector<torch::Tensor>&>())  // Constructor
+      .def("recv_blocks", &TransEngine::recv_blocks, "recv_blocks")
+      .def("send_blocks", &TransEngine::send_blocks, "send_blocks")
+      .def("check_send_finished_events", &TransEngine::check_send_finished_events, "check_send_finished_events")
+      .def("check_recv_finished_events", &TransEngine::check_recv_finished_events, "check_recv_finished_events");
+      
+  py::class_<TransWorker>(trans_ops, "TransWorker")
+      .def(py::init<const TransConfig&, const std::vector<torch::Tensor>&, int, int, int>())  // Constructor
+      .def("add_tasks", &TransWorker::add_tasks, "add_tasks")
+      .def("get_finished_transfer_tasks", &TransWorker::get_finished_transfer_tasks, "get_finished_transfer_tasks");
 
+  py::class_<TransConfig>(trans_ops, "TransConfig")
+    .def(py::init<int, int, torch::Dtype, int>(),
+          py::arg("head_size"), py::arg("num_heads"), py::arg("dtype"), py::arg("cache_size_per_block"))
+    .def_readwrite("head_size", &TransConfig::head_size)
+    .def_readwrite("num_heads", &TransConfig::num_heads)
+    .def_readwrite("dtype", &TransConfig::dtype)
+    .def_readwrite("cache_size_per_block", &TransConfig::cache_size_per_block);
+  
+  py::enum_<TaskType>(trans_ops, "TaskType")
+      .value("TRANSFER_SEND", TaskType::TRANSFER_SEND_BLOCKS)
+      .value("TRANSFER_RECV_BLOCKS", TaskType::TRANSFER_RECV_BLOCKS)
+      .export_values();
+
+  py::class_<TransferTaskMeta>(trans_ops, "TransferTaskMeta")
+      .def(py::init<const std::string&, const std::string& >())
+      .def_readwrite("channel", &TransferTaskMeta::channel)
+      .def_readwrite("request_id", &TransferTaskMeta::request_id);
+
+
+  py::class_<TransferTask>(trans_ops, "TransferTask")
+      .def(py::init<const TransferTaskMeta&, const std::vector<int>&, const std::vector<int>&>())
+      .def_readwrite("meta", &TransferTask::meta)
+      .def_readwrite("blocks", &TransferTask::blocks)
+      .def_readwrite("opposite_ranks", &TransferTask::opposite_ranks);
+
+            
 #ifndef USE_ROCM
   // Custom all-reduce kernels
   pybind11::module custom_ar = m.def_submodule("custom_ar", "custom allreduce");
