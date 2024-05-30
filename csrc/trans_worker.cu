@@ -49,7 +49,7 @@ void TransWorker::worker() {
     }
 }
 
-void TransWorker::add_tasks(const std::vector<std::vector<TransferTask>>& tasks) {
+void TransWorker::add_tasks(const std::vector<TransferTask>& tasks) {
     for (const auto& task : tasks) {
         task_queue.push_back(task);
     }

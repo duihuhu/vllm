@@ -68,7 +68,7 @@ public:
 
     ~TransWorker();
 
-    void add_tasks(const std::vector<vector<TransferTask>>& tasks);
+    void add_tasks(const std::vector<TransferTask>& tasks);
     std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> get_finished_transfer_tasks();
 
 private:
@@ -76,7 +76,7 @@ private:
     void worker();
 
     TransEngine trans_engine;
-    TransQueue<std::pair<TaskType, TransferTask>> task_queue;
+    TransQueue<TransferTask> task_queue;
     TransQueue<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> transfer_result_queue;
 
     std::thread execute;
