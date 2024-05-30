@@ -497,7 +497,7 @@ class _AsyncLLMEngine(LLMEngine):
         )
         for worker_finished_tasks in finished_tasks:
             if worker_finished_tasks:
-                print("worker_finished_tasks ", worker_finished_tasks)
+                print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
                 send_finished_tasks = worker_finished_tasks[0][0]
                 recv_finished_tasks = worker_finished_tasks[0][1]
                 print("send_finished_tasks, recv_finished_tasks ", send_finished_tasks, recv_finished_tasks)
