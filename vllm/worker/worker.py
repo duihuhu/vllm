@@ -23,25 +23,14 @@ from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 
-from vllm._C import gpu_ops, trans
+from vllm._C import gpu_ops, trans_ops
 from vllm.logger import init_logger
 import ray
-import json
-import socket
 #no TransferRequestIdTask, TransferBlocksTask
-from vllm.core.kv_trans_scheduler import TransferTaskMeta,  TransferRequestIdTask, TransferBlocksTask, TransferTask, TaskType
+from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferTask
 from vllm.worker.comm_engine import CommEngine
 import time
 logger = init_logger(__name__)
-# class TransferWorker:
-#     def __init__(self, trans_config: TransConfig, gpu_cache, rank, local_rank, nccl_local_rank) -> None:
-#         self.trans_config = trans_config
-#         self.gpu_cache = gpu_cache
-#         self.rank = rank
-#         self.local_rank = local_rank
-#         self.nccl_local_rank = nccl_local_rank
-
-
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
 
@@ -206,7 +195,8 @@ class Worker:
     
     def init_trans_worker(self):
         trans_config = TransConfig(self.model_config.get_head_size(),self.model_config.get_num_kv_heads(self.parallel_config), self.cache_config.cache_dtype, self.cache_engine.dtype)
-        self.trans_worker = trans.TransferWorker(trans_config, self.gpu_cache,  self.rank, self.local_rank, self.nccl_local_rank)
+        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+        self.trans_worker = trans_ops.TransWorker(trans_config, gpu_cache,  self.rank, self.local_rank, self.nccl_local_rank)
         
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:

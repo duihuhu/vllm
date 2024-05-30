@@ -1,5 +1,6 @@
 #include "trans_config.h"
-TransWorker::TransWorker(const TransConfig& trans_config, const std::vector<torch::Tensor>& gpu_cache,
+
+TransWorker::TransWorker(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache,
                          int rank, int local_rank, int nccl_local_rank)
     : trans_engine(trans_config, gpu_cache),
       rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank) {
@@ -47,12 +48,9 @@ void TransWorker::worker() {
     }
 }
 
-void TransWorker::add_tasks(const std::vector<std::pair<TaskType, TransferTask>>& tasks, bool is_prior) {
+void TransWorker::add_tasks(const std::vector<std::pair<TaskType, TransferTask>>& tasks) {
     for (const auto& task : tasks) {
-        if (is_prior)
-            task_queue.push_front(task);
-        else
-            task_queue.push_back(task);
+        task_queue.push_back(task);
     }
 }
 

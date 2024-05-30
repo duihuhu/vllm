@@ -7,14 +7,14 @@ TransEngine::TransEngine(const TransConfig& trans_config, const std::vector<std:
     // Initialize parameters from config dictionaries
 }
 
-void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<int>& src_blocks, int opposite_rank) {
+void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank) {
     if (recv_streams.find(channel) == recv_streams.end()) {
         // c10::cuda::CUDAStream stream = c10::cuda::getStreamFromPool(true);
         c10::cuda::CUDAStream* stream = new c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
         recv_streams[channel] = stream;
     }
-    
-    c10::cuda::CUDAStreamGuard guard(recv_streams[channel]);
+
+    c10::cuda::CUDAStreamGuard guard(*recv_streams[channel]);
     RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
@@ -29,14 +29,14 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     else
         recv_events[channel].push_back(std::make_pair(request_id, event));
 }
-void TransEngine::send_blocks(const std::string& channel, const std::string& request_id, const std::vector<int>& dst_blocks, int opposite_rank) {
+void TransEngine::send_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank) {
     if (send_streams.find(channel) == send_streams.end()) {
         // c10::cuda::CUDAStream stream = c10::cuda::getStreamFromPool(true);
         c10::cuda::CUDAStream* stream = new c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
         send_streams[channel] = stream;
     }
 
-    c10::cuda::CUDAStreamGuard guard(send_streams[channel]);
+    c10::cuda::CUDAStreamGuard guard(*send_streams[channel]);
     SendBlocksRemote(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
