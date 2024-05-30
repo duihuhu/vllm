@@ -370,7 +370,6 @@ class _AsyncLLMEngine(LLMEngine):
             and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
             self.check_deocde_recv_meta()
 
-        print("step_async ")
         # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
@@ -486,17 +485,19 @@ class _AsyncLLMEngine(LLMEngine):
         self.model_executor.check_health()
 
     async def trans_kv_step_aysnc(self) -> None:
+        print("trans_kv_step_aysnc 1")
         if not self.deploy_config.enable_separate:
             return
         if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
             return 
-        
+        print("trans_kv_step_aysnc 2")
         t1 = time.time()
         # print("trans_kv_step_aysnc ")
         finished_tasks = await self.model_executor._run_workers_async(
             "get_finished_transfer_tasks",
             # get_all_outputs=True
         )
+        print("trans_kv_step_aysnc 3")
         for worker_finished_tasks in finished_tasks:
             send_finished_tasks = worker_finished_tasks[0]
             recv_finished_tasks = worker_finished_tasks[1]
