@@ -42,7 +42,7 @@ void TransWorker::worker() {
                     throw std::runtime_error("invalid task_type.");
             }
         }
-        std::cout<<"task_queue is empty ";
+        // std::cout<<"task_queue is empty ";
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
         if (!send_blocks_finished.empty() || !recv_blocks_finished.empty())
@@ -60,6 +60,7 @@ std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMet
     std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> finished_tasks;
     while (!transfer_result_queue.empty())
     {
+        std::cout<<"transfer_result_queue is not empty ";
         auto finished_task = transfer_result_queue.pop_front();
         finished_tasks.push_back(finished_task);
     }
