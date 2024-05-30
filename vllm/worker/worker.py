@@ -195,7 +195,7 @@ class Worker:
     
     def init_trans_worker(self):
         trans_config = TransConfig(self.model_config.get_head_size(),self.model_config.get_num_kv_heads(self.parallel_config), self.cache_config.cache_dtype, self.cache_engine.dtype)
-        gpu_cache = [tuple(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         print("type gpu_cache " , type(gpu_cache))
         self.trans_worker = trans_ops.TransWorker(trans_config, gpu_cache,  self.rank, self.local_rank, self.nccl_local_rank)
         
