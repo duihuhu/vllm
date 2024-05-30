@@ -153,7 +153,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
   py::class_<TransEngine>(trans_ops, "TransEngine")
-      .def(py::init<const TransConfig&, const std::vector<torch::Tensor>&>())  // Constructor
+      .def(py::init<const TransConfig&, const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
       .def("recv_blocks", &TransEngine::recv_blocks, "recv_blocks")
       .def("send_blocks", &TransEngine::send_blocks, "send_blocks")
       .def("check_send_finished_events", &TransEngine::check_send_finished_events, "check_send_finished_events")
