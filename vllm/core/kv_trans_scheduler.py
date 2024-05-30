@@ -265,7 +265,7 @@ class SendKvTransferScheduler:
                     request: PriorityRequest = heapq.heappop(priority_request)
                     request_id = request[1]
                     meta=trans_ops.TransferTaskMeta(channel, request_id)
-                    print("send meta ")
+                    print("send meta ", type(meta), type(self.opposite_ranks), type(self.block_ids[request_id]))
                     tasks = trans_ops.TransferTask(
                         meta=meta,
                         opposite_ranks=self.opposite_ranks,
@@ -346,7 +346,7 @@ class RecvKvTransScheduler:
             while request_ids:
                 request_id = request_ids.pop(0)
                 meta=trans_ops.TransferTaskMeta(channel, request_id)
-                print("recv meta ")
+                print("recv meta ", type(meta), type(self.opposite_ranks), type(self.block_ids[request_id]))
                 task = trans_ops.TransferTask(
                     meta=trans_ops.TransferTaskMeta(channel, request_id),
                     opposite_ranks=self.opposite_ranks,
