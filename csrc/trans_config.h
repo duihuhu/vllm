@@ -10,6 +10,7 @@
 #include <c10/cuda/CUDAStream.h>
 #include <ATen/cuda/CUDAEvent.h>
 #include "nccl.h"
+#include "gpu_ops.h"
 #include "trans_queue.h"
 
 // 定义TaskType枚举类型，用于区分不同的任务类型

@@ -19,8 +19,8 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
         // gpu_cache_list.emplace_back(kv_cache.first, kv_cache.second);
     // }
 
-    // torch::cuda::CUDAStreamGuard guard(recv_streams[channel]);
-    // gpu_ops::RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
+    torch::cuda::CUDAStreamGuard guard(recv_streams[channel]);
+    RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
@@ -46,8 +46,8 @@ void TransEngine::send_blocks(const std::string& channel, const std::string& req
     //     gpu_cache_list.emplace_back(kv_cache.first, kv_cache.second);
     // }
 
-    // torch::cuda::CUDAStreamGuard guard(send_streams[channel]);
-    // gpu_ops::SendBlocksRemote(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank);
+    torch::cuda::CUDAStreamGuard guard(send_streams[channel]);
+    SendBlocksRemote(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();

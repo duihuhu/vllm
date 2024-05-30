@@ -1,5 +1,4 @@
 #include "trans_config.h"
-#include "gpu_ops.h"
 TransWorker::TransWorker(const TransConfig& trans_config, const std::vector<torch::Tensor>& gpu_cache,
                          int rank, int local_rank, int nccl_local_rank)
     : trans_engine(trans_config, gpu_cache),
@@ -44,7 +43,7 @@ void TransWorker::worker() {
         }
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
-        transfer_result_queue.push(std::make_pair(send_blocks_finished, recv_blocks_finished));
+        transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
     }
 }
 
@@ -53,7 +52,7 @@ void TransWorker::add_tasks(const std::vector<std::pair<TaskType, TransferTask>>
         if (is_prior)
             task_queue.push_front(task);
         else
-            task_queue.push_back(task)
+            task_queue.push_back(task);
     }
 }
 
