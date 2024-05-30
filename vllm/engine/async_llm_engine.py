@@ -495,8 +495,8 @@ class _AsyncLLMEngine(LLMEngine):
             "get_finished_transfer_tasks",
             # get_all_outputs=True
         )
-        print("finished_tasks " , finished_tasks)
         for worker_finished_tasks in finished_tasks:
+            print("worker_finished_tasks ", worker_finished_tasks)
             if worker_finished_tasks:
                 send_finished_tasks = worker_finished_tasks[0]
                 recv_finished_tasks = worker_finished_tasks[1]
