@@ -17,18 +17,18 @@ class TransferTaskMeta:
         self.channel = channel
         self.request_id = request_id
 
-# class TransferTask:
-#     def __init__(
-#         self,
-#         meta: TransferTaskMeta,
-#         opposite_ranks: List[int],
-#         blocks: List[int],
-#         type: TaskType
-#     ):
-#         self.meta = meta
-#         self.opposite_ranks = opposite_ranks
-#         self.blocks = blocks
-#         self.type = type
+class TransferTask:
+    def __init__(
+        self,
+        meta: TransferTaskMeta,
+        opposite_ranks: List[int],
+        blocks: List[int],
+        type: TaskType
+    ):
+        self.meta = meta
+        self.opposite_ranks = opposite_ranks
+        self.blocks = blocks
+        self.type = type
         
 PriorityRequest = Tuple[int, int ]       
  
