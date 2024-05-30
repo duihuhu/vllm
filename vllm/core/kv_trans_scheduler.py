@@ -266,8 +266,15 @@ class SendKvTransferScheduler:
                     request_id = request[1]
                     meta=trans_ops.TransferTaskMeta(channel, request_id)
                     print("send meta ")
-                    scheduled_transfer_tasks.append(trans_ops.TransferTask(
+                    tasks = trans_ops.TransferTask(
                         meta=meta,
+                        opposite_ranks=self.opposite_ranks,
+                        blocks=self.block_ids[request_id],
+                        type=trans_ops.TaskType.TRANSFER_SEND_BLOCKS
+                    )
+                    print("send tasks ")
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(
+                        meta=trans_ops.TransferTaskMeta(channel, request_id),
                         opposite_ranks=self.opposite_ranks,
                         blocks=self.block_ids[request_id],
                         type=trans_ops.TaskType.TRANSFER_SEND_BLOCKS
@@ -340,6 +347,13 @@ class RecvKvTransScheduler:
                 request_id = request_ids.pop(0)
                 meta=trans_ops.TransferTaskMeta(channel, request_id)
                 print("recv meta ")
+                task = trans_ops.TransferTask(
+                    meta=trans_ops.TransferTaskMeta(channel, request_id),
+                    opposite_ranks=self.opposite_ranks,
+                    blocks=self.block_ids[request_id],
+                    type=trans_ops.TaskType.TRANSFER_RECV_BLOCKS
+                )
+                print("recv task ")
                 scheduled_transfer_tasks.append(trans_ops.TransferTask(
                     meta=trans_ops.TransferTaskMeta(channel, request_id),
                     opposite_ranks=self.opposite_ranks,
