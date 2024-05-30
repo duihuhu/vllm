@@ -345,11 +345,6 @@ class RecvKvTransScheduler:
         for channel, request_ids in self.channel_request_ids.items():
             while request_ids:
                 request_id = request_ids.pop(0)
-                meta=trans_ops.TransferTaskMeta(channel, request_id)
-                opposite_ranks = [0, 1]
-                blocks = [3785, 3784, 3783, 3782]
-                task = trans_ops.TransferTask(channel, request_id, opposite_ranks, blocks,1)
-                print("recv task 1 ")
                 scheduled_transfer_tasks.append(trans_ops.TransferTask(
                     meta=trans_ops.TransferTaskMeta(channel, request_id),
                     opposite_ranks=self.opposite_ranks,
