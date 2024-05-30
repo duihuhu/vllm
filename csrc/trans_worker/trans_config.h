@@ -14,11 +14,8 @@
 
 // 定义TaskType枚举类型，用于区分不同的任务类型
 enum class TaskType {
-    TRANSFER_SEND,
+    TRANSFER_SEND_BLOCKS,
     TRANSFER_RECV_BLOCKS,
-    TRANSFER_CHECK_FINISHED,
-    TRANSFER_CHECK_SEND_FINISHED,
-    TRANSFER_CHECK_RECV_FINISHED
 };
 
 class TransConfig {
@@ -81,15 +78,15 @@ public:
     ~TransWorker();
 
     void add_tasks(const std::vector<std::pair<TaskType, TransferTask>>& tasks);
-    bool get_transfer_results();
+    std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> get_finished_transfer_tasks();
 
 private:
     void init_device();
     void worker();
 
     TransEngine trans_engine;
-    std::TransQueue<std::pair<TaskType, TransferTask>> task_queue;
-    std::TransQueue<std::vector<TransferTaskMeta>> transfer_result_queue;
+    TransQueue<std::pair<TaskType, TransferTask>> task_queue;
+    TransQueue<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> transfer_result_queue;
 
     std::thread execute;
     int rank;

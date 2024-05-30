@@ -68,6 +68,7 @@ class RayGPUExecutor(ExecutorBase):
 
         self._init_comm_engine()
         
+        self._init_trans_worker()
         self.forward_dag = None
         if USE_RAY_COMPILED_DAG:
             self.forward_dag = self._compiled_ray_dag()
@@ -265,6 +266,10 @@ class RayGPUExecutor(ExecutorBase):
 
     def _init_comm_engine(self) -> None:
         self._run_workers("init_comm_engine")
+
+    def _init_trans_worker(self) -> None:
+        self._run_workers("init_trans_worker")
+
 
     def execute_model(self,
                       seq_group_metadata_list: List[SequenceGroupMetadata],

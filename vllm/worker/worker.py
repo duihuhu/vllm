@@ -10,7 +10,7 @@ from vllm.sequence import SequenceData
 from vllm.utils import get_max_shared_memory_bytes
 
 from vllm.config import (CacheConfig, DeviceConfig, LoRAConfig, ModelConfig,
-                         ParallelConfig, SchedulerConfig, VisionLanguageConfig, DeployConfig)
+                         ParallelConfig, SchedulerConfig, VisionLanguageConfig, DeployConfig, TransConfig)
 from vllm.lora.request import LoRARequest
 from vllm.model_executor import set_random_seed
 from vllm.model_executor.parallel_utils import pynccl_utils
@@ -23,16 +23,25 @@ from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 
-from vllm._C import gpu_ops 
+from vllm._C import gpu_ops, trans
 from vllm.logger import init_logger
 import ray
 import json
 import socket
 #no TransferRequestIdTask, TransferBlocksTask
-from vllm.core.kv_trans_scheduler import TransferTaskMeta,  TransferRequestIdTask, TransferBlocksTask, TransferTask
+from vllm.core.kv_trans_scheduler import TransferTaskMeta,  TransferRequestIdTask, TransferBlocksTask, TransferTask, TaskType
 from vllm.worker.comm_engine import CommEngine
 import time
 logger = init_logger(__name__)
+# class TransferWorker:
+#     def __init__(self, trans_config: TransConfig, gpu_cache, rank, local_rank, nccl_local_rank) -> None:
+#         self.trans_config = trans_config
+#         self.gpu_cache = gpu_cache
+#         self.rank = rank
+#         self.local_rank = local_rank
+#         self.nccl_local_rank = nccl_local_rank
+
+
 class Worker:
     """A worker class that executes (a partition of) the model on a GPU.
 
@@ -115,10 +124,10 @@ class Worker:
                 f"Not support device type: {self.device_config.device}")
         
         if not self.is_driver_worker:
-            self.get_local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
-            logger.info("worker get from rank = %d, ", self.get_local_rank)
+            self.nccl_local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
+            logger.info("worker get from rank = %d, ", self.nccl_local_rank)
         else:
-            self.get_local_rank = self.device_id
+            self.nccl_local_rank = self.device_id
             
         # Initialize the distributed environment.
         init_distributed_environment(self.parallel_config, self.rank,
@@ -127,11 +136,11 @@ class Worker:
         # Set random seed.
         set_random_seed(self.model_config.seed)
         
-        if self.deploy_config.enable_separate:
-            if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4, 0) !=0:
-                # print("self.local_rank ", self.get_local_rank)
-                raise ValueError("CreateNcclFromRankTable error")
-        return self.get_local_rank
+        # if self.deploy_config.enable_separate:
+        #     if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4, 0) !=0:
+        #         # print("self.local_rank ", self.get_local_rank)
+        #         raise ValueError("CreateNcclFromRankTable error")
+        return self.nccl_local_rank
 
     def load_model(self):
         self.model_runner.load_model()
@@ -194,6 +203,10 @@ class Worker:
 
     def init_comm_engine(self):
         self.common_engine = CommEngine(self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.gpu_cache)
+    
+    def init_trans_worker(self):
+        trans_config = TransConfig(self.model_config.get_head_size(),self.model_config.get_num_kv_heads(self.parallel_config), self.cache_config.cache_dtype, self.cache_engine.dtype)
+        self.trans_worker = trans.TransferWorker(trans_config, self.gpu_cache,  self.rank, self.local_rank, self.nccl_local_rank)
         
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
@@ -300,12 +313,10 @@ class Worker:
         recv_tasks: List[TransferTask]
     ) -> None:
         t1 = time.time()
-        for task in send_tasks:
-            task_meta = task.meta
-            self.common_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
-        for task in recv_tasks:
-            task_meta = task.meta
-            self.common_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[self.rank])
+        if send_tasks:
+            self.trans_worker.add_tasks(send_tasks, False)
+        if recv_tasks:
+            self.trans_worker.add_tasks(recv_tasks, False)   
         t2 = time.time()
         self.trans_blocks_time = self.trans_blocks_time + t2 - t1
         # print("trans_blocks time ", self.trans_blocks_time)
@@ -315,11 +326,9 @@ class Worker:
     ) -> None:
         return self.trans_blocks_time
     
-    def check_finished_transfer_task(self) -> List[TransferTaskMeta]:
-        send_blocks_finished = self.common_engine.check_send_finished_events()
-        recv_blocks_finished = self.common_engine.check_recv_finished_events()
-        return send_blocks_finished, recv_blocks_finished
-                
+    def get_finished_transfer_task(self) -> List[List[TransferTaskMeta],List[TransferTaskMeta]]:
+        return self.trans_worker.get_finished_transfer_task() 
+        
 def init_distributed_environment(
     parallel_config: ParallelConfig,
     rank: int,

@@ -150,6 +150,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &SendBlockOnLayer,
     "SendBlockOnLayer");
 
+
 #ifndef USE_ROCM
   // Custom all-reduce kernels
   pybind11::module custom_ar = m.def_submodule("custom_ar", "custom allreduce");
@@ -165,5 +166,4 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   custom_ar.def("register_graph_buffers", &register_graph_buffers,
                 "register_graph_buffers");
 #endif
-
 }

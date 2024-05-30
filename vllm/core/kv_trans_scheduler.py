@@ -1,7 +1,12 @@
 from typing import Dict, List, Tuple
-from enum import Enum
+import enum
 import threading
 import heapq
+
+class TaskType(enum.Enum):
+    TRANSFER_SEND_BLOCKS = enum.auto()
+    TRANSFER_RECV_BLOCKS = enum.auto()
+    
 class TransferTaskMeta:
     def __init__(
         self,

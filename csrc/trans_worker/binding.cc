@@ -20,16 +20,11 @@ PYBIND11_MODULE(trans, m) {
              py::arg("trans_config"), py::arg("gpu_cache"))
         .def("send_blocks", &TransEngine::send_blocks)
         .def("recv_blocks", &TransEngine::recv_blocks)
-        .def("check_send_finished_events", &TransEngine::check_send_finished_events)
-        .def("check_recv_finished_events", &TransEngine::check_recv_finished_events);
 
 
     py::enum_<TaskType>(m, "TaskType")
-        .value("TRANSFER_SEND", TaskType::TRANSFER_SEND)
+        .value("TRANSFER_SEND", TaskType::TRANSFER_SEND_BLOCKS)
         .value("TRANSFER_RECV_BLOCKS", TaskType::TRANSFER_RECV_BLOCKS)
-        .value("TRANSFER_CHECK_FINISHED", TaskType::TRANSFER_CHECK_FINISHED)
-        .value("TRANSFER_CHECK_SEND_FINISHED", TaskType::TRANSFER_CHECK_SEND_FINISHED)
-        .value("TRANSFER_CHECK_RECV_FINISHED", TaskType::TRANSFER_CHECK_RECV_FINISHED)
         .export_values();
 
     py::class_<TransferTaskMeta>(m, "TransferTaskMeta")
