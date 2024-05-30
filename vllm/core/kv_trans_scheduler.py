@@ -264,21 +264,7 @@ class SendKvTransferScheduler:
                 if head_req_tag == self.channel_transfer_tag[channel]:
                     request: PriorityRequest = heapq.heappop(priority_request)
                     request_id = request[1]
-                    meta=trans_ops.TransferTaskMeta(channel, request_id)
-                    print("send meta ", type(meta), type(self.opposite_ranks), type(self.block_ids[request_id]))
-                    tasks = trans_ops.TransferTask(
-                        meta=meta,
-                        opposite_ranks=self.opposite_ranks,
-                        blocks=self.block_ids[request_id],
-                        type=trans_ops.TaskType.TRANSFER_SEND_BLOCKS
-                    )
-                    print("send tasks ")
-                    scheduled_transfer_tasks.append(trans_ops.TransferTask(
-                        meta=trans_ops.TransferTaskMeta(channel, request_id),
-                        opposite_ranks=self.opposite_ranks,
-                        blocks=self.block_ids[request_id],
-                        type=trans_ops.TaskType.TRANSFER_SEND_BLOCKS
-                    ))
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),self.opposite_ranks,self.block_ids[request_id], trans_ops.TaskType.TRANSFER_SEND_BLOCKS))
                     self.channel_transfer_tag[channel] += 1
                 else:
                     break
@@ -345,12 +331,7 @@ class RecvKvTransScheduler:
         for channel, request_ids in self.channel_request_ids.items():
             while request_ids:
                 request_id = request_ids.pop(0)
-                scheduled_transfer_tasks.append(trans_ops.TransferTask(
-                    meta=trans_ops.TransferTaskMeta(channel, request_id),
-                    opposite_ranks=self.opposite_ranks,
-                    blocks=self.block_ids[request_id],
-                    type=trans_ops.TaskType.TRANSFER_RECV_BLOCKS
-                ))
+                scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), self.opposite_ranks, self.block_ids[request_id], trans_ops.TaskType.TRANSFER_RECV_BLOCKS))
         return scheduled_transfer_tasks 
 
     def schedule(self) -> List[trans_ops.TransferTask]:
