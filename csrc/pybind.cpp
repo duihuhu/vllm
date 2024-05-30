@@ -153,33 +153,17 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
   py::class_<TransEngine>(trans_ops, "TransEngine")
-      .def(py::init<const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
-      .def(py::init<const TransConfig&>())  // Constructor
-      .def(py::init<const TransConfig&, const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
+      .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&>)  // Constructor
       .def("recv_blocks", &TransEngine::recv_blocks, "recv_blocks")
       .def("send_blocks", &TransEngine::send_blocks, "send_blocks")
       .def("check_send_finished_events", &TransEngine::check_send_finished_events, "check_send_finished_events")
       .def("check_recv_finished_events", &TransEngine::check_recv_finished_events, "check_recv_finished_events");
       
   py::class_<TransWorker>(trans_ops, "TransWorker")
-      .def(py::init<const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
-      .def(py::init<const TransConfig&, int, int, int>())  // Constructor
-      .def(py::init<const TransConfig&, const std::vector<std::pair<at::Tensor, at::Tensor>>& , int, int, int>())
-      .def(py::init<int, int, torch::Dtype, int, const std::vector<std::pair<at::Tensor, at::Tensor>>& , int, int, int>())
+      .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int >()>())
       .def("add_tasks", &TransWorker::add_tasks, "add_tasks")
       .def("get_finished_transfer_tasks", &TransWorker::get_finished_transfer_tasks, "get_finished_transfer_tasks");
 
-  py::class_<TransConfig>(trans_ops, "TransConfig")
-    .def(py::init<>())
-    .def(py::init<int, int, torch::Dtype, int>(),
-          py::arg("head_size"), py::arg("num_heads"), py::arg("dtype"), py::arg("cache_size_per_block"))
-    .def(py::init<const TransConfig&>(),  // 拷贝构造函数
-          py::arg("other"))
-    .def_readwrite("head_size", &TransConfig::head_size)
-    .def_readwrite("num_heads", &TransConfig::num_heads)
-    .def_readwrite("dtype", &TransConfig::dtype)
-    .def_readwrite("cache_size_per_block", &TransConfig::cache_size_per_block);
-  
   py::enum_<TaskType>(trans_ops, "TaskType")
       .value("TRANSFER_SEND_BLOCKS", TaskType::TRANSFER_SEND_BLOCKS)
       .value("TRANSFER_RECV_BLOCKS", TaskType::TRANSFER_RECV_BLOCKS)
@@ -189,7 +173,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def(py::init<const std::string&, const std::string& >())
       .def_readwrite("channel", &TransferTaskMeta::channel)
       .def_readwrite("request_id", &TransferTaskMeta::request_id);
-
 
   py::class_<TransferTask>(trans_ops, "TransferTask")
       .def(py::init<const TransferTaskMeta&, const std::vector<uint32_t>&, const std::vector<int>&>())

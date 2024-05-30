@@ -19,51 +19,6 @@ enum class TaskType {
     TRANSFER_RECV_BLOCKS,
 };
 
-class TransConfig {
-public:
-    int head_size;
-    int num_heads;
-    torch::Dtype dtype;
-    int cache_size_per_block;
-    TransConfig();
-    TransConfig(int head_size, int num_heads, torch::Dtype dtype, int cache_size_per_block);
-
-
-    // 拷贝构造函数
-    TransConfig(const TransConfig& other)
-        : head_size(other.head_size), num_heads(other.num_heads), dtype(other.dtype), cache_size_per_block(other.cache_size_per_block) {}
-        
-    // 拷贝赋值运算符
-    TransConfig& operator=(const TransConfig& other) {
-        if (this == &other) {
-            return *this; // 防止自我赋值
-        }
-        head_size = other.head_size;
-        num_heads = other.num_heads;
-        dtype = other.dtype;
-        cache_size_per_block = other.cache_size_per_block;
-        return *this;
-    }
-
-    // 移动赋值运算符
-    TransConfig& operator=(TransConfig&& other) noexcept {
-        if (this == &other) {
-            return *this; // 防止自我赋值
-        }
-        head_size = other.head_size;
-        num_heads = other.num_heads;
-        dtype = other.dtype;
-        cache_size_per_block = other.cache_size_per_block;
-
-        other.head_size = 0;
-        other.num_heads = 0;
-        other.dtype = torch::kFloat32;
-        other.cache_size_per_block = 0;
-        return *this;
-    }
-
-};
-
 // TransferTaskMeta结构体，用于存储传输任务的元信息
 class TransferTaskMeta {
 public:
@@ -86,10 +41,7 @@ public:
 // TransEngine类，负责管理KV缓存并执行发送和接收操作
 class TransEngine {
 public:
-    TransEngine(const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
-    TransEngine(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
-    TransEngine(const TransConfig& trans_config);
-
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
     void recv_blocks(const std::string& channel, const std::string& request_id,
                      const std::vector<uint32_t>& src_blocks, int opposite_rank);
     void send_blocks(const std::string& channel, const std::string& request_id,
@@ -97,7 +49,6 @@ public:
     std::vector<TransferTaskMeta> check_send_finished_events();
     std::vector<TransferTaskMeta> check_recv_finished_events();
 private:
-    TransConfig trans_config; // Add this member variable
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
 
     int cache_size_per_block;
@@ -111,12 +62,8 @@ private:
 
 class TransWorker {
 public:
-    TransWorker(const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
-    TransWorker(const TransConfig& trans_config, int rank, int local_rank, int nccl_local_rank);
-    TransWorker(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache,
-                int rank, int local_rank, int nccl_local_rank);
 
-    TransWorker(int head_size, int num_heads, torch::Dtype dtype, int cache_size_per_block, int rank, int local_rank, int nccl_local_rank)
+    :TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank)
 
     ~TransWorker();
 
