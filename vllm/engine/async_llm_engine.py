@@ -485,19 +485,17 @@ class _AsyncLLMEngine(LLMEngine):
         self.model_executor.check_health()
 
     async def trans_kv_step_aysnc(self) -> None:
-        print("trans_kv_step_aysnc 1")
         if not self.deploy_config.enable_separate:
             return
         if not self.scheduler.send_transfering and not self.scheduler.recv_transfering and not self.scheduler.req_pull_send_transfering:
             return 
-        print("trans_kv_step_aysnc 2")
         t1 = time.time()
         # print("trans_kv_step_aysnc ")
         finished_tasks = await self.model_executor._run_workers_async(
             "get_finished_transfer_tasks",
             # get_all_outputs=True
         )
-        print("trans_kv_step_aysnc 3")
+        print("finished_tasks " , finished_tasks)
         for worker_finished_tasks in finished_tasks:
             send_finished_tasks = worker_finished_tasks[0]
             recv_finished_tasks = worker_finished_tasks[1]
