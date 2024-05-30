@@ -861,10 +861,3 @@ class DeployConfig:
         
     def get_global_ranks(self) -> List[int]:
         return self.global_ranks
-
-class TransConfig:
-    def __init__(self, head_size, num_heads, dtype, cache_size_per_block) -> None:
-        self.head_size = head_size
-        self.num_heads = num_heads
-        self.dtype = dtype
-        self.cache_size_per_block = cache_size_per_block

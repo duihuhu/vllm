@@ -28,7 +28,6 @@ from vllm.logger import init_logger
 import ray
 #no TransferRequestIdTask, TransferBlocksTask
 from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferTask
-from vllm.worker.comm_engine import CommEngine
 import time
 logger = init_logger(__name__)
 class Worker:
@@ -190,16 +189,10 @@ class Worker:
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
 
-    def init_comm_engine(self):
-        self.common_engine = CommEngine(self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.gpu_cache)
-    
     def init_trans_worker(self):
-        trans_config = TransConfig(self.model_config.get_head_size(), self.model_config.get_num_kv_heads(self.parallel_config), self.cache_engine.dtype, self.cache_engine.cache_size_per_block)
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        print("type gpu_cache " , type(gpu_cache))
-        self.trans_workerb = trans_ops.TransWorker(gpu_cache)
         print("type trans_workera ")
-        self.trans_workera = trans_ops.TransWorker(trans_config, self.rank, self.local_rank, self.nccl_local_rank)
+        self.trans_workera = trans_ops.TransWorker(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank)
         print("type trans_workerbs ")
 
     def warm_up_model(self) -> None:
