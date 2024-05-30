@@ -194,7 +194,7 @@ class Worker:
         self.common_engine = CommEngine(self.cache_config, self.model_config, self.parallel_config, self.deploy_config, self.gpu_cache)
     
     def init_trans_worker(self):
-        trans_config = TransConfig(self.model_config.get_head_size(),self.model_config.get_num_kv_heads(self.parallel_config), self.cache_engine.dtype, self.cache_engine.cache_size_per_block)
+        trans_config = TransConfig(self.model_config.get_head_size(), self.model_config.get_num_kv_heads(self.parallel_config), self.cache_engine.dtype, self.cache_engine.cache_size_per_block)
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         print("type gpu_cache " , type(gpu_cache))
         self.trans_workerb = trans_ops.TransWorker(gpu_cache)
