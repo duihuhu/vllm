@@ -25,7 +25,7 @@ public:
     int num_heads;
     torch::Dtype dtype;
     int cache_size_per_block;
-
+    TransConfig();
     TransConfig(int head_size, int num_heads, torch::Dtype dtype, int cache_size_per_block);
 };
 

@@ -169,6 +169,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def("get_finished_transfer_tasks", &TransWorker::get_finished_transfer_tasks, "get_finished_transfer_tasks");
 
   py::class_<TransConfig>(trans_ops, "TransConfig")
+    .def(py::init<>())
     .def(py::init<int, int, torch::Dtype, int>(),
           py::arg("head_size"), py::arg("num_heads"), py::arg("dtype"), py::arg("cache_size_per_block"))
     .def_readwrite("head_size", &TransConfig::head_size)

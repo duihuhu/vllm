@@ -2,15 +2,17 @@
 #include <stdexcept>
 #include <iostream>
 
+TransEngine::TransEngine(const TransConfig& trans_config)
+    : trans_config(trans_config){
+    // Initialize parameters from config dictionaries
+}
+
 TransEngine::TransEngine(const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
     :gpu_cache(gpu_cache){
     // Initialize parameters from config dictionaries
 }
 
-TransEngine::TransEngine(const TransConfig& trans_config)
-    : trans_config(trans_config){
-    // Initialize parameters from config dictionaries
-}
+
 
 TransEngine::TransEngine(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
     : trans_config(trans_config), gpu_cache(gpu_cache){
