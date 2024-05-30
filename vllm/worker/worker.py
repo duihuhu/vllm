@@ -191,9 +191,7 @@ class Worker:
 
     def init_trans_worker(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        print("type trans_workera ")
         self.trans_worker = trans_ops.TransWorker(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank)
-        print("type trans_workerbs ")
 
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:

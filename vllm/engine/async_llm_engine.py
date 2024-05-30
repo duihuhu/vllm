@@ -418,6 +418,7 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
+                    print("prompt add_send_transfering ")
                     self.scheduler.add_send_transfering(seq_group)
             
             if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
@@ -778,14 +779,14 @@ class AsyncLLMEngine:
             try:
                 has_requests_in_progress = await asyncio.wait_for(
                     self.engine_step(), ENGINE_ITERATION_TIMEOUT_S)
-                if (not has_requests_in_progress and
-                    not self.engine.scheduler.swapping_in and
-                    not self.engine.scheduler.swapping_out and
-                    not self.engine.scheduler.recv_transfering and
-                    not self.engine.scheduler.send_transfering):
-                    trans_blocks_time = await self.engine.model_executor._run_workers_async(
-                        "get_trans_blocks_time",
-                    )
+                # if (not has_requests_in_progress and
+                #     not self.engine.scheduler.swapping_in and
+                #     not self.engine.scheduler.swapping_out and
+                #     not self.engine.scheduler.recv_transfering and
+                #     not self.engine.scheduler.send_transfering):
+                #     trans_blocks_time = await self.engine.model_executor._run_workers_async(
+                #         "get_trans_blocks_time",
+                #     )
                     # print("trans block time, transfer time, engine time, trans_checked_time, trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_running_time)
 
             except asyncio.TimeoutError as exc:

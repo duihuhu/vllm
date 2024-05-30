@@ -24,16 +24,18 @@ void TransWorker::worker() {
     
     while (true) {
         if(!task_queue.empty()) {
+            std::cout<<"task_queue is not empty ";
             auto task_pair = task_queue.pop_front();
-
             TaskType task_type = task_pair.first;
             TransferTask task = task_pair.second;
             auto task_meta = task.meta;
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
+                    std::cout<<"send blocks ";
                     trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank]);
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
+                    std::cout<<"recv blocks ";
                     trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank]);
                     break;
                 default:
