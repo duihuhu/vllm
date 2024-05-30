@@ -340,7 +340,7 @@ class RecvKvTransScheduler:
         self.channel_transfer_tag[channel] += 1
         return current_transfer_tag
     
-    def _get_task_for_recv_blocks(self) -> List[TransferTask]:
+    def _get_task_for_recv_blocks(self) -> List[trans_ops.TransferTask]:
         scheduled_transfer_tasks: List[trans_ops.TransferTask] = []
         for channel, request_ids in self.channel_request_ids.items():
             while request_ids:
