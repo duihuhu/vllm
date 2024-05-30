@@ -30,8 +30,8 @@ public:
 
 class TransferTask {
 public:
-    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks)
-        : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks) {}
+    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type)
+        : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks), type(type) {}
     TransferTaskMeta meta;
     std::vector<uint32_t> blocks;
     std::vector<int> opposite_ranks;
