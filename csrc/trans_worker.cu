@@ -42,6 +42,7 @@ void TransWorker::worker() {
                     throw std::runtime_error("invalid task_type.");
             }
         }
+        std::cout<<"task_queue is empty ";
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
         transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
