@@ -497,14 +497,15 @@ class _AsyncLLMEngine(LLMEngine):
         )
         print("finished_tasks " , finished_tasks)
         for worker_finished_tasks in finished_tasks:
-            send_finished_tasks = worker_finished_tasks[0]
-            recv_finished_tasks = worker_finished_tasks[1]
-            real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
-            real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(recv_finished_tasks)
-            if real_send_finished_req_ids:
-                self.scheduler.add_send_finished(real_send_finished_req_ids)
-            if real_recv_finished_req_ids:
-                self.scheduler.add_recv_finished(real_recv_finished_req_ids)
+            if worker_finished_tasks:
+                send_finished_tasks = worker_finished_tasks[0]
+                recv_finished_tasks = worker_finished_tasks[1]
+                real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
+                real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(recv_finished_tasks)
+                if real_send_finished_req_ids:
+                    self.scheduler.add_send_finished(real_send_finished_req_ids)
+                if real_recv_finished_req_ids:
+                    self.scheduler.add_recv_finished(real_recv_finished_req_ids)
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
