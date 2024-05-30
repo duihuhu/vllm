@@ -294,8 +294,8 @@ class Worker:
                                                 self.parallel_config)
     def trans_blocks(
         self,
-        send_tasks: List[TransferTask],
-        recv_tasks: List[TransferTask]
+        send_tasks: List[trans_ops.TransferTask],
+        recv_tasks: List[trans_ops.TransferTask]
     ) -> None:
         t1 = time.time()
         if send_tasks:
