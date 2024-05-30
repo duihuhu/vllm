@@ -10,7 +10,7 @@ from vllm.sequence import SequenceData
 from vllm.utils import get_max_shared_memory_bytes
 
 from vllm.config import (CacheConfig, DeviceConfig, LoRAConfig, ModelConfig,
-                         ParallelConfig, SchedulerConfig, VisionLanguageConfig, DeployConfig, TransConfig)
+                         ParallelConfig, SchedulerConfig, VisionLanguageConfig, DeployConfig)
 from vllm.lora.request import LoRARequest
 from vllm.model_executor import set_random_seed
 from vllm.model_executor.parallel_utils import pynccl_utils
