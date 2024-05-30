@@ -276,7 +276,7 @@ class SendKvTransferScheduler:
     
     def _process_send_blocks_finished(
         self,
-        send_finished_taks: List[TransferTaskMeta]
+        send_finished_taks: List[trans_ops.TransferTaskMeta]
     ) -> List[str]:
         real_finished_req_ids = []
         for task_meta in send_finished_taks:
@@ -290,7 +290,7 @@ class SendKvTransferScheduler:
     
     def add_finished_tasks(
         self,
-        send_finished_tasks: List[TransferTaskMeta],
+        send_finished_tasks: List[trans_ops.TransferTaskMeta],
     ) -> List[str]:
         return self._process_send_blocks_finished(send_finished_tasks)
     
@@ -340,7 +340,7 @@ class RecvKvTransScheduler:
 
     def _process_recv_blocks_finished(
         self,
-        recv_finished_taks: List[TransferTaskMeta]
+        recv_finished_taks: List[trans_ops.TransferTaskMeta]
     ) -> List[str]:
         real_finished_req_ids = []
         for task_meta in recv_finished_taks:
@@ -354,6 +354,6 @@ class RecvKvTransScheduler:
     
     def add_finished_tasks(
         self,
-        recv_finished_tasks: List[TransferTaskMeta],
+        recv_finished_tasks: List[trans_ops.TransferTaskMeta],
     ) -> List[str]:
         return self._process_recv_blocks_finished(recv_finished_tasks)
