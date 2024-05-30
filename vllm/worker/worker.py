@@ -326,8 +326,8 @@ class Worker:
     ) -> None:
         return self.trans_blocks_time
     
-    def get_finished_transfer_task(self) -> List[List[TransferTaskMeta],List[TransferTaskMeta]]:
-        return self.trans_worker.get_finished_transfer_task() 
+    def get_finished_transfer_tasks(self) -> List[List[TransferTaskMeta],List[TransferTaskMeta]]:
+        return self.trans_worker.get_finished_transfer_tasks() 
         
 def init_distributed_environment(
     parallel_config: ParallelConfig,

@@ -78,7 +78,7 @@ public:
                 int rank, int local_rank, int nccl_local_rank);
     ~TransWorker();
 
-    void add_tasks(const std::vector<std::pair<TaskType, TransferTask>>& tasks);
+    void add_tasks(const std::vector<std::pair<TaskType, TransferTask>>& tasks, bool is_prior);
     std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> get_finished_transfer_tasks();
 
 private:

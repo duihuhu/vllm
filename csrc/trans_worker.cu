@@ -63,6 +63,5 @@ std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMet
         auto finished_task = transfer_result_queue.pop_front();
         finished_tasks.push_back(finished_task);
     }
-    
-    return transfer_result_queue;
+    return finished_tasks;
 }
