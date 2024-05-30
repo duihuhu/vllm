@@ -496,8 +496,8 @@ class _AsyncLLMEngine(LLMEngine):
             # get_all_outputs=True
         )
         for worker_finished_tasks in finished_tasks:
-            print("worker_finished_tasks ", worker_finished_tasks)
             if worker_finished_tasks:
+                print("worker_finished_tasks ", worker_finished_tasks)
                 send_finished_tasks = worker_finished_tasks[0]
                 recv_finished_tasks = worker_finished_tasks[1]
                 real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
