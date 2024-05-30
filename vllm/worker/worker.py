@@ -301,9 +301,9 @@ class Worker:
     ) -> None:
         t1 = time.time()
         if send_tasks:
-            self.trans_worker.add_tasks(send_tasks, False)
+            self.trans_worker.add_tasks(send_tasks)
         if recv_tasks:
-            self.trans_worker.add_tasks(recv_tasks, False)   
+            self.trans_worker.add_tasks(recv_tasks)   
         t2 = time.time()
         self.trans_blocks_time = self.trans_blocks_time + t2 - t1
         # print("trans_blocks time ", self.trans_blocks_time)
