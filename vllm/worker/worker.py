@@ -27,7 +27,7 @@ from vllm._C import gpu_ops, trans_ops
 from vllm.logger import init_logger
 import ray
 #no TransferRequestIdTask, TransferBlocksTask
-from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferTask
+from vllm.core.kv_trans_scheduler import TransferTaskMeta
 import time
 logger = init_logger(__name__)
 class Worker:
