@@ -160,7 +160,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def("check_recv_finished_events", &TransEngine::check_recv_finished_events, "check_recv_finished_events");
       
   py::class_<TransWorker>(trans_ops, "TransWorker")
-      .def(py::init<const TransConfig&,const std::vector<std::pair<at::Tensor, at::Tensor>>& , int, int, int>())  // Constructor
+      .def(py::init<const TransConfig&, const std::vector<std::pair<at::Tensor, at::Tensor>>& , int, int, int>())  // Constructor
       .def("add_tasks", &TransWorker::add_tasks, "add_tasks")
       .def("get_finished_transfer_tasks", &TransWorker::get_finished_transfer_tasks, "get_finished_transfer_tasks");
 

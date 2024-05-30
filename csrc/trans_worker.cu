@@ -1,5 +1,4 @@
 #include "trans_config.h"
-
 TransWorker::TransWorker(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache,
                          int rank, int local_rank, int nccl_local_rank)
     : trans_engine(trans_config, gpu_cache),
