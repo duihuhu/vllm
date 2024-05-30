@@ -4,6 +4,11 @@ TransWorker::TransWorker(const std::vector<std::pair<at::Tensor, at::Tensor>>& g
     execute = std::thread(&TransWorker::worker, this);
 }
 
+TransWorker::TransWorker(int head_size, int num_heads, torch::Dtype dtype, int cache_size_per_block, int rank, int local_rank, int nccl_local_rank)
+    : trans_engine(head_size, num_heads, dtype, cache_size_per_block), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank) {
+    execute = std::thread(&TransWorker::worker, this);
+}
+
 TransWorker::TransWorker(const TransConfig& trans_config, int rank, int local_rank, int nccl_local_rank)
     : trans_engine(trans_config), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank) {
     execute = std::thread(&TransWorker::worker, this);

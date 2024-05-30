@@ -125,6 +125,8 @@ public:
     TransWorker(const TransConfig& trans_config, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache,
                 int rank, int local_rank, int nccl_local_rank);
 
+    TransWorker(int head_size, int num_heads, torch::Dtype dtype, int cache_size_per_block, int rank, int local_rank, int nccl_local_rank)
+
     ~TransWorker();
 
     void add_tasks(const std::vector<std::pair<TaskType, TransferTask>>& tasks);
