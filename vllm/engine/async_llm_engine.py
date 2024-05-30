@@ -509,7 +509,6 @@ class _AsyncLLMEngine(LLMEngine):
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
-        print("send tasks , recv tasks ", send_tasks, recv_tasks)
         t2 = time.time()   
         if send_tasks or recv_tasks:
             await self.model_executor._run_workers_async(

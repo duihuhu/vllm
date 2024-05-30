@@ -21,11 +21,13 @@ class TransferTask:
         self,
         meta: TransferTaskMeta,
         opposite_ranks: List[int],
-        blocks: List[int]
+        blocks: List[int],
+        type: TaskType
     ):
         self.meta = meta
         self.opposite_ranks = opposite_ranks
         self.blocks = blocks
+        self.type = type
         
 PriorityRequest = Tuple[int, int ]       
  
@@ -264,7 +266,8 @@ class SendKvTransferScheduler:
                     scheduled_transfer_tasks.append(TransferTask(
                         meta=TransferTaskMeta(channel, request_id),
                         opposite_ranks=self.opposite_ranks,
-                        blocks=self.block_ids[request_id]
+                        blocks=self.block_ids[request_id],
+                        type=TaskType.TRANSFER_SEND_BLOCKS
                     ))
                     self.channel_transfer_tag[channel] += 1
                 else:
@@ -335,7 +338,8 @@ class RecvKvTransScheduler:
                 scheduled_transfer_tasks.append(TransferTask(
                     meta=TransferTaskMeta(channel, request_id),
                     opposite_ranks=self.opposite_ranks,
-                    blocks=self.block_ids[request_id]
+                    blocks=self.block_ids[request_id],
+                    type=TaskType.TRANSFER_RECV_BLOCKS
                 ))
         return scheduled_transfer_tasks 
 

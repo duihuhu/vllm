@@ -25,9 +25,8 @@ void TransWorker::worker() {
     while (true) {
         if(!task_queue.empty()) {
             std::cout<<"task_queue is not empty ";
-            auto task_pair = task_queue.pop_front();
-            TaskType task_type = task_pair.first;
-            TransferTask task = task_pair.second;
+            auto task = task_queue.pop_front();
+            TaskType task_type = task.type;
             auto task_meta = task.meta;
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
@@ -50,7 +49,7 @@ void TransWorker::worker() {
     }
 }
 
-void TransWorker::add_tasks(const std::vector<std::pair<TaskType, TransferTask>>& tasks) {
+void TransWorker::add_tasks(const std::vector<std::vector<TransferTask>>& tasks) {
     for (const auto& task : tasks) {
         task_queue.push_back(task);
     }
