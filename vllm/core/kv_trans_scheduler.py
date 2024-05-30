@@ -349,7 +349,7 @@ class RecvKvTransScheduler:
                 opposite_ranks = [0, 1]
                 blocks = [3785, 3784, 3783, 3782]
                 task = trans_ops.TransferTask(
-                    meta=trans_ops.TransferTaskMeta(channel, request_id),
+                    meta=meta,
                     opposite_ranks=opposite_ranks,
                     blocks=blocks,
                     type=trans_ops.TaskType.TRANSFER_RECV_BLOCKS
