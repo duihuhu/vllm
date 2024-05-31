@@ -452,7 +452,7 @@ class LLMEngine:
                 # kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
                 
                 if self.deploy_config.enable_theory:
-                    kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks))
+                    kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
                     self.scheduler.running.append(seq_group)
                     self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                     kv_responses.append(kv_response)
