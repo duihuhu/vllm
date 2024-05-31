@@ -113,7 +113,7 @@ private:
 
     TransEngine trans_engine;
     TransQueue<TransferTask> task_queue;
-    TransQueue<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> transfer_result_queue;
+    TransQueue<std::pair<std::vector<std::string>, std::vector<std::string>>> transfer_result_queue;
 
     std::thread execute;
     int rank;
