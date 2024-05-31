@@ -60,7 +60,7 @@ void TransWorker::worker() {
 void TransWorker::add_tasks(const std::vector<std::string>& tasks) {
     for (const auto& task : tasks) {
         auto trans_task = TransferTask::deserialize(task);
-        task_queue.push_back(task);
+        task_queue.push_back(trans_task);
     }
 }
 
