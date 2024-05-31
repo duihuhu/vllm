@@ -14,6 +14,7 @@
 #include "trans_queue.h"
 #include <nlohmann/json.hpp>  // Include the JSON library
 
+using json = nlohmann::json;
 
 // 定义TaskType枚举类型，用于区分不同的任务类型
 enum class TaskType {
@@ -37,8 +38,8 @@ public:
     }
 
     // Deserialize TransferTaskMeta from JSON
-    static TransferTaskMeta from_json(const json& j) {
-        return TransferTaskMeta{j.at("channel").get<std::string>(), j.at("request_id").get<std::string>()};
+    static TransferTaskMeta from_json(const json& task_meta) {
+        return TransferTaskMeta{task_meta.at("channel").get<std::string>(), task_meta.at("request_id").get<std::string>()};
     }
 };
 
