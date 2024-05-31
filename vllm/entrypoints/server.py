@@ -151,6 +151,7 @@ def cprobs_key_s2i(cumulative_logprob):
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
+    start_time = time.time()
     request_id = payload.pop("request_id")
     opp_ranks = payload.pop("opp_ranks")
     prompt_token_ids = payload.pop("prompt_token_ids")
@@ -183,7 +184,6 @@ async def generate_decode(request: Request) -> Response:
         finished=finished,
     )
     request_output.global_ranks = opp_ranks
-    start_time = time.time()
     results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
     #return results to global scheduler
@@ -251,10 +251,10 @@ async def generate_prefill(request: Request) -> Response:
     """
     payload = await request.json()
     # prompt = payload.pop("prompt")
+    start_time = time.time()
     stream = payload.pop("stream")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
-    start_time = time.time()
     cache_meta = None
     if "cmeta_host" in payload:
         cmeta_host =  payload.pop("cmeta_host")

@@ -452,6 +452,7 @@ class LLMEngine:
                 # kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
                 
                 if self.deploy_config.enable_theory:
+                    print("schedule_decode_waiting add_recv_transfering ", seq_group.request_id, time.time())
                     kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
                     self.scheduler.running.append(seq_group)
                     self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
