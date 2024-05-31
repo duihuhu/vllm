@@ -12,6 +12,8 @@
 #include "nccl.h"
 #include "gpu_ops.h"
 #include "trans_queue.h"
+#include <nlohmann/json.hpp>  // Include the JSON library
+
 
 // 定义TaskType枚举类型，用于区分不同的任务类型
 enum class TaskType {
