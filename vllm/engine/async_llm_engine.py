@@ -505,9 +505,9 @@ class _AsyncLLMEngine(LLMEngine):
                     send_finished_tasks = [] 
                     recv_finished_tasks = []
                     for finished_task in worker_finished_task[0]:
-                        send_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
+                        send_finished_tasks.append(trans_ops.TransferTaskMeta.deserialize(finished_task))
                     for finished_task in worker_finished_task[1]:
-                        recv_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
+                        recv_finished_tasks.append(trans_ops.TransferTaskMeta.deserialize(finished_task))
                     # print("send_finished_tasks, recv_finished_tasks ", send_finished_tasks, recv_finished_tasks)
                     real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
                     real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(recv_finished_tasks)
