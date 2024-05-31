@@ -49,8 +49,8 @@ void TransEngine::send_blocks(const std::string& channel, const std::string& req
         send_events[channel].push_back(std::make_pair(request_id, event));
 }
 
-std::vector<TransferTaskMeta> TransEngine::check_send_finished_events() {
-    std::vector<TransferTaskMeta> send_blocks_finished;
+std::vector<std::string> TransEngine::check_send_finished_events() {
+    std::vector<std::string> send_blocks_finished;
     std::vector<std::string> finished_channels;
 
     for (auto& kv : send_events) {
@@ -63,7 +63,7 @@ std::vector<TransferTaskMeta> TransEngine::check_send_finished_events() {
             at::cuda::CUDAEvent *event = it->second;
 
             if (event->query()) {
-                send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id));
+                send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).to_json());
                 ++num_finished_events;
             } else {
                 break;
@@ -79,8 +79,8 @@ std::vector<TransferTaskMeta> TransEngine::check_send_finished_events() {
     return send_blocks_finished;
 }
 
-std::vector<TransferTaskMeta> TransEngine::check_recv_finished_events() {
-    std::vector<TransferTaskMeta> recv_blocks_finished;
+std::vector<std::string> TransEngine::check_recv_finished_events() {
+    std::vector<std::string> recv_blocks_finished;
     std::vector<std::string> finished_channels;
 
     for (auto& kv : recv_events) {
@@ -93,7 +93,7 @@ std::vector<TransferTaskMeta> TransEngine::check_recv_finished_events() {
             at::cuda::CUDAEvent *event = it->second;
 
             if (event->query()) {
-                recv_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id));
+                recv_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).to_json());
                 ++num_finished_events;
             } else {
                 break;

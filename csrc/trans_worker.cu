@@ -64,8 +64,8 @@ void TransWorker::add_tasks(const std::vector<std::string>& tasks) {
     }
 }
 
-std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> TransWorker::get_finished_transfer_tasks() {
-    std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> finished_tasks;
+std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> TransWorker::get_finished_transfer_tasks() {
+    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> finished_tasks;
     while (!transfer_result_queue.empty())
     {
         // std::cout<<"transfer_result_queue is not empty ";

@@ -105,7 +105,7 @@ public:
 
     // void add_tasks(const std::vector<TransferTask>& tasks);
     void add_tasks(const std::vector<std::string>& tasks);
-    std::vector<std::pair<std::vector<TransferTaskMeta>, std::vector<TransferTaskMeta>>> get_finished_transfer_tasks();
+    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
 
 private:
     void init_device();
