@@ -27,7 +27,7 @@ from vllm._C import gpu_ops, trans_ops
 from vllm.logger import init_logger
 import ray
 #no TransferRequestIdTask, TransferBlocksTask
-from vllm.core.kv_trans_scheduler import TransferTaskMeta
+from vllm.core.kv_trans_scheduler import TransferTaskMeta, TransferTask
 import time
 logger = init_logger(__name__)
 class Worker:
@@ -294,8 +294,8 @@ class Worker:
                                                 self.parallel_config)
     def trans_blocks(
         self,
-        send_tasks: List[trans_ops.TransferTask],
-        recv_tasks: List[trans_ops.TransferTask]
+        send_tasks: List[TransferTask],
+        recv_tasks: List[TransferTask]
     ) -> None:
         t1 = time.time()
         if send_tasks:
