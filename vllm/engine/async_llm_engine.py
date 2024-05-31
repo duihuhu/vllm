@@ -495,6 +495,7 @@ class _AsyncLLMEngine(LLMEngine):
             "get_finished_transfer_tasks",
             # get_all_outputs=True
         )
+        t2 = time.time()   
         for worker_finished_tasks in finished_tasks:
             if worker_finished_tasks:
                 for worker_finished_task in worker_finished_tasks:
@@ -515,16 +516,17 @@ class _AsyncLLMEngine(LLMEngine):
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
-        t2 = time.time()   
+        t3 = time.time()   
         if send_tasks or recv_tasks:
             await self.model_executor._run_workers_async(
                 "trans_blocks",
                 send_tasks=send_tasks,
                 recv_tasks=recv_tasks
             )
-        t3 = time.time()
+        t4 = time.time()
         self.trans_checked_time = self.trans_checked_time + t2 - t1
-        self.trans_running_time = self.trans_running_time + t3 - t2
+        self.trans_sched_time = self.trans_checked_time + t3 - t2
+        self.trans_running_time = self.trans_running_time + t4 - t3
 
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
@@ -793,7 +795,7 @@ class AsyncLLMEngine:
                     trans_blocks_time = await self.engine.model_executor._run_workers_async(
                         "get_trans_blocks_time",
                     )
-                    print("trans block time, transfer time, engine time, trans_checked_time, trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_running_time)
+                    print("trans block time, transfer time, engine time, trans_checked_time, trans_sched_time,trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_sched_time, self.engine.trans_running_time)
 
             except asyncio.TimeoutError as exc:
                 logger.error(

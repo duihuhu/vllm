@@ -66,8 +66,9 @@ class RayGPUExecutor(ExecutorBase):
         # Profile the memory usage and initialize the cache.
         self._init_cache()
 
-        
-        self._init_trans_worker()
+
+        if self.deploy_config.enable_separate:
+            self._init_trans_worker()
         self.forward_dag = None
         if USE_RAY_COMPILED_DAG:
             self.forward_dag = self._compiled_ray_dag()
