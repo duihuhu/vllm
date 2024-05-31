@@ -126,6 +126,7 @@ class LLMEngine:
         self.trans_checked_time = 0
         self.trans_running_time = 0
         self.trans_sched_time = 0 
+        self.trans_kv_turns = 0 
 
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
@@ -317,7 +318,7 @@ class LLMEngine:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         if len(blocks) > response.computed_blocks:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
-            print("prefill end query kv cache ", request_id, time.time())
+            # print("prefill end query kv cache ", request_id, time.time())
             self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
         else:
             self.scheduler.del_send_transfering(request_id)

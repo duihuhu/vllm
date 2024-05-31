@@ -298,7 +298,7 @@ async def generate_prefill(request: Request) -> Response:
             n = n + 1
             if args.enable_gs:
                 if infer_results.finished != True:
-                    print("prefill start query kv cache " , time.time())
+                    # print("prefill start query kv cache " , time.time())
                     decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0

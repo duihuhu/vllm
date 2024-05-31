@@ -531,7 +531,7 @@ class _AsyncLLMEngine(LLMEngine):
             self.trans_checked_time = self.trans_checked_time + t2 - t1
             self.trans_sched_time = self.trans_checked_time + t3 - t2
             self.trans_running_time = self.trans_running_time + t4 - t3
-
+            self.trans_kv_turns  = self.trans_kv_turns + 1
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
 
@@ -803,7 +803,7 @@ class AsyncLLMEngine:
                         trans_blocks_time = await self.engine.model_executor._run_workers_async(
                             "get_trans_blocks_time",
                         )
-                        print("trans block time, transfer time, engine time, trans_checked_time, trans_sched_time,trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_sched_time, self.engine.trans_running_time)
+                        print("trans block time, transfer time, engine time, trans_checked_time, trans_sched_time,trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_sched_time, self.engine.trans_running_time, self.engine.trans_kv_turns)
 
             except asyncio.TimeoutError as exc:
                 logger.error(
