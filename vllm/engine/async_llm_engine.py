@@ -20,6 +20,7 @@ from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader,
 import json
 import vllm.entrypoints.entrypoints_config as cfg
 from vllm.entrypoints.server_meta import QueryBlocks, PrefilledMeta
+from vllm._C import trans_ops
 
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
@@ -497,9 +498,14 @@ class _AsyncLLMEngine(LLMEngine):
         )
         for worker_finished_tasks in finished_tasks:
             if worker_finished_tasks:
+                ([], ['{"channel":"0_1","request_id":"add394ed99b545a2aab753dc6952d1ea"}'])
                 print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
-                send_finished_tasks = worker_finished_tasks[0][0]
-                recv_finished_tasks = worker_finished_tasks[0][1]
+                send_finished_tasks = [] 
+                recv_finished_tasks = []
+                for finished_task in worker_finished_tasks[0]:
+                    send_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
+                for finished_task in worker_finished_tasks[1]:
+                    recv_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
                 # print("send_finished_tasks, recv_finished_tasks ", send_finished_tasks, recv_finished_tasks)
                 real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
                 real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(recv_finished_tasks)
