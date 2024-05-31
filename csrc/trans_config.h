@@ -82,8 +82,8 @@ public:
                      const std::vector<uint32_t>& src_blocks, int opposite_rank);
     void send_blocks(const std::string& channel, const std::string& request_id,
                      const std::vector<uint32_t>& dst_blocks, int opposite_rank);
-    std::vector<TransferTaskMeta> check_send_finished_events();
-    std::vector<TransferTaskMeta> check_recv_finished_events();
+    std::vector<std::string> check_send_finished_events();
+    std::vector<std::string> check_recv_finished_events();
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
 
