@@ -496,23 +496,25 @@ class _AsyncLLMEngine(LLMEngine):
             "get_finished_transfer_tasks",
             # get_all_outputs=True
         )
+        [[([], ['{"channel":"0_1","request_id":"81335f1ccb174f17b9b7fc089354f3d6"}'])], []]
+        ([], ['{"channel":"0_1","request_id":"81335f1ccb174f17b9b7fc089354f3d6"}'])
         for worker_finished_tasks in finished_tasks:
             if worker_finished_tasks:
-                ([], ['{"channel":"0_1","request_id":"add394ed99b545a2aab753dc6952d1ea"}'])
-                print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
-                send_finished_tasks = [] 
-                recv_finished_tasks = []
-                for finished_task in worker_finished_tasks[0]:
-                    send_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
-                for finished_task in worker_finished_tasks[1]:
-                    recv_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
-                # print("send_finished_tasks, recv_finished_tasks ", send_finished_tasks, recv_finished_tasks)
-                real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
-                real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(recv_finished_tasks)
-                if real_send_finished_req_ids:
-                    self.scheduler.add_send_finished(real_send_finished_req_ids)
-                if real_recv_finished_req_ids:
-                    self.scheduler.add_recv_finished(real_recv_finished_req_ids)
+                for worker_finished_task in worker_finished_tasks:
+                    print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
+                    send_finished_tasks = [] 
+                    recv_finished_tasks = []
+                    for finished_task in worker_finished_task[0]:
+                        send_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
+                    for finished_task in worker_finished_task[1]:
+                        recv_finished_tasks.append(trans_ops.TransferTaskMeta(finished_task))
+                    # print("send_finished_tasks, recv_finished_tasks ", send_finished_tasks, recv_finished_tasks)
+                    real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
+                    real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(recv_finished_tasks)
+                    if real_send_finished_req_ids:
+                        self.scheduler.add_send_finished(real_send_finished_req_ids)
+                    if real_recv_finished_req_ids:
+                        self.scheduler.add_recv_finished(real_recv_finished_req_ids)
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
