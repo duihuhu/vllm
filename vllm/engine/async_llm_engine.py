@@ -418,7 +418,6 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
-                    print("prompt add_send_transfering ")
                     self.scheduler.add_send_transfering(seq_group)
             
             if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
@@ -496,12 +495,10 @@ class _AsyncLLMEngine(LLMEngine):
             "get_finished_transfer_tasks",
             # get_all_outputs=True
         )
-        [[([], ['{"channel":"0_1","request_id":"81335f1ccb174f17b9b7fc089354f3d6"}'])], []]
-        ([], ['{"channel":"0_1","request_id":"81335f1ccb174f17b9b7fc089354f3d6"}'])
         for worker_finished_tasks in finished_tasks:
             if worker_finished_tasks:
                 for worker_finished_task in worker_finished_tasks:
-                    print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
+                    # print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
                     send_finished_tasks = [] 
                     recv_finished_tasks = []
                     for finished_task in worker_finished_task[0]:
