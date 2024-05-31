@@ -73,6 +73,7 @@ class EngineArgs:
     local_port: bool = str
     enable_layer: bool = False
     enable_theory: bool = False
+    enable_debug: bool = False
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -421,6 +422,11 @@ class EngineArgs:
             '--enable-theory',
             action="store_true",
             help=('enable check cache meta from global scheduler'))
+
+        parser.add_argument(
+            '--enable-debug',
+            action="store_true",
+            help=('enable check cache meta from global scheduler'))
         
         return parser
         
@@ -494,7 +500,7 @@ class EngineArgs:
             vision_language_config = None
 
         deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
-            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory)
+            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 

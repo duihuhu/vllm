@@ -297,13 +297,15 @@ class Worker:
         send_tasks: List[trans_ops.TransferTask],
         recv_tasks: List[trans_ops.TransferTask]
     ) -> None:
-        t1 = time.time()
+        if self.deploy_config.enable_debug:
+            t1 = time.time()
         if send_tasks:
             self.trans_worker.add_tasks(send_tasks)
         if recv_tasks:
             self.trans_worker.add_tasks(recv_tasks)   
-        t2 = time.time()
-        self.trans_blocks_time = self.trans_blocks_time + t2 - t1
+        if self.deploy_config.enable_debug:
+            t2 = time.time()
+            self.trans_blocks_time = self.trans_blocks_time + t2 - t1
         # print("trans_blocks time ", self.trans_blocks_time)
 
     def get_trans_blocks_time(
