@@ -173,7 +173,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def(py::init<>())
       .def(py::init<const std::string&, const std::string& >())
       .def_readwrite("channel", &TransferTaskMeta::channel)
-      .def_readwrite("request_id", &TransferTaskMeta::request_id);
+      .def_readwrite("request_id", &TransferTaskMeta::request_id)
+      .def("serialize", &TransferTaskMeta::serialize)
+      .def("deserialize", &TransferTaskMeta::deserialize);;
 
   py::class_<TransferTask>(trans_ops, "TransferTask")
       .def(py::init<const TransferTaskMeta&, const std::vector<uint32_t>&, const std::vector<int>&, TaskType>())

@@ -45,6 +45,10 @@ public:
         return task_meta.dump();
     }
 
+    static TransferTaskMeta deserialize(const std::string& serialized_data) {
+        json task_meta = json::parse(serialized_data); // Parse JSON string
+        return TransferTaskMeta(task_meta.at("channel").get<std::string>(), task_meta.at("request_id").get<std::string>());
+    }
     // Deserialize TransferTaskMeta from JSON
     static TransferTaskMeta from_json(const json& task_meta) {
         return TransferTaskMeta{task_meta.at("channel").get<std::string>(), task_meta.at("request_id").get<std::string>()};
