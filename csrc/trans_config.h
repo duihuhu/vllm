@@ -37,6 +37,14 @@ public:
         return json{{"channel", channel}, {"request_id", request_id}};
     }
 
+    // Serialize the TransferTask to a string (JSON format)
+    std::string serialize() const {
+        json task_meta;
+        task_meta["channel"] = channel;
+        task_meta["request_id"] = request_id;
+        return task_meta.dump();
+    }
+
     // Deserialize TransferTaskMeta from JSON
     static TransferTaskMeta from_json(const json& task_meta) {
         return TransferTaskMeta{task_meta.at("channel").get<std::string>(), task_meta.at("request_id").get<std::string>()};
