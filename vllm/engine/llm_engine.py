@@ -319,6 +319,9 @@ class LLMEngine:
         if len(blocks) > response.computed_blocks:
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
             # print("prefill end query kv cache ", request_id, time.time())
+            with open("prefill_request.txt", "a+") as fd:
+                content = "prefill recv kv cache space " + request_id + str(time.time())
+                fd.write(content + "\n")
             self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
         else:
             self.scheduler.del_send_transfering(request_id)
