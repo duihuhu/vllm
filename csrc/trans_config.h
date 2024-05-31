@@ -28,6 +28,16 @@ public:
         : channel(channel), request_id(request_id) {}
     std::string channel;
     std::string request_id;
+
+    // Serialize TransferTaskMeta to JSON
+    json to_json() const {
+        return json{{"channel", channel}, {"request_id", request_id}};
+    }
+
+    // Deserialize TransferTaskMeta from JSON
+    static TransferTaskMeta from_json(const json& j) {
+        return TransferTaskMeta{j.at("channel").get<std::string>(), j.at("request_id").get<std::string>()};
+    }
 };
 
 class TransferTask {
@@ -38,6 +48,26 @@ public:
     std::vector<uint32_t> blocks;
     std::vector<int> opposite_ranks;
     TaskType type;
+
+    // Serialize the TransferTask to a string (JSON format)
+    std::string serialize() const {
+        json task;
+        task["meta"] = meta.to_json();
+        task["blocks"] = blocks;
+        task["opposite_ranks"] = opposite_ranks;
+        task["type"] = static_cast<int>(type);  // Store TaskType as an integer
+        return task.dump();
+    }
+
+    // Deserialize from a string (JSON format) to a TransferTask object
+    static TransferTask deserialize(const std::string& serialized_data) {
+        json task = json::parse(serialized_data);
+        TransferTaskMeta meta = TransferTaskMeta::from_json(task.at("meta"));
+        std::vector<uint32_t> blocks = task.at("blocks").get<std::vector<uint32_t>>();
+        std::vector<int> opposite_ranks = task.at("opposite_ranks").get<std::vector<int>>();
+        TaskType type = static_cast<TaskType>(task.at("type").get<int>());
+        return TransferTask(meta, blocks, opposite_ranks, type);
+    }
 };
 
 

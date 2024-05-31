@@ -180,7 +180,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def_readwrite("meta", &TransferTask::meta)
       .def_readwrite("blocks", &TransferTask::blocks)
       .def_readwrite("opposite_ranks", &TransferTask::opposite_ranks)
-      .def_readwrite("type", &TransferTask::type);
+      .def_readwrite("type", &TransferTask::type)
+      .def("serialize", &TransferTask::serialize)
+      .def_static("deserialize", &TransferTask::deserialize);
 
             
 #ifndef USE_ROCM
