@@ -450,16 +450,23 @@ class LLMEngine:
                 # else:
                 
                 # kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
-                if blocks:
-                    # if seq_group.request_id in self.scheduler.recv_transfering:
-                    print("schedule_decode_waiting add_recv_transfering ", seq_group.request_id, time.time())
-                    self.scheduler.add_recv_transfering(seq_group)
-                    transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id,
-                                                                prefill_request_output.global_ranks, blocks)
-                    kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), transfer_tag))
-                else:
+                
+                if self.deploy_config.enable_theory:
+                    kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks))
                     self.scheduler.running.append(seq_group)
                     self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                    kv_responses.append(kv_response)
+                else:
+                    if blocks:
+                        # if seq_group.request_id in self.scheduler.recv_transfering:
+                        print("schedule_decode_waiting add_recv_transfering ", seq_group.request_id, time.time())
+                        self.scheduler.add_recv_transfering(seq_group)
+                        transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id,
+                                                                    prefill_request_output.global_ranks, blocks)
+                        kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), transfer_tag))
+                    else:
+                        self.scheduler.running.append(seq_group)
+                        self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
 
             else:
                 break

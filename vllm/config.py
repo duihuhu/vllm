@@ -838,7 +838,8 @@ class DeployConfig:
         enable_cache_meta: bool = False,
         deploy_host: str = None,
         deploy_port: str = None,
-        enable_layer: bool = False
+        enable_layer: bool = False,
+        enable_theory: bool = False
         ) -> None: 
             self.enable_separate = enable_separate
             self.role = role
@@ -849,6 +850,7 @@ class DeployConfig:
             
             self.deploy_host = deploy_host
             self.deploy_port = deploy_port
+            self.enable_theory = enable_theory
             self._verify_args()
     
     def _verify_args(self) -> None:
