@@ -12,7 +12,7 @@
 #include "nccl.h"
 #include "gpu_ops.h"
 #include "trans_queue.h"
-#include "json.hpp" // Include the JSON library
+#include <nlohmann/json.hpp>  // Include the JSON library
 
 
 // 定义TaskType枚举类型，用于区分不同的任务类型
