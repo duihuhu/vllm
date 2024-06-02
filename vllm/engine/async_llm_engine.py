@@ -19,7 +19,7 @@ from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 import json
 import vllm.entrypoints.entrypoints_config as cfg
-from vllm.entrypoints.server_meta import QueryBlocks, PrefilledMeta
+from vllm.global_scheduler.server_meta import QueryBlocks, PrefilledMeta
 from vllm._C import trans_ops
 
 logger = init_logger(__name__)
@@ -714,7 +714,7 @@ class AsyncLLMEngine:
         if finished_requests:
             await self._engine_abort(finished_requests)
 
-        #kv_responses in 
+        #kv_responses in , sender get allocated kv cache notify from receiver
         kv_responses = self._request_tracker.get_kv_responses()
         for kv_response in kv_responses:
             # Add the response
@@ -722,7 +722,14 @@ class AsyncLLMEngine:
                 await self.engine.add_kv_response.remote(**kv_response)
             else:
                 self.engine.add_kv_response(**kv_response)
+    
+        #kv_responses out, receiver process allocate kv cache req from sender
+        kv_responses = self.engine.schedule_decode_waiting()
+        for kv_response in kv_responses:
+            self._request_tracker.process_kv_response(
+                self.engine.get_global_ranks(), kv_response)
         
+        #d to p, if only p to d, do not care 
         kv_results_requests = self._request_tracker.get_new_kv_results_request()
         
         for kv_result_requests in kv_results_requests:
@@ -734,13 +741,7 @@ class AsyncLLMEngine:
             if kv_response:
                 self._request_tracker.process_kv_results(
                     self.engine.get_global_ranks(), kv_response)
-                
-        #kv_responses out
-        kv_responses = self.engine.schedule_decode_waiting()
-        for kv_response in kv_responses:
-            self._request_tracker.process_kv_response(
-                self.engine.get_global_ranks(), kv_response)
-        
+        #
         if self.engine_use_ray:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()

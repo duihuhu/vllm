@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
 import httpx
 import random
-import vllm.entrypoints.entrypoints_config as cfg
+import vllm.global_scheduler.entrypoints_config as cfg
 from typing import Dict, Set, List, Iterable, AsyncGenerator
 import asyncio
 import time
