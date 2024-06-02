@@ -21,6 +21,7 @@ import json
 import vllm.global_scheduler.entrypoints_config as cfg
 from vllm.global_scheduler.server_meta import QueryLayerKvBlocks, PrefilledMeta
 from vllm._C import trans_ops
+from vllm.core.interfaces import AllocStatus
 
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
@@ -85,7 +86,7 @@ class AsyncStream:
 class RequestTracker:
     """Synchronous abstraction for tracking requests."""
 
-    def __init__(self, enable_layer) -> None:
+    def __init__(self, enable_layer, enable_breakdown) -> None:
         self._request_streams: Dict[str, AsyncStream] = {}
         self._finished_requests: asyncio.Queue[str] = asyncio.Queue()
         self._new_requests: asyncio.Queue[Tuple[AsyncStream,
@@ -100,6 +101,7 @@ class RequestTracker:
                                     dict]] = asyncio.Queue()
 
         self.enable_layer = enable_layer
+        self.enable_breakdown = enable_breakdown
     def __contains__(self, item):
         return item in self._request_streams
 
@@ -133,6 +135,10 @@ class RequestTracker:
             # if verbose:
                 # logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
+            if request_output.finished and self.enable_breakdown:
+                with open("decode_finished_reqs.txt", "a+") as fd:
+                    content = "decode finish req " + request_id + " " + str(time.time())
+                    fd.write(content + "\n")
 
     def process_kv_response(self,
                             global_ranks: List[int],
@@ -665,7 +671,7 @@ class AsyncLLMEngine:
         if self.is_running:
             raise RuntimeError("Background loop is already running.")
         # Initialize the RequestTracker here so it uses the right event loop.
-        self._request_tracker = RequestTracker(self.engine.deploy_config.enable_layer)
+        self._request_tracker = RequestTracker(self.engine.deploy_config.enable_layer, self.engine.deploy_config.enable_breakdown)
 
         self._background_loop_unshielded = asyncio.get_event_loop(
         ).create_task(self.run_engine_loop())
@@ -797,16 +803,16 @@ class AsyncLLMEngine:
             try:
                 has_requests_in_progress = await asyncio.wait_for(
                     self.engine_step(), ENGINE_ITERATION_TIMEOUT_S)
-                if self.engine.deploy_config.enable_debug:
-                    if (not has_requests_in_progress and
-                        not self.engine.scheduler.swapping_in and
-                        not self.engine.scheduler.swapping_out and
-                        not self.engine.scheduler.recv_transfering and
-                        not self.engine.scheduler.send_transfering):
-                        trans_blocks_time = await self.engine.model_executor._run_workers_async(
-                            "get_trans_blocks_time",
-                        )
-                        print("trans block time, transfer time, engine time, trans_checked_time, trans_sched_time,trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_sched_time, self.engine.trans_running_time, self.engine.trans_kv_turns)
+                # if self.engine.deploy_config.enable_debug:
+                #     if (not has_requests_in_progress and
+                #         not self.engine.scheduler.swapping_in and
+                #         not self.engine.scheduler.swapping_out and
+                #         not self.engine.scheduler.recv_transfering and
+                #         not self.engine.scheduler.send_transfering):
+                #         trans_blocks_time = await self.engine.model_executor._run_workers_async(
+                #             "get_trans_blocks_time",
+                #         )
+                #         print("trans block time, transfer time, engine time, trans_checked_time, trans_sched_time,trans_running_time ", trans_blocks_time[0], trans_blocks_time[1], self.transfer_time, self.engine_time, self.engine.trans_checked_time, self.engine.trans_sched_time, self.engine.trans_running_time, self.engine.trans_kv_turns)
 
             except asyncio.TimeoutError as exc:
                 logger.error(
@@ -908,55 +914,58 @@ class AsyncLLMEngine:
         del self.engine.scheduler.kv_prepared_seq_group[request_id]
         
     async def prepare_layer_kv_blocks(self,
-        request_id: str,
-        prompt: Optional[str],
-        sampling_params: SamplingParams,
-        prompt_token_ids: Optional[List[int]] = None,
-        arrival_time: Optional[float] = None,
-        lora_request: Optional[LoRARequest] = None,
-        multi_modal_data: Optional[MultiModalData] = None,
-        global_ranks: Optional[List[int]] = None,
+        layer_kv_blocks_meta,
     ) -> KvPreparedResponse:
+        res_kv_block_meta = {}
+        for meta in layer_kv_blocks_meta:
+            request_id = meta["request_id"]
+            prompt_token_ids = meta["prompt_token_ids"]
+            global_ranks = meta["global_ranks"]
+            sampling_params_json = meta["sampling_params"]
+            sampling_params =  SamplingParams(**sampling_params_json)
+            if arrival_time is None:
+                arrival_time = time.time()
+            # Create the sequences.
+            block_size = self.engine.cache_config.block_size
+            seq_id = next(self.engine.seq_counter)
+            seq = Sequence(seq_id, None, prompt_token_ids, block_size,
+                        None, None)
 
-        if arrival_time is None:
-            arrival_time = time.time()
-        # Create the sequences.
-        block_size = self.engine.cache_config.block_size
-        seq_id = next(self.engine.seq_counter)
-        seq = Sequence(seq_id, prompt, prompt_token_ids, block_size,
-                       None, lora_request)
-
-        # Defensive copy of SamplingParams, which are used by the sampler,
-        # this doesn't deep-copy LogitsProcessor objects
-        sampling_params = sampling_params.clone()
-        # inject the eos token id into the sampling_params to support min_tokens
-        # processing
-        sampling_params.eos_token_id = seq.eos_token_id
-        # Create the sequence group.
-        seq_group = SequenceGroup(request_id, [seq], sampling_params,
-                                  arrival_time, lora_request, multi_modal_data, None)
-        phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
-        blocks = [block.block_number for block in phy_blocks]
-        self.engine.scheduler.add_recv_transfering(seq_group)
-        self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
-        
-        self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
-        
-        if not self.is_running:
-            if self.start_engine_loop:
-                self.start_background_loop()
+            # Defensive copy of SamplingParams, which are used by the sampler,
+            # this doesn't deep-copy LogitsProcessor objects
+            sampling_params = sampling_params.clone()
+            # inject the eos token id into the sampling_params to support min_tokens
+            # processing
+            sampling_params.eos_token_id = seq.eos_token_id
+            # Create the sequence group.
+            seq_group = SequenceGroup(request_id, [seq], sampling_params,
+                                    arrival_time, None, None, None)
+            can_allocate = self.engine.scheduler.block_manager.can_allocate(seq_group)
+            if can_allocate == AllocStatus.OK:
+                phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
+                blocks = [block.block_number for block in phy_blocks]
+                self.engine.scheduler.add_recv_transfering(seq_group)
+                self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
+                
+                self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
+                
+                if not self.is_running:
+                    if self.start_engine_loop:
+                        self.start_background_loop()
+                    else:
+                        raise AsyncEngineDeadError(
+                            "Background loop is not running. If it was running, "
+                            "inspect the output to find the stacktrace of the "
+                            "error that caused the background loop to stop "
+                            "(AsyncEngineDeadError).")
+                #record request id, in case of we can not return token result
+                self._request_tracker.new_requests_event.set()
+                stream = AsyncStream(request_id)
+                self._request_tracker._request_streams[stream.request_id] = stream
+                res_kv_block_meta[request_id] = len(phy_blocks)
             else:
-                raise AsyncEngineDeadError(
-                    "Background loop is not running. If it was running, "
-                    "inspect the output to find the stacktrace of the "
-                    "error that caused the background loop to stop "
-                    "(AsyncEngineDeadError).")
-        #record request id, in case of we can not return token result
-        self._request_tracker.new_requests_event.set()
-        stream = AsyncStream(request_id)
-        self._request_tracker._request_streams[stream.request_id] = stream
-
-        return len(phy_blocks)
+                res_kv_block_meta[request_id] = 0
+            return res_kv_block_meta
 
     async def pull_kv_blocks(self, query_meta):
         self.engine.pull_kv_blocks(query_meta)

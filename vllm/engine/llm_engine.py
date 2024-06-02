@@ -317,9 +317,10 @@ class LLMEngine:
         blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
         # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
         if len(blocks) > response.computed_blocks:
-            # with open("prefill_request.txt", "a+") as fd:
-            #     content = "prefill recv kv cache space " + request_id + str(time.time())
-            #     fd.write(content + "\n")
+            if self.deploy_config.enable_breakdown:
+                with open("prefill_add_kv_request.txt", "a+") as fd:
+                    content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
+                    fd.write(content + "\n")
             self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
         else:
             self.scheduler.del_send_transfering(request_id)

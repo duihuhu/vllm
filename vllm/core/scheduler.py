@@ -792,9 +792,10 @@ class Scheduler:
             seq_group = self.recv_transfering[request_id]
             if self.deploy_config.role == "decoder":
                 if not self.enable_layer:
-                    # with open("decode_request.txt", "a+") as fd:
-                    #     content = "decoder finshed recv data append request to running " + seq_group.request_id + str(time.time())
-                    #     fd.write(content + "\n")
+                    if self.deploy_config.enable_breakdown:
+                        with open("decode_add_request_to_running.txt", "a+") as fd:
+                            content = "decoder finshed recv data append request to running " + seq_group.request_id + " " + str(time.time())
+                            fd.write(content + "\n")
                     self.running.append(seq_group)
                     self.block_manager.move_kv_blocks_meta(seq_group)
                 else:

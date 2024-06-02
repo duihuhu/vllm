@@ -37,18 +37,9 @@ async def send_prefilled_meta(response: Request) -> None:
 
 @app.post("/query_layer_kv_blocks")
 async def query_layer_kv_blocks(response: Request) -> None:
-    payload = await response.json()
-    print("query_layer_kv_blocks ", payload)
-    
-    request_id = payload.pop("request_id")
-    prompt_token_ids = payload.pop("prompt_token_ids")
-    global_ranks =  payload.pop("global_ranks")
-    sampling_params_json = payload.pop("sampling_params")
-    sampling_params =  SamplingParams(**sampling_params_json)
-    blocks_num = await server.engine.prepare_layer_kv_blocks(prompt=None, request_id=request_id, sampling_params=sampling_params, \
-        prompt_token_ids=prompt_token_ids, global_ranks=global_ranks)
-    
-    return {"blocks_num": blocks_num, "global_ranks": server.global_ranks}
+    payload = await response.json()    
+    kv_block_meta = await server.engine.prepare_layer_kv_blocks(payload)
+    return {"kv_block_meta": kv_block_meta, "global_ranks": server.global_ranks}
     
 
 @app.post("/pull_kv_cache")
@@ -302,7 +293,10 @@ async def generate_prefill(request: Request) -> Response:
             #send kv allocate to decode directly
             if args.enable_gs:
                 if infer_results.finished != True:
-                    # print("prefill start query kv cache " , time.time())
+                    if args.enable_breakdown:
+                        with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
+                            content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
+                            fd.write(content + "\n")
                     decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0
@@ -396,6 +390,7 @@ if __name__ == "__main__":
     parser.add_argument("--local_host", type=str)
     parser.add_argument("--local_port", type=int)
     parser.add_argument("--enable-gs", action="store_true")
+    parser.add_argument("--enable-breakdown", action="store_true")
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)

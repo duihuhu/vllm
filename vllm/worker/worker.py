@@ -247,23 +247,23 @@ class Worker:
             blocks_to_copy = data["blocks_to_copy"]
             blocks_to_send_remote = data["blocks_to_send_remote"]
 
-        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         #todo hucc
-        if wait_for_swap_out:
-            self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
+        # if wait_for_swap_out:
+        #     self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
                 
-        if num_seq_groups == 0:
-            swap_finished_req_ids = self.cache_engine.check_finished_events()
+        # if num_seq_groups == 0:
+        #     swap_finished_req_ids = self.cache_engine.check_finished_events()
     
-            return ([[]], swap_finished_req_ids)
+        #     return ([[]], swap_finished_req_ids)
         
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache, blocks_to_send_remote, self.cache_engine)
+                                                 self.gpu_cache, blocks_to_send_remote, self.cache_engine, self.trans_worker)
         
         swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)

@@ -48,7 +48,7 @@ from vllm.model_executor.weight_utils import (default_weight_loader,
 from vllm.sequence import SamplerOutput
 import time
 from vllm.worker.cache_engine import CacheEngine
-from vllm._C import gpu_ops
+from vllm._C import gpu_ops, trans_ops
 
 class LlamaMLP(nn.Module):
 
@@ -283,6 +283,8 @@ class LlamaModel(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
         blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
+        cache_engine: CacheEngine = None,
+        trans_worker: trans_ops.TransWorker = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         # torch.cuda.synchronize()
@@ -302,14 +304,10 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-            if blocks_to_send_remote:
-                if blocks_to_send_remote[0]:
-                    t1 = time.time()
-                    # print("start submit ", t1)
-                    self.send_layer_block(kv_caches[i], blocks_to_send_remote)
-                    # self.executor.submit(self.send_layer_block, kv_caches[i], blocks_to_send_remote)
-                    t2 = time.time()
-                    # print("end submit time ", t2-t1, t2)
+            # if blocks_to_send_remote:
+            #     if blocks_to_send_remote[0]:
+                    # trans_worker.add_tasks(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),self.block_ids[request_id] ,self.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_BLOCKS).serialize())
+
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
 
@@ -377,10 +375,12 @@ class LlamaForCausalLM(nn.Module):
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
         blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
+        cache_engine: CacheEngine = None,
+        transworker: trans_ops.TransWorker = None
     ) -> torch.Tensor:
         
         hidden_states = self.model(input_ids, positions, kv_caches,
-                                   attn_metadata, blocks_to_send_remote)
+                                   attn_metadata, blocks_to_send_remote, cache_engine, transworker)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,

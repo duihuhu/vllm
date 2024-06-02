@@ -74,6 +74,7 @@ class EngineArgs:
     enable_layer: bool = False
     enable_theory: bool = False
     enable_debug: bool = False
+    enable_breakdown: bool = False
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -426,8 +427,13 @@ class EngineArgs:
         parser.add_argument(
             '--enable-debug',
             action="store_true",
-            help=('enable check cache meta from global scheduler'))
-        
+            help=('enable debug'))
+
+        parser.add_argument(
+            '--enable-breakdown',
+            action="store_true",
+            help=('enable breakdown'))
+         
         return parser
         
     @classmethod
@@ -500,7 +506,7 @@ class EngineArgs:
             vision_language_config = None
 
         deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
-            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug)
+            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 

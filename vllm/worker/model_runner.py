@@ -28,7 +28,7 @@ from vllm.utils import (CudaMemoryProfiler, async_tensor_h2d,
                         maybe_expand_dim)
 
 from vllm.worker.cache_engine import CacheEngine
-
+from vllm._C import trans_ops
 
 logger = init_logger(__name__)
 
@@ -646,6 +646,7 @@ class ModelRunner:
         kv_caches: List[torch.Tensor],
         blocks_to_send_remote: Dict[str, Tuple[int, List[int], List[int]]] = None,
         cache_engine: CacheEngine = None,
+        transworker: trans_ops.TransWorker = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
@@ -667,7 +668,9 @@ class ModelRunner:
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
-                "blocks_to_send_remote": (blocks_to_send_remote, cache_engine),
+                "blocks_to_send_remote": blocks_to_send_remote,
+                "cache_engine": cache_engine,
+                "transworker": transworker
             }
         else:
             execute_model_kwargs = {
@@ -680,27 +683,7 @@ class ModelRunner:
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         
-        if blocks_to_send_remote:
-            for request_id, block_info in blocks_to_send_remote.items():
-                channel = ""
-                for i in range(len(block_info[1])):
-                    if i == 0:
-                            channel = str(block_info[1][0])
-                    else:
-                        channel =  channel + "_" + str(block_info[1][i])
-                cache_engine.send_request_id(request_id=request_id, channel=channel, opposite_rank=block_info[1][cache_engine.worker_rank])
-        # t1 = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
-
-        if blocks_to_send_remote:
-            for request_id, block_info in blocks_to_send_remote.items():
-                channel = ""
-                for i in range(len(block_info[1])):
-                    if i == 0:
-                        channel = str(block_info[1][i])
-                    else:
-                        channel =  channel + "_" + str(block_info[1][i])
-                cache_engine.set_event(channel=channel, request_id=request_id)
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
@@ -712,8 +695,6 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-        # t2 = time.time()
-        # print("model_executable time ", t2, t2-t1)
         return output
 
     @torch.inference_mode()
