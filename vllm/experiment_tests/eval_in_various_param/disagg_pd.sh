@@ -1,6 +1,25 @@
 #!/bin/bash
-dirname="e2e_exp"
-mkdir -p ${dirname}
+dirname="e2e_exp_data"
+if [ -d "$dirname" ]; then
+    rm -rf ${dirname}
+    if [ $? -eq 0 ]; then
+        mkdir ${dirname}
+        if [ $? -eq 0 ]; then
+            echo "Directory ${dirname} created successfully."
+        else
+            echo "Error creating directory ${dirname}."
+        fi
+    else
+        echo "Error deleting directory ${dirname}."
+    fi
+else
+    mkdir  -p ${dirname}
+    if [ $? -eq 0 ]; then
+        echo "Directory ${dirname} created successfully."
+    else
+        echo "Error creating directory ${dirname}."
+    fi
+fi
 name="disagg"
 input_lens=(64 128 256 512 1024 2048)
 output_lens=(16 32)
