@@ -141,7 +141,7 @@ async def main(args, reqs):
         tbt_with_second_token.extend(res[3])
         second_token.append(res[4])
         # print("Res ", res)
-    print("average_jct , p90_jct,  p99_jct, average_ttft , p90_ttft, p90_ttft, average_tbt_no_second_token , p90_tbt_no_second_token , p99_tbt_no_second_token, , average_tbt_with_second_token , p90_tbt_with_second_token , p99_tbt_with_second_token, avg_second_token ", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 99), np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 99), np.average(tbt_no_second_token), np.percentile(tbt_no_second_token, 90), np.percentile(tbt_no_second_token, 99) , np.average(tbt_with_second_token), np.percentile(tbt_with_second_token, 90), np.percentile(tbt_with_second_token, 99), np.average(second_token))
+    print("average_jct , p90_jct,  p99_jct, average_ttft , p90_ttft, p90_ttft, average_tbt_no_second_token , p90_tbt_no_second_token , p99_tbt_no_second_token, , average_tbt_with_second_token , p90_tbt_with_second_token , p99_tbt_with_second_token, avg_second_token ", np.average(jct), np.percentile(jct, 50), np.percentile(jct, 99), np.average(ttft), np.percentile(ttft, 50), np.percentile(ttft, 99), np.average(tbt_no_second_token), np.percentile(tbt_no_second_token, 50), np.percentile(tbt_no_second_token, 99) , np.average(tbt_with_second_token), np.percentile(tbt_with_second_token, 50), np.percentile(tbt_with_second_token, 99), np.average(second_token))
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
