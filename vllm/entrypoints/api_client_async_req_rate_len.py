@@ -137,7 +137,7 @@ async def main(args, reqs):
         jct.append(res[0])
         ttft.append(res[1])
         tbt.extend(res[2])
-        second_token.extend(res[3])
+        second_token.append(res[3])
         # print("Res ", res)
     print("average jct , p90 jct,  p95 jct, average ttft , p90 ttft, p95 ttft, average tbt , p90 tbt, p95 tbt ", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95), np.average(tbt), np.percentile(tbt, 90), np.percentile(tbt, 95), np.average(second_token))
     
