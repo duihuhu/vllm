@@ -40,7 +40,7 @@ for input_len in "${input_lens[@]}"; do
         
         mv /home/jovyan/vllm/decode_add_request_to_running.txt ${dirtype}/${type}_${input_len}_${output_len}_${request_rate}_${num_requests}_decode_add_request_to_running.txt
 
-        mv /home/jovyan/vllm/decode_add_request_to_running.txt ${dirtype}/${type}_${input_len}_${output_len}_${request_rate}_${num_requests}_decode_finished_reqs.txt
+        mv /home/jovyan/vllm/decode_finished_reqs.txt ${dirtype}/${type}_${input_len}_${output_len}_${request_rate}_${num_requests}_decode_finished_reqs.txt
         sleep 10
     done
   done
