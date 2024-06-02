@@ -167,7 +167,7 @@ if __name__ == "__main__":
     for i in range(args.num_requests):
         reqs.append(req)
 
-    print("reqs ", reqs)    
+    # print("reqs ", reqs)    
     # reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
     asyncio.run(main(args, reqs))
 
