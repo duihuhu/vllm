@@ -86,7 +86,7 @@ class InferResults:
             "end_time": self.end_time,    
         }
 
-class QueryLayerBlocks:
+class QueryLayerKvBlocks:
     def __init__(self, request_id , prompt_token_ids, sampling_params, global_ranks) -> None:
         self.request_id = request_id
         self.prompt_token_ids = prompt_token_ids
