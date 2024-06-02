@@ -1,4 +1,3 @@
-from comm import EngineType
 from enum import Enum
 
 #record session id , prompt, output, total text len, kv size, prefill machine, decode machine

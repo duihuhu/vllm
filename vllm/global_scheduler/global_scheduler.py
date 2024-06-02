@@ -8,7 +8,7 @@ import httpx
 import random
 from vllm.global_scheduler.global_radix_tree import RadixCache
 from vllm.global_scheduler.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
-from vllm.global_scheduler.comm import EngineType
+from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.global_scheduler.entrypoints_config as cfg
 from typing import Dict, Set, List, Iterable, AsyncGenerator
