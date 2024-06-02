@@ -119,12 +119,13 @@ async def post_request_and_get_response(args, req, waiting_time):
             elif resp['finished'] == True:
                 end_time = resp['end_time']
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
-    return (end_time-start_time, ttft, tbt[1:], tbt[0], req[-2] , req[-1])
+    return (end_time-start_time, ttft, tbt[1:], tbt, tbt[0], req[-2] , req[-1])
 
 async def main(args, reqs):
     jct = []
     ttft = []
-    tbt = []
+    tbt_no_second_token = []
+    tbt_with_second_token = []
     second_token = []
     waiting_time = 0
     coroutines = []
@@ -136,10 +137,11 @@ async def main(args, reqs):
     for res in response:
         jct.append(res[0])
         ttft.append(res[1])
-        tbt.extend(res[2])
-        second_token.append(res[3])
+        tbt_no_second_token.extend(res[2])
+        tbt_with_second_token.extend(res[3])
+        second_token.append(res[4])
         # print("Res ", res)
-    print("average jct , p90 jct,  p95 jct, average ttft , p90 ttft, p95 ttft, average tbt , p90 tbt, p95 tbt ", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 95), np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 95), np.average(tbt), np.percentile(tbt, 90), np.percentile(tbt, 95), np.average(second_token))
+    print("average_jct , p90_jct,  p99_jct, average_ttft , p90_ttft, p90_ttft, average_tbt_no_second_token , p90_tbt_no_second_token , p99_tbt_no_second_token, , average_tbt_with_second_token , p90_tbt_with_second_token , p99_tbt_with_second_token, avg_second_token ", np.average(jct), np.percentile(jct, 90), np.percentile(jct, 99), np.average(ttft), np.percentile(ttft, 90), np.percentile(ttft, 99), np.average(tbt_no_second_token), np.percentile(tbt_no_second_token, 90), np.percentile(tbt_no_second_token, 99) , np.average(tbt_with_second_token), np.percentile(tbt_with_second_token, 90), np.percentile(tbt_with_second_token, 99), np.average(second_token))
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
