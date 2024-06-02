@@ -32,6 +32,8 @@ for input_len in "${input_lens[@]}"; do
     for request_rate in "${request_rates[@]}"; do
         output_file="${dirtype}/${type}_${input_len}_${output_len}_${request_rate}_${num_requests}.txt"
         command="python3 ./vllm/entrypoints/api_client_async_req_rate_len.py --input-len $input_len --output-len $output_len --request-rate $request_rate --num-requests $num_requests"
+        eval "$command"
+        sleep 2
         mv /home/jovyan/vllm/prefill_add_kv_request.txt ${dirtype}/${type}_${input_len}_${output_len}_${request_rate}_${num_requests}_prefill_add_kv_request.txt
 
         mv /home/jovyan/vllm/prefill_send_query_kv_to_decode.txt ${dirtype}/${type}_${input_len}_${output_len}_${request_rate}_${num_requests}_prefill_send_query_kv_to_decode.txt
