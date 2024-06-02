@@ -428,11 +428,6 @@ class EngineArgs:
             '--enable-debug',
             action="store_true",
             help=('enable debug'))
-
-        parser.add_argument(
-            '--enable-breakdown',
-            action="store_true",
-            help=('enable breakdown'))
          
         return parser
         
