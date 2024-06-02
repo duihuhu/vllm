@@ -18,7 +18,7 @@ from vllm.sequence import MultiModalData, SequenceStatus, SequenceGroup, Sequenc
 from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 import json
-import vllm.entrypoints.entrypoints_config as cfg
+import vllm.global_scheduler.entrypoints_config as cfg
 from vllm.global_scheduler.server_meta import QueryBlocks, PrefilledMeta
 from vllm._C import trans_ops
 
@@ -731,7 +731,6 @@ class AsyncLLMEngine:
         
         #d to p, if only p to d, do not care 
         kv_results_requests = self._request_tracker.get_new_kv_results_request()
-        
         for kv_result_requests in kv_results_requests:
             kv_response = None
             if self.engine_use_ray:

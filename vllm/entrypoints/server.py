@@ -5,8 +5,8 @@ from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
 from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta, QueryMeta, QueryCacheMeta
-from vllm.entrypoints.server_meta import InferResults
-import entrypoints_config as cfg
+from vllm.global_scheduler.server_meta import InferResults
+from  vllm.global_scheduler.entrypoints_config as cfg
 import uvicorn
 import threading
 import queue
