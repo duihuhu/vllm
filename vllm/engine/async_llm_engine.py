@@ -19,7 +19,7 @@ from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 import json
 import vllm.global_scheduler.entrypoints_config as cfg
-from vllm.global_scheduler.server_meta import QueryBlocks, PrefilledMeta
+from vllm.global_scheduler.server_meta import QueryLayerKvBlocks, PrefilledMeta
 from vllm._C import trans_ops
 
 logger = init_logger(__name__)
@@ -326,23 +326,29 @@ class _AsyncLLMEngine(LLMEngine):
             del self.scheduler.decode_recv_finished[request_id]
  
 
-    async def _query_layer_kv_blocks(self, seq_group: SequenceGroup):
+    async def _query_layer_kv_blocks(self, seq_groups: List[SequenceGroup]):
             decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
-            query_blocks =  QueryBlocks(seq_group.request_id, seq_group.prompt_token_ids, seq_group.sampling_params, self.get_global_ranks()).__json__()
+            query_blocks = []
+            for seq_group in seq_groups:
+                query_layer_block =  QueryLayerKvBlocks(seq_group.request_id, seq_group.prompt_token_ids, seq_group.sampling_params, self.get_global_ranks()).__json__()
+                query_blocks.append(query_layer_block)
             data = CommData(
                 headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
                 payload=query_blocks
             )
             return await CommEngine.async_send_to(decode_entry_point, "query_layer_kv_blocks", data)
         
+    #get block num and global ranks
     async def query_layer_kv_blocks(self):
         layer_blocks = {}
+        seq_groups = []
         for seq_group in  self.scheduler.running:
-            query_response = await self._query_layer_kv_blocks(seq_group)
-            query_response = json.loads(query_response)
-            layer_blocks[seq_group.request_id] = (query_response["blocks_num"], query_response["global_ranks"])
-            self.scheduler.add_send_transfering(seq_group)
-
+            seq_groups.append(seq_group)
+            
+        query_response = await self._query_layer_kv_blocks(seq_groups)
+        query_response = json.loads(query_response)
+        layer_blocks[seq_group.request_id] = (query_response["blocks_num"], query_response["global_ranks"])
+        self.scheduler.add_send_transfering(seq_group)
         return layer_blocks
 
     async def send_prefilled_meta(self, request_id, prefilled_token_ids, output_logprobs):
@@ -371,7 +377,6 @@ class _AsyncLLMEngine(LLMEngine):
             and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
             self.check_deocde_recv_meta()
 
-        # t1 = time.time() 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
         # if scheduler_outputs.is_empty():
@@ -381,21 +386,22 @@ class _AsyncLLMEngine(LLMEngine):
         #             time.sleep(0.05)
         #     else:
         #         return []
-            
+        
+        # prefill send seq's query kv cache to decode
         if self.deploy_config.enable_cache_meta and self.deploy_config.role == "prompt":
             if cached_seq_groups:
                 for seq_group in cached_seq_groups:
                     asyncio.create_task(self._query_cache(seq_group, request_tracker))
     
+        #use transfer kv cache by layer and by req, should enable_layer, and it use only in prompt
         blocks_to_send_remote = None    
-        if self.deploy_config.enable_layer  and self.deploy_config.role == "prompt":
+        if self.deploy_config.enable_layer and self.deploy_config.role == "prompt":
             blocks_to_send_remote = await self.query_layer_kv_blocks()
             for seq_group_metadata in seq_group_metadata_list:
                 if seq_group_metadata.request_id in blocks_to_send_remote:
                     for key, value in seq_group_metadata.block_tables.items():
                         blocks_to_send_remote[seq_group_metadata.request_id] = (blocks_to_send_remote[seq_group_metadata.request_id][0], blocks_to_send_remote[seq_group_metadata.request_id][1], value)
                         
-        # t2 = time.time() 
         if not scheduler_outputs.is_empty():
             # Execute the model.
             all_outputs = await self.model_executor.execute_model_async(
@@ -410,7 +416,6 @@ class _AsyncLLMEngine(LLMEngine):
         else:
             output = []
 
-        # t3 = time.time()
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
@@ -751,12 +756,10 @@ class AsyncLLMEngine:
             if self.engine.deploy_config.enable_debug:
                 t3 = time.time()
                 self.transfer_time = self.transfer_time + t3 - t2
-            # print("transfer step ",  self.transfer_time)
             request_outputs = await self.engine.step_async(self._request_tracker)
             if self.engine.deploy_config.enable_debug:
                 t4 = time.time()
                 self.engine_time = self.engine_time + t4 - t2
-            # print("engine step ", self.engine_time, t4-t2, t3-t2)
 
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
@@ -933,9 +936,9 @@ class AsyncLLMEngine:
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data, None)
         phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
-        blocks_num = [block.block_number for block in phy_blocks]
+        blocks = [block.block_number for block in phy_blocks]
         self.engine.scheduler.add_recv_transfering(seq_group)
-        self.engine.kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks_num, False)
+        self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
         
         self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
         
@@ -948,6 +951,7 @@ class AsyncLLMEngine:
                     "inspect the output to find the stacktrace of the "
                     "error that caused the background loop to stop "
                     "(AsyncEngineDeadError).")
+        #record request id, in case of we can not return token result
         self._request_tracker.new_requests_event.set()
         stream = AsyncStream(request_id)
         self._request_tracker._request_streams[stream.request_id] = stream

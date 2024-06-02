@@ -52,7 +52,6 @@ class TransferSequenceGroup:
             self.seq_group = seq_group
             self.num_transfer_workers = num_transfer_workers
 
-
 class SchedulerOutputs:
 
     def __init__(

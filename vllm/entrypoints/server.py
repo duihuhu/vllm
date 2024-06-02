@@ -38,6 +38,8 @@ async def send_prefilled_meta(response: Request) -> None:
 @app.post("/query_layer_kv_blocks")
 async def query_layer_kv_blocks(response: Request) -> None:
     payload = await response.json()
+    print("query_layer_kv_blocks ", payload)
+    
     request_id = payload.pop("request_id")
     prompt_token_ids = payload.pop("prompt_token_ids")
     global_ranks =  payload.pop("global_ranks")
@@ -45,6 +47,7 @@ async def query_layer_kv_blocks(response: Request) -> None:
     sampling_params =  SamplingParams(**sampling_params_json)
     blocks_num = await server.engine.prepare_layer_kv_blocks(prompt=None, request_id=request_id, sampling_params=sampling_params, \
         prompt_token_ids=prompt_token_ids, global_ranks=global_ranks)
+    
     return {"blocks_num": blocks_num, "global_ranks": server.global_ranks}
     
 
@@ -296,6 +299,7 @@ async def generate_prefill(request: Request) -> Response:
             )
             last_time = end_time
             n = n + 1
+            #send kv allocate to decode directly
             if args.enable_gs:
                 if infer_results.finished != True:
                     # print("prefill start query kv cache " , time.time())
@@ -303,6 +307,8 @@ async def generate_prefill(request: Request) -> Response:
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
+       
+        #recv kv allocate result and deocde's decode
         if args.enable_gs: 
             async for resp in decode_response:
                 resp = resp.decode('utf-8')
