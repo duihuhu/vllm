@@ -455,16 +455,16 @@ class _AsyncLLMEngine(LLMEngine):
                 for seq_group in decoded_seq_groups:
                     self.scheduler.add_send_transfering(seq_group)
         else:
+            processed_output_with_layer = []
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
-                processed_output_with_layer = []
                 for seq_group in prefilled_seq_groups:
                     output = self.scheduler.outputs_with_layer[processed_output.request_id]
                     output.is_layer = True
                     processed_output_with_layer.append(output)
                     del self.scheduler.outputs_with_layer[seq_group.request_id]
                     del self.scheduler.seq_groups_with_layer[seq_group.request_id]
-
+                
                 # if processed_output_with_layer:
                     # await self.send_prefilled_meta(processed_output_with_layer)
 
@@ -738,7 +738,6 @@ class AsyncLLMEngine:
         # t1 = time.time()
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
-        print("new_requests ", new_requests)
         for new_request in new_requests:
             # Add the request into the vLLM engine's waiting queue.
             # TODO: Maybe add add_request_batch to reduce Ray overhead
