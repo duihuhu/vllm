@@ -442,8 +442,8 @@ class _AsyncLLMEngine(LLMEngine):
         for processed_output in processed_outputs:
             if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
                 processed_output_without_layer.append(processed_output)
-            else:
-                self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
+            # else:
+            #     self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
                 
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
@@ -469,10 +469,10 @@ class _AsyncLLMEngine(LLMEngine):
                         seq = seq_group.get_seqs()[0]
                         merge_request_id = merge_seq_groups[seq_group]
                         if merge_request_id not in processed_output_with_layer:
-                            processed_output_with_layer[merge_request_id] = [{seq_group.request_id: [seq.data.output_token_ids, seq.output_logprobs]}]
+                            processed_output_with_layer[merge_request_id] = [{seq_group.request_id: PrefilledMeta(seq.data.output_token_ids, seq.output_logprobs).__json__()}]
                         else:
-                            processed_output_with_layer[merge_request_id].append({seq_group.request_id: [seq.data.output_token_ids, seq.output_logprobs]})
-                        del self.scheduler.outputs_with_layer[seq_group.request_id]
+                            processed_output_with_layer[merge_request_id].append({seq_group.request_id: PrefilledMeta(seq.data.output_token_ids, seq.output_logprobs).__json__()})
+                        # del self.scheduler.outputs_with_layer[seq_group.request_id]
                         del self.scheduler.seq_groups_with_layer[seq_group.request_id]
                     else:
                         prefilled_seq_groups.append(seq_group)
