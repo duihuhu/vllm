@@ -22,7 +22,7 @@ import vllm.global_scheduler.entrypoints_config as cfg
 from vllm.global_scheduler.server_meta import QueryLayerKvBlocks, PrefilledMeta
 from vllm._C import trans_ops
 from vllm.core.interfaces import AllocStatus
-
+from vllm.utils import random_uuid
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
     os.environ.get("VLLM_ENGINE_ITERATION_TIMEOUT_S", "60"))
@@ -352,6 +352,7 @@ class _AsyncLLMEngine(LLMEngine):
             seq_groups.append(seq_group)
             
         query_response = await self._query_layer_kv_blocks(seq_groups)
+        print("query_response " , query_response)
         query_response = json.loads(query_response)
         layer_blocks[seq_group.request_id] = (query_response["blocks_num"], query_response["global_ranks"])
         self.scheduler.add_send_transfering(seq_group)
@@ -725,7 +726,7 @@ class AsyncLLMEngine:
         if finished_requests:
             await self._engine_abort(finished_requests)
 
-        #kv_responses in , sender get allocated kv cache notify from receiver
+        #recv kv_responses in , sender get allocated kv cache notify from receiver
         kv_responses = self._request_tracker.get_kv_responses()
         for kv_response in kv_responses:
             # Add the response
@@ -734,13 +735,13 @@ class AsyncLLMEngine:
             else:
                 self.engine.add_kv_response(**kv_response)
     
-        #kv_responses out, receiver process allocate kv cache req from sender
+        #kv_responses out, receiver process allocate kv cache req from sender, and return allocat kv num
         kv_responses = self.engine.schedule_decode_waiting()
         for kv_response in kv_responses:
             self._request_tracker.process_kv_response(
                 self.engine.get_global_ranks(), kv_response)
         
-        #d to p, if only p to d, do not care 
+        #d to p, if only p to d, do not care all kv_results
         kv_results_requests = self._request_tracker.get_new_kv_results_request()
         for kv_result_requests in kv_results_requests:
             kv_response = None
@@ -751,7 +752,8 @@ class AsyncLLMEngine:
             if kv_response:
                 self._request_tracker.process_kv_results(
                     self.engine.get_global_ranks(), kv_response)
-        #
+                
+        ##trans_kv_step response for check request finished send/recv and start a send/recv task
         if self.engine_use_ray:
             await self.engine.trans_kv_step.remote()
             request_outputs = await self.engine.step.remote()
@@ -916,7 +918,10 @@ class AsyncLLMEngine:
     async def prepare_layer_kv_blocks(self,
         layer_kv_blocks_meta,
     ) -> KvPreparedResponse:
-        res_kv_block_meta = {}
+        merge_request_id = random_uuid()
+        merge_seq_groups = []
+        merge_blocks = []
+        merge_num_blocks = []
         for meta in layer_kv_blocks_meta:
             request_id = meta["request_id"]
             prompt_token_ids = meta["prompt_token_ids"]
@@ -944,28 +949,33 @@ class AsyncLLMEngine:
             if can_allocate == AllocStatus.OK:
                 phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
                 blocks = [block.block_number for block in phy_blocks]
-                self.engine.scheduler.add_recv_transfering(seq_group)
-                self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
-                
-                self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
-                
-                if not self.is_running:
-                    if self.start_engine_loop:
-                        self.start_background_loop()
-                    else:
-                        raise AsyncEngineDeadError(
-                            "Background loop is not running. If it was running, "
-                            "inspect the output to find the stacktrace of the "
-                            "error that caused the background loop to stop "
-                            "(AsyncEngineDeadError).")
-                #record request id, in case of we can not return token result
-                self._request_tracker.new_requests_event.set()
-                stream = AsyncStream(request_id)
-                self._request_tracker._request_streams[stream.request_id] = stream
-                res_kv_block_meta[request_id] = len(phy_blocks)
+                merge_blocks.append(blocks)
+                merge_seq_groups.append(seq_group)
+                merge_num_blocks.append(len(blocks))
+                # self.engine.scheduler.add_recv_transfering(seq_group)
+                # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
+                # self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
             else:
-                res_kv_block_meta[request_id] = 0
-            return res_kv_block_meta
+                merge_num_blocks.append(0)
+        self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
+        current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
+        self.engine.scheduler.kv_prepared_seq_group[merge_request_id] = merge_seq_groups
+        for seq_group in merge_seq_groups:
+            if not self.is_running:
+                if self.start_engine_loop:
+                    self.start_background_loop()
+                else:
+                    raise AsyncEngineDeadError(
+                        "Background loop is not running. If it was running, "
+                        "inspect the output to find the stacktrace of the "
+                        "error that caused the background loop to stop "
+                        "(AsyncEngineDeadError).")
+            #record request id, in case of we can not return token result
+            self._request_tracker.new_requests_event.set()
+            stream = AsyncStream(seq_group.request_id)
+            self._request_tracker._request_streams[stream.request_id] = stream
+
+        return merge_request_id, merge_num_blocks, current_transfer_tag
 
     async def pull_kv_blocks(self, query_meta):
         self.engine.pull_kv_blocks(query_meta)

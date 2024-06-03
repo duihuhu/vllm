@@ -13,7 +13,7 @@ import queue
 import argparse
 import time
 import json
-from vllm.outputs import KvPreparedResponse, VLLMLoadInfo, RequestOutput, CompletionOutput
+from vllm.outputs import KvPreparedResponse, LayerKvPreparedResponse, VLLMLoadInfo, RequestOutput, CompletionOutput
 from vllm.sequence import Logprob
 import aiohttp
 
@@ -38,8 +38,8 @@ async def send_prefilled_meta(response: Request) -> None:
 @app.post("/query_layer_kv_blocks")
 async def query_layer_kv_blocks(response: Request) -> None:
     payload = await response.json()    
-    kv_block_meta = await server.engine.prepare_layer_kv_blocks(payload)
-    return {"kv_block_meta": kv_block_meta, "global_ranks": server.global_ranks}
+    merge_request_id, merge_num_blocks, current_transfer_tag = await server.engine.prepare_layer_kv_blocks(payload)
+    return LayerKvPreparedResponse(merge_request_id, merge_num_blocks, server.global_ranks, current_transfer_tag).__json__()
     
 
 @app.post("/pull_kv_cache")

@@ -203,3 +203,25 @@ class VLLMLoadInfo:
             "global_ranks": self.global_ranks,
             "timestamp": self.timestamp
         }
+
+
+class LayerKvPreparedResponse:
+    def __init__(
+        self,
+        request_id: str,
+        computed_blocks: List[int],
+        global_ranks: List[int],
+        transfer_tag: str
+    ) -> None:
+        self.request_id = request_id
+        self.computed_blocks = computed_blocks
+        self.global_ranks = global_ranks
+        self.transfer_tag = transfer_tag
+        
+    def __json__(self) -> Dict:
+        return {
+            "request_id": self.request_id,
+            "computed_blocks": self.computed_blocks,
+            "global_ranks": self.global_ranks,
+            "transfer_tag": self.transfer_tag,
+        }

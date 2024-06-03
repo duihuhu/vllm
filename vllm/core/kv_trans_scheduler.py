@@ -3,6 +3,7 @@ import enum
 import threading
 import heapq
 from vllm._C import trans_ops
+from vllm.sequence import SequenceGroup
 
 class TaskType(enum.Enum):
     TRANSFER_SEND_BLOCKS = enum.auto()
@@ -308,6 +309,26 @@ class RecvKvTransScheduler:
         
         self.channel_transfer_tag: Dict[str, int] = {}
         self.enable_layer = enable_layer
+
+        if enable_layer:
+            self.merage_reqs: Dict[str, List[SequenceGroup]] = {}
+            
+    def add_layer_kv_request(
+        self,
+        request_id: str,
+        global_ranks: List[int],
+        blocks: List[List[int]],
+    ) -> None:
+        channel = "_".join([str(rank) for rank in global_ranks])
+        self.block_ids[request_id] = blocks
+        self.finished_worker_count[request_id] = self.num_workers
+        if channel not in self.channel_request_ids:
+            self.channel_request_ids[channel] = []
+            self.channel_transfer_tag[channel] = 0
+        self.channel_request_ids[channel].append(request_id)
+        current_transfer_tag = self.channel_transfer_tag[channel]
+        self.channel_transfer_tag[channel] += 1
+        return current_transfer_tag
         
     def add_kv_request(
         self,
@@ -331,7 +352,13 @@ class RecvKvTransScheduler:
         for channel, request_ids in self.channel_request_ids.items():
             while request_ids:
                 request_id = request_ids.pop(0)
-                scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),  self.block_ids[request_id], self.opposite_ranks, trans_ops.TaskType.TRANSFER_RECV_BLOCKS).serialize())
+                if self.enable_layer:
+                    blocks = []
+                    for block_id in self.block_ids[request_id]:
+                        blocks.extend(block_id)
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), blocks, self.opposite_ranks, trans_ops.TaskType.TRANSFER_RECV_BLOCKS).serialize())
+                else:
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),  self.block_ids[request_id], self.opposite_ranks, trans_ops.TaskType.TRANSFER_RECV_BLOCKS).serialize())
         return scheduled_transfer_tasks 
 
     def schedule(self) -> List[trans_ops.TransferTask]:

@@ -306,7 +306,6 @@ class Worker:
         if self.deploy_config.enable_debug:
             t2 = time.time()
             self.trans_blocks_time = self.trans_blocks_time + t2 - t1
-        # print("trans_blocks time ", self.trans_blocks_time)
 
     def get_trans_blocks_time(
         self,

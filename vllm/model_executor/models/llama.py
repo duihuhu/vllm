@@ -259,7 +259,6 @@ class LlamaModel(nn.Module):
         cache_engine :CacheEngine =  blocks_to_send_remote[1]
         k_cache = kv_caches[0]
         v_cache = kv_caches[1]
-        t1 = time.time()
         # print("start in SendBlockOnLayer ", t1)
         for request_id, block_info in use_blocks_to_send_remote.items():
             channel = ""
@@ -273,8 +272,6 @@ class LlamaModel(nn.Module):
                     k_addr = k_cache[block_num].data_ptr()
                     v_addr = v_cache[block_num].data_ptr()
                     gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][cache_engine.worker_rank])
-        # t2 = time.time()
-        # print("end in SendBlockOnLayer ", t2, t2-t1)
 
     def forward(
         self,
@@ -287,8 +284,6 @@ class LlamaModel(nn.Module):
         trans_worker: trans_ops.TransWorker = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        # torch.cuda.synchronize()
-        # t1 = time.time()
         if inputs_embeds is not None:
             hidden_states = inputs_embeds
         else:
