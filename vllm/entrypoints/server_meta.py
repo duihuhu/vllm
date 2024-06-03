@@ -103,9 +103,9 @@ class QueryLayerKvBlocks:
             "global_ranks": self.global_ranks
         }
 class PrefilledMeta:
-    def __init__(self, request_id, prefilled_token_ids,  output_logprobs, is_layer) -> None:
+    def __init__(self, request_id, prefilled_token_id,  output_logprobs, is_layer) -> None:
         self.request_id = request_id
-        self.prefilled_token_ids = prefilled_token_ids
+        self.prefilled_token_id = prefilled_token_id
         self.output_logprobs = output_logprobs
         self.is_layer = is_layer
         
@@ -124,7 +124,7 @@ class PrefilledMeta:
         
             return {
             "request_id": self.request_id,
-            "prefilled_token_ids": self.prefilled_token_ids,
+            "prefilled_token_id": self.prefilled_token_id,
             "output_logprobs": output_logprobs,
             "is_layer": self.is_layer
         }
