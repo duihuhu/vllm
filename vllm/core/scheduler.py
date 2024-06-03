@@ -171,10 +171,6 @@ class Scheduler:
         # Sequence groups in the SWAPPED state.
         self.swapped: Deque[SequenceGroup] = deque()
 
-        #keep Sequence groups in the prefill under enable layer
-        self.prefilled: Deque[SequenceGroup] = deque()
-
-
         # Time at previous scheduling step
         self.prev_time = 0.0
         # Did we schedule a prompt at previous step?
@@ -218,7 +214,7 @@ class Scheduler:
         # Add sequence groups to the waiting queue.
         self.waiting.append(seq_group)
 
-    def add_decode_seq_group(self, seq_group: SequenceGroup) -> None:
+    def add_decode_seq_group(self, seq_group :Tuple[SequenceGroup, RequestOutput]) -> None:
         # Add sequence groups to the waiting queue.
         self.decode_waiting.append(seq_group)
 
@@ -302,8 +298,10 @@ class Scheduler:
         return decoded_seq_groups
 
     def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
+        prefilled_seq_groups = []
         while self.running:
-            self.prefilled.append(self.running.pop())
+            prefilled_seq_groups.append(self.running.pop())
+        return prefilled_seq_groups
     
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
@@ -756,7 +754,6 @@ class Scheduler:
 
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
-        merge_seq_groups = {}
         for request_id in self.send_finished_req_ids[:]:
             # if not self.enable_layer:
             if request_id in self.req_pull_send_transfering:
@@ -782,7 +779,6 @@ class Scheduler:
                     self.free_seq(seq)
                 else:
                     for seq_group in seq_groups:
-                        merge_seq_groups[seq_group] = request_id
                         seq = seq_group.get_seqs()[0]
                         self.free_seq(seq)
                         
@@ -800,7 +796,12 @@ class Scheduler:
                     self.running.append(seq_group)
                     self.block_manager.move_kv_blocks_meta(seq_group)
                 else:
-                    self.decode_recv_finished[request_id] = seq_group
+                    for seq_grp in seq_group:
+                        if seq_grp.request_id in self.meta_recv_finished:
+                            self.running.append(seq_grp)
+                            del self.meta_recv_finished[seq_grp.request_id]
+                        else:
+                            self.decode_recv_finished[request_id] = seq_group
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
                     self.block_manager.move_kv_blocks_meta(seq_group)
@@ -816,5 +817,4 @@ class Scheduler:
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
-        return merge_seq_groups
 

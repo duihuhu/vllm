@@ -5,7 +5,7 @@ from vllm.engine.async_llm_engine import AsyncLLMEngine
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.sampling_params import SamplingParams
 from vllm.entrypoints.comm import EngineType, CommEngine, CommData, CommonHeader, CacheMeta, QueryMeta, QueryCacheMeta
-from vllm.global_scheduler.server_meta import InferResults
+from vllm.entrypoints.server_meta import InferResults
 import vllm.global_scheduler.entrypoints_config as cfg
 import uvicorn
 import threading
@@ -16,6 +16,7 @@ import json
 from vllm.outputs import KvPreparedResponse, LayerKvPreparedResponse, VLLMLoadInfo, RequestOutput, CompletionOutput
 from vllm.sequence import Logprob
 import aiohttp
+from vllm.entrypoints.server_meta import PrefilledMeta
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5
@@ -146,45 +147,55 @@ def cprobs_key_s2i(cumulative_logprob):
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
     start_time = time.time()
-    request_id = payload.pop("request_id")
-    opp_ranks = payload.pop("opp_ranks")
-    prompt_token_ids = payload.pop("prompt_token_ids")
-    prompt_logprobs = payload.pop("prompt_logprobs")
-    prefilled_token_id = payload.pop("prefilled_token_id")
-    output_logprobs = payload.pop("output_logprobs")
-    cumulative_logprob  = payload.pop("cumulative_logprob")
-    sampling_params_json = payload.pop("sampling_params")
-    index = payload.pop("index")
-    texts = payload.pop("texts")
-    finished = payload.pop("finished")
-    # print("request_id ", request_id)
-    
-    prompt_logprobs = pprobs_key_s2i(prompt_logprobs)
-    output_logprobs = cprobs_key_s2i(output_logprobs)
-    
-    
-    sampling_params = SamplingParams(**sampling_params_json)
-    
-    request_output = RequestOutput(
-        request_id=request_id,
-        prompt=None,
-        outputs= [CompletionOutput(index=index,
-                                   text=texts[0],
-                                   token_ids=prefilled_token_id,
-                                   cumulative_logprob=cumulative_logprob,
-                                   logprobs=output_logprobs)],
-        prompt_token_ids=prompt_token_ids,
-        prompt_logprobs=prompt_logprobs,
-        finished=finished,
-    )
-    request_output.global_ranks = opp_ranks
-    results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
-                                               prompt_token_ids=prompt_token_ids, prefill_request_output=request_output)
+    is_layer = payload.pop("is_layer")
+    if not is_layer:
+        request_id = payload.pop("request_id")
+        opp_ranks = payload.pop("opp_ranks")
+        prompt_token_ids = payload.pop("prompt_token_ids")
+        prompt_logprobs = payload.pop("prompt_logprobs")
+        prefilled_token_id = payload.pop("prefilled_token_id")
+        output_logprobs = payload.pop("output_logprobs")
+        cumulative_logprob  = payload.pop("cumulative_logprob")
+        sampling_params_json = payload.pop("sampling_params")
+        index = payload.pop("index")
+        texts = payload.pop("texts")
+        finished = payload.pop("finished")
+        # print("request_id ", request_id)
+        
+        prompt_logprobs = pprobs_key_s2i(prompt_logprobs)
+        output_logprobs = cprobs_key_s2i(output_logprobs)
+        
+        
+        sampling_params = SamplingParams(**sampling_params_json)
+        
+        request_output = RequestOutput(
+            request_id=request_id,
+            prompt=None,
+            outputs= [CompletionOutput(index=index,
+                                    text=texts[0],
+                                    token_ids=prefilled_token_id,
+                                    cumulative_logprob=cumulative_logprob,
+                                    logprobs=output_logprobs)],
+            prompt_token_ids=prompt_token_ids,
+            prompt_logprobs=prompt_logprobs,
+            finished=finished,
+        )
+        request_output.global_ranks = opp_ranks
+        results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
+                                                prompt_token_ids=prompt_token_ids, prefill_request_output=request_output, is_layer=is_layer)
+    else:
+
+        request_id = payload.pop("request_id")
+        prefilled_token_id = payload.pop("prefilled_token_id")
+        output_logprobs = payload.pop("output_logprobs")
+        output_logprobs = cprobs_key_s2i(output_logprobs)
+        results_generator = server.engine.generate(request_id=request_id, prefilled_token_id=prefilled_token_id, output_logprobs=output_logprobs, is_layer=is_layer)
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
         last_time = start_time
         #response to p
-        if not server.engine.engine.deploy_config.enable_layer:
+        # if not server.engine.engine.deploy_config.enable_layer:
+        if not is_layer:
             async for kv_response in results_generator:
                 yield (json.dumps(kv_response.__json__()) + "\0").encode("utf-8")
                 break
@@ -286,12 +297,19 @@ async def generate_prefill(request: Request) -> Response:
                 tbt =  end_time-last_time,
                 n = n,
                 start_time=start_time,
-                end_time=end_time
+                end_time=end_time,
+                in_layer = request_output.is_layer
+            )
+            layer_infer_results = InferResults(
+                request_id = request_output.request_id,
+                output_logprobs = request_output.outputs[0].logprobs,
+                prefilled_token_id = request_output.outputs[0].token_ids,
+                in_layer = request_output.is_layer
             )
             last_time = end_time
             n = n + 1
             #send kv allocate to decode directly
-            if args.enable_direct and not args.enable_layer:
+            if args.enable_direct and not request_output.is_layer:
                 if infer_results.finished != True:
                     if args.enable_breakdown:
                         with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
@@ -300,6 +318,10 @@ async def generate_prefill(request: Request) -> Response:
                     decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0
+            else:
+                if infer_results.finished != True:
+                    decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
+                                                                (cfg.edecode_host, cfg.edecode_port))
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
        
         #recv kv allocate result and deocde's decode

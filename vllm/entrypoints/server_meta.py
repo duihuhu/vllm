@@ -1,25 +1,26 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class InferResults:
     def __init__(
         self,
         request_id,
-        opp_ranks,
-        prompt_token_ids,
-        prompt_logprobs,
-        prefilled_token_id,
-        output_logprobs,
-        cumulative_logprob,
-        sampling_params,
-        index,
-        texts: List[str],
-        finished: bool,
-        ttft = 0,
-        jct = 0,
-        tbt = 0,
-        n = 0,
-        start_time = 0,
-        end_time = 0
+        opp_ranks: Optional[List[int]] = None,
+        prompt_token_ids: Optional[List[int]] = None,
+        prompt_logprobs: Optional[List[int]] = None,
+        prefilled_token_id: Optional[List[int]] = None,
+        output_logprobs: Optional[List[int]] = None,
+        cumulative_logprob: Optional[List[int]] = None,
+        sampling_params: Optional[List[int]] = None,
+        index: Optional[List[int]] = None,
+        texts:  Optional[List[str]] = None,
+        finished: Optional[bool] = False,
+        ttft: Optional[int] = 0,
+        jct: Optional[int] = 0,
+        tbt: Optional[int] = 0,
+        n: Optional[int] =  0,
+        start_time: Optional[int] = 0,
+        end_time: Optional[int] = 0,
+        is_layer: Optional[bool] = False,
     ) -> None:
         self.request_id = request_id
         self.opp_ranks = opp_ranks
@@ -39,7 +40,7 @@ class InferResults:
         self.n = n
         self.start_time = start_time
         self.end_time = end_time
-    
+        self.is_layer = is_layer
     def __json__(self) -> Dict:
         prompt_logprobs = []
         if self.prompt_logprobs != None:
@@ -83,7 +84,8 @@ class InferResults:
             "tbt": self.tbt,
             "n": self.n,
             "start_time": self.start_time,
-            "end_time": self.end_time,    
+            "end_time": self.end_time,   
+            "is_layer": self.is_layer, 
         }
 
 class QueryLayerKvBlocks:

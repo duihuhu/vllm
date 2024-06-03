@@ -74,13 +74,14 @@ class RequestOutput:
     def __init__(
         self,
         request_id: str,
-        prompt: str,
-        prompt_token_ids: List[int],
+        prompt: Optional[str],
+        prompt_token_ids: Optional[List[int]],
         prompt_logprobs: Optional[PromptLogprobs],
-        outputs: List[CompletionOutput],
-        finished: bool,
+        outputs: Optional[List[CompletionOutput]],
+        finished: Optional[bool],
         metrics: Optional[RequestMetrics] = None,
         lora_request: Optional[LoRARequest] = None,
+        in_layer: Optional[bool] = False
     ) -> None:
         self.request_id = request_id
         self.prompt = prompt
@@ -91,6 +92,7 @@ class RequestOutput:
         self.metrics = metrics
         self.lora_request = lora_request
         self.global_ranks: List[int] = None
+        self.is_layer = False
 
     @classmethod
     def from_seq_group(cls, seq_group: SequenceGroup) -> "RequestOutput":

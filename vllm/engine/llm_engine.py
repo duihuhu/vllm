@@ -336,6 +336,9 @@ class LLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
+        prefilled_token_ids: Optional[List[int]] = None,
+        output_logprobs: Optional[Dict[int, float]] = None,
+        is_layer: Optional[bool] = False
     ) -> KvPreparedResponse:
         
         """Add a request to the engine's request pool.
@@ -379,6 +382,17 @@ class LLMEngine:
             >>> # continue the request processing
             >>> ...
         """
+        if is_layer:
+            seq_group = self.scheduler.kv_prepared_seq_group[request_id]
+            for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
+            if request_id in self.scheduler.decode_recv_finished:
+                self.scheduler.running.append(seq_group)
+            else:
+                self.scheduler.meta_recv_finished[request_id] = seq_group
+            del self.scheduler.kv_prepared_seq_group[request_id]
+            return None
+        
         if lora_request is not None and not self.lora_config:
             raise ValueError(f"Got lora_request {lora_request} but LoRA is "
                              "not enabled!")

@@ -19,7 +19,7 @@ from vllm.usage.usage_lib import UsageContext
 from vllm.entrypoints.comm import CacheMeta, CommEngine, CommData, CommonHeader, QueryMeta, QueryCacheMeta
 import json
 import vllm.global_scheduler.entrypoints_config as cfg
-from vllm.global_scheduler.server_meta import QueryLayerKvBlocks, PrefilledMeta
+from vllm.entrypoints.server_meta import QueryLayerKvBlocks, PrefilledMeta
 from vllm._C import trans_ops
 from vllm.core.interfaces import AllocStatus
 from vllm.utils import random_uuid
@@ -394,10 +394,10 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
-        
-        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder" \
-            and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
-            self.check_deocde_recv_meta()
+        self.scheduler._check_tranfer_finished_req()
+        # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder" \
+        #     and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
+        #     self.check_deocde_recv_meta()
 
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
@@ -439,8 +439,8 @@ class _AsyncLLMEngine(LLMEngine):
         for processed_output in processed_outputs:
             if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
                 processed_output_without_layer.append(processed_output)
-            # else:
-            #     self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
+            else:
+                self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
                 
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
@@ -456,28 +456,17 @@ class _AsyncLLMEngine(LLMEngine):
                     self.scheduler.add_send_transfering(seq_group)
         else:
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
-                self.scheduler.fetch_prefilled_seq_groups()
-                prefilled_seq_groups = []
-                # processed_output_with_layer: Dict[str, List[RequestOutput]] = {}
+                prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 processed_output_with_layer = []
-                while self.scheduler.prefilled:
-                    seq_group = self.scheduler.prefilled[0]
-                    merge_seq_groups = self.scheduler._check_tranfer_finished_req()
-                    if seq_group in merge_seq_groups:
-                        seq = seq_group.get_seqs()[0]
-                        merge_request_id = merge_seq_groups[seq_group]
-                        if merge_request_id not in processed_output_with_layer:
-                            processed_output_with_layer.append(PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs))
-                        else:
-                            processed_output_with_layer.append(PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs))
-                        # del self.scheduler.outputs_with_layer[seq_group.request_id]
-                        del self.scheduler.seq_groups_with_layer[seq_group.request_id]
-                    else:
-                        prefilled_seq_groups.append(seq_group)
-                    self.scheduler.prefilled.pop()
-                self.scheduler.prefilled = prefilled_seq_groups
+                for seq_group in prefilled_seq_groups:
+                    output = self.scheduler.outputs_with_layer[processed_output.request_id]
+                    output.is_layer = True
+                    processed_output_with_layer.append(output)
+                    del self.scheduler.outputs_with_layer[seq_group.request_id]
+                    del self.scheduler.seq_groups_with_layer[seq_group.request_id]
+
                 # if processed_output_with_layer:
-                #     await self.send_prefilled_meta(processed_output_with_layer)
+                    # await self.send_prefilled_meta(processed_output_with_layer)
 
         return processed_output_without_layer, processed_output_with_layer
 
@@ -506,7 +495,10 @@ class _AsyncLLMEngine(LLMEngine):
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
-        cache_meta: Optional[CacheMeta] = None
+        cache_meta: Optional[CacheMeta] = None,
+        prefilled_token_ids: Optional[List[int]] = None,
+        output_logprobs: Optional[Dict[int, float]] = None,
+        is_layer: Optional[bool] = False
     ) -> None:
         if lora_request is not None and not self.lora_config:
             raise ValueError(f"Got lora_request {lora_request} but LoRA is "
@@ -527,7 +519,10 @@ class _AsyncLLMEngine(LLMEngine):
                                 lora_request=lora_request,
                                 multi_modal_data=multi_modal_data,
                                 prefill_request_output=prefill_request_output,
-                                cache_meta=cache_meta)
+                                cache_meta=cache_meta,
+                                prefilled_token_ids=prefilled_token_ids,
+                                output_logprobs=output_logprobs,
+                                is_layer=is_layer)
 
     async def check_health_async(self) -> None:
         self.model_executor.check_health()
@@ -891,7 +886,10 @@ class AsyncLLMEngine:
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
-        cache_meta: Optional[CacheMeta] = None
+        cache_meta: Optional[CacheMeta] = None,
+        prefilled_token_id: Optional[List[int]] = None,
+        output_logprobs: Optional[Dict[int, float]] = None,
+        is_layer: Optional[bool] = False
     ) -> AsyncStream:
         if self.log_requests:
             shortened_prompt = prompt
@@ -944,7 +942,10 @@ class AsyncLLMEngine:
             lora_request=lora_request,
             multi_modal_data=multi_modal_data,
             prefill_request_output=prefill_request_output,
-            cache_meta = cache_meta
+            cache_meta = cache_meta,
+            prefilled_token_id = prefilled_token_id,
+            output_logprobs = output_logprobs,
+            is_layer = is_layer
         )
 
         return stream
@@ -1036,14 +1037,17 @@ class AsyncLLMEngine:
     
     async def generate(
         self,
-        prompt: Optional[str],
-        sampling_params: SamplingParams,
-        request_id: str,
+        prompt: Optional[str]=None,
+        sampling_params: Optional[SamplingParams] = None,
+        request_id: Optional[str] = None,
         prompt_token_ids: Optional[List[int]] = None,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
-        cache_meta: Optional[CacheMeta] = None
+        cache_meta: Optional[CacheMeta] = None,
+        prefilled_token_id: Optional[List[int]] = None,
+        output_logprobs: Optional[Dict[int, float]] = None,
+        is_layer: Optional[bool] = False
     ) -> AsyncIterator[RequestOutput]:
         """Generate outputs for a request.
 
@@ -1121,7 +1125,10 @@ class AsyncLLMEngine:
                 lora_request=lora_request,
                 multi_modal_data=multi_modal_data,
                 prefill_request_output=prefill_request_output,
-                cache_meta = cache_meta
+                cache_meta = cache_meta,
+                prefilled_token_id=prefilled_token_id,
+                output_logprobs = output_logprobs,
+                is_layer = is_layer
             )
 
             async for request_output in stream:
