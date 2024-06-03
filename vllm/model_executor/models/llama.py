@@ -348,12 +348,12 @@ class LlamaForCausalLM(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        transfer_blocks: Optional[MergeReqInfo] = None,
+        merge_req_info: Optional[MergeReqInfo] = None,
         transworker: Optional[trans_ops.TransWorker] = None
     ) -> torch.Tensor:
         
         hidden_states = self.model(input_ids, positions, kv_caches,
-                                   attn_metadata, transfer_blocks, transworker)
+                                   attn_metadata, merge_req_info, transworker)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,
