@@ -892,47 +892,48 @@ class AsyncLLMEngine:
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
     ) -> AsyncStream:
-        if self.log_requests:
-            shortened_prompt = prompt
-            shortened_token_ids = prompt_token_ids
-            if self.max_log_len is not None:
-                if shortened_prompt is not None:
-                    shortened_prompt = shortened_prompt[:self.max_log_len]
-                if shortened_token_ids is not None:
-                    shortened_token_ids = shortened_token_ids[:self.
-                                                              max_log_len]
-            # logger.info(f"Received request {request_id}: "
-            #             f"prompt: {shortened_prompt!r}, "
-            #             f"sampling_params: {sampling_params}, "
-            #             f"prompt_token_ids: {shortened_token_ids}, "
-            #             f"lora_request: {lora_request}.")
+        if not is_layer:
+            if self.log_requests:
+                shortened_prompt = prompt
+                shortened_token_ids = prompt_token_ids
+                if self.max_log_len is not None:
+                    if shortened_prompt is not None:
+                        shortened_prompt = shortened_prompt[:self.max_log_len]
+                    if shortened_token_ids is not None:
+                        shortened_token_ids = shortened_token_ids[:self.
+                                                                max_log_len]
+                # logger.info(f"Received request {request_id}: "
+                #             f"prompt: {shortened_prompt!r}, "
+                #             f"sampling_params: {sampling_params}, "
+                #             f"prompt_token_ids: {shortened_token_ids}, "
+                #             f"lora_request: {lora_request}.")
 
-        if not self.is_running:
-            if self.start_engine_loop:
-                self.start_engine_time = time.time()
-                self.start_background_loop()
+            if not self.is_running:
+                if self.start_engine_loop:
+                    self.start_engine_time = time.time()
+                    self.start_background_loop()
+                else:
+                    raise AsyncEngineDeadError(
+                        "Background loop is not running. If it was running, "
+                        "inspect the output to find the stacktrace of the "
+                        "error that caused the background loop to stop "
+                        "(AsyncEngineDeadError).")
+
+            if arrival_time is None:
+                arrival_time = time.time()
+
+            if self.engine_use_ray:
+                prompt_token_ids = await self.engine.encode_request_async.remote(
+                    request_id=request_id,
+                    prompt=prompt,
+                    prompt_token_ids=prompt_token_ids,
+                    lora_request=lora_request)
             else:
-                raise AsyncEngineDeadError(
-                    "Background loop is not running. If it was running, "
-                    "inspect the output to find the stacktrace of the "
-                    "error that caused the background loop to stop "
-                    "(AsyncEngineDeadError).")
-
-        if arrival_time is None:
-            arrival_time = time.time()
-
-        if self.engine_use_ray:
-            prompt_token_ids = await self.engine.encode_request_async.remote(
-                request_id=request_id,
-                prompt=prompt,
-                prompt_token_ids=prompt_token_ids,
-                lora_request=lora_request)
-        else:
-            prompt_token_ids = await self.engine.encode_request_async(
-                request_id=request_id,
-                prompt=prompt,
-                prompt_token_ids=prompt_token_ids,
-                lora_request=lora_request)
+                prompt_token_ids = await self.engine.encode_request_async(
+                    request_id=request_id,
+                    prompt=prompt,
+                    prompt_token_ids=prompt_token_ids,
+                    lora_request=lora_request)
 
         stream = self._request_tracker.add_request(
             request_id,
