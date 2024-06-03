@@ -300,7 +300,7 @@ async def generate_prefill(request: Request) -> Response:
                 end_time=end_time,
                 is_layer = request_output.is_layer
             )
-            layer_infer_results = InferResults(
+            layer_infer_results = PrefilledMeta(
                 request_id = request_output.request_id,
                 output_logprobs = request_output.outputs[0].logprobs,
                 prefilled_token_id = request_output.outputs[0].token_ids,
