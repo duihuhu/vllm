@@ -58,7 +58,7 @@ public:
 
 class TransferTask {
 public:
-    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type, int layer = 1, bool is_last_layer)
+    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type, int layer = 1, bool is_last_layer=false)
         : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks), type(type), layer(layer), is_last_layer(is_last_layer) {}
     TransferTaskMeta meta;
     std::vector<uint32_t> blocks;
