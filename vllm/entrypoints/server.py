@@ -18,7 +18,7 @@ from vllm.sequence import Logprob
 import aiohttp
 from vllm.entrypoints.server_meta import PrefilledMeta
 
-AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
+AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=10)
 TIMEOUT_KEEP_ALIVE = 5
 ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
@@ -231,20 +231,28 @@ async def generate_decode(request: Request) -> Response:
 async def asyc_forward_request(request_dict, api_url):
     headers = {"User-Agent": "Test Client"}
     # print("request info ", request_dict["request_id"], time.time())
-    async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
-        async with session.post(url=api_url, json=request_dict,
-                                headers=headers) as response:
-            if response.status == 200:
-                delimiter=b"\0"
-                buffer = b''  # 用于缓存数据块中的部分消息
-                async for chunk in response.content.iter_any():
-                    buffer += chunk  # 将新的数据块添加到缓冲区中
-                    while delimiter in buffer:
-                        index = buffer.index(delimiter)  # 查找分隔符在缓冲区中的位置
-                        message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
-                        yield message.strip()  # 返回提取的消息
-                        buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
-
+    try:
+        async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
+            async with session.post(url=api_url, json=request_dict,
+                                    headers=headers) as response:
+                if response.status == 200:
+                    print(f"Received successful response for request")
+                    delimiter=b"\0"
+                    buffer = b''  # 用于缓存数据块中的部分消息
+                    async for chunk in response.content.iter_any():
+                        buffer += chunk  # 将新的数据块添加到缓冲区中
+                        while delimiter in buffer:
+                            index = buffer.index(delimiter)  # 查找分隔符在缓冲区中的位置
+                            message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
+                            yield message.strip()  # 返回提取的消息
+                            buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
+                else:
+                    print(f"Failed response for request {response.status}")
+    except aiohttp.ClientError as e:
+         print(f"Request {request_dict['request_id']} failed: {e}")
+    except Exception as e:
+         print(f"Unexpected error for request {request_dict['request_id']}: {e}")
+        
 @app.post("/generate_prefill")
 async def generate_prefill(request: Request) -> Response:
     """Generate completion for request
