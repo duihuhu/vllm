@@ -27,8 +27,9 @@ from vllm.utils import (CudaMemoryProfiler, async_tensor_h2d,
                         is_pin_memory_available, make_tensor_with_pad,
                         maybe_expand_dim)
 
-from vllm.worker.cache_engine import CacheEngine
 from vllm._C import trans_ops
+from vllm.outputs import MergeReqInfo
+
 
 logger = init_logger(__name__)
 
@@ -644,9 +645,8 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
-        blocks_to_send_remote: Dict[str, Tuple[int, List[int], List[int]]] = None,
-        cache_engine: CacheEngine = None,
-        transworker: trans_ops.TransWorker = None
+        merge_req_info: Optional[MergeReqInfo] = None,
+        transworker: Optional[trans_ops.TransWorker] = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
@@ -662,14 +662,13 @@ class ModelRunner:
         else:
             model_executable = self.model
             
-        if cache_engine:
+        if merge_req_info:
             execute_model_kwargs = {
                 "input_ids": input_tokens,
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
-                "blocks_to_send_remote": blocks_to_send_remote,
-                "cache_engine": cache_engine,
+                "merge_req_info": merge_req_info,
                 "transworker": transworker
             }
         else:
@@ -678,7 +677,6 @@ class ModelRunner:
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
-                "blocks_to_send_remote": None,
             }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})

@@ -12,7 +12,7 @@ from vllm.engine.llm_engine import LLMEngine
 from vllm.engine.ray_utils import initialize_ray_cluster, ray
 from vllm.logger import init_logger
 from vllm.lora.request import LoRARequest
-from vllm.outputs import RequestOutput, KvPreparedResponse, VLLMLoadInfo
+from vllm.outputs import RequestOutput, KvPreparedResponse, LayerKvPreparedResponse, MergeReqInfo, VLLMLoadInfo
 from vllm.sampling_params import SamplingParams
 from vllm.sequence import MultiModalData, SequenceStatus, SequenceGroup, Sequence
 from vllm.usage.usage_lib import UsageContext
@@ -293,7 +293,6 @@ class _AsyncLLMEngine(LLMEngine):
     async def _query_cache(self, seq_group: SequenceGroup, request_tracker: RequestTracker):
         seq = seq_group.get_seqs()[0] 
         query_response = await self._query_cache_meta(seq_group.cache_meta, seq_group.request_id, seq.data.prompt_token_ids)
-        print("query_response ", query_response)
         query_response = json.loads(query_response)
         resp_cached_len = query_response["dcached_len"]
         seq_group.cache_meta.cmeta_kv_len = resp_cached_len
@@ -347,16 +346,26 @@ class _AsyncLLMEngine(LLMEngine):
     #get block num and global ranks
     async def query_layer_kv_blocks(self):
         layer_blocks = {}
-        seq_groups = []
+        send_seq_groups = []
         for seq_group in  self.scheduler.running:
-            seq_groups.append(seq_group)
+            send_seq_groups.append(seq_group)
             
-        query_response = await self._query_layer_kv_blocks(seq_groups)
-        print("query_response " , query_response)
-        query_response = json.loads(query_response)
-        layer_blocks[seq_group.request_id] = (query_response["blocks_num"], query_response["global_ranks"])
-        self.scheduler.add_send_transfering(seq_group)
-        return layer_blocks
+        layer_kv_response = await self._query_layer_kv_blocks(send_seq_groups)
+        layer_kv = LayerKvPreparedResponse(**layer_kv_response)
+        layer_blocks[layer_kv.merage_request_id] = layer_kv
+        # self.scheduler.add_send_transfering(seq_group)
+        #add layer_kv.merage_request_id to send_transfering
+        send_blocks = []
+        merge_seq_groups = []
+        for seq_group, computed_blocks, is_allocated in zip(send_seq_groups, layer_kv.computed_blocks, layer_kv.is_allocated):
+            if is_allocated:
+                blocks = self.scheduler.fetch_kv_blocks(seq_group)
+                if computed_blocks <= len(blocks):
+                    send_blocks.extend(blocks[computed_blocks:])
+                    merge_seq_groups.append(seq_group)
+        self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
+        opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
+        return MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
 
     async def send_prefilled_meta(self, request_id, prefilled_token_ids, output_logprobs):
         decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
@@ -401,13 +410,9 @@ class _AsyncLLMEngine(LLMEngine):
                     asyncio.create_task(self._query_cache(seq_group, request_tracker))
     
         #use transfer kv cache by layer and by req, should enable_layer, and it use only in prompt
-        blocks_to_send_remote = None    
+        merge_req_info = None    
         if self.deploy_config.enable_layer and self.deploy_config.role == "prompt":
-            blocks_to_send_remote = await self.query_layer_kv_blocks()
-            for seq_group_metadata in seq_group_metadata_list:
-                if seq_group_metadata.request_id in blocks_to_send_remote:
-                    for key, value in seq_group_metadata.block_tables.items():
-                        blocks_to_send_remote[seq_group_metadata.request_id] = (blocks_to_send_remote[seq_group_metadata.request_id][0], blocks_to_send_remote[seq_group_metadata.request_id][1], value)
+            merge_req_info = await self.query_layer_kv_blocks()
                         
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -415,7 +420,7 @@ class _AsyncLLMEngine(LLMEngine):
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
                 scheduler_outputs.blocks_to_swap_out,
                 scheduler_outputs.blocks_to_copy,
-                blocks_to_send_remote)
+                merge_req_info)
 
             self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.
@@ -922,6 +927,7 @@ class AsyncLLMEngine:
         merge_seq_groups = []
         merge_blocks = []
         merge_num_blocks = []
+        merge_is_allocated = []
         for meta in layer_kv_blocks_meta:
             request_id = meta["request_id"]
             prompt_token_ids = meta["prompt_token_ids"]
@@ -947,15 +953,19 @@ class AsyncLLMEngine:
             can_allocate = self.engine.scheduler.block_manager.can_allocate(seq_group)
             if can_allocate == AllocStatus.OK:
                 phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
-                blocks = [block.block_number for block in phy_blocks]
+                blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
+                computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+                blocks = [block.block_number for block in blocks]
                 merge_blocks.append(blocks)
                 merge_seq_groups.append(seq_group)
-                merge_num_blocks.append(len(blocks))
+                merge_num_blocks.append(len(computed_blocks))
+                merge_is_allocated.append(True)
                 # self.engine.scheduler.add_recv_transfering(seq_group)
                 # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
                 # self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
             else:
                 merge_num_blocks.append(0)
+                merge_is_allocated.append(False)
         self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
         current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
         self.engine.scheduler.kv_prepared_seq_group[merge_request_id] = merge_seq_groups
@@ -974,7 +984,7 @@ class AsyncLLMEngine:
             stream = AsyncStream(seq_group.request_id)
             self._request_tracker._request_streams[stream.request_id] = stream
 
-        return merge_request_id, merge_num_blocks, current_transfer_tag
+        return merge_request_id, merge_num_blocks, current_transfer_tag, merge_is_allocated
 
     async def pull_kv_blocks(self, query_meta):
         self.engine.pull_kv_blocks(query_meta)

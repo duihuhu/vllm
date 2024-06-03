@@ -20,6 +20,7 @@ using json = nlohmann::json;
 enum class TaskType {
     TRANSFER_SEND_BLOCKS,
     TRANSFER_RECV_BLOCKS,
+    TRANSFER_SEND_LAYER_BLOCKS,
 };
 
 // TransferTaskMeta结构体，用于存储传输任务的元信息
@@ -57,12 +58,14 @@ public:
 
 class TransferTask {
 public:
-    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type)
-        : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks), type(type) {}
+    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type, int layer = 1, bool is_last_layer)
+        : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks), type(type), layer(layer), is_last_layer(is_last_layer) {}
     TransferTaskMeta meta;
     std::vector<uint32_t> blocks;
     std::vector<int> opposite_ranks;
     TaskType type;
+    int layer;
+    bool is_last_layer;
 
     // Serialize the TransferTask to a string (JSON format)
     std::string serialize() const {
@@ -71,6 +74,8 @@ public:
         task["blocks"] = blocks;
         task["opposite_ranks"] = opposite_ranks;
         task["type"] = static_cast<int>(type);  // Store TaskType as an integer
+        task["layer"] = layer;  // Store TaskType as an integer
+        task["is_last_layer"] = is_last_layer;  // Store TaskType as an integer
         return task.dump();
     }
 
@@ -81,7 +86,10 @@ public:
         std::vector<uint32_t> blocks = task.at("blocks").get<std::vector<uint32_t>>();
         std::vector<int> opposite_ranks = task.at("opposite_ranks").get<std::vector<int>>();
         TaskType type = static_cast<TaskType>(task.at("type").get<int>());
-        return TransferTask(meta, blocks, opposite_ranks, type);
+        int layer = task.at("layer").get<int>();
+        bool is_last_layer = task.at("is_last_layer").get<bool>();
+
+        return TransferTask(meta, blocks, opposite_ranks, type, layer);
     }
 };
 
@@ -106,6 +114,7 @@ private:
 
     std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> recv_events;
+
 };
 
 class TransWorker {

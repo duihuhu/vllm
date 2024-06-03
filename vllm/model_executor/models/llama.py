@@ -47,8 +47,8 @@ from vllm.model_executor.weight_utils import (default_weight_loader,
                                               hf_model_weights_iterator)
 from vllm.sequence import SamplerOutput
 import time
-from vllm.worker.cache_engine import CacheEngine
-from vllm._C import gpu_ops, trans_ops
+from vllm._C import trans_ops
+from vllm.outputs import MergeReqInfo
 
 class LlamaMLP(nn.Module):
 
@@ -254,34 +254,14 @@ class LlamaModel(nn.Module):
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.embed_tokens(input_ids)
 
-    def send_layer_block(self, kv_caches, blocks_to_send_remote):
-        use_blocks_to_send_remote = blocks_to_send_remote[0]
-        cache_engine :CacheEngine =  blocks_to_send_remote[1]
-        k_cache = kv_caches[0]
-        v_cache = kv_caches[1]
-        # print("start in SendBlockOnLayer ", t1)
-        for request_id, block_info in use_blocks_to_send_remote.items():
-            channel = ""
-            for i in range(len(block_info[1])):
-                if i == 0:
-                        channel = str(block_info[1][0])
-                else:
-                    channel =  channel + "_" + str(block_info[1][i])
-            with torch.cuda.stream(cache_engine.send_streams[channel]):
-                for block_num in block_info[-1]:
-                    k_addr = k_cache[block_num].data_ptr()
-                    v_addr = v_cache[block_num].data_ptr()
-                    gpu_ops.SendBlockOnLayer(k_addr, v_addr, cache_engine.cache_size_per_block, block_info[-2][cache_engine.worker_rank])
-
     def forward(
         self,
         input_ids: Optional[torch.Tensor],
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
-        cache_engine: CacheEngine = None,
-        trans_worker: trans_ops.TransWorker = None,
+        merge_req_info: Optional[MergeReqInfo] = None,
+        trans_worker: Optional[trans_ops.TransWorker] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         if inputs_embeds is not None:
@@ -299,9 +279,8 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-            # if blocks_to_send_remote:
-            #     if blocks_to_send_remote[0]:
-                    # trans_worker.add_tasks(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),self.block_ids[request_id] ,self.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_BLOCKS).serialize())
+            if merge_req_info:
+                trans_worker.add_tasks(trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, merge_req_info.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize())
 
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
@@ -369,13 +348,12 @@ class LlamaForCausalLM(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
-        cache_engine: CacheEngine = None,
-        transworker: trans_ops.TransWorker = None
+        transfer_blocks: Optional[MergeReqBlocks] = None,
+        transworker: Optional[trans_ops.TransWorker] = None
     ) -> torch.Tensor:
         
         hidden_states = self.model(input_ids, positions, kv_caches,
-                                   attn_metadata, blocks_to_send_remote, cache_engine, transworker)
+                                   attn_metadata, transfer_blocks, transworker)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,

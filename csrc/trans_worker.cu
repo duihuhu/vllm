@@ -37,6 +37,9 @@ void TransWorker::worker() {
                     // std::cout<<"task_queue is not empty recv " <<std::endl;
                     trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank]);
                     break;
+                case TaskType::TRANSFER_SEND_LAYER_BLOCKS:
+                    trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], task.layer, task.is_last_layer);
+                    break;
                 default:
                     throw std::runtime_error("invalid task_type.");
             }

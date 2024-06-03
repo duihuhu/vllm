@@ -208,20 +208,37 @@ class VLLMLoadInfo:
 class LayerKvPreparedResponse:
     def __init__(
         self,
-        request_id: str,
+        merage_request_id: str,
         computed_blocks: List[int],
         global_ranks: List[int],
-        transfer_tag: str
+        transfer_tag: str,
+        is_allocated: List[bool]
     ) -> None:
-        self.request_id = request_id
+        self.merage_request_id = merage_request_id
         self.computed_blocks = computed_blocks
         self.global_ranks = global_ranks
         self.transfer_tag = transfer_tag
-        
+        self.is_allocated = is_allocated
     def __json__(self) -> Dict:
         return {
-            "request_id": self.request_id,
+            "merage_request_id": self.merage_request_id,
             "computed_blocks": self.computed_blocks,
             "global_ranks": self.global_ranks,
             "transfer_tag": self.transfer_tag,
+            "is_allocated": self.is_allocated,
+
         }
+        
+
+class MergeReqInfo:
+    def __init__(
+        self,
+        merage_request_id: str,
+        blocks: List[int],
+        channel: str,
+        opposite_ranks: List[int],
+    ):
+        self.merage_request_id = merage_request_id
+        self.blocks = blocks
+        self.channel = channel
+        self.opposite_ranks = opposite_ranks

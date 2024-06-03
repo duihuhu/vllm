@@ -147,15 +147,16 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "HandleNcclCommDestroy");
 
   gpu_ops.def(
-    "SendBlockOnLayer",
-    &SendBlockOnLayer,
-    "SendBlockOnLayer");
+    "SendLayerBlocks",
+    &SendLayerBlocks,
+    "SendLayerBlocks");
 
   pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
   py::class_<TransEngine>(trans_ops, "TransEngine")
       .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
       .def("recv_blocks", &TransEngine::recv_blocks, "recv_blocks")
       .def("send_blocks", &TransEngine::send_blocks, "send_blocks")
+      .def("send_layer_blocks", &TransEngine::send_layer_blocks, "send_layer_blocks")
       .def("check_send_finished_events", &TransEngine::check_send_finished_events, "check_send_finished_events")
       .def("check_recv_finished_events", &TransEngine::check_recv_finished_events, "check_recv_finished_events");
       
@@ -167,6 +168,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   py::enum_<TaskType>(trans_ops, "TaskType")
       .value("TRANSFER_SEND_BLOCKS", TaskType::TRANSFER_SEND_BLOCKS)
       .value("TRANSFER_RECV_BLOCKS", TaskType::TRANSFER_RECV_BLOCKS)
+      .value("TRANSFER_SEND_LAYER_BLOCKS", TaskType::TRANSFER_SEND_LAYER_BLOCKS)
       .export_values();
 
   py::class_<TransferTaskMeta>(trans_ops, "TransferTaskMeta")
@@ -178,11 +180,21 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def("deserialize", &TransferTaskMeta::deserialize);;
 
   py::class_<TransferTask>(trans_ops, "TransferTask")
-      .def(py::init<const TransferTaskMeta&, const std::vector<uint32_t>&, const std::vector<int>&, TaskType>())
+      .def(py::init<const TransferTaskMeta&, 
+                    const std::vector<uint32_t>&, 
+                    const std::vector<int>&, 
+                    TaskType, 
+                    int>(),
+            py::arg("meta"),
+            py::arg("uids"),
+            py::arg("priorities"),
+            py::arg("type"),
+            py::arg("layer") = 0)
       .def_readwrite("meta", &TransferTask::meta)
       .def_readwrite("blocks", &TransferTask::blocks)
       .def_readwrite("opposite_ranks", &TransferTask::opposite_ranks)
       .def_readwrite("type", &TransferTask::type)
+      .def_readwrite("layer", &TransferTask::layer)
       .def("serialize", &TransferTask::serialize)
       .def_static("deserialize", &TransferTask::deserialize);
 

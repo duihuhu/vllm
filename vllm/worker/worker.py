@@ -22,6 +22,7 @@ from vllm.model_executor.parallel_utils.parallel_state import (
 from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
+from vllm.outputs import MergeReqInfo
 
 from vllm._C import gpu_ops, trans_ops
 from vllm.logger import init_logger
@@ -222,8 +223,8 @@ class Worker:
         blocks_to_swap_in: Optional[Dict[int, int]] = None,
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
-        blocks_to_send_remote: Optional[Dict[str, Tuple[int, List[int], List[int]]]] = None,
-        wait_for_swap_out: List[str] = None,
+        merge_req_info: Optional[MergeReqInfo] = None,
+        wait_for_swap_out: Optional[List[str]] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
@@ -236,7 +237,7 @@ class Worker:
                 "blocks_to_swap_in": blocks_to_swap_in,
                 "blocks_to_swap_out": blocks_to_swap_out,
                 "blocks_to_copy": blocks_to_copy,
-                "blocks_to_send_remote": blocks_to_send_remote,
+                "merge_req_info": merge_req_info,
             }
             broadcast_tensor_dict(data, src=0)
         else:
@@ -245,7 +246,7 @@ class Worker:
             blocks_to_swap_in = data["blocks_to_swap_in"]
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
-            blocks_to_send_remote = data["blocks_to_send_remote"]
+            merge_req_info = data["merge_req_info"]
 
         # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
@@ -263,7 +264,7 @@ class Worker:
             return {}
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache, blocks_to_send_remote, self.cache_engine, self.trans_worker)
+                                                 self.gpu_cache, merge_req_info, self.trans_worker)
         
         swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)
