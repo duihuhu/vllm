@@ -500,16 +500,17 @@ class _AsyncLLMEngine(LLMEngine):
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
     ) -> None:
-        if lora_request is not None and not self.lora_config:
-            raise ValueError(f"Got lora_request {lora_request} but LoRA is "
-                             "not enabled!")
-        if arrival_time is None:
-            arrival_time = time.time()
-        prompt_token_ids = await self.encode_request_async(
-            request_id=request_id,
-            prompt=prompt,
-            prompt_token_ids=prompt_token_ids,
-            lora_request=lora_request)
+        if not is_layer:
+            if lora_request is not None and not self.lora_config:
+                raise ValueError(f"Got lora_request {lora_request} but LoRA is "
+                                "not enabled!")
+            if arrival_time is None:
+                arrival_time = time.time()
+            prompt_token_ids = await self.encode_request_async(
+                request_id=request_id,
+                prompt=prompt,
+                prompt_token_ids=prompt_token_ids,
+                lora_request=lora_request)
 
         return self.add_request(request_id,
                                 prompt=prompt,
