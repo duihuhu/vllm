@@ -51,7 +51,7 @@ class CommEngine:
         async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
             async with session.post(url=api_url, json=data.payload,
                                     headers=data.headers) as response:
-                return await response.text()
+                return await response.json()
 class CacheMeta:
     def __init__(
         self,
