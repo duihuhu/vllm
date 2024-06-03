@@ -827,10 +827,12 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.swapping_out and
                 not self.engine.scheduler.recv_transfering and
                 not self.engine.scheduler.send_transfering and
-                not self.engine.scheduler.req_pull_send_transfering and
-                not self.engine.scheduler.decode_recv_finished and
-                not self.engine.scheduler.meta_recv_finished and
-                not self.engine.scheduler.kv_prepared_seq_group):
+                not self.engine.scheduler.req_pull_send_transfering 
+                # and
+                # not self.engine.scheduler.decode_recv_finished and
+                # not self.engine.scheduler.meta_recv_finished and
+                # not self.engine.scheduler.kv_prepared_seq_group
+                ):
                 
                 logger.debug("Waiting for new requests...")
                 await self._request_tracker.wait_for_new_requests()
