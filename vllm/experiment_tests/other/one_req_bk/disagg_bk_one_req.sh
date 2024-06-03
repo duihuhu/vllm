@@ -1,6 +1,6 @@
 #!/bin/bash
 dirname="e2e_breakdown"
-type="disagg"
+type="disagg_one_req"
 dirtype="${dirname}/${type}"
 if [ -d "$dirtype" ]; then
     rm -rf ${dirtype}
@@ -26,7 +26,7 @@ fi
 input_lens=(64 128 256 512 1024 2048)
 output_lens=(16 32)
 request_rates=(3.2 6.4 12.8 25.6 51.2 102.4)
-num_requests=256
+num_requests=1
 for input_len in "${input_lens[@]}"; do
   for output_len in "${output_lens[@]}"; do
     for request_rate in "${request_rates[@]}"; do
