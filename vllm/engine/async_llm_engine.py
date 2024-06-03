@@ -389,9 +389,6 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         
-        finished_request_id = self.scheduler._check_tranfer_finished_req()
-        if finished_request_id:
-            print("finished_request_id ", finished_request_id)
         if self.deploy_config.enable_separate and self.deploy_config.role=="decoder" \
             and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
             self.check_deocde_recv_meta()
@@ -446,9 +443,18 @@ class _AsyncLLMEngine(LLMEngine):
                     self.scheduler.add_send_transfering(seq_group)
         else:
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
-                prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
-                if self.scheduler.send_finished_req_ids:
-                    print("self transfer ", self.scheduler.send_finished_req_ids)
+                self.scheduler.fetch_prefilled_seq_groups()
+                prefilled_seq_groups = []
+                while self.scheduler.prefilled:
+                    seq_group = self.scheduler.prefilled[0]
+                    finished_request_id, merge_seq_groups = self.scheduler._check_tranfer_finished_req()
+                    if seq_group in merge_seq_groups:
+                        seq = seq_group.get_seqs()[0]
+                        print("finished ",  finished_request_id, seq_group.request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
+                    else:
+                        prefilled_seq_groups.append(seq_group)
+                    self.scheduler.prefilled.pop()
+                self.scheduler.prefilled = prefilled_seq_groups
                 # for seq_group in prefilled_seq_groups:
                 #     seq = seq_group.get_seqs()[0]
                 #     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)

@@ -171,7 +171,9 @@ class Scheduler:
         # Sequence groups in the SWAPPED state.
         self.swapped: Deque[SequenceGroup] = deque()
 
-        self.decode: Deque[SequenceGroup] = deque()
+        #keep Sequence groups in the prefill under enable layer
+        self.prefilled: Deque[SequenceGroup] = deque()
+
 
         # Time at previous scheduling step
         self.prev_time = 0.0
@@ -296,10 +298,8 @@ class Scheduler:
         return decoded_seq_groups
 
     def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
-        prefilled_seq_groups = []
         while self.running:
-            prefilled_seq_groups.append(self.running.pop())
-        return prefilled_seq_groups
+            self.prefilled.append(self.running.pop())
     
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
@@ -753,6 +753,7 @@ class Scheduler:
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
         finished_request_id = []
+        merge_seq_groups = []
         for request_id in self.send_finished_req_ids[:]:
             # if not self.enable_layer:
             if request_id in self.req_pull_send_transfering:
@@ -764,20 +765,21 @@ class Scheduler:
                 self.send_finished_req_ids.remove(request_id)
                 continue
             
-            seq_group = self.send_transfering[request_id]
+            seq_groups = self.send_transfering[request_id]
             
             #should free 
             # block_table = self.block_manager.block_tables[seq.seq_id]
             if self.block_manager.enable_radix_caching:
-                for seq in seq_group.get_seqs():
+                for seq in seq_groups.get_seqs():
                     self.block_manager.free(seq)    
                 del self.block_manager.block_tables[seq.seq_id]
             else:
                 if not self.enable_layer:
-                    seq = seq_group.get_seqs()[0]
+                    seq = seq_groups.get_seqs()[0]
                     self.free_seq(seq)
                 else:
-                    for seq_group in seq_group:
+                    merge_seq_groups.extend(seq_groups)
+                    for seq_group in seq_groups:
                         seq = seq_group.get_seqs()[0]
                         self.free_seq(seq)
                         
@@ -812,5 +814,5 @@ class Scheduler:
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
-        return finished_request_id
+        return finished_request_id, merge_seq_groups
 
