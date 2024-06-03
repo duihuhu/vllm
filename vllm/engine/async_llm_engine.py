@@ -389,7 +389,9 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         
-        self.scheduler._check_tranfer_finished_req()
+        finished_request_id = self.scheduler._check_tranfer_finished_req()
+        if finished_request_id:
+            print("finished_request_id ", finished_request_id)
         if self.deploy_config.enable_separate and self.deploy_config.role=="decoder" \
             and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
             self.check_deocde_recv_meta()

@@ -754,30 +754,32 @@ class Scheduler:
     def _check_tranfer_finished_req(self) -> None:
         finished_request_id = []
         for request_id in self.send_finished_req_ids[:]:
-            if not self.enable_layer:
-                if request_id in self.req_pull_send_transfering:
-                    del self.req_pull_send_transfering[request_id]
-                    blocks = self.block_manager.req_pull_block_tables[request_id]
-                    for block in blocks:
-                        block.ref_count = block.ref_count - 1
-                    del self.block_manager.req_pull_block_tables[request_id]
-                    self.send_finished_req_ids.remove(request_id)
-                    continue
-                
-                seq_group = self.send_transfering[request_id]
-                seq = seq_group.get_seqs()[0]
-                del self.send_transfering[request_id]
+            # if not self.enable_layer:
+            if request_id in self.req_pull_send_transfering:
+                del self.req_pull_send_transfering[request_id]
+                blocks = self.block_manager.req_pull_block_tables[request_id]
+                for block in blocks:
+                    block.ref_count = block.ref_count - 1
+                del self.block_manager.req_pull_block_tables[request_id]
                 self.send_finished_req_ids.remove(request_id)
-            else:
-                trans_seq_group = self.send_transfering[request_id] 
-                trans_seq_group.num_transfer_workers = trans_seq_group.num_transfer_workers - 1
-                if trans_seq_group.num_transfer_workers == 0:
-                    finished_request_id.append(request_id)
-                    seq_group = self.send_transfering[request_id].seq_group
-                    seq = seq_group.get_seqs()[0]
-                    self.free_seq(seq)
-                    del self.send_transfering[request_id]
-                self.send_finished_req_ids.remove(request_id)
+                continue
+            
+            seq_group = self.send_transfering[request_id]
+            seq = seq_group.get_seqs()[0]
+            del self.send_transfering[request_id]
+            self.send_finished_req_ids.remove(request_id)
+            finished_request_id.append(request_id)
+            # else:
+            #     trans_seq_group = self.send_transfering[request_id] 
+            #     trans_seq_group.num_transfer_workers = trans_seq_group.num_transfer_workers - 1
+            #     if trans_seq_group.num_transfer_workers == 0:
+            #         finished_request_id.append(request_id)
+            #         seq_group = self.send_transfering[request_id].seq_group
+            #         seq = seq_group.get_seqs()[0]
+            #         self.free_seq(seq)
+            #         del self.send_transfering[request_id]
+            #     self.send_finished_req_ids.remove(request_id)
+            
             #should free 
             # block_table = self.block_manager.block_tables[seq.seq_id]
             if self.block_manager.enable_radix_caching:
