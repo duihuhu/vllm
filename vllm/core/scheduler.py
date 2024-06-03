@@ -799,6 +799,7 @@ class Scheduler:
                     for seq_grp in seq_group:
                         if seq_grp.request_id in self.meta_recv_finished:
                             self.running.append(seq_grp)
+                            self.block_manager.move_kv_blocks_meta(seq_grp)
                             del self.meta_recv_finished[seq_grp.request_id]
                         else:
                             self.decode_recv_finished[seq_grp.request_id] = seq_group

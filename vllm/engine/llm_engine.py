@@ -388,6 +388,7 @@ class LLMEngine:
                 seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
             if request_id in self.scheduler.decode_recv_finished:
                 self.scheduler.running.append(seq_group)
+                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
             else:
                 self.scheduler.meta_recv_finished[request_id] = seq_group
             del self.scheduler.kv_prepared_seq_group[request_id]
