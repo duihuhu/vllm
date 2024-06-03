@@ -746,6 +746,7 @@ class AsyncLLMEngine:
                 if self.engine_use_ray:
                     await self.engine.add_request.remote(**new_request)
                 else:
+                    print("new_request ", new_request)
                     await self.engine.add_request_async(**new_request)
             except ValueError as e:
                 # TODO: use a vLLM specific error for failed validation
