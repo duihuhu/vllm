@@ -432,7 +432,7 @@ class _AsyncLLMEngine(LLMEngine):
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         processed_output_without_layer = []
         for processed_output in processed_outputs:
-            if processed_output not in self.scheduler.seq_groups_in_layer:
+            if processed_output not in self.scheduler.seq_groups_with_layer:
                 processed_output_without_layer.append(processed_output)
             else:
                 self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
