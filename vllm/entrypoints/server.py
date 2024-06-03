@@ -26,8 +26,9 @@ server=None
 @app.post("/send_prefilled_meta")
 async def send_prefilled_meta(response: Request) -> None:
     payload = await response.json()
-    prefilld_reqs_with_layer = payload.pop("prefilld_reqs_with_layer")
-    print("prefilld_reqs_with_layer ", prefilld_reqs_with_layer)
+    print(payload)
+    # prefilld_reqs_with_layer = payload.pop("prefilld_reqs_with_layer")
+    # print("prefilld_reqs_with_layer ", prefilld_reqs_with_layer)
     # output_logprobs = cprobs_key_s2i(output_logprobs)
     # await server.engine.add_prefilled_meta(request_id, prefilled_token_ids, output_logprobs)
     
