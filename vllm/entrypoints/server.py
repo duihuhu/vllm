@@ -234,9 +234,7 @@ async def asyc_forward_request(request_dict, api_url):
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
-            print(" response.status ",  response.status)
             if response.status == 200:
-                print(" response.status ",  response.status)
                 delimiter=b"\0"
                 buffer = b''  # 用于缓存数据块中的部分消息
                 async for chunk in response.content.iter_any():
@@ -246,6 +244,11 @@ async def asyc_forward_request(request_dict, api_url):
                         message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
                         yield message.strip()  # 返回提取的消息
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
+import requests
+async def forward_request_to_decode(request_dict, api_url):
+    headers = {"User-Agent": "Test Client"}
+    response = requests.post(api_url, headers=headers, json=request_dict, stream=True)
+    return response
 
 @app.post("/generate_prefill")
 async def generate_prefill(request: Request) -> Response:
@@ -318,13 +321,13 @@ async def generate_prefill(request: Request) -> Response:
                         with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
                             content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
                             fd.write(content + "\n")
-                    decode_response = await asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
+                    decode_response = forward_request_to_decode(infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0
             else:
                 if infer_results.finished != True:
-                    print(" asyc_forward_request ", layer_infer_results)
-                    decode_response = await asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
+                    
+                    decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     print("decode_response ", decode_response)
                     d_num = 0
