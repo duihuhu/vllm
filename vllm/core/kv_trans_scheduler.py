@@ -240,7 +240,20 @@ class SendKvTransferScheduler:
         self.channel_transfer_tag: Dict[str, int] = {}
         
         self.enable_layer = enable_layer
-    
+
+    def add_layer_kv_request(
+        self,
+        request_id: str,
+        global_ranks: List[int],
+        blocks: List[int],
+    ) -> None:
+        channel = "_".join([str(rank) for rank in global_ranks])
+        self.block_ids[request_id] = blocks
+        self.finished_worker_count[request_id] = self.num_workers
+        if channel not in self.channel_request_ids:
+            self.channel_request_ids[channel] = []
+            self.channel_transfer_tag[channel] = 0
+
     def add_kv_request(
         self,
         request_id: str,
