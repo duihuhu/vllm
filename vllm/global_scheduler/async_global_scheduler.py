@@ -109,7 +109,9 @@ def search_prefix(radix_tree, token_ids):
     else:
         return False, [], [], 0
 
-def get_epd_cached_meta(ptree, dtree, token_ids):
+#choose pd instance by vairous policy
+#such as: search_prefix, random, randon robin, etc
+def select_pd_instance(ptree, dtree, token_ids):
     ep_host = None
     ep_port = None
     cd_host = None
@@ -144,7 +146,7 @@ async def add_request(request: Request) -> Response:
     # print("request info ", request_dict["request_id"], time.time())
     #no matched other req
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
-        edecode_host, edecode_port, cdecode_blocks = get_epd_cached_meta(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
+        edecode_host, edecode_port, cdecode_blocks = select_pd_instance(gs_ptoken_tree, gs_dtoken_tree, prompt_token_ids)
 
     # print("match prefill, decode, cdecode ", eprefill_host, edecode_host, cdecode_host)
     #提出 prefill repsonse内容text

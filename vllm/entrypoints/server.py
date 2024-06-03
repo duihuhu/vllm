@@ -291,7 +291,7 @@ async def generate_prefill(request: Request) -> Response:
             last_time = end_time
             n = n + 1
             #send kv allocate to decode directly
-            if args.enable_gs:
+            if args.enable_direct:
                 if infer_results.finished != True:
                     if args.enable_breakdown:
                         with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
@@ -303,7 +303,7 @@ async def generate_prefill(request: Request) -> Response:
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
        
         #recv kv allocate result and deocde's decode
-        if args.enable_gs: 
+        if args.enable_direct: 
             async for resp in decode_response:
                 resp = resp.decode('utf-8')
                 payload = json.loads(resp)
@@ -389,7 +389,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--local_host", type=str)
     parser.add_argument("--local_port", type=int)
-    parser.add_argument("--enable-gs", action="store_true")
+    parser.add_argument("--enable-direct", action="store_true")
     parser.add_argument("--enable-breakdown", action="store_true")
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
