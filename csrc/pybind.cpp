@@ -191,7 +191,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
             py::arg("opposite_ranks"),
             py::arg("type"),
             py::arg("layer") = 0,
-            py::arg("is_last_layer") = false)
+            py::arg("is_last_layer") = 0)
 
       .def_readwrite("meta", &TransferTask::meta)
       .def_readwrite("blocks", &TransferTask::blocks)
