@@ -139,7 +139,12 @@ class RequestTracker:
                 with open("decode_finished_reqs.txt", "a+") as fd:
                     content = "decode finish req " + request_id + " " + str(time.time())
                     fd.write(content + "\n")
-
+    
+    def process_request_layer_output(self,
+                               request_id: str,
+                               value):
+        self._request_streams[request_id].put({request_id, value})
+           
     def process_kv_response(self,
                             global_ranks: List[int],
                             kv_response: KvPreparedResponse) -> None:
@@ -344,7 +349,7 @@ class _AsyncLLMEngine(LLMEngine):
             return await CommEngine.async_send_to(decode_entry_point, "query_layer_kv_blocks", data)
         
     #get block num and global ranks
-    async def query_layer_kv_blocks(self):
+    async def query_layer_kv_blocks(self, request_tracker: RequestTracker):
         layer_blocks = {}
         send_seq_groups :List[SequenceGroup] = []
         for seq_group in  self.scheduler.running:
@@ -367,6 +372,10 @@ class _AsyncLLMEngine(LLMEngine):
         self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
         self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
         opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
+        #insert into aysnc stream to complish return token
+        stream = AsyncStream(layer_kv.merage_request_id)
+        request_tracker._request_streams[stream.request_id] = stream
+        
         return MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
 
     async def send_prefilled_meta(self, request_id, prefilled_token_ids, output_logprobs):
@@ -413,7 +422,7 @@ class _AsyncLLMEngine(LLMEngine):
         #use transfer kv cache by layer and by req, should enable_layer, and it use only in prompt
         merge_req_info = None    
         if self.deploy_config.enable_layer and self.deploy_config.role == "prompt" and seq_group_metadata_list:
-            merge_req_info = await self.query_layer_kv_blocks()
+            merge_req_info = await self.query_layer_kv_blocks(request_tracker)
                         
         if not scheduler_outputs.is_empty():
             # Execute the model.
@@ -462,9 +471,9 @@ class _AsyncLLMEngine(LLMEngine):
                         merge_request_id = merge_seq_groups[seq_group]
                         print("finished ",  merge_request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
                         if merge_request_id not in processed_output_with_layer:
-                            processed_output_with_layer[merge_request_id] = [self.scheduler.outputs_with_layer[seq_group.request_id]]
+                            processed_output_with_layer[merge_request_id] = [(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs)]
                         else:
-                            processed_output_with_layer[merge_request_id].append(self.scheduler.outputs_with_layer[seq_group.request_id])
+                            processed_output_with_layer[merge_request_id].append((seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs))
                         del self.scheduler.outputs_with_layer[seq_group.request_id]
                         del self.scheduler.seq_groups_with_layer[seq_group.request_id]
                     else:
@@ -476,7 +485,7 @@ class _AsyncLLMEngine(LLMEngine):
                 #     seq = seq_group.get_seqs()[0]
                 #     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
                 
-        return processed_outputs
+        return processed_output_without_layer, processed_output_with_layer
 
     async def encode_request_async(
         self,
@@ -797,7 +806,7 @@ class AsyncLLMEngine:
             if self.engine.deploy_config.enable_debug:
                 t3 = time.time()
                 self.transfer_time = self.transfer_time + t3 - t2
-            request_outputs = await self.engine.step_async(self._request_tracker)
+            request_outputs, request_outputs_with_layer = await self.engine.step_async(self._request_tracker)
             if self.engine.deploy_config.enable_debug:
                 t4 = time.time()
                 self.engine_time = self.engine_time + t4 - t2
@@ -808,8 +817,10 @@ class AsyncLLMEngine:
                 self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
                 self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
-
-        return len(request_outputs) > 0
+        if request_outputs_with_layer:
+            for request_id, value in request_outputs_with_layer.items():
+                self._request_tracker.process_request_layer_output(request_id, value)
+        return len(request_outputs) > 0 or len(request_outputs_with_layer)
 
     async def _engine_abort(self, request_ids: Iterable[str]):
         if self.engine_use_ray:

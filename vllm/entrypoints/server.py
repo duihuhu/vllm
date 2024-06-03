@@ -268,7 +268,7 @@ async def generate_prefill(request: Request) -> Response:
         last_time = start_time
         async for request_output in results_generator:
             end_time = time.time()
-            # print("request_output " , request_output)
+            print("request_output " , request_output)
             infer_results = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
