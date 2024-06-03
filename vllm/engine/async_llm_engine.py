@@ -435,6 +435,7 @@ class _AsyncLLMEngine(LLMEngine):
             if processed_output not in self.scheduler.seq_groups_with_layer:
                 processed_output_without_layer.append(processed_output)
             else:
+                print("processed_output.request_id ", processed_output.request_id)
                 self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
                 
         #prompt eng pull metadata in separate mode
@@ -460,7 +461,8 @@ class _AsyncLLMEngine(LLMEngine):
                     if seq_group in merge_seq_groups:
                         seq = seq_group.get_seqs()[0]
                         merge_request_id = merge_seq_groups[seq_group]
-                        print("finished ",  merge_request_id, seq_group.request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
+                        print("finished ",  merge_request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
+                        print("self.scheduler.outputs_with_layer ",  self.scheduler.outputs_with_layer)
                         if merge_request_id not in processed_output_with_layer:
                             processed_output_with_layer[merge_request_id] = [self.scheduler.outputs_with_layer[seq_group.request_id]]
                         else:
