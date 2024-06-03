@@ -467,7 +467,7 @@ class _AsyncLLMEngine(LLMEngine):
                         seq = seq_group.get_seqs()[0]
                         merge_request_id = merge_seq_groups[seq_group]
                         if merge_request_id not in processed_output_with_layer:
-                            processed_output_with_layer.append([PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs)])
+                            processed_output_with_layer.append(PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs))
                         else:
                             processed_output_with_layer.append(PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs))
                         # del self.scheduler.outputs_with_layer[seq_group.request_id]
