@@ -956,7 +956,6 @@ class AsyncLLMEngine:
                 phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
                 blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
                 computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-                blocks = [block.block_number for block in blocks]
                 merge_blocks.append(blocks)
                 merge_seq_groups.append(seq_group)
                 merge_num_blocks.append(len(computed_blocks))
