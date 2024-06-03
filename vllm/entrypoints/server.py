@@ -320,6 +320,7 @@ async def generate_prefill(request: Request) -> Response:
                     d_num = 0
             else:
                 if infer_results.finished != True:
+                    print(" asyc_forward_request ", layer_infer_results)
                     decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0
