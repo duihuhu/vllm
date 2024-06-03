@@ -348,7 +348,7 @@ class LlamaForCausalLM(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        transfer_blocks: Optional[MergeReqBlocks] = None,
+        transfer_blocks: Optional[MergeReqInfo] = None,
         transworker: Optional[trans_ops.TransWorker] = None
     ) -> torch.Tensor:
         
