@@ -738,7 +738,7 @@ class AsyncLLMEngine:
         # t1 = time.time()
         new_requests, finished_requests = (
             self._request_tracker.get_new_and_finished_requests())
-
+        print("new_requests ", new_requests)
         for new_request in new_requests:
             # Add the request into the vLLM engine's waiting queue.
             # TODO: Maybe add add_request_batch to reduce Ray overhead
@@ -746,7 +746,6 @@ class AsyncLLMEngine:
                 if self.engine_use_ray:
                     await self.engine.add_request.remote(**new_request)
                 else:
-                    print("new_request ", new_request)
                     await self.engine.add_request_async(**new_request)
             except ValueError as e:
                 # TODO: use a vLLM specific error for failed validation
