@@ -466,8 +466,9 @@ class _AsyncLLMEngine(LLMEngine):
                 
                 # if processed_output_with_layer:
                     # await self.send_prefilled_meta(processed_output_with_layer)
-
-        return processed_output_without_layer, processed_output_with_layer
+        if self.deploy_config.enable_layer:
+            return processed_output_without_layer, processed_output_with_layer
+        return processed_output_without_layer
 
     async def encode_request_async(
         self,
