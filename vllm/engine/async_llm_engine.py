@@ -346,7 +346,7 @@ class _AsyncLLMEngine(LLMEngine):
     #get block num and global ranks
     async def query_layer_kv_blocks(self):
         layer_blocks = {}
-        send_seq_groups = []
+        send_seq_groups :List[SequenceGroup] = []
         for seq_group in  self.scheduler.running:
             send_seq_groups.append(seq_group)
             
@@ -363,6 +363,7 @@ class _AsyncLLMEngine(LLMEngine):
                 if computed_blocks <= len(blocks):
                     send_blocks.extend(blocks[computed_blocks:])
                     merge_seq_groups.append(seq_group)
+                    self.scheduler.seq_groups_with_layer[seq_group.request_id] = seq_group
         self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
         self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
         opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
@@ -429,6 +430,13 @@ class _AsyncLLMEngine(LLMEngine):
             output = []
 
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
+        processed_output_without_layer = []
+        for processed_output in processed_outputs:
+            if processed_output not in self.scheduler.seq_groups_in_layer:
+                processed_output_without_layer.append(processed_output)
+            else:
+                self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
+                
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if not self.deploy_config.enable_layer:
@@ -445,20 +453,29 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 self.scheduler.fetch_prefilled_seq_groups()
                 prefilled_seq_groups = []
+                processed_output_with_layer: Dict[str, List[RequestOutput]] = {}
                 while self.scheduler.prefilled:
                     seq_group = self.scheduler.prefilled[0]
-                    finished_request_id, merge_seq_groups = self.scheduler._check_tranfer_finished_req()
+                    merge_seq_groups = self.scheduler._check_tranfer_finished_req()
                     if seq_group in merge_seq_groups:
                         seq = seq_group.get_seqs()[0]
-                        print("finished ",  finished_request_id, seq_group.request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
+                        merge_request_id = merge_seq_groups[seq_group]
+                        print("finished ",  merge_request_id, seq_group.request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
+                        if merge_request_id not in processed_output_with_layer:
+                            processed_output_with_layer[merge_request_id] = [self.scheduler.outputs_with_layer[seq_group.request_id]]
+                        else:
+                            processed_output_with_layer[merge_request_id].append(self.scheduler.outputs_with_layer[seq_group.request_id])
+                        del self.scheduler.outputs_with_layer[seq_group.request_id]
+                        del self.scheduler.seq_groups_with_layer[seq_group.request_id]
                     else:
                         prefilled_seq_groups.append(seq_group)
                     self.scheduler.prefilled.pop()
                 self.scheduler.prefilled = prefilled_seq_groups
+                print("processed_output_with_layer ", processed_output_with_layer)
                 # for seq_group in prefilled_seq_groups:
                 #     seq = seq_group.get_seqs()[0]
                 #     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
-
+                
         return processed_outputs
 
     async def encode_request_async(

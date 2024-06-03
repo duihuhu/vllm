@@ -189,17 +189,21 @@ class Scheduler:
         self.send_finished_req_ids: List[str] = []
         self.recv_finished_req_ids: List[str] = []
         
-        if not deploy_config.enable_layer:
-            self.send_transfering: Dict[str, SequenceGroup] = {}
-        else:
-            self.send_transfering: Dict[str, TransferSequenceGroup] = {}
-            
+        # if not deploy_config.enable_layer:
+        self.send_transfering: Dict[str, SequenceGroup] = {}
+        # else:
+        #     self.send_transfering: Dict[str, TransferSequenceGroup] = {}
+        
         self.recv_transfering: Dict[str, SequenceGroup] = {}
         
         self.req_pull_send_transfering: Dict[str, int] = {}
 
         self.num_workers: int = tensor_parallel_size
         
+        self.seq_groups_with_layer: Dict[str, SequenceGroup] = {}
+        
+        self.outputs_with_layer: Dict[str, RequestOutput] = {}
+
         #for layer data pass
         self.enable_layer =  deploy_config.enable_layer
         self.kv_prepared_seq_group: Dict[str, SequenceGroup] = {}
@@ -752,8 +756,7 @@ class Scheduler:
 
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
-        finished_request_id = []
-        merge_seq_groups = []
+        merge_seq_groups = {}
         for request_id in self.send_finished_req_ids[:]:
             # if not self.enable_layer:
             if request_id in self.req_pull_send_transfering:
@@ -778,14 +781,13 @@ class Scheduler:
                     seq = seq_groups.get_seqs()[0]
                     self.free_seq(seq)
                 else:
-                    merge_seq_groups.extend(seq_groups)
                     for seq_group in seq_groups:
+                        merge_seq_groups[seq_group] = request_id
                         seq = seq_group.get_seqs()[0]
                         self.free_seq(seq)
                         
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
-            finished_request_id.append(request_id)
             
         for request_id in self.recv_finished_req_ids[:]:
             seq_group = self.recv_transfering[request_id]
@@ -814,5 +816,5 @@ class Scheduler:
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
-        return finished_request_id, merge_seq_groups
+        return merge_seq_groups
 

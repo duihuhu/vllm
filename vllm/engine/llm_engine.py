@@ -1,5 +1,5 @@
 import time
-from typing import Iterable, List, Optional, Tuple, Type, Union
+from typing import Iterable, List, Optional, Tuple, Type, Union, Dict
 
 from transformers import PreTrainedTokenizer
 
