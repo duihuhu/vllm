@@ -279,7 +279,7 @@ async def generate_prefill(request: Request) -> Response:
         last_time = start_time
         async for request_output in results_generator:
             end_time = time.time()
-            print("request_output " , request_output)
+            # print("request_output " , request_output)
             infer_results = InferResults(
                 request_id = request_output.request_id,
                 opp_ranks = request_output.global_ranks,
@@ -298,13 +298,13 @@ async def generate_prefill(request: Request) -> Response:
                 n = n,
                 start_time=start_time,
                 end_time=end_time,
-                in_layer = request_output.is_layer
+                is_layer = request_output.is_layer
             )
             layer_infer_results = InferResults(
                 request_id = request_output.request_id,
                 output_logprobs = request_output.outputs[0].logprobs,
                 prefilled_token_id = request_output.outputs[0].token_ids,
-                in_layer = request_output.is_layer
+                is_layer = request_output.is_layer
             )
             last_time = end_time
             n = n + 1
