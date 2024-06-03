@@ -146,6 +146,7 @@ def cprobs_key_s2i(cumulative_logprob):
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
+    print("generte decode ")
     start_time = time.time()
     is_layer = payload.pop("is_layer")
     if not is_layer:
@@ -184,11 +185,11 @@ async def generate_decode(request: Request) -> Response:
         results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                 prompt_token_ids=prompt_token_ids, prefill_request_output=request_output, is_layer=is_layer)
     else:
-
         request_id = payload.pop("request_id")
         prefilled_token_id = payload.pop("prefilled_token_id")
         output_logprobs = payload.pop("output_logprobs")
         output_logprobs = cprobs_key_s2i(output_logprobs)
+        print("generte decode ", request_id)
         results_generator = server.engine.generate(request_id=request_id, prefilled_token_id=prefilled_token_id, output_logprobs=output_logprobs, is_layer=is_layer)
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
