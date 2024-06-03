@@ -336,7 +336,7 @@ class LLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
-        prefilled_token_ids: Optional[List[int]] = None,
+        prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
     ) -> KvPreparedResponse:
@@ -384,7 +384,7 @@ class LLMEngine:
         """
         if is_layer:
             seq_group = self.scheduler.kv_prepared_seq_group[request_id]
-            for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+            for token_id, output_logprob in zip(prefilled_token_id, output_logprobs):
                 seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
             if request_id in self.scheduler.decode_recv_finished:
                 self.scheduler.running.append(seq_group)

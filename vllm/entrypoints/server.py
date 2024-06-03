@@ -230,7 +230,7 @@ async def generate_decode(request: Request) -> Response:
 
 async def asyc_forward_request(request_dict, api_url):
     headers = {"User-Agent": "Test Client"}
-    # print("request info ", request_dict["request_id"], time.time())
+    print("request info ", request_dict["request_id"], api_url)
     try:
         async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
             async with session.post(url=api_url, json=request_dict,

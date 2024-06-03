@@ -496,7 +496,7 @@ class _AsyncLLMEngine(LLMEngine):
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
-        prefilled_token_ids: Optional[List[int]] = None,
+        prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
     ) -> None:
@@ -520,7 +520,7 @@ class _AsyncLLMEngine(LLMEngine):
                                 multi_modal_data=multi_modal_data,
                                 prefill_request_output=prefill_request_output,
                                 cache_meta=cache_meta,
-                                prefilled_token_ids=prefilled_token_ids,
+                                prefilled_token_id=prefilled_token_id,
                                 output_logprobs=output_logprobs,
                                 is_layer=is_layer)
 
@@ -888,7 +888,7 @@ class AsyncLLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
-        prefilled_token_ids: Optional[List[int]] = None,
+        prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
     ) -> AsyncStream:
@@ -944,7 +944,7 @@ class AsyncLLMEngine:
             multi_modal_data=multi_modal_data,
             prefill_request_output=prefill_request_output,
             cache_meta = cache_meta,
-            prefilled_token_ids = prefilled_token_ids,
+            prefilled_token_id = prefilled_token_id,
             output_logprobs = output_logprobs,
             is_layer = is_layer
         )
@@ -1042,7 +1042,7 @@ class AsyncLLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
-        prefilled_token_ids: Optional[List[int]] = None,
+        prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
     ) -> AsyncIterator[RequestOutput]:
@@ -1123,7 +1123,7 @@ class AsyncLLMEngine:
                 multi_modal_data=multi_modal_data,
                 prefill_request_output=prefill_request_output,
                 cache_meta = cache_meta,
-                prefilled_token_ids=prefilled_token_ids,
+                prefilled_token_id=prefilled_token_id,
                 output_logprobs = output_logprobs,
                 is_layer = is_layer
             )
