@@ -143,7 +143,7 @@ class RequestTracker:
     def process_request_layer_output(self,
                                request_id: str,
                                value):
-        self._request_streams[request_id].put({request_id, value})
+        self._request_streams[request_id].put({request_id:value})
            
     def process_kv_response(self,
                             global_ranks: List[int],
