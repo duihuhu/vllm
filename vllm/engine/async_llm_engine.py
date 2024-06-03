@@ -378,14 +378,13 @@ class _AsyncLLMEngine(LLMEngine):
         
         return MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
 
-    async def send_prefilled_meta(self, request_id, prefilled_token_ids, output_logprobs):
+    async def send_prefilled_meta(self, prefilld_reqs_with_layer):
         decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
-        prefilled_meta = PrefilledMeta(request_id=request_id, prefilled_token_ids=prefilled_token_ids, output_logprobs=output_logprobs).__json__()
         data = CommData(
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
-            payload=prefilled_meta
+            payload=prefilld_reqs_with_layer
         )
-        return await CommEngine.async_send_to(decode_entry_point, "send_prefilled_meta", data)
+        await CommEngine.async_send_to(decode_entry_point, "send_prefilled_meta", data)
 
             
     async def step_async(self, request_tracker) -> List[RequestOutput]:
@@ -479,13 +478,10 @@ class _AsyncLLMEngine(LLMEngine):
                         prefilled_seq_groups.append(seq_group)
                     self.scheduler.prefilled.pop()
                 self.scheduler.prefilled = prefilled_seq_groups
-                print("processed_output_with_layer ", processed_output_with_layer)
-                # for seq_group in prefilled_seq_groups:
-                #     seq = seq_group.get_seqs()[0]
-                #     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
-            elif self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
-                processed_output_with_layer = {}
-        return processed_output_without_layer, processed_output_with_layer
+                if processed_output_with_layer:
+                    await self.send_prefilled_meta(processed_output_with_layer)
+
+        return processed_output_without_layer
 
     async def encode_request_async(
         self,
@@ -806,7 +802,7 @@ class AsyncLLMEngine:
             if self.engine.deploy_config.enable_debug:
                 t3 = time.time()
                 self.transfer_time = self.transfer_time + t3 - t2
-            request_outputs, request_outputs_with_layer = await self.engine.step_async(self._request_tracker)
+            request_outputs = await self.engine.step_async(self._request_tracker)
             if self.engine.deploy_config.enable_debug:
                 t4 = time.time()
                 self.engine_time = self.engine_time + t4 - t2
@@ -817,10 +813,7 @@ class AsyncLLMEngine:
                 self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
                 self.engine.get_global_ranks(),
                 request_output, verbose=self.log_requests)
-        if request_outputs_with_layer:
-            for request_id, value in request_outputs_with_layer.items():
-                self._request_tracker.process_request_layer_output(request_id, value)
-        return len(request_outputs) > 0 or len(request_outputs_with_layer)
+        return len(request_outputs) > 0
 
     async def _engine_abort(self, request_ids: Iterable[str]):
         if self.engine_use_ray:
@@ -1001,13 +994,13 @@ class AsyncLLMEngine:
                 merge_is_allocated.append(True)
                 # self.engine.scheduler.add_recv_transfering(seq_group)
                 # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
-                # self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
+                self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
             else:
                 merge_num_blocks.append(0)
                 merge_is_allocated.append(False)
         self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
         current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
-        self.engine.scheduler.kv_prepared_seq_group[merge_request_id] = merge_seq_groups
+        # self.engine.scheduler.kv_prepared_seq_group[merge_request_id] = merge_seq_groups
         for seq_group in merge_seq_groups:
             if not self.is_running:
                 if self.start_engine_loop:
