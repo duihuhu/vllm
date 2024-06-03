@@ -411,7 +411,7 @@ class _AsyncLLMEngine(LLMEngine):
     
         #use transfer kv cache by layer and by req, should enable_layer, and it use only in prompt
         merge_req_info = None    
-        if self.deploy_config.enable_layer and self.deploy_config.role == "prompt":
+        if self.deploy_config.enable_layer and self.deploy_config.role == "prompt" and seq_group_metadata_list:
             merge_req_info = await self.query_layer_kv_blocks()
                         
         if not scheduler_outputs.is_empty():
