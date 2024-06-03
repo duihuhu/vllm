@@ -89,7 +89,7 @@ public:
         int layer = task.at("layer").get<int>();
         bool is_last_layer = task.at("is_last_layer").get<bool>();
 
-        return TransferTask(meta, blocks, opposite_ranks, type, layer);
+        return TransferTask(meta, blocks, opposite_ranks, type, layer, is_last_layer);
     }
 };
 
