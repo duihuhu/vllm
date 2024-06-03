@@ -187,8 +187,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
                     int,
                     bool>(),
             py::arg("meta"),
-            py::arg("uids"),
-            py::arg("priorities"),
+            py::arg("blocks"),
+            py::arg("opposite_ranks"),
             py::arg("type"),
             py::arg("layer") = 0,
             py::arg("is_last_layer") = false)
