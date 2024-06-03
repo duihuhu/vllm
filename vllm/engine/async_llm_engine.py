@@ -471,9 +471,9 @@ class _AsyncLLMEngine(LLMEngine):
                         merge_request_id = merge_seq_groups[seq_group]
                         print("finished ",  merge_request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
                         if merge_request_id not in processed_output_with_layer:
-                            processed_output_with_layer[merge_request_id] = [(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs)]
+                            processed_output_with_layer[merge_request_id] = [{seq_group.request_id: [seq.data.output_token_ids, seq.output_logprobs]}]
                         else:
-                            processed_output_with_layer[merge_request_id].append((seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs))
+                            processed_output_with_layer[merge_request_id].append({seq_group.request_id: [seq.data.output_token_ids, seq.output_logprobs]})
                         del self.scheduler.outputs_with_layer[seq_group.request_id]
                         del self.scheduler.seq_groups_with_layer[seq_group.request_id]
                     else:
@@ -484,7 +484,8 @@ class _AsyncLLMEngine(LLMEngine):
                 # for seq_group in prefilled_seq_groups:
                 #     seq = seq_group.get_seqs()[0]
                 #     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
-                
+            elif self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
+                processed_output_with_layer = {}
         return processed_output_without_layer, processed_output_with_layer
 
     async def encode_request_async(
