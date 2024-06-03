@@ -380,6 +380,7 @@ class _AsyncLLMEngine(LLMEngine):
 
     async def send_prefilled_meta(self, prefilld_reqs_with_layer):
         decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
+        print(prefilld_reqs_with_layer)
         data = CommData(
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
             payload=prefilld_reqs_with_layer
@@ -469,9 +470,9 @@ class _AsyncLLMEngine(LLMEngine):
                         seq = seq_group.get_seqs()[0]
                         merge_request_id = merge_seq_groups[seq_group]
                         if merge_request_id not in processed_output_with_layer:
-                            processed_output_with_layer[merge_request_id] = [{seq_group.request_id: PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs).__json__()}]
+                            processed_output_with_layer[merge_request_id] = [PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs).__json__()]
                         else:
-                            processed_output_with_layer[merge_request_id].append({seq_group.request_id: PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs).__json__()})
+                            processed_output_with_layer[merge_request_id].append(PrefilledMeta(seq_group.request_id, seq.data.output_token_ids, seq.output_logprobs).__json__())
                         # del self.scheduler.outputs_with_layer[seq_group.request_id]
                         del self.scheduler.seq_groups_with_layer[seq_group.request_id]
                     else:
