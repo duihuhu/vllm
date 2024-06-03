@@ -15,6 +15,7 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
 
     c10::cuda::CUDAStreamGuard guard(*recv_streams[channel]);
     RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
+    std::cout<<"recv_blocks " << std::endl;
 
     // at::cuda::CUDAEvent event;
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
@@ -39,6 +40,7 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
 
     // at::cuda::CUDAEvent event;
     if(is_last_layer){
+        std::cout<<"is_last_layer " << layer << std::endl;
         at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
         event->record();
         if (send_events.find(channel) == send_events.end()) {
