@@ -81,7 +81,7 @@ class RequestOutput:
         finished: Optional[bool],
         metrics: Optional[RequestMetrics] = None,
         lora_request: Optional[LoRARequest] = None,
-        in_layer: Optional[bool] = False
+        is_layer: Optional[bool] = False
     ) -> None:
         self.request_id = request_id
         self.prompt = prompt

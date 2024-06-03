@@ -188,6 +188,8 @@ async def generate_decode(request: Request) -> Response:
         request_id = payload.pop("request_id")
         prefilled_token_id = payload.pop("prefilled_token_id")
         output_logprobs = payload.pop("output_logprobs")
+        sampling_params_json = payload.pop("sampling_params")
+        sampling_params = SamplingParams(**sampling_params_json)
         output_logprobs = cprobs_key_s2i(output_logprobs)
         print("generte decode ", request_id)
         results_generator = server.engine.generate(request_id=request_id, prefilled_token_id=prefilled_token_id, output_logprobs=output_logprobs, is_layer=is_layer)
@@ -313,6 +315,7 @@ async def generate_prefill(request: Request) -> Response:
                 request_id = request_output.request_id,
                 output_logprobs = request_output.outputs[0].logprobs,
                 prefilled_token_id = request_output.outputs[0].token_ids,
+                sampling_params = sampling_params,
                 is_layer = request_output.is_layer
             )
             last_time = end_time
