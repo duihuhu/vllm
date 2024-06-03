@@ -291,7 +291,7 @@ async def generate_prefill(request: Request) -> Response:
             last_time = end_time
             n = n + 1
             #send kv allocate to decode directly
-            if args.enable_direct :
+            if args.enable_direct and not args.enable_layer:
                 if infer_results.finished != True:
                     if args.enable_breakdown:
                         with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
@@ -303,7 +303,7 @@ async def generate_prefill(request: Request) -> Response:
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
        
         #recv kv allocate result and deocde's decode
-        if args.enable_direct: 
+        if args.enable_direct and not args.enable_layer: 
             async for resp in decode_response:
                 resp = resp.decode('utf-8')
                 payload = json.loads(resp)
