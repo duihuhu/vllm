@@ -352,7 +352,7 @@ class _AsyncLLMEngine(LLMEngine):
             
         layer_kv_response = await self._query_layer_kv_blocks(send_seq_groups)
         print("layer_kv_response ",  layer_kv_response)
-        layer_kv = LayerKvPreparedResponse(**json.load(layer_kv_response))
+        layer_kv = LayerKvPreparedResponse(**layer_kv_response)
         layer_blocks[layer_kv.merage_request_id] = layer_kv
         # self.scheduler.add_send_transfering(seq_group)
         #add layer_kv.merage_request_id to send_transfering
