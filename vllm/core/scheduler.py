@@ -801,7 +801,7 @@ class Scheduler:
                             self.running.append(seq_grp)
                             del self.meta_recv_finished[seq_grp.request_id]
                         else:
-                            self.decode_recv_finished[request_id] = seq_group
+                            self.decode_recv_finished[seq_grp.request_id] = seq_group
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
                     self.block_manager.move_kv_blocks_meta(seq_group)
