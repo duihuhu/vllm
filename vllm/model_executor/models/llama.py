@@ -280,6 +280,8 @@ class LlamaModel(nn.Module):
                 residual,
             )
             if merge_req_info:
+                serialize_str = trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, merge_req_info.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize()
+                print("serialize_str " , serialize_str)
                 trans_worker.add_tasks(trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, merge_req_info.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize())
 
         hidden_states, _ = self.norm(hidden_states, residual)
