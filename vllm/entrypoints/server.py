@@ -291,7 +291,7 @@ async def generate_prefill(request: Request) -> Response:
             last_time = end_time
             n = n + 1
             #send kv allocate to decode directly
-            if args.enable_direct:
+            if args.enable_direct :
                 if infer_results.finished != True:
                     if args.enable_breakdown:
                         with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
@@ -391,6 +391,7 @@ if __name__ == "__main__":
     parser.add_argument("--local_port", type=int)
     parser.add_argument("--enable-direct", action="store_true")
     parser.add_argument("--enable-breakdown", action="store_true")
+    parser.add_argument("--enable-layer", action="store_true")
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)

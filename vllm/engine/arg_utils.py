@@ -413,10 +413,10 @@ class EngineArgs:
             default=None,
             help=('port send to pull kv data'))
         
-        parser.add_argument(
-            '--enable-layer',
-            action="store_true",
-            help=('enable enable layer pass data'))
+        # parser.add_argument(
+        #     '--enable-layer',
+        #     action="store_true",
+        #     help=('enable enable layer pass data'))
 
 
         parser.add_argument(

@@ -444,7 +444,8 @@ class _AsyncLLMEngine(LLMEngine):
         else:
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
-                print("self transfer ", self.scheduler.send_finished_req_ids)
+                if self.scheduler.send_finished_req_ids:
+                    print("self transfer ", self.scheduler.send_finished_req_ids)
                 # for seq_group in prefilled_seq_groups:
                 #     seq = seq_group.get_seqs()[0]
                 #     await self.send_prefilled_meta(seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
