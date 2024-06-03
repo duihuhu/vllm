@@ -469,7 +469,6 @@ class _AsyncLLMEngine(LLMEngine):
                     if seq_group in merge_seq_groups:
                         seq = seq_group.get_seqs()[0]
                         merge_request_id = merge_seq_groups[seq_group]
-                        print("finished ",  merge_request_id, seq_group.request_id,seq.data.output_token_ids, seq.output_logprobs)
                         if merge_request_id not in processed_output_with_layer:
                             processed_output_with_layer[merge_request_id] = [{seq_group.request_id: [seq.data.output_token_ids, seq.output_logprobs]}]
                         else:
