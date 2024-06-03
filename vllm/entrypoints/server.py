@@ -235,6 +235,7 @@ async def asyc_forward_request(request_dict, api_url):
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
             if response.status == 200:
+                print(" response.status ",  response.status)
                 delimiter=b"\0"
                 buffer = b''  # 用于缓存数据块中的部分消息
                 async for chunk in response.content.iter_any():
@@ -324,6 +325,7 @@ async def generate_prefill(request: Request) -> Response:
                     print(" asyc_forward_request ", layer_infer_results)
                     decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
+                    print("decode_response ", decode_response)
                     d_num = 0
             yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
        
