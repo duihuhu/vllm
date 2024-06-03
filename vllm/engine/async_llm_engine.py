@@ -394,6 +394,8 @@ class _AsyncLLMEngine(LLMEngine):
         and updates the scheduler with the model outputs. Finally, it decodes
         the sequences and returns the newly generated results.
         """
+        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
+            print("decoder decoder ")
         self.scheduler._check_tranfer_finished_req()
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder" \
         #     and self.scheduler.meta_recv_finished  and self.scheduler.decode_recv_finished:
@@ -1005,20 +1007,16 @@ class AsyncLLMEngine:
         self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
         current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
         # self.engine.scheduler.kv_prepared_seq_group[merge_request_id] = merge_seq_groups
-        for seq_group in merge_seq_groups:
-            if not self.is_running:
-                if self.start_engine_loop:
-                    self.start_background_loop()
-                else:
-                    raise AsyncEngineDeadError(
-                        "Background loop is not running. If it was running, "
-                        "inspect the output to find the stacktrace of the "
-                        "error that caused the background loop to stop "
-                        "(AsyncEngineDeadError).")
-            #record request id, in case of we can not return token result
-            self._request_tracker.new_requests_event.set()
-            stream = AsyncStream(seq_group.request_id)
-            self._request_tracker._request_streams[stream.request_id] = stream
+        
+        if not self.is_running:
+            if self.start_engine_loop:
+                self.start_background_loop()
+            else:
+                raise AsyncEngineDeadError(
+                    "Background loop is not running. If it was running, "
+                    "inspect the output to find the stacktrace of the "
+                    "error that caused the background loop to stop "
+                    "(AsyncEngineDeadError).")
 
         return merge_request_id, merge_num_blocks, current_transfer_tag, merge_is_allocated
 
