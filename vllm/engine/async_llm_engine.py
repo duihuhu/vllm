@@ -928,8 +928,7 @@ class AsyncLLMEngine:
             global_ranks = meta["global_ranks"]
             sampling_params_json = meta["sampling_params"]
             sampling_params =  SamplingParams(**sampling_params_json)
-            if arrival_time is None:
-                arrival_time = time.time()
+            arrival_time = time.time()
             # Create the sequences.
             block_size = self.engine.cache_config.block_size
             seq_id = next(self.engine.seq_counter)
