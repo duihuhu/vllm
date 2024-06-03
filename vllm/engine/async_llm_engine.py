@@ -929,6 +929,7 @@ class AsyncLLMEngine:
         merge_blocks = []
         merge_num_blocks = []
         merge_is_allocated = []
+        global_ranks = None
         for meta in layer_kv_blocks_meta:
             request_id = meta["request_id"]
             prompt_token_ids = meta["prompt_token_ids"]
