@@ -122,7 +122,7 @@ class PrefilledMeta:
                     serialized_d[key] = serialized_value
                 output_logprobs.append(serialized_d)
         
-            return {
+        return {
             "request_id": self.request_id,
             "prefilled_token_id": self.prefilled_token_id,
             "output_logprobs": output_logprobs,

@@ -234,6 +234,7 @@ async def asyc_forward_request(request_dict, api_url):
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
+            print(" response.status ",  response.status)
             if response.status == 200:
                 print(" response.status ",  response.status)
                 delimiter=b"\0"
