@@ -140,8 +140,12 @@ class RequestTracker:
                     content = "decode finish req " + request_id + " " + str(time.time())
                     fd.write(content + "\n")
     
-    def process_request_with_layer_output(self,request_with_layer_output):
+    def process_request_with_layer_output(self, is_prefill: bool, request_with_layer_output):
         self._request_streams[request_with_layer_output.request_id].put(request_with_layer_output)
+        if is_prefill:
+            # if verbose:
+                # logger.info(f"Finished request {request_id}.")
+            self.abort_request(request_with_layer_output.request_id)
            
     def process_kv_response(self,
                             global_ranks: List[int],
@@ -809,6 +813,7 @@ class AsyncLLMEngine:
         
         for request_with_layer_output in request_with_layer_outputs:
             self._request_tracker.process_request_with_layer_output(
+                self.engine.deploy_config.enable_separate and self.engine.deploy_config.role == "prompt",
                 request_with_layer_output
             )
         
