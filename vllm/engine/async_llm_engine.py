@@ -382,12 +382,15 @@ class _AsyncLLMEngine(LLMEngine):
                     # print("request is allocated is true  ", seq_group.request_id)
             # else:
             #     print("request is allocated is false  ", seq_group.request_id)
-
+            if self.engine.deploy_config.enable_breakdown:
+                with open("prefill_add_kv_request_layer.txt", "a+") as fd:
+                    content = "prefill recv kv cache space " + seq_group.request_id + " " +  str(time.time())
+                    fd.write(content + "\n")
         self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
         self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
         opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
         #insert into aysnc stream to complish return token
-    
+
         return MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
 
             
@@ -1009,10 +1012,6 @@ class AsyncLLMEngine:
                 # self.engine.scheduler.add_recv_transfering(seq_group)
                 # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
                 self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
-                if self.engine.deploy_config.enable_breakdown:
-                    with open("prefill_add_kv_request_layer.txt", "a+") as fd:
-                        content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
-                        fd.write(content + "\n")
             else:
                 merge_num_blocks.append(0)
                 merge_is_allocated.append(False)
