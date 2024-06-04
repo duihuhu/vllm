@@ -319,10 +319,6 @@ async def generate_prefill(request: Request) -> Response:
                     d_num = 0
             else:
                 if infer_results.finished != True:
-                    if args.enable_breakdown:
-                        with open("prefill_send_query_kv_to_decode_layer.txt", "a+") as fd:
-                            content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
-                            fd.write(content + "\n")
                     decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0       

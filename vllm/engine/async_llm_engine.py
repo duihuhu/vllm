@@ -361,7 +361,10 @@ class _AsyncLLMEngine(LLMEngine):
         send_seq_groups :List[SequenceGroup] = []
         for seq_group in  self.scheduler.running:
             send_seq_groups.append(seq_group)
-            
+            if self.deploy_config.enable_layer:
+                with open("prefill_send_query_kv_to_decode_layer.txt", "a+") as fd:
+                    content = "prefill send query kv to decode " + seq_group.request_id + " " + str(time.time())
+                    fd.write(content + "\n")
         layer_kv_response = await self._query_layer_kv_blocks(send_seq_groups)
         layer_kv = LayerKvPreparedResponse(**layer_kv_response)
         layer_blocks[layer_kv.merage_request_id] = layer_kv
