@@ -378,9 +378,6 @@ class Scheduler:
                         ignored_seq_groups.append(seq_group)
                         self.waiting.popleft()
                         continue
-                with open("prefill_request_sched_waiting.txt", "a+") as fd:
-                    content = "prefill request sched waiting " + seq_group.request_id + " " + str(time.time())
-                    fd.write(content + "\n")
                 lora_int_id = 0
                 if self.lora_enabled:
                     lora_int_id = seq_group.lora_int_id
@@ -429,7 +426,10 @@ class Scheduler:
                     if seq_group.cache_meta and seq_group.cache_meta.is_ready:
                         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                             seq.status = SequenceStatus.RUNNING
-                            
+            
+                with open("prefill_request_sched_waiting.txt", "a+") as fd:
+                    content = "prefill request sched waiting " + seq_group.request_id + " " + str(time.time())
+                    fd.write(content + "\n")
                 self.running.append(seq_group)
                 num_curr_seqs += num_new_seqs
                 scheduled.append(
