@@ -443,6 +443,7 @@ class _AsyncLLMEngine(LLMEngine):
             if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
                 processed_output_without_layer.append(processed_output)
             else:
+                print(" processed_output.request_id ", processed_output.request_id)
                 self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
                 
         #prompt eng pull metadata in separate mode
@@ -462,6 +463,7 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
+                    print(" processed_output.request_id ", processed_output.request_id)
                     output = self.scheduler.outputs_with_layer[processed_output.request_id]
                     output.is_layer = True
                     processed_output_with_layer.append(output)
