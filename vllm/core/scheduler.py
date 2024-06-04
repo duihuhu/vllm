@@ -378,7 +378,9 @@ class Scheduler:
                         ignored_seq_groups.append(seq_group)
                         self.waiting.popleft()
                         continue
-
+                with open("prefill_request_sched_waiting.txt", "a+") as fd:
+                    content = "prefill request sched waiting " + seq_group.request_id + " " + str(time.time())
+                    fd.write(content + "\n")
                 lora_int_id = 0
                 if self.lora_enabled:
                     lora_int_id = seq_group.lora_int_id
