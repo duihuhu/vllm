@@ -225,6 +225,7 @@ async def generate_decode(request: Request) -> Response:
                 end_time=end_time
             )
             last_time = end_time
+            print("decode ", infer_result)
             yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")
     
     return StreamingResponse(stream_results())
@@ -350,6 +351,7 @@ async def generate_prefill(request: Request) -> Response:
                             kv_response.global_ranks = global_ranks
                             await server.engine.add_kv_response(kv_response)
                     else:
+                        print("payload ", payload)
                         yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
                     d_num = d_num + 1
     return StreamingResponse(stream_results())
