@@ -1002,12 +1002,14 @@ class AsyncLLMEngine:
                 # self.engine.scheduler.add_recv_transfering(seq_group)
                 # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
                 self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
-                print("prepare_layer_kv_blocks is allocated is true  ", request_id)
+                if self.engine.deploy_config.enable_breakdown:
+                    with open("prefill_add_kv_request_layer.txt", "a+") as fd:
+                        content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
+                        fd.write(content + "\n")
             else:
                 merge_num_blocks.append(0)
                 merge_is_allocated.append(False)
-                print("prepare_layer_kv_blocks is allocated is false  ", request_id)
-                
+          
         self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
         current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
         

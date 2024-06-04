@@ -798,6 +798,10 @@ class Scheduler:
                 else:
                     for seq_grp in seq_group:
                         if seq_grp.request_id in self.meta_recv_finished:
+                            if self.deploy_config.enable_breakdown:
+                                with open("decode_add_request_to_running_layer.txt", "a+") as fd:
+                                    content = "decoder finshed recv data append request to running " + seq_grp.request_id + " " + str(time.time())
+                                    fd.write(content + "\n")
                             self.running.append(seq_grp)
                             self.block_manager.move_kv_blocks_meta(seq_grp)
                             del self.meta_recv_finished[seq_grp.request_id]
