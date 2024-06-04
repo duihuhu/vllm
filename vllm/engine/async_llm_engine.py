@@ -378,15 +378,6 @@ class _AsyncLLMEngine(LLMEngine):
     
         return MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
 
-    async def send_prefilled_meta(self, prefilld_reqs_with_layer):
-        decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
-        print(prefilld_reqs_with_layer)
-        data = CommData(
-            headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
-            payload=prefilld_reqs_with_layer
-        )
-        await CommEngine.async_send_to(decode_entry_point, "send_prefilled_meta", data)
-
             
     async def step_async(self, request_tracker) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
@@ -443,6 +434,7 @@ class _AsyncLLMEngine(LLMEngine):
             if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
                 processed_output_without_layer.append(processed_output)
             else:
+                print("add outputs_with_layer processed_output.request_id ", processed_output.request_id)
                 self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
                 
         #prompt eng pull metadata in separate mode
@@ -459,18 +451,16 @@ class _AsyncLLMEngine(LLMEngine):
                     self.scheduler.add_send_transfering(seq_group)
         else:
             processed_output_with_layer = []
-            n = 0 
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
+                    print("get outputs_with_layer processed_output.request_id ", seq_group.request_id)
                     output = self.scheduler.outputs_with_layer[seq_group.request_id]
                     output.is_layer = True
                     processed_output_with_layer.append(output)
                     del self.scheduler.outputs_with_layer[seq_group.request_id]
                     del self.scheduler.seq_groups_with_layer[seq_group.request_id]
-                    n = n + 1
-                # if processed_output_with_layer:
-                    # await self.send_prefilled_meta(processed_output_with_layer)
+                    
         if self.deploy_config.enable_layer:
             return processed_output_without_layer, processed_output_with_layer
         return processed_output_without_layer, []
@@ -1014,7 +1004,6 @@ class AsyncLLMEngine:
                 merge_is_allocated.append(False)
         self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
         current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
-        # self.engine.scheduler.kv_prepared_seq_group[merge_request_id] = merge_seq_groups
         
         if not self.is_running:
             if self.start_engine_loop:
