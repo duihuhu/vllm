@@ -190,7 +190,6 @@ async def generate_decode(request: Request) -> Response:
         sampling_params_json = payload.pop("sampling_params")
         sampling_params = SamplingParams(**sampling_params_json)
         output_logprobs = cprobs_key_s2i(output_logprobs)
-        print("generte decode ", request_id)
         results_generator = server.engine.generate(request_id=request_id, prefilled_token_id=prefilled_token_id, output_logprobs=output_logprobs, is_layer=is_layer)
     #return results to global scheduler
     async def stream_results() -> AsyncGenerator[bytes, None]:
@@ -236,7 +235,6 @@ async def asyc_forward_request(request_dict, api_url):
             async with session.post(url=api_url, json=request_dict,
                                     headers=headers) as response:
                 if response.status == 200:
-                    print(f"Received successful response for request")
                     delimiter=b"\0"
                     buffer = b''  # 用于缓存数据块中的部分消息
                     async for chunk in response.content.iter_any():
