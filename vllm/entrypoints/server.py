@@ -299,48 +299,54 @@ async def generate_prefill(request: Request) -> Response:
                 end_time=end_time,
                 is_layer = request_output.is_layer
             )
-            layer_infer_results = PrefilledMeta(
-                request_id = request_output.request_id,
-                output_logprobs = request_output.outputs[0].logprobs,
-                prefilled_token_id = request_output.outputs[0].token_ids,
-                sampling_params = sampling_params,
-                is_layer = request_output.is_layer
-            )
-            last_time = end_time
-            if n==0:
+            if not args.enable_separate:
                 yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
-            n = n + 1
-        
-            #send kv allocate to decode directly
-            if args.enable_direct and not request_output.is_layer:
-                if infer_results.finished != True:
-                    if args.enable_breakdown:
-                        with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
-                            content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
-                            fd.write(content + "\n")
-                    decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
-                                                                (cfg.edecode_host, cfg.edecode_port))
-                    d_num = 0
+                last_time = end_time
+                n = n + 1
             else:
-                if infer_results.finished != True:
-                    decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
-                                                                (cfg.edecode_host, cfg.edecode_port))
-                    d_num = 0       
-            #recv kv allocate result and deocde's decode
-            if args.enable_direct: 
-                async for resp in decode_response:
-                    resp = resp.decode('utf-8')
-                    payload = json.loads(resp)
-                    if not request_output.is_layer:
-                        if d_num == 0:
-                            global_ranks = payload.pop("global_ranks")
-                            kv_response = KvPreparedResponse(**payload)
-                            # print("response_kv_result ", kv_response.computed_blocks)
-                            kv_response.global_ranks = global_ranks
-                            await server.engine.add_kv_response(kv_response)
-                    else:
-                        yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
-                    d_num = d_num + 1
+                layer_infer_results = PrefilledMeta(
+                    request_id = request_output.request_id,
+                    output_logprobs = request_output.outputs[0].logprobs,
+                    prefilled_token_id = request_output.outputs[0].token_ids,
+                    sampling_params = sampling_params,
+                    is_layer = request_output.is_layer
+                )
+            
+                if n==0:
+                    yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
+                last_time = end_time
+                n = n + 1
+        
+                #send kv allocate to decode directly
+                if args.enable_direct and not request_output.is_layer:
+                    if infer_results.finished != True:
+                        if args.enable_breakdown:
+                            with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
+                                content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
+                                fd.write(content + "\n")
+                        decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
+                                                                    (cfg.edecode_host, cfg.edecode_port))
+                        d_num = 0
+                else:
+                    if infer_results.finished != True:
+                        decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
+                                                                    (cfg.edecode_host, cfg.edecode_port))
+                        d_num = 0       
+                #recv kv allocate result and deocde's decode
+                if args.enable_direct: 
+                    async for resp in decode_response:
+                        resp = resp.decode('utf-8')
+                        payload = json.loads(resp)
+                        if not request_output.is_layer:
+                            if d_num == 0:
+                                global_ranks = payload.pop("global_ranks")
+                                kv_response = KvPreparedResponse(**payload)
+                                # print("response_kv_result ", kv_response.computed_blocks)
+                                kv_response.global_ranks = global_ranks
+                                await server.engine.add_kv_response(kv_response)
+                        else:
+                            yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
+                        d_num = d_num + 1
     return StreamingResponse(stream_results())
 
 
@@ -416,7 +422,10 @@ if __name__ == "__main__":
     parser.add_argument("--local_port", type=int)
     parser.add_argument("--enable-direct", action="store_true")
     parser.add_argument("--enable-breakdown", action="store_true")
+    parser.add_argument("--enable-spee", action="store_true")
     parser.add_argument("--enable-layer", action="store_true")
+    parser.add_argument('--enable-separate', action="store_true", help=('separate or not '))
+    
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)

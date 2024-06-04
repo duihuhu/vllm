@@ -379,11 +379,7 @@ class EngineArgs:
             default=False,
             help='If True, the prefill requests can be chunked based on the '
             'max_num_batched_tokens')
-        parser.add_argument(
-            '--enable-separate',
-            action="store_true",
-            help=('separate or not '))
-    
+
         parser.add_argument(
             '--role',
             type=str,
