@@ -300,7 +300,7 @@ class Scheduler:
     def fetch_prefilled_seq_groups(self) -> List[SequenceGroup]:
         prefilled_seq_groups = []
         while self.running:
-            prefilled_seq_groups.append(self.running.pop())
+            prefilled_seq_groups.append(self.running.popleft())
         return prefilled_seq_groups
     
     def get_num_unfinished_seq_groups(self) -> int:

@@ -461,16 +461,17 @@ class _AsyncLLMEngine(LLMEngine):
                     self.scheduler.add_send_transfering(seq_group)
         else:
             processed_output_with_layer = []
+            n = 0 
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
-                    print("find processed_output request_id in outputs_with_layer ", processed_output.request_id)
+                    print("find processed_output request_id in outputs_with_layer n ", processed_output.request_id)
                     output = self.scheduler.outputs_with_layer[processed_output.request_id]
                     output.is_layer = True
                     processed_output_with_layer.append(output)
                     del self.scheduler.outputs_with_layer[seq_group.request_id]
                     del self.scheduler.seq_groups_with_layer[seq_group.request_id]
-                
+                    n = n + 1
                 # if processed_output_with_layer:
                     # await self.send_prefilled_meta(processed_output_with_layer)
         if self.deploy_config.enable_layer:
