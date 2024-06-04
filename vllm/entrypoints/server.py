@@ -332,11 +332,6 @@ async def generate_prefill(request: Request) -> Response:
                     d_num = 0
             else:
                 if infer_results.finished != True:
-                    # print("layer_infer_results ", layer_infer_results.__json__())
-                    # import requests
-                    # headers = {"User-Agent": "Test Client"}
-                    # response = requests.post(cfg.forward_edecode_url % (cfg.edecode_host, cfg.edecode_port), headers=headers, json=layer_infer_results.__json__())
-                    # print("response ", response)
                     decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
                     d_num = 0
@@ -344,7 +339,6 @@ async def generate_prefill(request: Request) -> Response:
        
             #recv kv allocate result and deocde's decode
             if args.enable_direct: 
-                print("aaa")
                 async for resp in decode_response:
                     resp = resp.decode('utf-8')
                     payload = json.loads(resp)
