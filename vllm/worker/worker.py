@@ -262,10 +262,12 @@ class Worker:
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
-
-        output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache, merge_req_info, self.trans_worker)
-        
+        if self.deploy_config.enable_layer:
+            output = self.model_runner.execute_model(seq_group_metadata_list,
+                                                    self.gpu_cache, merge_req_info, self.trans_worker)
+        else:
+            output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache)
+            
         swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)
 
