@@ -371,9 +371,9 @@ class _AsyncLLMEngine(LLMEngine):
                     send_blocks.extend(blocks[computed_blocks:])
                     merge_seq_groups.append(seq_group)
                     self.scheduler.seq_groups_with_layer[seq_group.request_id] = seq_group
-                    print("request is allocated is true  ", seq_group.request_id)
-            else:
-                print("request is allocated is false  ", seq_group.request_id)
+                    # print("request is allocated is true  ", seq_group.request_id)
+            # else:
+            #     print("request is allocated is false  ", seq_group.request_id)
 
         self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
         self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
@@ -438,7 +438,6 @@ class _AsyncLLMEngine(LLMEngine):
             if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
                 processed_output_without_layer.append(processed_output)
             else:
-                print("add outputs_with_layer processed_output.request_id ", processed_output.request_id)
                 self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
                 
         #prompt eng pull metadata in separate mode
