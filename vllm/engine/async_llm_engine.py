@@ -136,9 +136,14 @@ class RequestTracker:
                 # logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
             if request_output.finished and self.enable_breakdown:
-                with open("decode_finished_reqs_layer.txt", "a+") as fd:
-                    content = "decode finish req " + request_id + " " + str(time.time())
-                    fd.write(content + "\n")
+                if self.enable_layer:
+                    with open("decode_finished_reqs_layer.txt", "a+") as fd:
+                        content = "decode finish req " + request_id + " " + str(time.time())
+                        fd.write(content + "\n")
+                else:
+                    with open("decode_finished_reqs.txt", "a+") as fd:
+                        content = "decode finish req " + request_id + " " + str(time.time())
+                        fd.write(content + "\n")
     
     def process_request_with_layer_output(self, is_prefill: bool, request_with_layer_output):
         self._request_streams[request_with_layer_output.request_id].put(request_with_layer_output)
