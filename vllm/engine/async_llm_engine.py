@@ -382,7 +382,7 @@ class _AsyncLLMEngine(LLMEngine):
                     # print("request is allocated is true  ", seq_group.request_id)
             # else:
             #     print("request is allocated is false  ", seq_group.request_id)
-            if self.engine.deploy_config.enable_breakdown:
+            if self.deploy_config.enable_breakdown:
                 with open("prefill_add_kv_request_layer.txt", "a+") as fd:
                     content = "prefill recv kv cache space " + seq_group.request_id + " " +  str(time.time())
                     fd.write(content + "\n")
