@@ -464,7 +464,7 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
-                    print("find processed_output.request_id in outputs_with_layer ", processed_output.request_id)
+                    print("find processed_output request_id in outputs_with_layer ", processed_output.request_id)
                     output = self.scheduler.outputs_with_layer[processed_output.request_id]
                     output.is_layer = True
                     processed_output_with_layer.append(output)
