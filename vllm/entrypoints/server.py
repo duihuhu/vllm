@@ -352,7 +352,6 @@ async def generate_prefill(request: Request) -> Response:
                             kv_response.global_ranks = global_ranks
                             await server.engine.add_kv_response(kv_response)
                     else:
-                        print("payload ", payload)
                         yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
                     d_num = d_num + 1
     return StreamingResponse(stream_results())
