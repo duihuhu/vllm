@@ -136,7 +136,7 @@ class RequestTracker:
                 # logger.info(f"Finished request {request_id}.")
             self.abort_request(request_id)
             if request_output.finished and self.enable_breakdown:
-                with open("decode_finished_reqs.txt", "a+") as fd:
+                with open("decode_finished_reqs_layer.txt", "a+") as fd:
                     content = "decode finish req " + request_id + " " + str(time.time())
                     fd.write(content + "\n")
     
