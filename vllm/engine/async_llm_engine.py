@@ -371,6 +371,10 @@ class _AsyncLLMEngine(LLMEngine):
                     send_blocks.extend(blocks[computed_blocks:])
                     merge_seq_groups.append(seq_group)
                     self.scheduler.seq_groups_with_layer[seq_group.request_id] = seq_group
+                    print("request is allocated is true  ", seq_group.request_id)
+            else:
+                print("request is allocated is false  ", seq_group.request_id)
+
         self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
         self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
         opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
@@ -454,7 +458,6 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
-                    print("get outputs_with_layer processed_output.request_id ", seq_group.request_id)
                     output = self.scheduler.outputs_with_layer[seq_group.request_id]
                     output.is_layer = True
                     processed_output_with_layer.append(output)
@@ -999,9 +1002,12 @@ class AsyncLLMEngine:
                 # self.engine.scheduler.add_recv_transfering(seq_group)
                 # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
                 self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
+                print("prepare_layer_kv_blocks is allocated is true  ", request_id)
             else:
                 merge_num_blocks.append(0)
                 merge_is_allocated.append(False)
+                print("prepare_layer_kv_blocks is allocated is false  ", request_id)
+                
         self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
         current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
         
