@@ -320,7 +320,10 @@ async def generate_prefill(request: Request) -> Response:
                 is_layer = request_output.is_layer
             )
             last_time = end_time
+            if n==0:
+                yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
             n = n + 1
+        
             #send kv allocate to decode directly
             if args.enable_direct and not request_output.is_layer:
                 if infer_results.finished != True:
@@ -335,9 +338,7 @@ async def generate_prefill(request: Request) -> Response:
                 if infer_results.finished != True:
                     decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
                                                                 (cfg.edecode_host, cfg.edecode_port))
-                    d_num = 0
-            yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
-       
+                    d_num = 0       
             #recv kv allocate result and deocde's decode
             if args.enable_direct: 
                 async for resp in decode_response:
