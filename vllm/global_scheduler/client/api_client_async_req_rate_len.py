@@ -112,13 +112,11 @@ async def post_request_and_get_response(args, req, waiting_time):
             ttft = resp['ttft']
             if resp['finished'] == True:
                 end_time = resp['end_time']
-                break
         else:
             if resp['finished'] != True:
                 tbt.append(resp['tbt'])
             elif resp['finished'] == True:
                 end_time = resp['end_time']
-                break
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     return (end_time-start_time, ttft, tbt[1:], tbt, tbt[0], req[-2] , req[-1])
 
