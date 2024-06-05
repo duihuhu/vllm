@@ -346,6 +346,8 @@ async def generate_prefill(request: Request) -> Response:
                                 # print("response_kv_result ", kv_response.computed_blocks)
                                 kv_response.global_ranks = global_ranks
                                 await server.engine.add_kv_response(kv_response)
+                            else:
+                                yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
                         else:
                             yield (json.dumps(payload, ensure_ascii=False) + "\0").encode("utf-8")
                         d_num = d_num + 1
