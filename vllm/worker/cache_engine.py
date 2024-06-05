@@ -56,7 +56,7 @@ class CacheEngine:
 
         #hucc
         self.cache_size_per_block = self.block_size *self.num_heads * self.head_size * _get_dtype_size(self.dtype)
-        print("cache_size_per_block ", cache_size_per_block)
+        print("cache_size_per_block ", self.cache_size_per_block)
         self.request_id_size = request_id_size
 
         #hucc Initialize the stream for caching operations
