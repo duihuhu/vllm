@@ -256,9 +256,10 @@ async def generate_prefill(request: Request) -> Response:
     stream = payload.pop("stream")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
-    with open("prefill_request_in.txt", "a+") as fd:
-        content = "prefill request in " + request_id + " " + str(time.time())
-        fd.write(content + "\n")
+    if args.enable_breakdown:
+        with open("prefill_request_in.txt", "a+") as fd:
+            content = "prefill request in " + request_id + " " + str(time.time())
+            fd.write(content + "\n")
     cache_meta = None
     if "cmeta_host" in payload:
         cmeta_host =  payload.pop("cmeta_host")
