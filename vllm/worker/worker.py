@@ -310,6 +310,11 @@ class Worker:
             t2 = time.time()
             self.trans_blocks_time = self.trans_blocks_time + t2 - t1
 
+    def get_nccl_id(
+        self,
+        dst_channel)->None:
+        nccl_id = self.trans_worker.get_nccl_id(dst_channel)
+        print("nccl_id ", nccl_id)
     def get_trans_blocks_time(
         self,
     ) -> None:

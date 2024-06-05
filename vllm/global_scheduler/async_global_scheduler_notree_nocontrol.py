@@ -9,16 +9,21 @@ from vllm.global_scheduler.global_meta import InstanceInfo, ReqCacheInfo, Prefix
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.global_scheduler.entrypoints_config as cfg
-from typing import Dict, Set, List, Iterable, AsyncGenerator
+from typing import Dict, Set, List, Optional, AsyncGenerator
 import asyncio
-import time
 import aiohttp
+import requests
+
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 tokenizer = None
+
+#config instance:gs first to read instance.json to know how many instance 
+config_instance_table: Dict[str, InstanceInfo] = {}
+num_comm = 0
 
 #key: host_(service_port)_(machine_type)
 #value: InstanceInfo 
@@ -36,6 +41,31 @@ coroutines: Dict[str, List] = {}
 
 # gs_ptoken_tree = RadixCache()
 # gs_dtoken_tree = RadixCache()
+
+def post_request(api_url, request_dict: Optional[Dict] = {}):
+    headers = {"User-Agent": "Test Client"}
+    response = requests.post(api_url, headers=headers, json=request_dict)
+    return response
+
+#to init comm between instances
+def create_comm(src_instance: InstanceInfo, dst_instance: InstanceInfo):
+    uniqe_id_api_url = cfg.comm_uniqe_id_url % (src_instance.host, src_instance.service_port)
+    dst_channel = "_".join([str(rank) for rank in dst_instance.global_ranks])
+    response = post_request(uniqe_id_api_url, {"dst_channel": dst_channel})
+
+    # create_comm_url = cfg.create_comm_url % (dst_instance.host, dst_instance.service_port)
+    # response = post_request(create_comm_url, response.json())
+
+@app.post("/init_comm")
+async def init_comm(request: Request) -> Response:
+    config_instances = [config_instance_table.values()]
+    instances: List[InstanceInfo] = [instance_table.values()]
+    if len(instances) == config_instances:
+        for src_comm in range(len(instances)):
+            for dst_comm in range(src_comm + 1, len(instances)):
+                for num in range(num_comm):
+                    create_comm(instances[src_comm], instances[dst_comm])
+            
 
 @app.post("/monitor_report")
 async def monitor_report(request: Request) -> Response:

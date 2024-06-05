@@ -50,7 +50,7 @@ long long index_time = 0;
 long long send_time = 0;
 long long nccl_time = 0;
 long long nccl_num = 0;
-int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 32) {
+int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t num_comms = 16) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
     constexpr int32_t ROOT_INFO_OK = 1;
@@ -149,26 +149,6 @@ int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t size = 3
     // }
 
     std::cout << "Create Global NCCL Comm Success" << std::endl;
-    if (size!=0) {
-        if (rank == 0){
-            float *send_buf;
-            auto gpuStream = c10::cuda::getCurrentCUDAStream();
-            auto cudaStream = gpuStream.stream();
-            cudaMalloc(&send_buf, size * sizeof(float));
-
-            NCCLCHECK(ncclSend(send_buf, size , ncclFloat, 1, g_globalNcclComm, cudaStream));
-            cudaStreamSynchronize(0);
-        }
-        else {
-            float *recv_buf;
-            auto gpuStream = c10::cuda::getCurrentCUDAStream();
-            auto cudaStream = gpuStream.stream();
-            cudaMalloc(&recv_buf, size * sizeof(float));
-
-            NCCLCHECK(ncclRecv(recv_buf, size , ncclFloat, 0, g_globalNcclComm, cudaStream));
-            cudaStreamSynchronize(0);
-        }
-    }
     return 0;
 }
 

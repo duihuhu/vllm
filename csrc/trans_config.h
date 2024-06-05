@@ -129,6 +129,7 @@ public:
     // void add_tasks(const std::vector<TransferTask>& tasks);
     void add_tasks(const std::vector<std::string>& tasks);
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
+    std::vector<char> get_nccl_id(std::string dst_channel);
 
 private:
     void init_device();

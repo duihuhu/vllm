@@ -78,3 +78,10 @@ std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> Trans
     }
     return finished_tasks;
 }
+
+std::vector<char> TransWorker get_nccl_id(std::string dst_channel){
+    ncclUniqueId uniqueId; 
+    int shmSize = sizeof(ncclUniqueId);
+    ncclGetUniqueId(&uniqueId);
+    return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
+}
