@@ -325,6 +325,7 @@ async def generate_prefill(request: Request) -> Response:
                             with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
                                 content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
                                 fd.write(content + "\n")
+                        print("infer_results ", infer_results)
                         decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
                                                                     (cfg.edecode_host, cfg.edecode_port))
                         d_num = 0
