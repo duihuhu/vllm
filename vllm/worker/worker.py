@@ -314,7 +314,7 @@ class Worker:
         self,
         dst_channel)->None:
         nccl_id = self.trans_worker.get_nccl_id(dst_channel)
-        print("nccl_id ", nccl_id)
+        print("nccl_id nccl_id ", nccl_id)
     def get_trans_blocks_time(
         self,
     ) -> None:

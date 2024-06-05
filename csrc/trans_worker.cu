@@ -83,5 +83,6 @@ std::vector<char> TransWorker::get_nccl_id(std::string dst_channel){
     ncclUniqueId uniqueId; 
     int shmSize = sizeof(ncclUniqueId);
     ncclGetUniqueId(&uniqueId);
+    std::cout<<" TransWorker::get_nccl_id " << std::endl;
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
 }
