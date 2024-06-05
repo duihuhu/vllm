@@ -28,7 +28,7 @@ server=None
 async def get_nccl_id(request: Request) -> Response:
     payload = await request.json()
     dst_channel = payload.pop("dst_channel")
-    nccl_id = server.engine.get_nccl_id(dst_channel)
+    nccl_id = await server.engine.get_nccl_id(dst_channel)
     return 
 @app.post("/query_layer_kv_blocks")
 async def query_layer_kv_blocks(response: Request) -> None:

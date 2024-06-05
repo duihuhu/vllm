@@ -1207,5 +1207,6 @@ class AsyncLLMEngine:
         logger.debug(f"Health check took {time.perf_counter()-t}s")
 
     async def get_nccl_id(self, dst_channel) -> None:
-        return self.engine.model_executor._run_workers_async("get_nccl_id", dst_channel=dst_channel)
+        nccl_id = await self.engine.model_executor._run_workers_async("get_nccl_id", dst_channel=dst_channel)
+        return nccl_id
     
