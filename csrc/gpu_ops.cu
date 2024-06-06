@@ -33,10 +33,14 @@ using namespace at;
 } while(0)
 
 ncclComm_t g_globalNcclComm = nullptr;
+ncclComm_t comm[4];
+ncclUniqueId commId[4];
+
 long long index_time = 0;
 long long send_time = 0;
 long long nccl_time = 0;
 long long nccl_num = 0;
+
 int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice, ncclComm_t& comm, ncclUniqueId uniqueId) {
     int32_t g_tpSize = NumDevice;
     if (NumDevice <=1) {
@@ -48,6 +52,91 @@ int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice, ncclComm_t& comm
     std::cout << "Create CreateInternalNcclComm NCCL Comm Success" << std::endl;
     return 0;
 }
+
+int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_comms) {
+    constexpr int32_t ROOT_RANK = 0;
+    constexpr int32_t TIME_OUT = 180;
+    int32_t g_tpSize = NumDevice;
+    if (NumDevice <=1) {
+        g_tpSize = 1;
+        return 0;
+    }
+    if (rank == ROOT_RANK) {
+        for (int i = 0; i < num_comms; ++i) {
+            int shm_fd;
+            int shmSize = sizeof(ncclUniqueId);
+            NCCL_CHECK(ncclGetUniqueId(&commId[i]));
+            // 将唯一标识符写入共享内存
+            char filename[256];
+            sprintf(filename, "/tmp/ncclCommId%d", i);
+
+            shm_fd = shm_open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+            if (shm_fd < 0) {
+                perror("shm_open");
+                exit(1);
+            }
+            // 设置共享内存大小
+            if (ftruncate(shm_fd, shmSize) == -1) {
+                perror("ftruncate");
+                exit(1);
+            }
+            // 映射共享内存
+            void* shmaddr = mmap(NULL, shmSize, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+            if (shmaddr == MAP_FAILED) {
+                perror("mmap");
+                exit(1);
+            }
+            // 生成唯一ID
+            ncclGetUniqueId(&commId[i]);
+            memcpy(shmaddr, &commId[i], shmSize);
+            // 解除映射
+            if (munmap(shmaddr, shmSize) == -1) {
+                perror("munmap");
+                exit(1);
+            }
+            NCCL_CHECK(ncclCommInitRank(&comm[i], NumDevice, commId[i], rank));
+            std::cout<<"AAA ncclCommInitRank "<<std::endl;
+        }
+
+    } else {
+        for (int i = 0; i < num_comms; ++i) {
+            int shm_fd;
+            int shmSize = sizeof(ncclUniqueId);
+            char filename[256];
+            sprintf(filename, "/tmp/ncclCommId%d", i);
+            int sleepTime = 0;
+            // 等待共享内存就绪
+            while (((shm_fd = shm_open(filename, O_RDONLY, 0)) < 0) && (sleepTime < TIME_OUT)) {
+                sleepTime++;
+                sleep(1);
+            }
+            if (sleepTime >= TIME_OUT) {
+                std::cout << "shm_open timeout" << std::endl;
+                return -1;
+            }
+            // 映射共享内存
+            void* shmaddr = mmap(NULL, shmSize, PROT_READ, MAP_SHARED, shm_fd, 0);
+            if (shmaddr == MAP_FAILED) {
+                perror("mmap");
+                exit(1);
+            }
+            // 从共享内存中读取唯一ID
+            memcpy(&commId[i], shmaddr, shmSize);
+            // 解除映射
+            if (munmap(shmaddr, shmSize) == -1) {
+                perror("munmap");
+                exit(1);
+            }
+
+            NCCLCHECK(ncclCommInitRank(&comm[i], NumDevice, commId[i] ,rank));
+            sleep(1);
+            std::cout<<"BBB ncclCommInitRank "<<std::endl;
+        }
+    }
+    return 0;
+}
+
+
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice , int32_t num_comms) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
