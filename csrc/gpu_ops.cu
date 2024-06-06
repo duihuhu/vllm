@@ -333,15 +333,14 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             }
-            num_comm = (num_comm + 1) % ARRAY_SIZE;
             if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclFloat, destRank,\
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
-            num_comm = (num_comm + 1) % ARRAY_SIZE;
         }
     }
     NCCLCHECK(ncclGroupEnd());
+    num_comm = (num_comm + 1) % ARRAY_SIZE;
 }
 
 void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
@@ -365,15 +364,14 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
                 comm[num_comm],  cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
-            num_comm = (num_comm + 1) % ARRAY_SIZE;
             if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
                 comm[num_comm],  cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
-            num_comm = (num_comm + 1) % ARRAY_SIZE;
         }
     }
     NCCLCHECK(ncclGroupEnd());
+    num_comm = (num_comm + 1) % ARRAY_SIZE;
 }
 
 void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
@@ -393,14 +391,13 @@ void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
             comm[num_comm], cudaStream)) {
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
         }
-        num_comm = (num_comm + 1) % ARRAY_SIZE;
         if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
             comm[num_comm], cudaStream)) {
             std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
         }
-        num_comm = (num_comm + 1) % ARRAY_SIZE;
     }
     NCCLCHECK(ncclGroupEnd());
+    num_comm = (num_comm + 1) % ARRAY_SIZE;
 }
 
 void HandleNcclCommDestroy()
