@@ -33,8 +33,11 @@ using namespace at;
 } while(0)
 
 ncclComm_t g_globalNcclComm = nullptr;
-ncclComm_t comm[4];
-ncclUniqueId commId[4];
+
+// 定义变量来表示数组大小
+const int ARRAY_SIZE = 8;
+ncclComm_t comm[ARRAY_SIZE];
+ncclUniqueId commId[ARRAY_SIZE];
 
 constexpr int MAX_SHM_NAME_LENGTH = 256;
 long long index_time = 0;
@@ -63,7 +66,7 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
         return 0;
     }
     if (rank == ROOT_RANK) {
-        for (int i = 0; i < num_comms; ++i) {
+        for (int i = 0; i < ARRAY_SIZE; ++i) {
             int shm_fd;
             int shmSize = sizeof(ncclUniqueId);
             ncclGetUniqueId(&commId[i]);
@@ -98,7 +101,7 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
         }
 
     } else {
-        for (int i = 0; i < num_comms; ++i) {
+        for (int i = 0; i < ARRAY_SIZE; ++i) {
             int shm_fd;
             int shmSize = sizeof(ncclUniqueId);
             char shmName[MAX_SHM_NAME_LENGTH];
@@ -334,7 +337,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
-            num_comm = (num_comm + 1) % 4;
+            num_comm = (num_comm + 1) % ARRAY_SIZE;
         }
     }
     NCCLCHECK(ncclGroupEnd());
@@ -365,7 +368,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
-            num_comm = (num_comm + 1) % 4;
+            num_comm = (num_comm + 1) % ARRAY_SIZE;
         }
     }
     NCCLCHECK(ncclGroupEnd());
