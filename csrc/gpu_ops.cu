@@ -38,6 +38,7 @@ ncclComm_t g_globalNcclComm = nullptr;
 const int ARRAY_SIZE = 4;
 ncclComm_t comm[ARRAY_SIZE];
 ncclUniqueId commId[ARRAY_SIZE];
+cudaStream_t streams[ARRAY_SIZE];
 
 constexpr int MAX_SHM_NAME_LENGTH = 256;
 long long index_time = 0;
@@ -61,6 +62,9 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
     int32_t g_tpSize = NumDevice;
+    for (int i = 0; i < ARRAY_SIZE; ++i) {
+        cudaStreamCreate(&streams[i]);
+    }
     if (NumDevice <=1) {
         g_tpSize = 1;
         return 0;
@@ -318,8 +322,8 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank)
 {
     int layerNum = srcCaches.size();
-    auto gpuStream = c10::cuda::getCurrentCUDAStream();
-    auto cudaStream = gpuStream.stream();
+    // auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    // auto cudaStream = gpuStream.stream();
     NCCLCHECK(ncclGroupStart());
     for (int i=0; i < layerNum; i++) {
         at::Tensor srcKeyCache = srcCaches[i].first;
@@ -330,12 +334,12 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
             if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclFloat, destRank,\
-                comm[num_comm], cudaStream)) {
+                comm[num_comm], streams[num_comm])) {
                 std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             }
             num_comm = (num_comm + 1) % ARRAY_SIZE;
             if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclFloat, destRank,\
-                comm[num_comm], cudaStream)) {
+                comm[num_comm],  streams[num_comm])) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
             num_comm = (num_comm + 1) % ARRAY_SIZE;
@@ -362,12 +366,12 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
             if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
-                comm[num_comm], cudaStream)) {
+                comm[num_comm],  streams[num_comm])) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
             num_comm = (num_comm + 1) % ARRAY_SIZE;
             if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
-                comm[num_comm], cudaStream)) {
+                comm[num_comm],  streams[num_comm])) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
             num_comm = (num_comm + 1) % ARRAY_SIZE;
