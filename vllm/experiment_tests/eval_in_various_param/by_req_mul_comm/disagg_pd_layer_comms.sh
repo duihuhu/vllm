@@ -23,7 +23,7 @@ else
     fi
 fi
 
-input_lens=(64 128 256 512 1024 2048)
+input_lens=(64 128 256 512 1024)
 output_lens=(16 32)
 request_rates=(3.2 6.4 12.8 25.6 51.2 102.4)
 num_requests=256
