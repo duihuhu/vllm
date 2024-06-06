@@ -36,6 +36,7 @@ ncclComm_t g_globalNcclComm = nullptr;
 ncclComm_t comm[4];
 ncclUniqueId commId[4];
 
+constexpr int MAX_SHM_NAME_LENGTH = 256;
 long long index_time = 0;
 long long send_time = 0;
 long long nccl_time = 0;
@@ -66,11 +67,10 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
             int shm_fd;
             int shmSize = sizeof(ncclUniqueId);
             ncclGetUniqueId(&commId[i]);
-            // 将唯一标识符写入共享内存
-            char filename[256];
-            sprintf(filename, "/tmp/ncclCommId%d", i);
-
-            shm_fd = shm_open(filename, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+            char shmName[MAX_SHM_NAME_LENGTH];
+            sprintf(shmName, "NcclRootInfo%d", i);
+            std::cout<<"aaaaa";
+            shm_fd = shm_open(shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
             if (shm_fd < 0) {
                 perror("shm_open");
                 exit(1);
@@ -102,11 +102,12 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
         for (int i = 0; i < num_comms; ++i) {
             int shm_fd;
             int shmSize = sizeof(ncclUniqueId);
-            char filename[256];
-            sprintf(filename, "/tmp/ncclCommId%d", i);
+            char shmName[MAX_SHM_NAME_LENGTH];
+            sprintf(shmName, "NcclRootInfo%d", i);
+            std::cout<<"bbbb";
             int sleepTime = 0;
             // 等待共享内存就绪
-            while (((shm_fd = shm_open(filename, O_RDONLY, 0)) < 0) && (sleepTime < TIME_OUT)) {
+            while (((shm_fd = shm_open(shmName, O_RDONLY, 0)) < 0) && (sleepTime < TIME_OUT)) {
                 sleepTime++;
                 sleep(1);
             }
