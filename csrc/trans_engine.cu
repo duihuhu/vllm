@@ -10,11 +10,6 @@ TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<a
 }
 
 void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank) {
-    // if (recv_streams.find(channel) == recv_streams.end()) {
-    //     // c10::cuda::CUDAStream stream = c10::cuda::getStreamFromPool(true);
-    //     c10::cuda::CUDAStream* stream = new c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
-    //     recv_streams[channel] = stream;
-    // }
 
     c10::cuda::CUDAStream& stream = streams[num_stream];
     c10::cuda::CUDAStreamGuard guard(stream);
