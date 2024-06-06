@@ -4,6 +4,10 @@
 TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
     : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache){
     // Initialize parameters from config dictionaries
+    for (int i = 0; i < 4; ++i) {
+        cudaStreamCreate(&streams[i]);
+    }
+    num_stream = 0;
 }
 
 void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank) {
@@ -13,8 +17,8 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     //     recv_streams[channel] = stream;
     // }
 
-    // c10::cuda::CUDAStreamGuard guard(*recv_streams[channel]);
-    // RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
+    c10::cuda::CUDAStreamGuard guard(stream[num_stream]);
+    RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
@@ -27,6 +31,7 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     }
     else
         recv_events[channel].push_back(std::make_pair(request_id, event));
+    num_stream = (num_stream + 1) % 4;
 }
 void TransEngine::send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer) {
     if (send_streams.find(channel) == send_streams.end()) {
@@ -52,24 +57,21 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
 
 
 void TransEngine::send_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank) {
-    // if (send_streams.find(channel) == send_streams.end()) {
-    //     // c10::cuda::CUDAStream stream = c10::cuda::getStreamFromPool(true);
-    //     c10::cuda::CUDAStream* stream = new c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
-    //     send_streams[channel] = stream;
-    // }
-
     // c10::cuda::CUDAStreamGuard guard(*send_streams[channel]);
+    c10::cuda::CUDAStreamGuard guard(stream[num_stream]);
+
     SendBlocksRemote(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
     event->record();
-
     if (send_events.find(channel) == send_events.end()) {
         send_events[channel] = std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>();
         send_events[channel].push_back(std::make_pair(request_id, event));
     } else
         send_events[channel].push_back(std::make_pair(request_id, event));
+    num_stream = (num_stream + 1) % 4;
+
 }
 
 std::vector<std::string> TransEngine::check_send_finished_events() {
