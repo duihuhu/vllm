@@ -126,7 +126,7 @@ private:
 
     std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> recv_events;
-    std::vector<c10::cuda::CUDAStream*> streams;
+    std::vector<c10::cuda::CUDAStream> streams;
     int num_stream;
 };
 
