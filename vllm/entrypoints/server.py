@@ -24,12 +24,13 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
-@app.post("/get_nccl_id")
-async def get_nccl_id(request: Request) -> Response:
+@app.post("/get_nccl_ids")
+async def get_nccl_ids(request: Request) -> Response:
     payload = await request.json()
     dst_channel = payload.pop("dst_channel")
-    nccl_id = await server.engine.get_nccl_id(dst_channel)
-    return 
+    nccl_ids = await server.engine.get_nccl_ids(dst_channel)
+    return nccl_ids
+
 @app.post("/query_layer_kv_blocks")
 async def query_layer_kv_blocks(response: Request) -> None:
     payload = await response.json()    

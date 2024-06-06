@@ -29,6 +29,7 @@ from vllm.logger import init_logger
 import ray
 #no TransferRequestIdTask, TransferBlocksTask
 from vllm.core.kv_trans_scheduler import TransferTaskMeta
+from vllm.entrypoints.server_meta import NcclUniqueId
 import time
 logger = init_logger(__name__)
 class Worker:
@@ -310,11 +311,13 @@ class Worker:
             t2 = time.time()
             self.trans_blocks_time = self.trans_blocks_time + t2 - t1
 
-    def get_nccl_id(
+    def get_nccl_ids(
         self,
         dst_channel)->None:
-        nccl_id = self.trans_worker.get_nccl_id(dst_channel)
-        print("nccl_id nccl_id ", nccl_id)
+        nccl_id = self.trans_worker.get_nccl_ids(dst_channel)
+        nccl_uniqe_id = NcclUniqueId(self.nccl_local_rank, nccl_id).__json__()
+        return nccl_uniqe_id
+    
     def get_trans_blocks_time(
         self,
     ) -> None:

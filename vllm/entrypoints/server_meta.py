@@ -135,3 +135,16 @@ class PrefilledMeta:
             "sampling_params": self.sampling_params.__json__(),
             "is_layer": self.is_layer
         }
+        
+class NcclUniqueId:
+    def __init__(self, 
+                 nccl_local_rank, 
+                 nccl_uniqe_id):
+        self.nccl_local_rank = nccl_local_rank
+        self.nccl_uniqe_id = nccl_uniqe_id
+        
+    def __json__(self) -> Dict:
+        return {
+            "nccl_local_rank": self.nccl_local_rank,
+            "nccl_uniqe_id": self.nccl_uniqe_id
+        }
