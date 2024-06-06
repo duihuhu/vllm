@@ -157,13 +157,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "SendLayerBlocks");
 
   pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
-  py::class_<TransEngine>(trans_ops, "TransEngine")
-      .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
-      .def("recv_blocks", &TransEngine::recv_blocks, "recv_blocks")
-      .def("send_blocks", &TransEngine::send_blocks, "send_blocks")
-      .def("send_layer_blocks", &TransEngine::send_layer_blocks, "send_layer_blocks")
-      .def("check_send_finished_events", &TransEngine::check_send_finished_events, "check_send_finished_events")
-      .def("check_recv_finished_events", &TransEngine::check_recv_finished_events, "check_recv_finished_events");
+  // py::class_<TransEngine>(trans_ops, "TransEngine")
+  //     .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
+  //     .def("recv_blocks", &TransEngine::recv_blocks, "recv_blocks")
+  //     .def("send_blocks", &TransEngine::send_blocks, "send_blocks")
+  //     .def("send_layer_blocks", &TransEngine::send_layer_blocks, "send_layer_blocks")
+  //     .def("check_send_finished_events", &TransEngine::check_send_finished_events, "check_send_finished_events")
+  //     .def("check_recv_finished_events", &TransEngine::check_recv_finished_events, "check_recv_finished_events");
       
   py::class_<TransWorker>(trans_ops, "TransWorker")
       .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int>())
