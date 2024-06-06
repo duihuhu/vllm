@@ -37,7 +37,7 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
 
     // at::cuda::CUDAEvent event;
     if(is_last_layer){
-        // std::cout<<"send_layer_blocks is_last_layer is end " << layer << " "<< is_last_layer << std::endl;
+        std::cout<<"send_layer_blocks is_last_layer is end " << layer << " "<< is_last_layer << " " << request_id << std::endl;
         at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
         event->record();
         if (send_events.find(channel) == send_events.end()) {
@@ -116,6 +116,7 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
                 recv_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
                 ++num_finished_events;
             } else {
+                std::cout<<"request_id not finished " << " " << request_id << std::endl;
                 break;
             }
         }
