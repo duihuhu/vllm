@@ -94,7 +94,7 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
                 perror("munmap");
                 exit(1);
             }
-            NCCL_CHECK(ncclCommInitRank(&comm[i], NumDevice, commId[i], rank));
+            ncclCommInitRank(&comm[i], NumDevice, commId[i], rank);
             std::cout<<"AAA ncclCommInitRank "<<std::endl;
         }
 
@@ -128,7 +128,7 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
                 exit(1);
             }
 
-            NCCLCHECK(ncclCommInitRank(&comm[i], NumDevice, commId[i] ,rank));
+            ncclCommInitRank(&comm[i], NumDevice, commId[i] ,rank);
             sleep(1);
             std::cout<<"BBB ncclCommInitRank "<<std::endl;
         }
