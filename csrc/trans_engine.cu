@@ -5,7 +5,7 @@ TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<a
     : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), num_stream(4), streams(num_stream){
     // Initialize parameters from config dictionaries
     for (int i = 0; i < num_stream; ++i) {
-         streams[i] = c10::cuda::CUDAStream();
+         streams[i] = c10::cuda::getStreamFromPool(true);
     }
 }
 
@@ -17,7 +17,7 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     // }
 
     c10::cuda::CUDAStream& stream = streams[num_stream];
-    c10::cuda::CUDAStreamGuard guard();
+    c10::cuda::CUDAStreamGuard guard(stream);
     RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
