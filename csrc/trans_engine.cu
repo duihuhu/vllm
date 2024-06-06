@@ -34,7 +34,7 @@ void TransEngine::recv_layer_blocks(const std::string& channel, const std::strin
     for(int layer = 0; layer < num_layer; layer++) {
         c10::cuda::CUDAStream& stream = streams[num_stream];
         c10::cuda::CUDAStreamGuard guard(stream);
-        RecvLayerBlocks(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank, layer);
+        RecvLayerBlocks(gpu_cache, src_blocks, cache_size_per_block, opposite_rank, layer);
         if(layer == num_layer - 1) {
             at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
             event->record();

@@ -114,7 +114,7 @@ public:
     void send_blocks(const std::string& channel, const std::string& request_id,
                      const std::vector<uint32_t>& dst_blocks, int opposite_rank);
     void send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer);
-    void recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer);
+    void recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer);
 
     std::vector<std::string> check_send_finished_events();
     std::vector<std::string> check_recv_finished_events();
