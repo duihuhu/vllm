@@ -978,6 +978,7 @@ class AsyncLLMEngine:
         merge_num_blocks = []
         merge_is_allocated = []
         global_ranks = None
+        print("eee")  
         for meta in layer_kv_blocks_meta:
             request_id = meta["request_id"]
             prompt_token_ids = meta["prompt_token_ids"]
@@ -1012,13 +1013,14 @@ class AsyncLLMEngine:
                 # self.engine.scheduler.add_recv_transfering(seq_group)
                 # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
                 self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
+                print("ddd")  
             else:
                 merge_num_blocks.append(0)
                 merge_is_allocated.append(False)
-          
+        print("ccc")  
         self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
         current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
-        
+        print("bbbb")
         if not self.is_running:
             if self.start_engine_loop:
                 self.start_background_loop()
@@ -1028,7 +1030,7 @@ class AsyncLLMEngine:
                     "inspect the output to find the stacktrace of the "
                     "error that caused the background loop to stop "
                     "(AsyncEngineDeadError).")
-
+        print("aaaaa")
         return merge_request_id, merge_num_blocks, current_transfer_tag, merge_is_allocated
 
     async def pull_kv_blocks(self, query_meta):
