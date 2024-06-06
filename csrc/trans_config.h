@@ -21,6 +21,16 @@ enum class TaskType {
     TRANSFER_SEND_BLOCKS,
     TRANSFER_RECV_BLOCKS,
     TRANSFER_SEND_LAYER_BLOCKS,
+    CREATE_NCCL_COMM,
+};
+
+class CommTask {
+public:
+    CommTask(ncclUniqueId &uniqueId, const std::string& dst_channel)
+        : uniqueId(uniqueId), dst_channel(dst_channel) {}
+
+    ncclUniqueId uniqueId;
+    std::string dst_channel;
 };
 
 // TransferTaskMeta结构体，用于存储传输任务的元信息
@@ -130,6 +140,7 @@ public:
     void add_tasks(const std::vector<std::string>& tasks);
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
     std::vector<char> get_nccl_id(std::string dst_channel);
+    bool create_comm(std::vector<char>, std::string dst_channel);
 
 private:
     void init_device();
@@ -137,6 +148,7 @@ private:
 
     TransEngine trans_engine;
     TransQueue<TransferTask> task_queue;
+    TransQueue<CommTask> comm_queue;
     TransQueue<std::pair<std::vector<std::string>, std::vector<std::string>>> transfer_result_queue;
 
     std::thread execute;
@@ -145,4 +157,5 @@ private:
     int nccl_local_rank;
     ncclComm_t comm;
 };
+
 #endif // TRANS_CONFIG_H

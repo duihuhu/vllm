@@ -117,6 +117,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "CreateGlobalNcclComm");
 
   gpu_ops.def(
+    "CreateInternalNcclComm",
+    &CreateInternalNcclComm,
+    "CreateInternalNcclComm");
+
+  gpu_ops.def(
     "copy_blocks_in_layer",
     &copy_blocks_in_layer,
     "copy_blocks_in_layer");
@@ -165,6 +170,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def("add_tasks", &TransWorker::add_tasks, "add_tasks")
       .def("get_finished_transfer_tasks", &TransWorker::get_finished_transfer_tasks, "get_finished_transfer_tasks")
       .def("get_nccl_id", &TransWorker::get_nccl_id, "A function that returns NCCL unique ID as a list of characters");
+      .def("create_comm", &TransWorker::create_comm, "A function that create NCCL comm ");
 
   py::enum_<TaskType>(trans_ops, "TaskType")
       .value("TRANSFER_SEND_BLOCKS", TaskType::TRANSFER_SEND_BLOCKS)

@@ -50,6 +50,17 @@ long long index_time = 0;
 long long send_time = 0;
 long long nccl_time = 0;
 long long nccl_num = 0;
+int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice=8, ncclComm_t& comm, ncclUniqueId uniqueId) {
+    int32_t g_tpSize = NumDevice;
+    if (NumDevice <=1) {
+        g_tpSize = 1;
+        return 0;
+    }
+    std::cout << "Start init CreateInternalNcclComm  NCCL Comm Success" << std::endl;
+    NCCLCHECK(ncclCommInitRank(&comm, NumDevice, uniqueId ,rank));
+    std::cout << "Create CreateInternalNcclComm NCCL Comm Success" << std::endl;
+    return 0;
+}
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t num_comms = 16) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;

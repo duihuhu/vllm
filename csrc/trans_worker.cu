@@ -45,6 +45,15 @@ void TransWorker::worker() {
                     throw std::runtime_error("invalid task_type.");
             }
         }
+
+        if (!comm_queue.empty()) {
+            auto comm_task = comm_queue.pop_front();
+            ncclComm_t comm;
+            if (CreateInternalNcclComm(nccl_local_rank, 4, comm, comm_task.uniqueId)!=0) {
+                throw std::runtime_error("CreateNcclFromRankTable error");
+            }
+        }
+
         // std::cout<<"task_queue is empty ";
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
@@ -81,7 +90,18 @@ std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> Trans
 
 std::vector<char> TransWorker::get_nccl_id(std::string dst_channel){
     ncclUniqueId uniqueId; 
-    int shmSize = sizeof(ncclUniqueId);
+    // int shmSize = sizeof(ncclUniqueId);
     ncclGetUniqueId(&uniqueId);
+    comm_queue.push_back(CommTask(uniqueId, dst_channel));
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
+}
+
+bool TransWorker::create_comm(std::vector<char>, std::string dst_channel){
+    ncclUniqueId uniqueId;
+    std::memcpy(uniqueId.internal, id_vector.data(), sizeof(uniqueId.internal));
+    ncclComm_t comm;
+    if (CreateInternalNcclComm(nccl_local_rank, 4, comm, uniqueId)!=0) {
+        throw std::runtime_error("CreateNcclFromRankTable error");
+    }
+    return true
 }

@@ -24,6 +24,13 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+@app.post("/create_comm")
+async def create_comm(request: Request) -> Response:
+    payload = await request.json()
+    dst_channel = payload.pop("dst_channel")
+    nccl_ids =  payload.pop("nccl_ids")
+    await server.engine.create_comm(nccl_ids, dst_channel)
+    
 @app.post("/get_nccl_ids")
 async def get_nccl_ids(request: Request) -> Response:
     payload = await request.json()
