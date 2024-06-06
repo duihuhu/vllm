@@ -34,12 +34,10 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     num_stream = (num_stream + 1) % 4;
 }
 void TransEngine::send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer) {
-    if (send_streams.find(channel) == send_streams.end()) {
-        c10::cuda::CUDAStream* stream = new c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
-        send_streams[channel] = stream;
-    }
 
-    c10::cuda::CUDAStreamGuard guard(*send_streams[channel]);
+    // c10::cuda::CUDAStreamGuard guard(*send_streams[channel]);
+    c10::cuda::CUDAStream& stream = streams[num_stream];
+    c10::cuda::CUDAStreamGuard guard(stream);
     SendLayerBlocks(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank, layer);
 
     // at::cuda::CUDAEvent event;
