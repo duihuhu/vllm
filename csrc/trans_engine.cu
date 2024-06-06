@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <iostream>
 TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
-    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), num_stream(4){
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), num_stream(0){
     // Initialize parameters from config dictionaries
     for (int i = 0; i < num_stream; ++i) {
          streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
