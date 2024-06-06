@@ -311,10 +311,10 @@ class Worker:
             t2 = time.time()
             self.trans_blocks_time = self.trans_blocks_time + t2 - t1
 
-    def get_nccl_ids(
+    def get_nccl_id(
         self,
         dst_channel)->None:
-        nccl_id = self.trans_worker.get_nccl_ids(dst_channel)
+        nccl_id = self.trans_worker.get_nccl_id(dst_channel)
         nccl_uniqe_id = NcclUniqueId(self.nccl_local_rank, nccl_id).__json__()
         return nccl_uniqe_id
     
