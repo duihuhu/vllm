@@ -41,7 +41,7 @@ long long index_time = 0;
 long long send_time = 0;
 long long nccl_time = 0;
 long long nccl_num = 0;
-
+int num_comm = 0;
 int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice, ncclComm_t& comm, ncclUniqueId uniqueId) {
     int32_t g_tpSize = NumDevice;
     if (NumDevice <=1) {
@@ -69,7 +69,6 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
             ncclGetUniqueId(&commId[i]);
             char shmName[MAX_SHM_NAME_LENGTH];
             sprintf(shmName, "NcclRootInfo%d", i);
-            std::cout<<"aaaaa";
             shm_fd = shm_open(shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
             if (shm_fd < 0) {
                 perror("shm_open");
@@ -104,7 +103,6 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
             int shmSize = sizeof(ncclUniqueId);
             char shmName[MAX_SHM_NAME_LENGTH];
             sprintf(shmName, "NcclRootInfo%d", i);
-            std::cout<<"bbbb";
             int sleepTime = 0;
             // 等待共享内存就绪
             while (((shm_fd = shm_open(shmName, O_RDONLY, 0)) < 0) && (sleepTime < TIME_OUT)) {
@@ -329,14 +327,15 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
             if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
-                g_globalNcclComm, cudaStream)) {
+                comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             }
             if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
-                g_globalNcclComm, cudaStream)) {
+                comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
         }
+        num_comm = (num_comm + 1) % 4;
     }
     NCCLCHECK(ncclGroupEnd());
 }
@@ -359,17 +358,15 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
             if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt, srcRank,\
-                g_globalNcclComm, cudaStream)) {
+                comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
-
-
             if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt, srcRank,\
-                g_globalNcclComm, cudaStream)) {
+                comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
-
         }
+        num_comm = (num_comm + 1) % 4;
     }
     NCCLCHECK(ncclGroupEnd());
 }
