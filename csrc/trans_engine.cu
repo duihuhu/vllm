@@ -5,7 +5,7 @@ TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<a
     : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), num_stream(4){
     // Initialize parameters from config dictionaries
     for (int i = 0; i < num_stream; ++i) {
-         streams[i] =  c10::cuda::CUDAStream();
+         streams[i] =  c10::cuda::CUDAStream::create();
     }
 }
 
