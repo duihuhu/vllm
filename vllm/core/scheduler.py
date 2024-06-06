@@ -449,7 +449,7 @@ class Scheduler:
                     blocks_to_copy=blocks_to_copy,
                     ignored_seq_groups=ignored_seq_groups,
                 )
-                print("prefill batch and tokens :", len(scheduler_outputs.scheduled_seq_groups), num_batched_tokens)
+                # print("prefill batch and tokens :", len(scheduler_outputs.scheduled_seq_groups), num_batched_tokens)
                 return scheduler_outputs, cached_seq_groups
 
         # NOTE(woosuk): Preemption happens only when there is no available slot
