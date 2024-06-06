@@ -390,13 +390,15 @@ void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
         void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
         void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
         if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
-            g_globalNcclComm, cudaStream)) {
+            comm[num_comm], cudaStream)) {
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
         }
+        num_comm = (num_comm + 1) % ARRAY_SIZE;
         if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
-            g_globalNcclComm, cudaStream)) {
+            comm[num_comm], cudaStream)) {
             std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
         }
+        num_comm = (num_comm + 1) % ARRAY_SIZE;
     }
     NCCLCHECK(ncclGroupEnd());
 }
