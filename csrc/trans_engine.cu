@@ -28,6 +28,27 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
         recv_events[channel].push_back(std::make_pair(request_id, event));
     num_stream = (num_stream + 1) % 4;
 }
+
+void TransEngine::recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int num_layer) {
+
+    for(int layer = 0; layer < num_layer; layer++) {
+        c10::cuda::CUDAStream& stream = streams[num_stream];
+        c10::cuda::CUDAStreamGuard guard(stream);
+        RecvLayerBlocks(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank, layer);
+        if(layer == num_layer - 1) {
+            at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
+            event->record();
+            if (recv_events.find(channel) == recv_events.end()) {
+                recv_events[channel] = std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>();
+                recv_events[channel].push_back(std::make_pair(std::string(request_id), event));
+            }
+            else
+                recv_events[channel].push_back(std::make_pair(request_id, event));
+        }
+        num_stream = (num_stream + 1) % 4;
+    }
+}
+
 void TransEngine::send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer) {
 
     // c10::cuda::CUDAStreamGuard guard(*send_streams[channel]);

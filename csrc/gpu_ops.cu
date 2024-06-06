@@ -400,6 +400,33 @@ void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
     num_comm = (num_comm + 1) % ARRAY_SIZE;
 }
 
+void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
+    std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer)
+{
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+
+    auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclGroupStart());
+    at::Tensor dstKeyCache = dstCaches[layer].first;
+    at::Tensor dstValueCache = dstCaches[layer].second;
+
+    for (int j = 0; j < dstBlocks.size(); j++) {
+        int blockIdx = dstBlocks[j];
+        void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
+        void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
+        if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
+            comm[num_comm],  cudaStream)) {
+            std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
+        }
+        if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
+            comm[num_comm],  cudaStream)) {
+            std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
+        }
+    }
+    NCCLCHECK(ncclGroupEnd());
+    num_comm = (num_comm + 1) % ARRAY_SIZE;
+}
+
 void HandleNcclCommDestroy()
 {
     ncclCommDestroy(g_globalNcclComm);

@@ -369,7 +369,7 @@ class RecvKvTransScheduler:
                     blocks = []
                     for block_id in self.block_ids[request_id]:
                         blocks.extend(block_id)
-                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), blocks, self.opposite_ranks, trans_ops.TaskType.TRANSFER_RECV_BLOCKS).serialize())
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), blocks, self.opposite_ranks, trans_ops.TaskType.TRANSFER_RECV_LAYER_BLOCKS).serialize())
                 else:
                     scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),  self.block_ids[request_id], self.opposite_ranks, trans_ops.TaskType.TRANSFER_RECV_BLOCKS).serialize())
         return scheduled_transfer_tasks 

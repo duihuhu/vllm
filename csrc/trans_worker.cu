@@ -41,6 +41,8 @@ void TransWorker::worker() {
                     // std::cout<< "send_layer_blocks " << task.layer << " " << task.is_last_layer;
                     trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], task.layer, task.is_last_layer);
                     break;
+                case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
+                    trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], 40);
                 default:
                     throw std::runtime_error("invalid task_type.");
             }

@@ -156,6 +156,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &SendLayerBlocks,
     "SendLayerBlocks");
 
+  gpu_ops.def(
+    "RecvLayerBlocks",
+    &RecvLayerBlocks,
+    "RecvLayerBlocks");
+
   pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
   // py::class_<TransEngine>(trans_ops, "TransEngine")
   //     .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&>())  // Constructor
@@ -176,6 +181,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .value("TRANSFER_SEND_BLOCKS", TaskType::TRANSFER_SEND_BLOCKS)
       .value("TRANSFER_RECV_BLOCKS", TaskType::TRANSFER_RECV_BLOCKS)
       .value("TRANSFER_SEND_LAYER_BLOCKS", TaskType::TRANSFER_SEND_LAYER_BLOCKS)
+      .value("TRANSFER_RECV_LAYER_BLOCKS", TaskType::TRANSFER_RECV_LAYER_BLOCKS)
       .export_values();
 
   py::class_<TransferTaskMeta>(trans_ops, "TransferTaskMeta")
