@@ -116,10 +116,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &CreateGlobalNcclComm,
     "CreateGlobalNcclComm");
 
-  gpu_ops.def(
-    "CreateInternalNcclComm",
-    &CreateInternalNcclComm,
-    "CreateInternalNcclComm");
+  // gpu_ops.def(
+  //   "CreateInternalNcclComm",
+  //   &CreateInternalNcclComm,
+  //   "CreateInternalNcclComm");
 
   gpu_ops.def(
     "copy_blocks_in_layer",
