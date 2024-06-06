@@ -17,7 +17,7 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     //     recv_streams[channel] = stream;
     // }
 
-    c10::cuda::CUDAStreamGuard guard(stream[num_stream]);
+    c10::cuda::CUDAStreamGuard guard(streams[num_stream]);
     RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
