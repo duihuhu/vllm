@@ -93,7 +93,7 @@ std::vector<char> TransWorker::get_nccl_id(std::string dst_channel){
     // int shmSize = sizeof(ncclUniqueId);
     ncclGetUniqueId(&uniqueId);
     comm_queue.push_back(CommTask(uniqueId, dst_channel));
-    std::cout << "NCCL Unique ID get in C++: " << " nccl_local_rank " << nccl_local_rank;
+    std::cout << "NCCL Unique ID get in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
     for (char c : uniqueId.internal) {
         std::cout << std::hex << (int)c << " ";
     }
@@ -104,7 +104,7 @@ bool TransWorker::create_comm(std::vector<char> nccl_id, std::string dst_channel
     ncclUniqueId uniqueId;
     std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
     ncclComm_t comm;
-    std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank;
+    std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
     for (char c : uniqueId.internal) {
         std::cout << std::hex << (int)c << " ";
     }

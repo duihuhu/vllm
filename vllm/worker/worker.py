@@ -323,6 +323,7 @@ class Worker:
         nccl_ids,
         dst_channel
     ) -> None:
+        print("worker create_comm ", self.nccl_local_rank, self.parallel_config.tensor_parallel_size)
         nccl_id = nccl_ids[self.nccl_local_rank % self.parallel_config.tensor_parallel_size]["nccl_uniqe_id"]
         res = self.trans_worker.create_comm(nccl_id, dst_channel)
         print("res ", res)
