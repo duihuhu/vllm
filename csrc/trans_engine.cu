@@ -16,7 +16,7 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     //     recv_streams[channel] = stream;
     // }
 
-    c10::cuda::CUDAStream stream = streams[num_stream];
+    c10::cuda::CUDAStream& stream = streams[num_stream];
     c10::cuda::CUDAStreamGuard guard(stream);
     RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
@@ -58,7 +58,7 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
 
 void TransEngine::send_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank) {
     // c10::cuda::CUDAStreamGuard guard(*send_streams[channel]);
-    c10::cuda::CUDAStream stream = streams[num_stream];
+    c10::cuda::CUDAStream& stream = streams[num_stream];
     c10::cuda::CUDAStreamGuard guard(stream);
 
     SendBlocksRemote(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank);
