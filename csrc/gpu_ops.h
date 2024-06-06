@@ -3,7 +3,8 @@
 
 using namespace torch::indexing;
 
-int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice=8, ncclComm_t comm, ncclUniqueId uniqueId);
+int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice, ncclComm_t comm, ncclUniqueId uniqueId);
+
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t num_comms = 16);
 
 void copy_blocks_in_layer(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches,

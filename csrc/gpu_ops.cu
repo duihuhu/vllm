@@ -50,7 +50,7 @@ long long index_time = 0;
 long long send_time = 0;
 long long nccl_time = 0;
 long long nccl_num = 0;
-int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice=8, ncclComm_t& comm, ncclUniqueId uniqueId) {
+int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice, ncclComm_t& comm, ncclUniqueId uniqueId) {
     int32_t g_tpSize = NumDevice;
     if (NumDevice <=1) {
         g_tpSize = 1;

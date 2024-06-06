@@ -96,12 +96,12 @@ std::vector<char> TransWorker::get_nccl_id(std::string dst_channel){
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
 }
 
-bool TransWorker::create_comm(std::vector<char>, std::string dst_channel){
+bool TransWorker::create_comm(std::vector<char> nccl_id, std::string dst_channel){
     ncclUniqueId uniqueId;
-    std::memcpy(uniqueId.internal, id_vector.data(), sizeof(uniqueId.internal));
+    std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
     ncclComm_t comm;
     if (CreateInternalNcclComm(nccl_local_rank, 4, comm, uniqueId)!=0) {
         throw std::runtime_error("CreateNcclFromRankTable error");
     }
-    return true
+    return true;
 }
