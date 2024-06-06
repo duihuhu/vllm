@@ -2,12 +2,11 @@
 #include <stdexcept>
 #include <iostream>
 TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
-    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache){
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), num_stream(4), streams(num_stream){
     // Initialize parameters from config dictionaries
-    for (int i = 0; i < 4; ++i) {
-        cudaStreamCreate(&streams[i]);
+    for (int i = 0; i < num_stream; ++i) {
+         streams[i] = c10::cuda::getStreamFromPool();
     }
-    num_stream = 0;
 }
 
 void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank) {
@@ -17,7 +16,8 @@ void TransEngine::recv_blocks(const std::string& channel, const std::string& req
     //     recv_streams[channel] = stream;
     // }
 
-    c10::cuda::CUDAStreamGuard guard(streams[num_stream]);
+    c10::cuda::CUDAStream& stream = streams[num_stream];
+    c10::cuda::CUDAStreamGuard guard();
     RecvBlocksRemote(gpu_cache, src_blocks, cache_size_per_block, opposite_rank);
 
     // at::cuda::CUDAEvent event;
@@ -58,7 +58,8 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
 
 void TransEngine::send_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank) {
     // c10::cuda::CUDAStreamGuard guard(*send_streams[channel]);
-    c10::cuda::CUDAStreamGuard guard(streams[num_stream]);
+    c10::cuda::CUDAStream& stream = streams[num_stream];
+    c10::cuda::CUDAStreamGuard guard();
 
     SendBlocksRemote(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank);
 
