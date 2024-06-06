@@ -329,11 +329,11 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
             int blockIdx = srcBlocks[j];
             void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
-            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
+            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclFloat, destRank,\
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             }
-            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
+            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclFloat, destRank,\
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
@@ -360,11 +360,11 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
             int blockIdx = dstBlocks[j];
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
-            if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt, srcRank,\
+            if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
-            if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt, srcRank,\
+            if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
