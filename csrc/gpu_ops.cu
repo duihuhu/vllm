@@ -35,7 +35,7 @@ using namespace at;
 ncclComm_t g_globalNcclComm = nullptr;
 
 // 定义变量来表示数组大小
-const int ARRAY_SIZE = 8;
+const int ARRAY_SIZE = 4;
 ncclComm_t comm[ARRAY_SIZE];
 ncclUniqueId commId[ARRAY_SIZE];
 
@@ -333,6 +333,7 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             }
+            num_comm = (num_comm + 1) % ARRAY_SIZE;
             if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclFloat, destRank,\
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
@@ -364,6 +365,7 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
+            num_comm = (num_comm + 1) % ARRAY_SIZE;
             if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
