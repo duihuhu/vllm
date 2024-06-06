@@ -18,7 +18,7 @@ void TransWorker::init_device() {
 
 void TransWorker::worker() {
     init_device();
-    if (CreateGlobalMulNcclComm(nccl_local_rank, 4, 0)!=0) {
+    if (CreateGlobalMulNcclComm(nccl_local_rank, 4, 4)!=0) {
         throw std::runtime_error("CreateNcclFromRankTable error");
     }
     
