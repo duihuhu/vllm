@@ -334,8 +334,8 @@ void SendBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, 
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
+            num_comm = (num_comm + 1) % 4;
         }
-        num_comm = (num_comm + 1) % 4;
     }
     NCCLCHECK(ncclGroupEnd());
 }
@@ -365,8 +365,8 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
                 comm[num_comm], cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
+            num_comm = (num_comm + 1) % 4;
         }
-        num_comm = (num_comm + 1) % 4;
     }
     NCCLCHECK(ncclGroupEnd());
 }
