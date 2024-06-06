@@ -316,6 +316,9 @@ class Worker:
         dst_channel)->None:
         nccl_id = self.trans_worker.get_nccl_id(dst_channel)
         nccl_uniqe_id = NcclUniqueId(self.nccl_local_rank, nccl_id).__json__()
+        print("get_nccl_id nccl_id " , nccl_id)
+        print("get_nccl_id nccl_uniqe_id " , nccl_uniqe_id)
+
         return nccl_uniqe_id
     
     def create_comm(
@@ -323,10 +326,10 @@ class Worker:
         nccl_ids,
         dst_channel
     ) -> None:
-        print("worker create_comm ", self.nccl_local_rank, self.parallel_config.tensor_parallel_size)
-        nccl_id = nccl_ids[self.nccl_local_rank % self.parallel_config.tensor_parallel_size]["nccl_uniqe_id"]
-        res = self.trans_worker.create_comm(nccl_id, dst_channel)
-        print("res ", res)
+        print("worker create_comm ", nccl_ids, dst_channel, self.nccl_local_rank, self.parallel_config.tensor_parallel_size)
+        # nccl_id = nccl_ids[self.nccl_local_rank % self.parallel_config.tensor_parallel_size]["nccl_uniqe_id"]
+        # res = self.trans_worker.create_comm(nccl_id, dst_channel)
+        # print("res ", res)
     
     def get_trans_blocks_time(
         self,
