@@ -405,10 +405,8 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         self.scheduler._check_tranfer_finished_req()
-        # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
-        #     print(self.scheduler.meta_recv_finished, self.scheduler.decode_recv_finished, self.scheduler.kv_prepared_seq_group)
-        if self.deploy_config.role == 'decoder':
-            print("decode execute ")
+        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
+            print(self.scheduler.meta_recv_finished, self.scheduler.decode_recv_finished, self.scheduler.kv_prepared_seq_group)
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
         # if scheduler_outputs.is_empty():
