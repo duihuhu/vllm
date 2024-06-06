@@ -65,7 +65,7 @@ int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_co
         for (int i = 0; i < num_comms; ++i) {
             int shm_fd;
             int shmSize = sizeof(ncclUniqueId);
-            NCCL_CHECK(ncclGetUniqueId(&commId[i]));
+            ncclGetUniqueId(&commId[i]);
             // 将唯一标识符写入共享内存
             char filename[256];
             sprintf(filename, "/tmp/ncclCommId%d", i);
