@@ -48,7 +48,7 @@ int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice, ncclComm_t& comm
     std::cout << "Create CreateInternalNcclComm NCCL Comm Success" << std::endl;
     return 0;
 }
-int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t num_comms = 16) {
+int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice , int32_t num_comms) {
     constexpr int32_t ROOT_RANK = 0;
     constexpr int32_t TIME_OUT = 180;
     constexpr int32_t ROOT_INFO_OK = 1;
