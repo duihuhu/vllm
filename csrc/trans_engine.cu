@@ -46,6 +46,7 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
         } else
             send_events[channel].push_back(std::make_pair(request_id, event));
     }
+    num_stream = (num_stream + 1) % 4;
 }
 
 
