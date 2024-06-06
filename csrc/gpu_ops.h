@@ -39,6 +39,6 @@ void RecvBlocksRemote(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, 
 void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
     std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer);
 
-void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
-    std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer);
+void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
+    std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer);
 void HandleNcclCommDestroy();

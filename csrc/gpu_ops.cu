@@ -400,8 +400,8 @@ void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
     num_comm = (num_comm + 1) % ARRAY_SIZE;
 }
 
-void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
-    std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer)
+void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
+    std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer)
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
