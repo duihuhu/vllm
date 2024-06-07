@@ -17,7 +17,7 @@ def create_comm():
     creat_comm_api_url = cfg.create_comm_url % (cfg.edecode_host, cfg.edecode_port)
     src_channel =  "_".join([str(rank) for rank in [2,3]])
     payload = {}
-    payload['nccl_ids'] = resp.json()
+    payload['nccl_id'] = resp.json()
     payload['dst_channel'] = src_channel
 
     resp = post_request(creat_comm_api_url, payload)
