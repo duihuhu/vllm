@@ -41,7 +41,9 @@ void TransEngine::send_blocks(const std::string& channel, const std::string& req
 
 void TransEngine::recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer, bool is_last_layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
     c10::cuda::CUDAStreamGuard guard(stream);
+    std::cout<<"aaa"<<std::endl
     RecvLayerBlocks(gpu_cache, src_blocks, cache_size_per_block, opposite_rank, layer, comm);
+    std::cout<<"ccc"<<std::endl
     if(is_last_layer) {
         at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
         event->record();
@@ -52,6 +54,7 @@ void TransEngine::recv_layer_blocks(const std::string& channel, const std::strin
         else
             recv_events[channel].push_back(std::make_pair(request_id, event));
     }
+    std::cout<<"bbb"<<std::endl
 }
 
 void TransEngine::send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
@@ -226,7 +229,6 @@ void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm)
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
-
     auto cudaStream = gpuStream.stream();
     NCCLCHECK(ncclGroupStart());
     at::Tensor dstKeyCache = dstCaches[layer].first;
@@ -237,11 +239,11 @@ void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
         void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
         void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
         if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
-            comm,  cudaStream)) {
+            comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
         if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
-            comm,  cudaStream)) {
+            comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
         }
     }
