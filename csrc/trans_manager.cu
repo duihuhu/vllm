@@ -21,6 +21,7 @@ std::vector<char> TransManager::get_nccl_id(std::string dst_channel){
         std::cout << std::hex << (int)c << " ";
     }
     if(trans_workers.find(dst_channel) == trans_workers.end()){
+        TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank);
         // trans_workers.emplace(std::make_pair(dst_channel, TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank)));
         std::cout << "NCCL Unique ID get in C++";
     }else{
