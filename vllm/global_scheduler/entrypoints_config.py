@@ -34,7 +34,7 @@ generate_host =  "127.0.0.1"
 generate_port =  8082
 
 
-comm_uniqe_id_url ="http://%s:%s/get_nccl_ids"
+comm_uniqe_id_url ="http://%s:%s/get_nccl_id"
 
 create_comm_url="http://%s:%s/create_comm"
 
