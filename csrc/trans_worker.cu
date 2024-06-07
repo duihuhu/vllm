@@ -7,9 +7,9 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
         dst_ranks.push_back(std::stoi(token));
     }
     if (nccl_local_rank > dst_ranks[0]){
-        comm_rank = nccl_local_rank % tp;
-    } else{
         comm_rank = nccl_local_rank % tp + tp;
+    } else{
+        comm_rank = nccl_local_rank % tp;
     }
     execute = std::thread(&TransWorker::worker, this);
 }
