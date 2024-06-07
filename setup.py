@@ -6,15 +6,11 @@ import subprocess
 import sys
 from shutil import which
 from typing import List
-import pybind11
-from pybind11.setup_helpers import Pybind11Extension
-# , build_ext
-
 import torch
 from packaging.version import Version, parse
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
-from torch.utils.cpp_extension import CUDA_HOME, include_paths, library_paths
+from torch.utils.cpp_extension import CUDA_HOME
 
 
 
