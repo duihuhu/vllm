@@ -28,7 +28,7 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel){
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
 }
 
-std::vector<char> TransManager::create_comm(std::vector<char> unique_id ,const std::string& dst_channel){
+void TransManager::create_comm(std::vector<char> unique_id ,const std::string& dst_channel){
     ncclUniqueId uniqueId;
     std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
     ncclComm_t comm;
@@ -41,5 +41,5 @@ std::vector<char> TransManager::create_comm(std::vector<char> unique_id ,const s
     // if (CreateInternalNcclComm(nccl_local_rank, 4, comm, uniqueId)!=0) {
     //     throw std::runtime_error("CreateNcclFromRankTable error");
     // }
-    return true;
+    return;
 }
