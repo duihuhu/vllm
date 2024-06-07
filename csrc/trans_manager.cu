@@ -10,7 +10,7 @@ TransManager::~TransManager() {
     }
 }
 void TransManager::dist_worker() {
-    return 0;
+    return;
 }
 
 std::vector<char> TransManager::get_nccl_id(std::string dst_channel){
