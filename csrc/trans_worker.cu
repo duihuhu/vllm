@@ -72,11 +72,11 @@ void TransWorker::worker() {
             for (char c : uniqueId.internal) {
                 std::cout << std::hex << (int)c << " ";
             }
-            ncclComm_t comm = nullptr;
-            if (trans_engine.create_nccl_comm(comm_rank, comm, uniqueId, tp * 2)!=0) {
-                throw std::runtime_error("CreateNcclFromRankTable error");
-            }
-            comms.push_back(comm);
+            // ncclComm_t comm = nullptr;
+            // if (trans_engine.create_nccl_comm(comm_rank, comm, uniqueId, tp * 2)!=0) {
+            //     throw std::runtime_error("CreateNcclFromRankTable error");
+            // }
+            // comms.push_back(comm);
         }
     }
 }
