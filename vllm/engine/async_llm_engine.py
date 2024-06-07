@@ -1205,7 +1205,7 @@ class AsyncLLMEngine:
     async def get_nccl_id(self, dst_channel) -> None:
         nccl_id = await self.engine.model_executor._run_workers_async("get_nccl_id", dst_channel=dst_channel)
         res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id[0], dst_channel=dst_channel)
-        return nccl_id
+        return nccl_id[0]
     
     async def create_comm(self, nccl_id, dst_channel) -> None:
         res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel)
