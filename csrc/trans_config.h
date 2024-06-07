@@ -169,7 +169,7 @@ public:
 
     ~TransManager();
     std::vector<char> get_nccl_id(std::string dst_channel);
-    // void dist_worker();
+    void dist_worker();
 private:
     std::unordered_map<std::string, TransWorker> trans_workers;
 

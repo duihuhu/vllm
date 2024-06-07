@@ -154,6 +154,7 @@ set(VLLM_EXT_SRC
   "csrc/quantization/gptq/q_gemm.cu"
   "csrc/cuda_utils_kernels.cu"
   "csrc/moe_align_block_size_kernels.cu"
+  "csrc/trans_manager.cu"
   "csrc/trans_engine.cu"
   "csrc/trans_worker.cu"
   "csrc/pybind.cpp")
