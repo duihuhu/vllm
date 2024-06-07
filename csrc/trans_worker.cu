@@ -37,11 +37,11 @@ void TransWorker::worker() {
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
                     // std::cout<<"task_queue is not empty send " <<std::endl;
-                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comm[use_comm], streams[use_comm]);
+                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
                     // std::cout<<"task_queue is not empty recv " <<std::endl;
-                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comm[use_comm], streams[use_comm]);
+                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
                     break;
                 case TaskType::TRANSFER_SEND_LAYER_BLOCKS:
                     // std::cout<< "send_layer_blocks " << task.layer << " " << task.is_last_layer;
@@ -51,12 +51,12 @@ void TransWorker::worker() {
                     //todo 40
                     for(int layer = 0 ;layer < 40; ++layer) {
                         trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], layer, layer==(40-1), comm[use_comm], streams[use_comm]);
-                        use_comm = use_comm + 1
+                        use_comm = use_comm + 1;
                     }
                     break;
                 default:
                     throw std::runtime_error("invalid task_type.");
-                use_comm = use_comm + 1
+                use_comm = use_comm + 1;
             }
         }
 
