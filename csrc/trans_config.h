@@ -108,7 +108,7 @@ public:
 // TransEngine类，负责管理KV缓存并执行发送和接收操作
 class TransEngine {
 public:
-    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
+    TransEngine(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
     void recv_blocks(const std::string& channel, const std::string& request_id,
                      const std::vector<uint32_t>& src_blocks, int opposite_rank);
     void send_blocks(const std::string& channel, const std::string& request_id,
@@ -136,7 +136,7 @@ private:
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
+    TransWorker(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
 
     ~TransWorker();
 
@@ -165,7 +165,7 @@ private:
 class TransManager {
 public:
 
-    TransManager(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
+    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
 
     ~TransManager();
     std::vector<char> get_nccl_id(std::string dst_channel);

@@ -1,7 +1,7 @@
 #include "trans_config.h"
 #include <stdexcept>
 #include <iostream>
-TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
+TransEngine::TransEngine(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
     : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), num_stream(0){
     // Initialize parameters from config dictionaries
     for (int i = 0; i < 4; ++i) {
