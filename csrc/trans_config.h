@@ -140,17 +140,6 @@ public:
 
     ~TransWorker();
 
-    TransWorker(const TransWorker&) = default;
-
-    // 移动构造函数
-    TransWorker(TransWorker&&) = default;
-
-    // 拷贝赋值运算符
-    TransWorker& operator=(const TransWorker&) = default;
-
-    // 移动赋值运算符
-    TransWorker& operator=(TransWorker&&) = default;
-
     // void add_tasks(const std::vector<TransferTask>& tasks);
     void add_tasks(const std::vector<std::string>& tasks);
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
