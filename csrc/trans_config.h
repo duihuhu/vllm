@@ -1,6 +1,7 @@
 #ifndef TRANS_CONFIG_H
 #define TRANS_CONFIG_H
 
+#include <torch/extension.h>
 #include <torch/torch.h>
 #include <torch/cuda.h>
 #include <string>
@@ -10,11 +11,31 @@
 #include <c10/cuda/CUDAStream.h>
 #include <ATen/cuda/CUDAEvent.h>
 #include "nccl.h"
-#include "gpu_ops.h"
+// #include "gpu_ops.h"
 #include "trans_queue.h"
 #include <nlohmann/json.hpp>  // Include the JSON library
+#include <iostream>
+#include <cuda_runtime.h>
 
 using json = nlohmann::json;
+#define CUDACHECK(cmd) do {                         \
+  cudaError_t e = cmd;                              \
+  if( e != cudaSuccess ) {                          \
+    printf("Failed: Cuda error %s:%d '%s'\n",             \
+        __FILE__,__LINE__,cudaGetErrorString(e));   \
+    exit(EXIT_FAILURE);                             \
+  }                                                 \
+} while(0)
+
+
+#define NCCLCHECK(cmd) do {                         \
+  ncclResult_t r = cmd;                             \
+  if (r!= ncclSuccess) {                            \
+    printf("Failed, NCCL error %s:%d '%s'\n",             \
+        __FILE__,__LINE__,ncclGetErrorString(r));   \
+    exit(EXIT_FAILURE);                             \
+  }                                                 \
+} while(0)
 
 // 定义TaskType枚举类型，用于区分不同的任务类型
 enum class TaskType {
@@ -100,16 +121,23 @@ public:
 class TransEngine {
 public:
     TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
-    void recv_blocks(const std::string& channel, const std::string& request_id,
-                     const std::vector<uint32_t>& src_blocks, int opposite_rank);
-    void send_blocks(const std::string& channel, const std::string& request_id,
-                     const std::vector<uint32_t>& dst_blocks, int opposite_rank);
-    void send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer);
-    void recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer);
+    void recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
+    void send_blocks(const std::string& channel, const std::string& request_id,const std::vector<uint32_t>& dst_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
+    void send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
+    void recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer , bool is_last_layer ,ncclComm_t& comm, c10::cuda::CUDAStream& stream);
     int create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice);
 
     std::vector<std::string> check_send_finished_events();
     std::vector<std::string> check_recv_finished_events();
+
+    void SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
+        std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
+    void RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
+        std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
+    void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
+        std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer, ncclComm_t& comm);
+    void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
+    std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm);
 
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
@@ -121,8 +149,6 @@ private:
 
     std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> recv_events;
-    std::vector<c10::cuda::CUDAStream> streams;
-    int num_stream;
 };
 
 class TransWorker {
@@ -154,6 +180,8 @@ private:
     int comm_rank;
     int tp;
     std::vector<ncclComm_t> comms;
+    std::vector<c10::cuda::CUDAStream> streams;
+    int use_comm;
 };
 
 class TransManager {

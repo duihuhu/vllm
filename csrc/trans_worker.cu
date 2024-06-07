@@ -6,12 +6,12 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
     while (std::getline(ss, token, '_')) {
         dst_ranks.push_back(std::stoi(token));
     }
-    std::cout << "dst_ranks[0]" <<dst_ranks[0]<<std::endl;
     if (nccl_local_rank >= dst_ranks[0]){
         comm_rank = nccl_local_rank % tp + tp;
     } else{
         comm_rank = nccl_local_rank % tp;
     }
+    use_comm = 0;
     execute = std::thread(&TransWorker::worker, this);
 }
 
@@ -37,22 +37,26 @@ void TransWorker::worker() {
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
                     // std::cout<<"task_queue is not empty send " <<std::endl;
-                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank]);
+                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comm[use_comm], streams[use_comm]);
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
                     // std::cout<<"task_queue is not empty recv " <<std::endl;
-                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank]);
+                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comm[use_comm], streams[use_comm]);
                     break;
                 case TaskType::TRANSFER_SEND_LAYER_BLOCKS:
                     // std::cout<< "send_layer_blocks " << task.layer << " " << task.is_last_layer;
-                    trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], task.layer, task.is_last_layer);
+                    trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], task.layer, task.is_last_layer, comm[use_comm], streams[use_comm]);
                     break;
                 case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
                     //todo 40
-                    trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], 40);
+                    for(int layer = 0 ;layer < 40; ++layer) {
+                        trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], layer, layer==(40-1), comm[use_comm], streams[use_comm]);
+                        use_comm = use_comm + 1
+                    }
                     break;
                 default:
                     throw std::runtime_error("invalid task_type.");
+                use_comm = use_comm + 1
             }
         }
 
@@ -68,16 +72,12 @@ void TransWorker::worker() {
             auto nccl_id = comm_queue.pop_front();
             ncclUniqueId uniqueId;
             std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
-            std::cout<<"create comm " << std::endl;
-            std::cout << "NCCL Unique ID set in C++: " << nccl_local_rank << " comm_rank " << comm_rank << std::endl;
-            // for (char c : uniqueId.internal) {
-            //     std::cout << std::hex << (int)c << " ";
-            // }
             ncclComm_t comm = nullptr;
             if (trans_engine.create_nccl_comm(comm_rank, comm, uniqueId, tp * 2)!=0) {
                 throw std::runtime_error("CreateNcclFromRankTable error");
             }
             comms.push_back(comm);
+            streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
         }
     }
 }
