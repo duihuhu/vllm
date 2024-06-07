@@ -22,9 +22,9 @@ std::vector<char> TransManager::get_nccl_id(std::string dst_channel){
     }
     if(trans_workers.find(dst_channel) == trans_workers.end()){
         auto trans_worker = TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank);
-        trans_workers[dst_channel] = trans_worker;
+        trans_workers.emplace(dst_channel, trans_worker);
     }else{
-        auto trans_worker = trans_workers[dst_channel];
+         TransWorker& trans_worker = trans_workers[dst_channel];
         // trans_worker.add_tasks();
     }
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
