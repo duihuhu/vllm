@@ -194,7 +194,7 @@ public:
     void create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel);
     void add_tasks(const std::vector<std::string>& tasks);
     void dist_worker();
-    std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> get_finished_transfer_tasks() {
+    std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> get_finished_transfer_tasks();
 private:
     std::unordered_map<std::string, TransWorker*> trans_workers;
 
@@ -208,7 +208,6 @@ private:
     int local_rank;
     int nccl_local_rank;
     int tp;
-
 
 };
 

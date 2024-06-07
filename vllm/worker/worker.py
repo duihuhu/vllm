@@ -333,7 +333,7 @@ class Worker:
     ) -> None:
         return self.trans_blocks_time
     
-    def get_finished_transfer_tasks(self) -> List[Tuple[List[trans_ops.TransferTaskMeta],List[trans_ops.TransferTaskMeta]]]:
+    def get_finished_transfer_tasks(self) -> List[List[Tuple[List[trans_ops.TransferTaskMeta],List[trans_ops.TransferTaskMeta]]]]:
         return self.trans_manager.get_finished_transfer_tasks() 
         
 def init_distributed_environment(
