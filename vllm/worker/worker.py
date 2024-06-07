@@ -320,7 +320,6 @@ class Worker:
         dst_channel)->None:
         nccl_id = self.trans_manager.get_nccl_id(dst_channel)
         nccl_uniqe_id = NcclUniqueId(self.nccl_local_rank, nccl_id).__json__()
-        print("get_nccl_id nccl_id " , nccl_id)
         print("get_nccl_id nccl_uniqe_id " , nccl_uniqe_id)
 
         return nccl_uniqe_id

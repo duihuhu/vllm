@@ -136,15 +136,13 @@ private:
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel);
 
     ~TransWorker();
 
     // void add_tasks(const std::vector<TransferTask>& tasks);
     void add_tasks(const std::vector<std::string>& tasks);
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
-    std::vector<char> get_nccl_id(std::string dst_channel);
-    bool create_comm(std::vector<char>, std::string dst_channel);
 
 private:
     void init_device();
@@ -159,6 +157,7 @@ private:
     int rank;
     int local_rank;
     int nccl_local_rank;
+    std::string dst_channel;
     ncclComm_t comm;
 };
 
@@ -168,7 +167,7 @@ public:
     TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
 
     ~TransManager();
-    std::vector<char> get_nccl_id(std::string dst_channel);
+    std::vector<char> get_nccl_id(const std::string& dst_channel);
     void dist_worker();
 private:
     std::unordered_map<std::string, TransWorker*> trans_workers;
