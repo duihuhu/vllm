@@ -449,7 +449,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
         driver_executor = make_async(getattr(self.driver_worker, method))
         coros.append(driver_executor(*driver_args, **driver_kwargs))
         all_outputs = await asyncio.gather(*coros)
-        return all_outputs
+        return all_outputs[0]
 
     async def execute_model_async(
         self,
