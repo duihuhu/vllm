@@ -161,7 +161,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   py::class_<TransManager>(trans_ops, "TransManager")
       .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int, int>())
       .def("get_nccl_id", &TransManager::get_nccl_id, "A function that returns NCCL unique ID as a list of characters")
-      .def("create_comm", &TransManager::create_comm, "A function create comm");
+      .def("create_comm", &TransManager::create_comm, "A function create comm")
       .def("add_tasks", &TransManager::add_tasks, "add_tasks")
       .def("get_finished_transfer_tasks", &TransManager::get_finished_transfer_tasks, "get_finished_transfer_tasks");
 
