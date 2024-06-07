@@ -27,6 +27,10 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel){
 }
 
 void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel){
+    if(trans_workers.find(dst_channel) == trans_workers.end()){
+        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp);
+        trans_workers[dst_channel] = task_worker;
+    }
     TransWorker* task_worker = trans_workers[dst_channel];
     task_worker->add_comm_task(nccl_id);
     return;
