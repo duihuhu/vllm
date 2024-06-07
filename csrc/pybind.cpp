@@ -167,13 +167,12 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     
   py::class_<TransManager>(trans_ops, "TransManager")
       .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int>())
-      .def("get_nccl_id", &TransManager::get_nccl_id, "A function that returns NCCL unique ID as a list of characters")
-      .def("create_comm", &TransManager::create_comm, "A function that create NCCL comm ");
+      .def("get_nccl_id", &TransManager::get_nccl_id, "A function that returns NCCL unique ID as a list of characters");
 
   py::class_<TransWorker>(trans_ops, "TransWorker")
       .def(py::init<int, const std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int>())
       .def("add_tasks", &TransWorker::add_tasks, "add_tasks")
-      .def("get_finished_transfer_tasks", &TransWorker::get_finished_transfer_tasks, "get_finished_transfer_tasks")
+      .def("get_finished_transfer_tasks", &TransWorker::get_finished_transfer_tasks, "get_finished_transfer_tasks");
 
   py::enum_<TaskType>(trans_ops, "TaskType")
       .value("TRANSFER_SEND_BLOCKS", TaskType::TRANSFER_SEND_BLOCKS)
