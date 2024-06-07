@@ -318,8 +318,6 @@ class Worker:
         self,
         dst_channel)->None:
         nccl_id = self.trans_manager.get_nccl_id(dst_channel)
-        print("get_nccl_id nccl_uniqe_id " , nccl_id)
-
         return nccl_id
     
     def create_comm(

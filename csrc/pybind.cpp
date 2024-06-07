@@ -164,7 +164,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   //     .def("send_layer_blocks", &TransEngine::send_layer_blocks, "send_layer_blocks")
   //     .def("check_send_finished_events", &TransEngine::check_send_finished_events, "check_send_finished_events")
   //     .def("check_recv_finished_events", &TransEngine::check_recv_finished_events, "check_recv_finished_events");
-    
+
   py::class_<TransManager>(trans_ops, "TransManager")
       .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int, int>())
       .def("get_nccl_id", &TransManager::get_nccl_id, "A function that returns NCCL unique ID as a list of characters")

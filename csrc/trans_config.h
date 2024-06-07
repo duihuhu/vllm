@@ -177,7 +177,6 @@ private:
     int local_rank;
     int nccl_local_rank;
     int tp;
-
 };
 
 #endif // TRANS_CONFIG_H

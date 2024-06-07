@@ -1,6 +1,5 @@
 #include "trans_config.h"
 TransManager::TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), tp(tp) {
-    std::cout << "trans manager " << " rank " << rank << " local_rank " << local_rank << " nccl_local_rank " << nccl_local_rank<<std::endl;
     execute = std::thread(&TransManager::dist_worker, this);
 }
 
@@ -30,7 +29,6 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel){
 void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel){
     ncclUniqueId uniqueId;
     std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
-    ncclComm_t comm;
     std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
     for (char c : uniqueId.internal) {
         std::cout << std::hex << (int)c << " ";
