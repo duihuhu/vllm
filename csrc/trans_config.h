@@ -158,8 +158,8 @@ public:
 
     ~TransWorker();
 
-    // void add_tasks(const std::vector<TransferTask>& tasks);
-    void add_tasks(const std::vector<std::string>& tasks);
+    void add_tasks(const std::vector<TransferTask>& tasks);
+    // void add_tasks(const std::vector<std::string>& tasks);
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
     void add_comm_task(std::vector<char>& uniqueId);
 private:
@@ -192,7 +192,9 @@ public:
     ~TransManager();
     std::vector<char> get_nccl_id(const std::string& dst_channel);
     void create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel);
+    void add_tasks(const std::vector<std::string>& tasks);
     void dist_worker();
+    std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> get_finished_transfer_tasks() {
 private:
     std::unordered_map<std::string, TransWorker*> trans_workers;
 
@@ -201,10 +203,13 @@ private:
     int cache_size_per_block;
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
 
+    TransQueue<TransferTask> worker_task_queue;
     int rank;
     int local_rank;
     int nccl_local_rank;
     int tp;
+
+
 };
 
 #endif // TRANS_CONFIG_H

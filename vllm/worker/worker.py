@@ -268,7 +268,7 @@ class Worker:
             return {}
         if self.deploy_config.enable_layer:
             output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                    self.gpu_cache, merge_req_info, self.trans_worker)
+                                                    self.gpu_cache, merge_req_info, self.trans_manager)
         else:
             output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache)
             
@@ -307,9 +307,9 @@ class Worker:
         if self.deploy_config.enable_debug:
             t1 = time.time()
         if send_tasks:
-            self.trans_worker.add_tasks(send_tasks)
+            self.trans_manager.add_tasks(send_tasks)
         if recv_tasks:
-            self.trans_worker.add_tasks(recv_tasks)   
+            self.trans_manager.add_tasks(recv_tasks)   
         if self.deploy_config.enable_debug:
             t2 = time.time()
             self.trans_blocks_time = self.trans_blocks_time + t2 - t1
@@ -334,7 +334,7 @@ class Worker:
         return self.trans_blocks_time
     
     def get_finished_transfer_tasks(self) -> List[Tuple[List[trans_ops.TransferTaskMeta],List[trans_ops.TransferTaskMeta]]]:
-        return self.trans_worker.get_finished_transfer_tasks() 
+        return self.trans_manager.get_finished_transfer_tasks() 
         
 def init_distributed_environment(
     parallel_config: ParallelConfig,

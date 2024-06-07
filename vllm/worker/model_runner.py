@@ -646,7 +646,7 @@ class ModelRunner:
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
         merge_req_info: Optional[MergeReqInfo] = None,
-        transworker: Optional[trans_ops.TransWorker] = None
+        trans_manager: Optional[trans_ops.TransManager] = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
@@ -669,7 +669,7 @@ class ModelRunner:
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
                 "merge_req_info": merge_req_info,
-                "transworker": transworker
+                "trans_manager": trans_manager
             }
         else:
             execute_model_kwargs = {

@@ -81,23 +81,23 @@ void TransWorker::worker() {
         }
     }
 }
-// void TransWorker::add_tasks(const std::vector<TransferTask>& tasks) {
-//     for (const auto& task : tasks) {
-//         task_queue.push_back(task);
-//     }
-// }
+void TransWorker::add_tasks(const std::vector<TransferTask>& tasks) {
+    for (const auto& task : tasks) {
+        task_queue.push_back(task);
+    }
+}
 
 void TransWorker::add_comm_task(std::vector<char>& nccl_id) {
     comm_queue.push_back(nccl_id);
 }
 
 
-void TransWorker::add_tasks(const std::vector<std::string>& tasks) {
-    for (const auto& task : tasks) {
-        auto trans_task = TransferTask::deserialize(task);
-        task_queue.push_back(trans_task);
-    }
-}
+// void TransWorker::add_tasks(const std::vector<std::string>& tasks) {
+//     for (const auto& task : tasks) {
+//         auto trans_task = TransferTask::deserialize(task);
+//         task_queue.push_back(trans_task);
+//     }
+// }
 
 std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> TransWorker::get_finished_transfer_tasks() {
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> finished_tasks;
