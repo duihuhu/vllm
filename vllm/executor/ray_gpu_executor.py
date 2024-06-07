@@ -428,30 +428,6 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
 
         all_outputs = await asyncio.gather(*coros)
         return all_outputs
-    
-
-    async def _run_driver_async(
-        self,
-        method: str,
-        *args,
-        driver_args: Optional[List[Any]] = None,
-        driver_kwargs: Optional[Dict[str, Any]] = None,
-        **kwargs,
-    ) -> Any:
-        """Runs the given method on all workers."""
-        coros = []
-
-        if driver_args is None:
-            driver_args = args
-        if driver_kwargs is None:
-            driver_kwargs = kwargs
-
-        # Run the driver worker asynchronously.
-        driver_executor = make_async(getattr(self.driver_worker, method))
-        coros.append(driver_executor(*driver_args, **driver_kwargs))
-        
-        all_outputs = await asyncio.gather(*coros)
-        return all_outputs[0]
 
     async def execute_model_async(
         self,
