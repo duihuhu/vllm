@@ -52,12 +52,12 @@ void TransWorker::worker() {
                     for(int layer = 0 ;layer < 40; layer++) {
                         std::cout<<"recv layer "<< layer<<std::endl;
                         trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], layer, layer==(40-1), comms[use_comm], streams[use_comm]);
-                        use_comm = use_comm + 1;
+                        use_comm = (use_comm + 1) % comms.size();
                     }
                     break;
                 default:
                     throw std::runtime_error("invalid task_type.");
-                use_comm = use_comm + 1;
+                use_comm = (use_comm + 1) % comms.size();
             }
         }
 
