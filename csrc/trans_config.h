@@ -135,14 +135,14 @@ public:
     // void add_tasks(const std::vector<TransferTask>& tasks);
     void add_tasks(const std::vector<std::string>& tasks);
     std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
-    void add_comm_task(ncclUniqueId& uniqueId);
+    void add_comm_task(std::vector<char>& uniqueId);
 private:
     void init_device();
     void worker();
 
     TransEngine trans_engine;
     TransQueue<TransferTask> task_queue;
-    TransQueue<ncclUniqueId> comm_queue;
+    TransQueue<std::vector<char>> comm_queue;
     TransQueue<std::pair<std::vector<std::string>, std::vector<std::string>>> transfer_result_queue;
 
     std::thread execute;

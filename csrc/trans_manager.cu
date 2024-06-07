@@ -27,16 +27,7 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel){
 }
 
 void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel){
-    ncclUniqueId uniqueId;
-    std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
-    std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
-    for (char c : uniqueId.internal) {
-        std::cout << std::hex << (int)c << " ";
-    }
     TransWorker* task_worker = trans_workers[dst_channel];
-    task_worker->add_comm_task(uniqueId);
-    // if (CreateInternalNcclComm(nccl_local_rank, 4, comm, uniqueId)!=0) {
-    //     throw std::runtime_error("CreateNcclFromRankTable error");
-    // }
+    task_worker->add_comm_task(nccl_id);
     return;
 }
