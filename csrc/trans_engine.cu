@@ -151,9 +151,9 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
     return recv_blocks_finished;
 }
 
-void TransEngine::create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice) {
+int TransEngine::create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice) {
 
-    NCCLCHECK(ncclCommInitRank(&comm, NumDevice, uniqueId ,rank));
+    ncclCommInitRank(&comm, NumDevice, uniqueId ,rank);
     std::cout << "Create Global NCCL Comm Success" << std::endl;
     return 0;
 }
