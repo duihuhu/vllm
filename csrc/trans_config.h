@@ -25,15 +25,6 @@ enum class TaskType {
     CREATE_NCCL_COMM,
 };
 
-class CommTask {
-public:
-    CommTask(ncclUniqueId &uniqueId, const std::string& dst_channel)
-        : uniqueId(uniqueId), dst_channel(dst_channel) {}
-
-    ncclUniqueId uniqueId;
-    std::string dst_channel;
-};
-
 // TransferTaskMeta结构体，用于存储传输任务的元信息
 class TransferTaskMeta {
 public:
@@ -66,13 +57,6 @@ public:
         return TransferTaskMeta{task_meta.at("channel").get<std::string>(), task_meta.at("request_id").get<std::string>()};
     }
 };
-
-class CommTask {
-    public:
-        CommTask(std::vector<char>& nccl_id ,const std::string& dst_channel): nccl_id(nccl_id), dst_channel(dst_channel){}
-        std::vector<char>nccl_id;
-        const std::string& dst_channel;
-}
 
 class TransferTask {
 public:
