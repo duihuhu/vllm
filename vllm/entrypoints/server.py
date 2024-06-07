@@ -338,9 +338,9 @@ async def generate_prefill(request: Request) -> Response:
                             with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
                                 content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
                                 fd.write(content + "\n")
-                        port = random.choice([cfg.edecode_port, cfg.edecode_port1])
+                        # port = random.choice([cfg.edecode_port, cfg.edecode_port1])
                         decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
-                                                                    (cfg.edecode_host, port))
+                                                                    (cfg.edecode_host, cfg.edecode_port))
                         d_num = 0
                 else:
                     if infer_results.finished != True:
