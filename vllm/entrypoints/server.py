@@ -29,6 +29,7 @@ async def create_comm(request: Request) -> Response:
     payload = await request.json()
     dst_channel = payload.pop("dst_channel")
     nccl_id =  payload.pop("nccl_id")
+    print("create_comm nccl ", nccl_id)
     await server.engine.create_comm(nccl_id, dst_channel)
     
 @app.post("/get_nccl_id")

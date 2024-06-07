@@ -19,7 +19,7 @@ def create_comm():
     payload = {}
     payload['nccl_id'] = resp.json()
     payload['dst_channel'] = src_channel
-
+    print("payload ", payload)
     resp = post_request(creat_comm_api_url, payload)
     return resp
    
