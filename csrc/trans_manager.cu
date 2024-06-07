@@ -12,10 +12,8 @@ void TransManager::dist_worker() {
     while (true) {
         if(!worker_task_queue.empty()) {
             auto worker_tasks = worker_task_queue.pop_front();
-            for (const auto& worker_task : worker_tasks) {
-                TransWorker* task_worker = trans_workers[worker_task.dst_channel];
-                task_worker->add_tasks(worker_task);
-            }   
+            TransWorker* task_worker = trans_workers[worker_task.dst_channel];
+            task_worker->add_tasks(worker_task);
         }
     }
 
