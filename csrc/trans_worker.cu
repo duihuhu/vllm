@@ -64,10 +64,10 @@ void TransWorker::worker() {
         }
         while (!comm_queue.empty())
         {
-            // auto nccl_id = comm_queue.pop_front();
+            auto nccl_id = comm_queue.pop_front();
             // ncclUniqueId uniqueId;
             // std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
-            // std::cout<<"create comm " << std::endl;
+            std::cout<<"create comm " << std::endl;
             // std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
             // for (char c : uniqueId.internal) {
             //     std::cout << std::hex << (int)c << " ";
