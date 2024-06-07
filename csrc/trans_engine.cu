@@ -153,6 +153,7 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
 
 int TransEngine::create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice) {
 
+    std::cout << "before create Global NCCL Comm " << rank << std::endl;
     ncclCommInitRank(&comm, NumDevice, uniqueId ,rank);
     std::cout << "Create Global NCCL Comm Success" << std::endl;
     return 0;
