@@ -136,7 +136,7 @@ private:
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
 
     ~TransWorker();
 
@@ -176,7 +176,8 @@ private:
     std::thread execute;
 
     int cache_size_per_block;
-    std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
+    std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
+
     int rank;
     int local_rank;
     int nccl_local_rank;
