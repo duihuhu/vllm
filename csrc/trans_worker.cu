@@ -4,9 +4,9 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
     std::stringstream ss(dst_channel);
     std::string token;
     while (std::getline(ss, token, '_')) {
-        comm_ranks.push_back(std::stoi(token));
+        dst_ranks.push_back(std::stoi(token));
     }
-    if (nccl_local_rank > comm_ranks[0]){
+    if (nccl_local_rank > dst_ranks[0]){
         comm_rank = nccl_local_rank % tp;
     } else{
         comm_rank = nccl_local_rank % tp + tp;
@@ -64,14 +64,14 @@ void TransWorker::worker() {
         }
         while (!comm_queue.empty())
         {
-            auto nccl_id = comm_queue.pop_front();
-            ncclUniqueId uniqueId;
-            std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
-            std::cout<<"create comm " << std::endl;
-            std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
-            for (char c : uniqueId.internal) {
-                std::cout << std::hex << (int)c << " ";
-            }
+            // auto nccl_id = comm_queue.pop_front();
+            // ncclUniqueId uniqueId;
+            // std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
+            // std::cout<<"create comm " << std::endl;
+            // std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
+            // for (char c : uniqueId.internal) {
+            //     std::cout << std::hex << (int)c << " ";
+            // }
             // ncclComm_t comm = nullptr;
             // if (trans_engine.create_nccl_comm(comm_rank, comm, uniqueId, tp * 2)!=0) {
             //     throw std::runtime_error("CreateNcclFromRankTable error");

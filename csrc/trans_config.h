@@ -150,7 +150,7 @@ private:
     int local_rank;
     int nccl_local_rank;
     std::string dst_channel;
-    std::vector<int> comm_ranks;
+    std::vector<int> dst_ranks;
     int comm_rank;
     int tp;
     std::vector<ncclComm_t> comms;
