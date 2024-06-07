@@ -4,11 +4,11 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
     execute = std::thread(&TransWorker::worker, this);
 }
 
-// TransWorker::~TransWorker() {
-//     if (execute.joinable()) {
-//         execute.join();
-//     }
-// }
+TransWorker::~TransWorker() {
+    if (execute.joinable()) {
+        execute.join();
+    }
+}
 
 void TransWorker::init_device() {
     torch::Device device(torch::kCUDA, local_rank);
