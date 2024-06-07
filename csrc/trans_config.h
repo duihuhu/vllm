@@ -131,13 +131,13 @@ public:
     std::vector<std::string> check_recv_finished_events();
 
     void SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
-        std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
+        const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
     void RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, \
-        std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
+        const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
     void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
-        std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer, ncclComm_t& comm);
+        const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer, ncclComm_t& comm);
     void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, \
-    std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm);
+    const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm);
 
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
