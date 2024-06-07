@@ -139,8 +139,8 @@ int TransEngine::create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& 
 }
 
 
-void TransEngine::RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
-    std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
+void TransEngine::RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, \
+    std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
 {
     int layerNum = dstCaches.size();
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
@@ -169,8 +169,8 @@ void TransEngine::RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstC
 }
 
 
-void TransEngine::SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
-    std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm)
+void TransEngine::SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
+    std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm)
 {
     int layerNum = srcCaches.size();
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
@@ -197,8 +197,8 @@ void TransEngine::SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcC
     NCCLCHECK(ncclGroupEnd());
 }
 
-void TransEngine::SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> srcCaches, \
-    std::vector<uint32_t> srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer, ncclComm_t& comm)
+void TransEngine::SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
+    std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer, ncclComm_t& comm)
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
@@ -222,8 +222,8 @@ void TransEngine::SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
     NCCLCHECK(ncclGroupEnd());
 }
 
-void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>> dstCaches, \
-    std::vector<uint32_t> dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm)
+void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, \
+    std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm)
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
 
