@@ -64,7 +64,7 @@ void TransWorker::worker() {
         }
         while (!comm_queue.empty())
         {
-            print(" create comm ")
+            std::cout<<"create comm " << std::endl;
             auto nccl_id = comm_queue.pop_front();
             ncclComm_t comm = nullptr;
             if (trans_engine.create_nccl_comm(comm_rank, comm, nccl_id, tp * 2)!=0) {
