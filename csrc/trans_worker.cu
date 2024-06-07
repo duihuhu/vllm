@@ -65,18 +65,18 @@ void TransWorker::worker() {
         while (!comm_queue.empty())
         {
             auto nccl_id = comm_queue.pop_front();
-            // ncclUniqueId uniqueId;
-            // std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
+            ncclUniqueId uniqueId;
+            std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
             std::cout<<"create comm " << std::endl;
-            // std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
+            std::cout << "NCCL Unique ID set in C++: " << " nccl_local_rank " << nccl_local_rank << std::endl;
             // for (char c : uniqueId.internal) {
             //     std::cout << std::hex << (int)c << " ";
             // }
-            // ncclComm_t comm = nullptr;
-            // if (trans_engine.create_nccl_comm(comm_rank, comm, uniqueId, tp * 2)!=0) {
-            //     throw std::runtime_error("CreateNcclFromRankTable error");
-            // }
-            // comms.push_back(comm);
+            ncclComm_t comm = nullptr;
+            if (trans_engine.create_nccl_comm(comm_rank, comm, uniqueId, tp * 2)!=0) {
+                throw std::runtime_error("CreateNcclFromRankTable error");
+            }
+            comms.push_back(comm);
         }
     }
 }
