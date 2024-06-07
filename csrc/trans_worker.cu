@@ -81,10 +81,8 @@ void TransWorker::worker() {
         }
     }
 }
-void TransWorker::add_tasks(const std::vector<TransferTask>& tasks) {
-    for (const auto& task : tasks) {
-        task_queue.push_back(task);
-    }
+void TransWorker::add_tasks(TransferTask& task) {
+    task_queue.push_back(task);
 }
 
 void TransWorker::add_comm_task(std::vector<char>& nccl_id) {
