@@ -17,8 +17,6 @@
 
 using namespace torch::indexing;
 
-int32_t CreateInternalNcclComm(int32_t rank, int32_t NumDevice, ncclComm_t& comm, ncclUniqueId uniqueId);
-
 int32_t CreateGlobalMulNcclComm(int32_t rank, int32_t NumDevice , int32_t num_comms = 4);
 
 int32_t CreateGlobalNcclComm(int32_t rank, int32_t NumDevice=8, int32_t num_comms = 16);

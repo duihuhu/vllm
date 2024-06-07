@@ -195,6 +195,10 @@ class Worker:
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         self.trans_worker = trans_ops.TransWorker(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank)
 
+    def init_trans_manager(self):
+        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+        self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank)
+        
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
             self.model_runner.capture_model(self.gpu_cache)
@@ -314,7 +318,7 @@ class Worker:
     def get_nccl_id(
         self,
         dst_channel)->None:
-        nccl_id = self.trans_worker.get_nccl_id(dst_channel)
+        nccl_id = self.trans_manager.get_nccl_id(dst_channel)
         nccl_uniqe_id = NcclUniqueId(self.nccl_local_rank, nccl_id).__json__()
         print("get_nccl_id nccl_id " , nccl_id)
         print("get_nccl_id nccl_uniqe_id " , nccl_uniqe_id)
@@ -328,7 +332,7 @@ class Worker:
     ) -> None:
         print("worker create_comm ", nccl_ids, dst_channel, self.nccl_local_rank, self.parallel_config.tensor_parallel_size)
         # nccl_id = nccl_ids[self.nccl_local_rank % self.parallel_config.tensor_parallel_size]["nccl_uniqe_id"]
-        # res = self.trans_worker.create_comm(nccl_id, dst_channel)
+        # res = self.trans_manager.create_comm(nccl_id, dst_channel)
         # print("res ", res)
     
     def get_trans_blocks_time(

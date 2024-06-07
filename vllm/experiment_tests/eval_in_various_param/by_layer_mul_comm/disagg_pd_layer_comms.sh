@@ -1,6 +1,6 @@
 #!/bin/bash
 dirname="e2e_exp"
-type="disagg_pd_comms"
+type="disagg_pd_layer_comms"
 dirtype="${dirname}/${type}"
 if [ -d "$dirtype" ]; then
     rm -rf ${dirtype}

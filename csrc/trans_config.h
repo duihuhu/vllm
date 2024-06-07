@@ -162,4 +162,26 @@ private:
     ncclComm_t comm;
 };
 
+class TransManager {
+public:
+
+    TransManager(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
+
+    ~TransManager();
+    std::vector<char> get_nccl_id(std::string dst_channel);
+    void dist_worker();
+private:
+    std::unordered_map<std::string, TransWorker> trans_workers;
+
+    std::thread execute;
+
+    int cache_size_per_block;
+    std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
+    int rank;
+    int local_rank;
+    int nccl_local_rank;
+
+
+};
+
 #endif // TRANS_CONFIG_H

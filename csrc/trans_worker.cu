@@ -49,14 +49,6 @@ void TransWorker::worker() {
             }
         }
 
-        if (!comm_queue.empty()) {
-            auto comm_task = comm_queue.pop_front();
-            ncclComm_t comm;
-            if (CreateInternalNcclComm(nccl_local_rank, 4, comm, comm_task.uniqueId)!=0) {
-                throw std::runtime_error("CreateNcclFromRankTable error");
-            }
-        }
-
         // std::cout<<"task_queue is empty ";
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
@@ -111,8 +103,8 @@ bool TransWorker::create_comm(std::vector<char> nccl_id, std::string dst_channel
     for (char c : uniqueId.internal) {
         std::cout << std::hex << (int)c << " ";
     }
-    if (CreateInternalNcclComm(nccl_local_rank, 4, comm, uniqueId)!=0) {
-        throw std::runtime_error("CreateNcclFromRankTable error");
-    }
+    // if (CreateInternalNcclComm(nccl_local_rank, 4, comm, uniqueId)!=0) {
+    //     throw std::runtime_error("CreateNcclFromRankTable error");
+    // }
     return true;
 }
