@@ -196,7 +196,7 @@ class Worker:
 
     def init_trans_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank)
+        self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank, self.parallel_config.tensor_parallel_size)
         
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
@@ -327,7 +327,6 @@ class Worker:
         nccl_id,
         dst_channel
     ) -> None:
-        print("worker create_comm ", nccl_id, dst_channel, self.nccl_local_rank, self.parallel_config.tensor_parallel_size)
         res = self.trans_manager.create_comm(nccl_id, dst_channel)
         # print("res ", res)
     

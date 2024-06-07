@@ -67,6 +67,13 @@ public:
     }
 };
 
+class CommTask {
+    public:
+        CommTask(std::vector<char>& nccl_id ,const std::string& dst_channel): nccl_id(nccl_id), dst_channel(dst_channel){}
+        std::vector<char>nccl_id;
+        const std::string& dst_channel;
+}
+
 class TransferTask {
 public:
     TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type, int layer = 1, bool is_last_layer=false)
@@ -136,7 +143,7 @@ private:
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel);
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp);
 
     ~TransWorker();
 
@@ -150,7 +157,7 @@ private:
 
     TransEngine trans_engine;
     TransQueue<TransferTask> task_queue;
-    TransQueue<CommTask> comm_queue;
+    TransQueue<ncclUniqueId> comm_queue;
     TransQueue<std::pair<std::vector<std::string>, std::vector<std::string>>> transfer_result_queue;
 
     std::thread execute;
@@ -158,13 +165,16 @@ private:
     int local_rank;
     int nccl_local_rank;
     std::string dst_channel;
-    ncclComm_t comm;
+    std::vector<int> comm_ranks;
+    int comm_rank;
+    int tp;
+    std::vector<ncclComm_t> comms;
 };
 
 class TransManager {
 public:
 
-    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank);
+    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp);
 
     ~TransManager();
     std::vector<char> get_nccl_id(const std::string& dst_channel);
@@ -181,6 +191,7 @@ private:
     int rank;
     int local_rank;
     int nccl_local_rank;
+    int tp;
 
 };
 

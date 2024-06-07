@@ -1,6 +1,16 @@
 #include "trans_config.h"
 
-TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel): trans_engine(cache_size_per_block, gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel) {
+TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp): trans_engine(cache_size_per_block, gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp) {
+    std::stringstream ss(dst_channel);
+    std::string token;
+    while (std::getline(ss, token, '_')) {
+        comm_ranks.push_back(std::stoi(token));
+    }
+    if (nccl_local_rank > comm_ranks[0]){
+        comm_rank = nccl_local_rank % tp;
+    } else{
+        comm_rank = nccl_local_rank % tp + tp;
+    }
     execute = std::thread(&TransWorker::worker, this);
 }
 
@@ -17,10 +27,6 @@ void TransWorker::init_device() {
 
 void TransWorker::worker() {
     init_device();
-    if (CreateGlobalMulNcclComm(nccl_local_rank, 4, 4)!=0) {
-        throw std::runtime_error("CreateNcclFromRankTable error");
-    }
-    
     while (true) {
         if(!task_queue.empty()) {
             // std::cout<<"task_queue is not empty ";
@@ -41,6 +47,7 @@ void TransWorker::worker() {
                     trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], task.layer, task.is_last_layer);
                     break;
                 case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
+                    //todo 40
                     trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], 40);
                     break;
                 default:
@@ -55,14 +62,27 @@ void TransWorker::worker() {
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
             transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
         }
+        while (!comm_queue.empty())
+        {
+            auto nccl_id = comm_queue.pop_front();
+            ncclComm_t comm = nullptr;
+            if (trans_engine.create_nccl_comm(comm_rank, comm, nccl_id, tp * 2)!=0) {
+                throw std::runtime_error("CreateNcclFromRankTable error");
+            }
+            comms.push_back(comm);
+        }
     }
 }
-
 // void TransWorker::add_tasks(const std::vector<TransferTask>& tasks) {
 //     for (const auto& task : tasks) {
 //         task_queue.push_back(task);
 //     }
 // }
+
+void TransWorker::add_comm_task(ncclUniqueId& uniqueId) {
+    comm_queue.push_back(uniqueId);
+}
+
 
 void TransWorker::add_tasks(const std::vector<std::string>& tasks) {
     for (const auto& task : tasks) {
