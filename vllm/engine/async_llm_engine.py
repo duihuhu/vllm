@@ -1202,11 +1202,11 @@ class AsyncLLMEngine:
             await self.engine.check_health_async()
         logger.debug(f"Health check took {time.perf_counter()-t}s")
 
-    async def get_nccl_ids(self, dst_channel) -> None:
+    async def get_nccl_id(self, dst_channel) -> None:
         nccl_id = await self.engine.model_executor._run_driver_async("get_nccl_id", dst_channel=dst_channel)
         res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel)
         return nccl_id
     
-    async def create_comm(self, nccl_ids, dst_channel) -> None:
-        res = await self.engine.model_executor._run_workers_async("create_comm", nccl_ids=nccl_ids, dst_channel=dst_channel)
+    async def create_comm(self, nccl_id, dst_channel) -> None:
+        res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel)
     
