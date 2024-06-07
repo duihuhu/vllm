@@ -1,6 +1,5 @@
 #include "trans_config.h"
-TransManager::TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank)
-    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank) {
+TransManager::TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank) {
     std::cout << "trans manager " << " rank " << rank << " local_rank " << local_rank << " nccl_local_rank " << nccl_local_rank<<std::endl;
     execute = std::thread(&TransManager::dist_worker, this);
 }
