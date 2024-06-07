@@ -13,7 +13,7 @@ from typing import Dict, Set, List, Optional, AsyncGenerator
 import asyncio
 import aiohttp
 import requests
-
+import random
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
@@ -174,6 +174,8 @@ async def add_request(request: Request) -> Response:
 
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
         edecode_host, edecode_port, cdecode_blocks  = cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
+        
+    eprefill_port = random.choice([cfg.eprefill_port, cfg.eprefill_port1])
 
     prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
                                                         (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks)
