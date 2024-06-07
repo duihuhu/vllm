@@ -168,7 +168,7 @@ public:
 
     ~TransManager();
     std::vector<char> get_nccl_id(const std::string& dst_channel);
-    void create_comm(std::vector<char> unique_id ,const std::string& dst_channel);
+    void create_comm(std::vector<char> nccl_id ,const std::string& dst_channel);
     void dist_worker();
 private:
     std::unordered_map<std::string, TransWorker*> trans_workers;

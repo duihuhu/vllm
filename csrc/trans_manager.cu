@@ -28,7 +28,7 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel){
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
 }
 
-void TransManager::create_comm(std::vector<char> unique_id ,const std::string& dst_channel){
+void TransManager::create_comm(std::vector<char> nccl_id ,const std::string& dst_channel){
     ncclUniqueId uniqueId;
     std::memcpy(uniqueId.internal, nccl_id.data(), sizeof(uniqueId.internal));
     ncclComm_t comm;
