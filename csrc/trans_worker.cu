@@ -50,7 +50,6 @@ void TransWorker::worker() {
                 case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
                     //todo 40
                     for(int layer = 0 ;layer < 40; layer++) {
-                        std::cout<<"recv layer "<< layer<<std::endl;
                         trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], layer, layer==(40-1), comms[use_comm], streams[use_comm]);
                         use_comm = (use_comm + 1) % comms.size();
                     }
