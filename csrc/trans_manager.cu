@@ -2,7 +2,7 @@
 TransManager::TransManager(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank)
     : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank) {
     std::cout << "trans manager " << " rank " << rank << " local_rank " << local_rank << " nccl_local_rank " << nccl_local_rank<<std::endl;
-    execute = std::thread(&TransManager::dist_worker, this);
+    // execute = std::thread(&TransManager::dist_worker, this);
 }
 
 TransManager::~TransManager() {
@@ -10,8 +10,8 @@ TransManager::~TransManager() {
         execute.join();
     }
 }
-void TransManager::dist_worker() {
-}
+// void TransManager::dist_worker() {
+// }
 
 std::vector<char> TransManager::get_nccl_id(std::string dst_channel){
     ncclUniqueId uniqueId; 
