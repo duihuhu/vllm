@@ -84,7 +84,7 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
         events.push_back(event);
         std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>> req_comms;
         req_comms[comm_id] = events;
-        send_comms_events[channel] =  std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>;
+        send_comms_events[channel] =  std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>();
         send_comms_events[channel].push_back(std::make_pair(request_id, req_comms));
     } else {
         auto& last_reqs = send_comms_events[channel][-1];
@@ -122,7 +122,7 @@ void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std:
         events.push_back(event);
         std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>> req_comms;
         req_comms[comm_id] = events;
-        recv_comms_events[channel] =  std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>;
+        recv_comms_events[channel] =  std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>();
         recv_comms_events[channel].push_back(std::make_pair(request_id, req_comms));
     } else {
         auto& last_reqs = recv_comms_events[channel][-1];
