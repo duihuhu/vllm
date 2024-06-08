@@ -224,6 +224,7 @@ std::vector<std::string> TransEngine::check_send_finished_comms_events() {
                 at::cuda::CUDAEvent* event = events.back();
                 if (!event->query()) {
                     is_finished = false;
+                    break;
                 }
             }
             if(is_finished){
@@ -233,7 +234,7 @@ std::vector<std::string> TransEngine::check_send_finished_comms_events() {
         }
         if (num_finished_events > 0) {
             request_ids_and_comms.erase(request_ids_and_comms.begin(), request_ids_and_comms.begin() + num_finished_events);
-            print("request_ids_and_comms len " , len(request_ids_and_comms))
+            std::cout<<"check_send_finished_comms_events request_ids_and_comms len " << len(request_ids_and_comms);
         }
     }
     return send_blocks_finished;
@@ -258,6 +259,7 @@ std::vector<std::string> TransEngine::check_recv_finished_comms_events() {
                 at::cuda::CUDAEvent* event = events.back();
                 if (!event->query()) {
                     is_finished = false;
+                    break;
                 }
             }
             if(is_finished){
