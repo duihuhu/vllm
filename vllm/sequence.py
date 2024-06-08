@@ -392,7 +392,9 @@ class SequenceGroup:
         arrival_time: float,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        cache_meta: Optional[CacheMeta] = None
+        cache_meta: Optional[CacheMeta] = None,
+        edecode_host: Optional[str] = None,
+        edecode_port: Optional[str] = None,
     ) -> None:
         self.request_id = request_id
         self.seqs_dict = {seq.seq_id: seq for seq in seqs}
@@ -407,6 +409,8 @@ class SequenceGroup:
         self.state = SequenceGroupState()
         self.multi_modal_data = multi_modal_data
         self.cache_meta = cache_meta
+        self.edecode_host = edecode_host
+        self.edecode_port = edecode_port
     @property
     def prompt(self) -> str:
         # All sequences in the group should have the same prompt.

@@ -21,6 +21,8 @@ class InferResults:
         start_time: Optional[int] = 0,
         end_time: Optional[int] = 0,
         is_layer: Optional[bool] = False,
+        edecode_host: Optional[str] = None,
+        edecode_port: Optional[str] = None
     ) -> None:
         self.request_id = request_id
         self.opp_ranks = opp_ranks
@@ -41,6 +43,8 @@ class InferResults:
         self.start_time = start_time
         self.end_time = end_time
         self.is_layer = is_layer
+        self.edecode_host = edecode_host
+        self.edecode_port = edecode_port
     def __json__(self) -> Dict:
         prompt_logprobs = []
         if self.prompt_logprobs != None:

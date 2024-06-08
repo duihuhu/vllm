@@ -269,6 +269,9 @@ async def generate_prefill(request: Request) -> Response:
     stream = payload.pop("stream")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
+    edecode_host = payload.pop("edecode_host")
+    edecode_port = payload.pop("edecode_port")
+    
     if args.enable_breakdown:
         with open("prefill_request_in.txt", "a+") as fd:
             content = "prefill request in " + request_id + " " + str(time.time())
@@ -284,7 +287,7 @@ async def generate_prefill(request: Request) -> Response:
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
     results_generator = server.engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, \
-        sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta)
+        sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta, edecode_host=edecode_host, edecode_port=edecode_port)
     #Streaming case
     n = 0 
     async def stream_results() -> AsyncGenerator[bytes, None]:
@@ -311,7 +314,9 @@ async def generate_prefill(request: Request) -> Response:
                 n = n,
                 start_time=start_time,
                 end_time=end_time,
-                is_layer = request_output.is_layer
+                is_layer = request_output.is_layer,
+                edecode_host= request_output.edecode_host,
+                edecode_port= request_output.edecode_port
             )
             if not args.enable_separate:
                 yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
@@ -340,7 +345,7 @@ async def generate_prefill(request: Request) -> Response:
                                 fd.write(content + "\n")
                         # port = random.choice([cfg.edecode_port, cfg.edecode_port1])
                         decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
-                                                                    (cfg.edecode_host, cfg.edecode_port))
+                                                                    (infer_results.edecode_host, infer_results.edecode_port))
                         d_num = 0
                 else:
                     if infer_results.finished != True:

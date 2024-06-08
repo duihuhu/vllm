@@ -336,6 +336,8 @@ class LLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
+        edecode_host: Optional[str] = None,
+        edecode_port: Optional[str] = None,
         prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
@@ -434,7 +436,7 @@ class LLMEngine:
         
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
-                                  arrival_time, lora_request, multi_modal_data, cache_meta=cache_meta)
+                                  arrival_time, lora_request, multi_modal_data, cache_meta=cache_meta, edecode_host=edecode_host, edecode_port=edecode_port)
 
         # Add the sequence group to the scheduler.
 

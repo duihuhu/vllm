@@ -81,6 +81,8 @@ class RequestOutput:
         finished: Optional[bool],
         metrics: Optional[RequestMetrics] = None,
         lora_request: Optional[LoRARequest] = None,
+        edecode_host: Optional[str] = None,
+        edecode_port: Optional[str] = None,
         is_layer: Optional[bool] = False
     ) -> None:
         self.request_id = request_id
@@ -91,6 +93,8 @@ class RequestOutput:
         self.finished = finished
         self.metrics = metrics
         self.lora_request = lora_request
+        self.edecode_host = edecode_host
+        self.edecode_port = edecode_port
         self.global_ranks: List[int] = None
         self.is_layer = False
 
@@ -138,7 +142,9 @@ class RequestOutput:
                    outputs,
                    finished,
                    seq_group.metrics,
-                   lora_request=seq_group.lora_request)
+                   lora_request=seq_group.lora_request,
+                   edecode_host=seq_group.edecode_host,
+                   edecode_port=seq_group.edecode_port)
 
     def __repr__(self) -> str:
         return (f"RequestOutput(request_id={self.request_id}, "

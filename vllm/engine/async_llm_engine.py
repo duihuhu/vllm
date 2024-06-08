@@ -503,6 +503,8 @@ class _AsyncLLMEngine(LLMEngine):
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
+        edecode_host: Optional[str] = None,
+        edecode_port: Optional[str] = None,
         prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
@@ -528,6 +530,8 @@ class _AsyncLLMEngine(LLMEngine):
                                 multi_modal_data=multi_modal_data,
                                 prefill_request_output=prefill_request_output,
                                 cache_meta=cache_meta,
+                                edecode_host=edecode_host,
+                                edecode_port=edecode_port,
                                 prefilled_token_id=prefilled_token_id,
                                 output_logprobs=output_logprobs,
                                 is_layer=is_layer)
@@ -898,6 +902,8 @@ class AsyncLLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
+        edecode_host: Optional[str] = None,
+        edecode_port: Optional[str] = None,
         prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
@@ -955,6 +961,8 @@ class AsyncLLMEngine:
             multi_modal_data=multi_modal_data,
             prefill_request_output=prefill_request_output,
             cache_meta = cache_meta,
+            edecode_host = edecode_host,
+            edecode_port = edecode_port,
             prefilled_token_id = prefilled_token_id,
             output_logprobs = output_logprobs,
             is_layer = is_layer
@@ -1050,6 +1058,8 @@ class AsyncLLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
+        edecode_host: Optional[str] = None,
+        edecode_port: Optional[str] = None,
         prefilled_token_id: Optional[List[int]] = None,
         output_logprobs: Optional[Dict[int, float]] = None,
         is_layer: Optional[bool] = False
@@ -1131,6 +1141,8 @@ class AsyncLLMEngine:
                 multi_modal_data=multi_modal_data,
                 prefill_request_output=prefill_request_output,
                 cache_meta = cache_meta,
+                edecode_host=edecode_host,
+                edecode_port = edecode_port,
                 prefilled_token_id=prefilled_token_id,
                 output_logprobs = output_logprobs,
                 is_layer = is_layer
