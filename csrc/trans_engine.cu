@@ -83,7 +83,7 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
         std::vector<at::cuda::CUDAEvent*> events;
         events.push_back(event);
         std::pair<int, std::vector<at::cuda::CUDAEvent*>> req_comms;
-        req_comms.push_back(std::make_pair(comm_id, events));
+        req_comms[comm_id] = events;
         send_comms_events[channel] =  std::vector<std::pair<std::string, std::pair<int, std::vector<at::cuda::CUDAEvent*>>>>;
         send_comms_events[channel].push_back(std::make_pair(request_id, req_comms));
     } else {
@@ -93,7 +93,7 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
             if(req_comms.find(comm_id) == req_comms.end()){
                 std::vector<at::cuda::CUDAEvent*> events;
                 events.push_back(event);
-                req_comms.push_back(std::make_pair(comm_id, events));
+                req_comms[comm_id] = events;
             } else {
                 req_comms[comm_id].push_back(event);
             }
@@ -101,7 +101,7 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
             std::pair<int, std::vector<at::cuda::CUDAEvent*>> req_comms;
             std::vector<at::cuda::CUDAEvent*> events;
             events.push_back(event);
-            req_comms.push_back(std::make_pair(comm_id, events));
+            req_comms[comm_id] = events;
             send_comms_events[channel].push_back(std::make_pair(request_id, req_comms));
         }
     }
@@ -221,7 +221,7 @@ std::vector<std::string> TransEngine::check_send_finished_layer_events() {
             for (auto it = comm_ids_and_events.begin(); it != comm_ids_and_events.end(); ++it) {
                 auto comm_id = it->first;
                 auto& events = it->second;
-                at::cuda::CUDAEvent * event = events[-1];
+                at::cuda::CUDAEvent* event = events[-1];
                 if (!event->query()) {
                     is_finished = false;
                 }
