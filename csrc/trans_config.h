@@ -122,13 +122,27 @@ class TransEngine {
 public:
     TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
     void recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
+    
     void send_blocks(const std::string& channel, const std::string& request_id,const std::vector<uint32_t>& dst_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
+    
     void send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
+    
     void recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer , bool is_last_layer ,ncclComm_t& comm, c10::cuda::CUDAStream& stream);
+    
+    void send_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id);
+
+    void recv_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id);
+
+
     int create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice);
+
+
 
     std::vector<std::string> check_send_finished_events();
     std::vector<std::string> check_recv_finished_events();
+
+    std::vector<std::string> check_send_finished_layer_events();
+    std::vector<std::string> check_recv_finished_layer_events();
 
     void SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
@@ -144,17 +158,20 @@ private:
 
     int cache_size_per_block;
 
-    std::unordered_map<std::string, c10::cuda::CUDAStream*> send_streams;
+    // std::unordered_map<std::string, c10::cuda::CUDAStream*> send_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> send_events;
 
-    std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
+    // std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> recv_events;
+
+    std::unordered_map<std::string, std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>> send_layer_events;
+    std::unordered_map<std::string, std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>> recv_layer_events;
 };
 
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp);
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer);
 
     ~TransWorker();
 
@@ -179,6 +196,7 @@ private:
     std::vector<int> dst_ranks;
     int comm_rank;
     int tp;
+    int num_layer;
     std::vector<ncclComm_t> comms;
     std::vector<c10::cuda::CUDAStream> streams;
     int use_comm;
@@ -187,7 +205,7 @@ private:
 class TransManager {
 public:
 
-    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp);
+    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer);
 
     ~TransManager();
     std::vector<char> get_nccl_id(const std::string& dst_channel);
@@ -208,6 +226,7 @@ private:
     int local_rank;
     int nccl_local_rank;
     int tp;
+    int num_layer
 
 };
 

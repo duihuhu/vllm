@@ -1,7 +1,7 @@
 #include "trans_config.h"
 #include <stdexcept>
 #include <iostream>
-TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
+TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int num_layer)
     : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache){
     // Initialize parameters from config dictionaries
 }
@@ -54,6 +54,7 @@ void TransEngine::recv_layer_blocks(const std::string& channel, const std::strin
     }
 }
 
+
 void TransEngine::send_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, bool is_last_layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
 
     c10::cuda::CUDAStreamGuard guard(stream);
@@ -70,10 +71,83 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
     }
 }
 
+//channel->request_list
+//request_id -> comms
+//comm ->event_list
+void TransEngine::send_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id) {
+    c10::cuda::CUDAStreamGuard guard(stream);
+    SendLayerBlocks(gpu_cache, dst_blocks, cache_size_per_block, opposite_rank, layer, comm);
+    at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
+    event->record();
+    if (send_layer_events.find(channel) == send_layer_events.end()) {
+        auto events = std::vector<at::cuda::CUDAEvent*>;
+        events.push_back(event);
+        auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+        req_comms.push_back(std::make_pair(comm_id, events));
+        send_layer_events[channel] =  std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>;
+        send_layer_events[channel].push_back(std::make_pair(request_id, req_comms));
+    } else {
+        auto& last_reqs = send_layer_events[channel][-1];
+        if (last_reqs.first == request_id) {
+            auto& req_comms = last_reqs.second;
+            if(req_comms.find(comm_id) == req_comms.end()){
+                auto events = std::vector<at::cuda::CUDAEvent*>;
+                events.push_back(event);
+                req_comms.push_back(std::make_pair(comm_id, events));
+            } else {
+                req_comms[comm_id].push_back(event);
+            }
+        } else{
+            auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+            auto events = std::vector<at::cuda::CUDAEvent*>;
+            events.push_back(event);
+            req_comms.push_back(std::make_pair(comm_id, events));
+            send_layer_events[channel].push_back(std::make_pair(request_id, req_comms));
+        }
+    }
+}
+
+//channel->request_list
+//request_id -> comms
+//comm ->event_list
+void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id) {
+   
+    c10::cuda::CUDAStreamGuard guard(stream);
+    RecvLayerBlocks(gpu_cache, src_blocks, cache_size_per_block, opposite_rank, layer, comm);
+    at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
+    event->record();
+
+    if (recv_layer_events.find(channel) == recv_layer_events.end()) {
+        auto events = std::vector<at::cuda::CUDAEvent*>;
+        events.push_back(event);
+        auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+        req_comms.push_back(std::make_pair(comm_id, events));
+        recv_layer_events[channel] =  std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>;
+        recv_layer_events[channel].push_back(std::make_pair(request_id, req_comms));
+    } else {
+        auto& last_reqs = recv_layer_events[channel][-1];
+        if (last_reqs.first == request_id) {
+            auto& req_comms = last_reqs.second;
+            if(req_comms.find(comm_id) == req_comms.end()){
+                auto events = std::vector<at::cuda::CUDAEvent*>;
+                events.push_back(event);
+                req_comms.push_back(std::make_pair(comm_id, events));
+            } else {
+                req_comms[comm_id].push_back(event);
+            }
+        } else{
+            auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+            auto events = std::vector<at::cuda::CUDAEvent*>;
+            events.push_back(event);
+            req_comms.push_back(std::make_pair(comm_id, events));
+            recv_layer_events[channel].push_back(std::make_pair(request_id, req_comms));
+        }
+    }
+}
+
+
 std::vector<std::string> TransEngine::check_send_finished_events() {
     std::vector<std::string> send_blocks_finished;
-    std::vector<std::string> finished_channels;
-
     for (auto& kv : send_events) {
         const std::string& channel = kv.first;
         auto& request_ids_and_events = kv.second;
@@ -102,7 +176,6 @@ std::vector<std::string> TransEngine::check_send_finished_events() {
 
 std::vector<std::string> TransEngine::check_recv_finished_events() {
     std::vector<std::string> recv_blocks_finished;
-    std::vector<std::string> finished_channels;
 
     for (auto& kv : recv_events) {
         const std::string& channel = kv.first;
@@ -125,6 +198,74 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
         if (num_finished_events > 0) {
             // Remove finished events from the list
             request_ids_and_events.erase(request_ids_and_events.begin(), request_ids_and_events.begin() + num_finished_events);
+        }
+    }
+    return recv_blocks_finished;
+}
+
+
+//channel->request_list
+//request_id -> comms
+//comm ->event_list
+std::vector<std::string> TransEngine::check_send_finished_layer_events() {
+    std::vector<std::string> send_blocks_finished;
+
+    for (auto kv: send_layer_events) {
+        const std::string& channel = kv.first;
+        auto& request_ids_and_comms = kv.second;
+        size_t num_finished_events = 0;
+        for (auto comm = request_ids_and_comms.begin(); comm != request_ids_and_comms.end(); ++comm) {
+            bool is_finished = true;
+            const std::string& request_id = comm->first;
+            auto& comm_ids_and_events = comm->second;
+            for (auto it = comm_ids_and_events.begin(); it != comm_ids_and_events.end(); ++it) {
+                auto comm_id = it->first;
+                auto& events = it->second;
+                at::cuda::CUDAEvent * event = events[-1];
+                if (!event->query()) {
+                    is_finished = false;
+                }
+            }
+            if(is_finished){
+                num_finished_events = num_finished_events + 1;
+                send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
+            }
+        }
+        if (num_finished_events > 0) {
+            request_ids_and_comms.erase(request_ids_and_comms.begin(), request_ids_and_comms.begin() + num_finished_events);
+        }
+    }
+    return send_blocks_finished;
+}
+
+//channel->request_list
+//request_id -> comms
+//comm ->event_list
+std::vector<std::string> TransEngine::check_recv_finished_layer_events() {
+    std::vector<std::string> recv_blocks_finished;
+    for (auto kv: recv_layer_events) {
+        const std::string& channel = kv.first;
+        auto& request_ids_and_comms = kv.second;
+        size_t num_finished_events = 0;
+        for (auto comm = request_ids_and_comms.begin(); comm != request_ids_and_comms.end(); ++comm) {
+            bool is_finished = true;
+            const std::string& request_id = comm->first;
+            auto& comm_ids_and_events = comm->second;
+            for (auto it = comm_ids_and_events.begin(); it != comm_ids_and_events.end(); ++it) {
+                auto comm_id = it->first;
+                auto& events = it->second;
+                at::cuda::CUDAEvent * event = events[-1];
+                if (!event->query()) {
+                    is_finished = false;
+                }
+            }
+            if(is_finished){
+                num_finished_events = num_finished_events + 1;
+                send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
+            }
+        }
+        if (num_finished_events > 0) {
+            request_ids_and_comms.erase(request_ids_and_comms.begin(), request_ids_and_comms.begin() + num_finished_events);
         }
     }
     return recv_blocks_finished;

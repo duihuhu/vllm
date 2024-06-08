@@ -1,5 +1,5 @@
 #include "trans_config.h"
-TransManager::TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), tp(tp) {
+TransManager::TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), tp(tp), num_layer(num_layer) {
     execute = std::thread(&TransManager::dist_worker, this);
 }
 
@@ -38,7 +38,7 @@ void TransManager::add_tasks(const std::vector<std::string>& tasks) {
 }
 void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel){
     if(trans_workers.find(dst_channel) == trans_workers.end()){
-        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp);
+        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
         trans_workers[dst_channel] = task_worker;
     }
     TransWorker* task_worker = trans_workers[dst_channel];
