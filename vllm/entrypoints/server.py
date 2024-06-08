@@ -350,7 +350,7 @@ async def generate_prefill(request: Request) -> Response:
                 else:
                     if infer_results.finished != True:
                         decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
-                                                                    (cfg.edecode_host, cfg.edecode_port))
+                                                                    (request_output.edecode_host, request_output.edecode_port))
                         d_num = 0       
                 #recv kv allocate result and deocde's decode
                 if args.enable_direct: 
