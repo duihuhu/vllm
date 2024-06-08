@@ -164,8 +164,8 @@ private:
     // std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> recv_events;
 
-    std::unordered_map<std::string, std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>> send_layer_events;
-    std::unordered_map<std::string, std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>> recv_layer_events;
+    std::unordered_map<std::string, std::vector<std::pair<std::string, std::pair<int, std::vector<at::cuda::CUDAEvent*>>>>> send_comms_events;
+    std::unordered_map<std::string, std::vector<std::pair<std::string, std::pair<int, std::vector<at::cuda::CUDAEvent*>>>>> recv_comms_events;
 };
 
 class TransWorker {
