@@ -221,7 +221,7 @@ std::vector<std::string> TransEngine::check_send_finished_layer_events() {
             for (auto it = comm_ids_and_events.begin(); it != comm_ids_and_events.end(); ++it) {
                 auto comm_id = it->first;
                 auto& events = it->second;
-                at::cuda::CUDAEvent* event = events[-1];
+                at::cuda::CUDAEvent* event = events.back();
                 if (!event->query()) {
                     is_finished = false;
                 }
@@ -254,7 +254,7 @@ std::vector<std::string> TransEngine::check_recv_finished_layer_events() {
             for (auto it = comm_ids_and_events.begin(); it != comm_ids_and_events.end(); ++it) {
                 auto comm_id = it->first;
                 auto& events = it->second;
-                at::cuda::CUDAEvent * event = events[-1];
+                at::cuda::CUDAEvent* event = events.back();
                 if (!event->query()) {
                     is_finished = false;
                 }
