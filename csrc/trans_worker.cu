@@ -38,17 +38,14 @@ void TransWorker::worker() {
                 case TaskType::TRANSFER_SEND_BLOCKS:
                     // std::cout<<"task_queue is not empty send " <<std::endl;
                     trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
-                    use_comm = (use_comm + 1) % comms.size();
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
                     // std::cout<<"task_queue is not empty recv " <<std::endl;
                     trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
-                    use_comm = (use_comm + 1) % comms.size();
                     break;
                 case TaskType::TRANSFER_SEND_LAYER_BLOCKS:
                     std::cout<< "request id " << task_meta.request_id <<"send_layer_blocks " << task.layer << " use_comm " << use_comm<<std::endl;
                     trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], task.layer, task.is_last_layer, comms[use_comm], streams[use_comm]);
-                    use_comm = (use_comm + 1) % comms.size();
                     break;
                 case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
                     //todo 40
@@ -61,6 +58,7 @@ void TransWorker::worker() {
                 default:
                     throw std::runtime_error("invalid task_type.");
             }
+            use_comm = (use_comm + 1) % comms.size();
         }
 
         // std::cout<<"task_queue is empty ";
