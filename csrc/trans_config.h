@@ -226,7 +226,7 @@ private:
     int local_rank;
     int nccl_local_rank;
     int tp;
-    int num_layer
+    int num_layer;
 
 };
 
