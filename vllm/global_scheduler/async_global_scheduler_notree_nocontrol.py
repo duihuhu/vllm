@@ -176,7 +176,7 @@ async def add_request(request: Request) -> Response:
         edecode_host, edecode_port, cdecode_blocks  = cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
         
     eprefill_port = random.choice([cfg.eprefill_port])
-    edecode_port = random.choice([cfg.edecode_port])
+    edecode_port = random.choice([cfg.edecode_port, cfg.edecode_port1])
     request_dict["edecode_host"] = edecode_host
     request_dict["edecode_port"] = edecode_port
     prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
