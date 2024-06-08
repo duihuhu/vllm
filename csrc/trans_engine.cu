@@ -71,7 +71,6 @@ void TransEngine::send_layer_blocks(const std::string& channel, const std::strin
     }
 }
 
-    std::unordered_map<std::string, std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>> send_comms_events;
 //channel->request_list
 //request_id -> comms
 //comm ->event_list
