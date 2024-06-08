@@ -380,7 +380,6 @@ class _AsyncLLMEngine(LLMEngine):
             coroutines.append(asyncio.create_task(self._query_layer_kv_blocks(seq_groups)))
             send_seq_groups.append(seq_groups)
         layer_kv_responses = await asyncio.gather(*coroutines)
-        print("res ", layer_kv_responses)
         merage_reqs = []
         for layer_kv_response, send_seq_group in zip(layer_kv_responses, send_seq_groups):
             layer_kv = LayerKvPreparedResponse(**layer_kv_response)
@@ -401,7 +400,7 @@ class _AsyncLLMEngine(LLMEngine):
             opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
             merage_req = MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
             merage_reqs.append(merage_req)
-        return merage_reqs[0]
+        return merage_reqs, order_kv_request_ids + order_no_kv_request_ids
 
             
     async def step_async(self, request_tracker) -> List[RequestOutput]:
@@ -436,8 +435,13 @@ class _AsyncLLMEngine(LLMEngine):
         #use transfer kv cache by layer and by req, should enable_layer, and it use only in prompt
         merge_req_info = None    
         if self.deploy_config.enable_layer and self.deploy_config.role == "prompt" and seq_group_metadata_list:
-            merge_req_info = await self.query_layer_kv_blocks(request_tracker)
-                        
+            merge_req_info, order_request_ids = await self.query_layer_kv_blocks(request_tracker)
+            
+            order_request_ids_index: Dict[int, int] = {rid: index for index, rid in enumerate(order_request_ids)}
+
+            seq_group_metadata_list.sort(key=lambda x: order_request_ids_index[x.request_id])
+            scheduler_outputs.scheduled_seq_groups.sort(key=lambda x: order_request_ids_index[x.seq_group.request_id])
+
         if not scheduler_outputs.is_empty():
             # Execute the model.
             all_outputs = await self.model_executor.execute_model_async(

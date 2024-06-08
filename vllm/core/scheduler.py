@@ -56,7 +56,8 @@ class SchedulerOutputs:
 
     def __init__(
         self,
-        scheduled_seq_groups: Iterable[ScheduledSequenceGroup],
+        # scheduled_seq_groups: Iterable[ScheduledSequenceGroup],
+        scheduled_seq_groups: List[ScheduledSequenceGroup],
         prompt_run: bool,
         num_batched_tokens: int,
         blocks_to_swap_in: Dict[int, int],
@@ -588,6 +589,7 @@ class Scheduler:
                 common_computed_block_nums = (
                     self.block_manager.get_common_computed_block_ids(
                         seq_group.get_seqs(status=SequenceStatus.RUNNING)))
+                
             seq_group_metadata = SequenceGroupMetadata(
                 request_id=seq_group.request_id,
                 is_prompt=scheduler_outputs.prompt_run,
