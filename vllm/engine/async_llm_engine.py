@@ -364,7 +364,7 @@ class _AsyncLLMEngine(LLMEngine):
         categorized_groups: Dict[str, List[SequenceGroup]] = {}
 
         for seq_group in  self.scheduler.running:
-            categorized_groups[seq_group.edecode_host + "_" + seq_group.edecode_port].append(seq_group)
+            categorized_groups[seq_group.edecode_host + "_" + str(seq_group.edecode_port)].append(seq_group)
             if self.deploy_config.enable_layer:
                 with open("prefill_send_query_kv_to_decode_layer.txt", "a+") as fd:
                     content = "prefill send query kv to decode " + seq_group.request_id + " " + str(time.time())
