@@ -77,10 +77,8 @@ __global__ void new_single_query_cached_kv_attention_kernel(
   const scalar_t* __restrict__ q,         // [num_seqs, num_heads, head_size]
   //const scalar_t* __restrict__ k_cache,   // [num_blocks, num_heads, head_size/x, block_size, x] -> [num_blocks]
   //const scalar_t* __restrict__ v_cache,   // [num_blocks, num_heads, head_size, block_size]
-  
   int64_t* key_cache_ptrs, // 记得扣除重复的
   int64_t* value_cache_ptrs,
-  
   const float scale,
   const int* __restrict__ block_tables,   // [num_seqs, max_num_blocks_per_seq] 
   // [[0,1,-1],[2,3,4],[5,-1,-1]]
@@ -89,7 +87,6 @@ __global__ void new_single_query_cached_kv_attention_kernel(
   // 3
   const float* __restrict__ alibi_slopes, // [num_heads]
   const int q_stride, // Q的第一个维度
-  
   const int layer_num) { 
 
   constexpr int THREAD_GROUP_SIZE = MAX(WARP_SIZE / BLOCK_SIZE, 1); // 一个warp处理一个block里面的token，蕴含有blocksize个threadgroup
@@ -100,7 +97,7 @@ __global__ void new_single_query_cached_kv_attention_kernel(
   const int lane = thread_idx % WARP_SIZE;
 
   const int head_idx = blockIdx.x;
-  const int num_heads = gridDim.x
+  const int num_heads = gridDim.x;
   const int seq_idx = blockIdx.y; // 因为cuda的坐标是y轴向下的，所以每一行刚好就是一个q token <-> 也确实对应一个seq
   const float alibi_slope = alibi_slopes == nullptr ? 0.f : alibi_slopes[head_idx];
 
@@ -354,8 +351,7 @@ __global__ void new_single_query_cached_kv_attention_kernel(
     max_num_blocks_per_seq,                                                                   \
     alibi_slopes_ptr,                                                                         \
     query_stride,                                                                             \
-    layer_num                                                                          
-    );
+    layer_num);
 
 // TODO(woosuk): Tune NUM_THREADS.
 template<
@@ -476,8 +472,7 @@ void new_single_query_cached_kv_attention_launcher( // 本质上按照，元素�
     context_lens,                                                   \
     max_context_len,                                                \
     alibi_slopes,                                                   \
-    layer_num                                                      
-    );
+    layer_num);
 
 // NOTE(woosuk): To reduce the compilation time, we omitted block sizes
 // 1, 2, 4, 64, 128, 256.
@@ -520,19 +515,15 @@ void new_single_query_cached_kv_attention(
   torch::Tensor& query,           // [num_seqs, num_heads, head_size]
   //torch::Tensor& key_cache,       // [num_blocks, num_heads, head_size/x, block_size, x]
   //torch::Tensor& value_cache,     // [num_blocks, num_heads, head_size, block_size]
-
   std::vector<torch::Tensor>& key_caches, // [num_layers, num_heads, head_size/x, block_size, x]
   std::vector<torch::Tensor>& value_caches, // [num_layers, num_heads, head_size, block_size]
-
   float scale,
   torch::Tensor& block_tables,    // [num_seqs, max_num_blocks_per_seq]
   torch::Tensor& context_lens,    // [num_seqs]
   int block_size,
   int max_context_len,
   const c10::optional<torch::Tensor>& alibi_slopes,
-  
   int layer_num) {
-  
   if (query.dtype() == at::ScalarType::Float) {
     CALL_KERNEL_LAUNCHER_BLOCK_SIZE(float);
   } else if (query.dtype() == at::ScalarType::Half) {
