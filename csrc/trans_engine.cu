@@ -233,8 +233,9 @@ std::vector<std::string> TransEngine::check_send_finished_comms_events() {
             }
         }
         if (num_finished_events > 0) {
+            std::cout<<"before check_send_finished_comms_events request_ids_and_comms len " << request_ids_and_comms.size();
             request_ids_and_comms.erase(request_ids_and_comms.begin(), request_ids_and_comms.begin() + num_finished_events);
-            std::cout<<"check_send_finished_comms_events request_ids_and_comms len " << len(request_ids_and_comms);
+            std::cout<<"after check_send_finished_comms_events request_ids_and_comms len " << request_ids_and_comms.size();
         }
     }
     return send_blocks_finished;
