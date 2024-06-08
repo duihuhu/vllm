@@ -158,7 +158,7 @@ def ref_multi_query_cached_kv_attention(
 @torch.inference_mode()
 def run_new_single_query_cached_kv_attention() -> None:
     # 40 layers, 40 heads, 5120 dimension
-    query = torch.empty(16, 40, 128, dtype = torch.float16, device = 'cuda')
+    query = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
     query.uniform_(-1e-3, 1e-3)
 
     x = 16 // torch.tensor([], dtype = torch.float16).element_size()
@@ -193,7 +193,7 @@ def run_new_single_query_cached_kv_attention() -> None:
 
     layer_num = 1
 
-    output = torch.empty(16, 40, 128, dtype = torch.float16, device = 'cuda')
+    output = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
 
     attention_ops.new_single_query_cached_kv_attention(
         output,
@@ -209,7 +209,7 @@ def run_new_single_query_cached_kv_attention() -> None:
         layer_num
     )
 
-    output2 = torch.empty_like(query)
+    output2 = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
 
     key_cache2 = torch.empty(size = (10, 40, 128 // x, 16, x),
                              dtype = torch.float16,
