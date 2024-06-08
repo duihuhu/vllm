@@ -57,8 +57,8 @@ void TransWorker::worker() {
                     break;
                 default:
                     throw std::runtime_error("invalid task_type.");
-                use_comm = (use_comm + 1) % comms.size();
             }
+            use_comm = (use_comm + 1) % comms.size();
         }
 
         // std::cout<<"task_queue is empty ";
