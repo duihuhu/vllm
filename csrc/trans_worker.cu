@@ -74,11 +74,11 @@ void TransWorker::worker() {
             transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
         }      
         // for layer  
-        auto send_blocks_finished = trans_engine.check_send_finished_comms_events();
-        auto recv_blocks_finished = trans_engine.check_recv_finished_comms_events();
-        if (!send_blocks_finished.empty() || !recv_blocks_finished.empty()){
+        auto send_blocks_comms_finished = trans_engine.check_send_finished_comms_events();
+        auto recv_blocks_comms_finished = trans_engine.check_recv_finished_comms_events();
+        if (!send_blocks_comms_finished.empty() || !recv_blocks_comms_finished.empty()){
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
-            transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
+            transfer_result_queue.push_back(std::make_pair(send_blocks_comms_finished, recv_blocks_comms_finished));
         }
         while (!comm_queue.empty())
         {
