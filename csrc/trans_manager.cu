@@ -49,7 +49,7 @@ void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& ds
 std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> TransManager::get_finished_transfer_tasks() {
     std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> finished_work_tasks;
     for (const auto& pair : trans_workers) {
-        const std::string& key = pair.first;
+        // const std::string& key = pair.first;
         TransWorker* worker = pair.second;
         auto finished_work_task = worker->get_finished_transfer_tasks();
         if(!finished_work_task.empty()) {

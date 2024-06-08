@@ -261,7 +261,7 @@ std::vector<std::string> TransEngine::check_recv_finished_layer_events() {
             }
             if(is_finished){
                 num_finished_events = num_finished_events + 1;
-                send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
+                recv_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
             }
         }
         if (num_finished_events > 0) {
