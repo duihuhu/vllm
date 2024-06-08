@@ -377,9 +377,8 @@ class _AsyncLLMEngine(LLMEngine):
         send_seq_groups: List[List[SequenceGroup]] = []
         coroutines = []
         for dest, seq_groups in categorized_groups.items():
-            print(seq_groups)
             coroutines.append(asyncio.create_task(self._query_layer_kv_blocks(seq_groups)))
-            send_seq_groups.append[seq_groups]
+            send_seq_groups.append(seq_groups)
         layer_kv_responses = await asyncio.gather(*coroutines)
         print("res ", layer_kv_responses)
         merage_reqs = []
