@@ -295,6 +295,7 @@ class SendKvTransferScheduler:
     ) -> List[str]:
         real_finished_req_ids = []
         for task_meta in send_finished_taks:
+            print("task_meta.request_id ", self.finished_worker_count[task_meta.request_id])
             self.finished_worker_count[task_meta.request_id] -=1
             if self.finished_worker_count[task_meta.request_id] == 0:
                 del self.block_ids[task_meta.request_id]
