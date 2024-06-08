@@ -98,7 +98,7 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
     }
 
     if(is_last_layer) {
-        std::cout<< "add to send_comms_events " << request_id <<std::endl;
+        // std::cout<< "add to send_comms_events " << request_id <<std::endl;
         if (send_comms_events.find(channel) == send_comms_events.end()) {
             auto& req_comms = send_req_events[request_id];
             send_comms_events[channel] =  std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>();
@@ -237,6 +237,14 @@ std::vector<std::string> TransEngine::check_send_finished_comms_events() {
                 }
             }
             if(is_finished){
+                for (auto it = comm_ids_and_events.begin(); it != comm_ids_and_events.end(); ++it) {
+                    auto comm_id = it->first;
+                    auto& events = it->second;
+                    for (auto event : events) {
+                        delete event;
+                    }
+                    events.clear();
+                }
                 num_finished_events = num_finished_events + 1;
                 send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
             }
@@ -271,6 +279,14 @@ std::vector<std::string> TransEngine::check_recv_finished_comms_events() {
                 }
             }
             if(is_finished){
+                for (auto it = comm_ids_and_events.begin(); it != comm_ids_and_events.end(); ++it) {
+                    auto comm_id = it->first;
+                    auto& events = it->second;
+                    for (auto event : events) {
+                        delete event;
+                    }
+                    events.clear();
+                }
                 num_finished_events = num_finished_events + 1;
                 recv_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
             }
