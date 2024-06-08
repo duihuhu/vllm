@@ -207,7 +207,7 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
 //channel->request_list
 //request_id -> comms
 //comm ->event_list
-std::vector<std::string> TransEngine::check_send_finished_layer_events() {
+std::vector<std::string> TransEngine::check_send_finished_comms_events() {
     std::vector<std::string> send_blocks_finished;
 
     for (auto kv: send_comms_events) {
@@ -241,7 +241,7 @@ std::vector<std::string> TransEngine::check_send_finished_layer_events() {
 //channel->request_list
 //request_id -> comms
 //comm ->event_list
-std::vector<std::string> TransEngine::check_recv_finished_layer_events() {
+std::vector<std::string> TransEngine::check_recv_finished_comms_events() {
     std::vector<std::string> recv_blocks_finished;
     for (auto kv: recv_comms_events) {
         const std::string& channel = kv.first;

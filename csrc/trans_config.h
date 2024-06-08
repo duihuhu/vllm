@@ -133,16 +133,13 @@ public:
 
     void recv_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id);
 
-
     int create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice);
-
-
 
     std::vector<std::string> check_send_finished_events();
     std::vector<std::string> check_recv_finished_events();
 
-    std::vector<std::string> check_send_finished_layer_events();
-    std::vector<std::string> check_recv_finished_layer_events();
+    std::vector<std::string> check_send_finished_comms_events();
+    std::vector<std::string> check_recv_finished_comms_events();
 
     void SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
