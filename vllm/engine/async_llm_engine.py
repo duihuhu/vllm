@@ -344,11 +344,13 @@ class _AsyncLLMEngine(LLMEngine):
  
 
     async def _query_layer_kv_blocks(self, seq_groups: List[SequenceGroup]):
-            decode_entry_point = (cfg.edecode_host, cfg.edecode_port)
+            decode_entry_point = (seq_groups[0].edecode_host, seq_groups[0].edecode_port)
             query_blocks = []
+            #gather all seq_groups
             for seq_group in seq_groups:
                 query_layer_block =  QueryLayerKvBlocks(seq_group.request_id, seq_group.prompt_token_ids, seq_group.sampling_params, self.get_global_ranks()).__json__()
                 query_blocks.append(query_layer_block)
+                
             data = CommData(
                 headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
                 payload=query_blocks
@@ -358,40 +360,73 @@ class _AsyncLLMEngine(LLMEngine):
     #get block num and global ranks
     async def query_layer_kv_blocks(self, request_tracker: RequestTracker):
         layer_blocks = {}
-        send_seq_groups :List[SequenceGroup] = []
+        
+        categorized_groups: Dict[str, List[SequenceGroup]] = {}
+
         for seq_group in  self.scheduler.running:
-            send_seq_groups.append(seq_group)
+            categorized_groups[seq_group.edecode_host + "_" + seq_group.edecode_port].append(seq_group)
             if self.deploy_config.enable_layer:
                 with open("prefill_send_query_kv_to_decode_layer.txt", "a+") as fd:
                     content = "prefill send query kv to decode " + seq_group.request_id + " " + str(time.time())
                     fd.write(content + "\n")
-        layer_kv_response = await self._query_layer_kv_blocks(send_seq_groups)
-        layer_kv = LayerKvPreparedResponse(**layer_kv_response)
-        layer_blocks[layer_kv.merage_request_id] = layer_kv
-        # self.scheduler.add_send_transfering(seq_group)
-        #add layer_kv.merage_request_id to send_transfering
-        send_blocks = []
-        merge_seq_groups = []
-        for seq_group, computed_blocks, is_allocated in zip(send_seq_groups, layer_kv.computed_blocks, layer_kv.is_allocated):
-            if is_allocated:
-                blocks = self.scheduler.fetch_kv_blocks(seq_group)
-                if computed_blocks <= len(blocks):
-                    send_blocks.extend(blocks[computed_blocks:])
-                    merge_seq_groups.append(seq_group)
-                    self.scheduler.seq_groups_with_layer[seq_group.request_id] = seq_group
-                    # print("request is allocated is true  ", seq_group.request_id)
-            # else:
-            #     print("request is allocated is false  ", seq_group.request_id)
-            if self.deploy_config.enable_breakdown:
-                with open("prefill_add_kv_request_layer.txt", "a+") as fd:
-                    content = "prefill recv kv cache space " + seq_group.request_id + " " +  str(time.time())
-                    fd.write(content + "\n")
-        self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
-        self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
-        opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
+        order_kv_request_ids = []
+        order_no_kv_request_ids = []
+        send_seq_groups: List[List[SequenceGroup]] = []
+        coroutines = []
+        for dest, seq_groups in categorized_groups.items():
+            coroutines.append(asyncio.create_task(self._query_layer_kv_blocks(seq_groups)))
+            send_seq_groups.append[seq_groups]
+        layer_kv_responses = await asyncio.gather(*coroutines)
+        print("res ", layer_kv_responses)
+        merage_reqs = []
+        for layer_kv_response, send_seq_group in zip(layer_kv_responses, send_seq_groups):
+            layer_kv = LayerKvPreparedResponse(**layer_kv_response)
+            layer_blocks[layer_kv.merage_request_id] = layer_kv
+            send_blocks = []
+            merge_seq_groups = []
+            for seq_group, computed_blocks, is_allocated in zip(send_seq_group, layer_kv.computed_blocks, layer_kv.is_allocated):
+                if is_allocated:
+                    blocks = self.scheduler.fetch_kv_blocks(seq_group)
+                    if computed_blocks <= len(blocks):
+                        send_blocks.extend(blocks[computed_blocks:])
+                        merge_seq_groups.append(seq_group)
+                        self.scheduler.seq_groups_with_layer[seq_group.request_id] = seq_group
+                        order_kv_request_ids.append(seq_group.request_id)
+                else:
+                    order_no_kv_request_ids.append(seq_group.request_id)
+            self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
+            self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
+            opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
+            merage_req = MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
+            merage_reqs.append(merage_req)
+        # send_seq_groups :List[SequenceGroup] = []         
+        # layer_kv_response = await self._query_layer_kv_blocks(send_seq_groups)
+        # layer_kv = LayerKvPreparedResponse(**layer_kv_response)
+        # layer_blocks[layer_kv.merage_request_id] = layer_kv
+        # #add layer_kv.merage_request_id to send_transfering
+        # send_blocks = []
+        # merge_seq_groups = []
+        # for seq_group, computed_blocks, is_allocated in zip(send_seq_groups, layer_kv.computed_blocks, layer_kv.is_allocated):
+        #     if is_allocated:
+        #         blocks = self.scheduler.fetch_kv_blocks(seq_group)
+        #         if computed_blocks <= len(blocks):
+        #             send_blocks.extend(blocks[computed_blocks:])
+        #             merge_seq_groups.append(seq_group)
+        #             self.scheduler.seq_groups_with_layer[seq_group.request_id] = seq_group
+        #             # print("request is allocated is true  ", seq_group.request_id)
+        #     # else:
+        #     #     print("request is allocated is false  ", seq_group.request_id)
+        #     if self.deploy_config.enable_breakdown:
+        #         with open("prefill_add_kv_request_layer.txt", "a+") as fd:
+        #             content = "prefill recv kv cache space " + seq_group.request_id + " " +  str(time.time())
+        #             fd.write(content + "\n")
+        # self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
+        # self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
+        # opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
         #insert into aysnc stream to complish return token
 
-        return MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
+        return merage_reqs[0]
+        # return MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
 
             
     async def step_async(self, request_tracker) -> List[RequestOutput]:
