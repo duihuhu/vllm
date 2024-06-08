@@ -400,7 +400,7 @@ class _AsyncLLMEngine(LLMEngine):
             opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
             merage_req = MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
             merage_reqs.append(merage_req)
-        return merage_reqs[0], order_kv_request_ids + order_no_kv_request_ids
+        return merage_reqs, order_kv_request_ids + order_no_kv_request_ids
 
             
     async def step_async(self, request_tracker) -> List[RequestOutput]:
@@ -433,12 +433,12 @@ class _AsyncLLMEngine(LLMEngine):
                     asyncio.create_task(self._query_cache(seq_group, request_tracker))
     
         #use transfer kv cache by layer and by req, should enable_layer, and it use only in prompt
-        merge_req_info = None    
+        merge_reqs_info = None    
         if self.deploy_config.enable_layer and self.deploy_config.role == "prompt" and seq_group_metadata_list:
-            merge_req_info, order_request_ids = await self.query_layer_kv_blocks(request_tracker)
+            merge_reqs_info, order_request_ids = await self.query_layer_kv_blocks(request_tracker)
             
+            #sort by merge req info's request id order to send block 
             order_request_ids_index: Dict[int, int] = {rid: index for index, rid in enumerate(order_request_ids)}
-
             seq_group_metadata_list.sort(key=lambda x: order_request_ids_index[x.request_id])
             scheduler_outputs.scheduled_seq_groups.sort(key=lambda x: order_request_ids_index[x.seq_group.request_id])
 
@@ -448,7 +448,7 @@ class _AsyncLLMEngine(LLMEngine):
                 seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
                 scheduler_outputs.blocks_to_swap_out,
                 scheduler_outputs.blocks_to_copy,
-                merge_req_info)
+                merge_reqs_info)
 
             self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.

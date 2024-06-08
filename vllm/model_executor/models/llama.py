@@ -260,7 +260,7 @@ class LlamaModel(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        merge_req_info: Optional[MergeReqInfo] = None,
+        merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
@@ -279,8 +279,9 @@ class LlamaModel(nn.Module):
                 attn_metadata,
                 residual,
             )
-            if merge_req_info:
-                trans_manager.add_tasks([trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, merge_req_info.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize()])
+            if merge_reqs_info:
+                for merge_req_info in merge_reqs_info:
+                    trans_manager.add_tasks([trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, merge_req_info.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize()])
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states
 
@@ -347,12 +348,12 @@ class LlamaForCausalLM(nn.Module):
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
         attn_metadata: AttentionMetadata,
-        merge_req_info: Optional[MergeReqInfo] = None,
+        merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> torch.Tensor:
         
         hidden_states = self.model(input_ids, positions, kv_caches,
-                                   attn_metadata, merge_req_info, trans_manager)
+                                   attn_metadata, merge_reqs_info, trans_manager)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,

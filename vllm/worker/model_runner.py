@@ -645,7 +645,7 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
-        merge_req_info: Optional[MergeReqInfo] = None,
+        merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
@@ -662,13 +662,13 @@ class ModelRunner:
         else:
             model_executable = self.model
             
-        if merge_req_info:
+        if merge_reqs_info:
             execute_model_kwargs = {
                 "input_ids": input_tokens,
                 "positions": input_positions,
                 "kv_caches": kv_caches,
                 "attn_metadata": attn_metadata,
-                "merge_req_info": merge_req_info,
+                "merge_reqs_info": merge_reqs_info,
                 "trans_manager": trans_manager
             }
         else:

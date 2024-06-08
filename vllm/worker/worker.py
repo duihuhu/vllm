@@ -227,7 +227,7 @@ class Worker:
         blocks_to_swap_in: Optional[Dict[int, int]] = None,
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
-        merge_req_info: Optional[MergeReqInfo] = None,
+        merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         wait_for_swap_out: Optional[List[str]] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
@@ -241,7 +241,7 @@ class Worker:
                 "blocks_to_swap_in": blocks_to_swap_in,
                 "blocks_to_swap_out": blocks_to_swap_out,
                 "blocks_to_copy": blocks_to_copy,
-                "merge_req_info": merge_req_info,
+                "merge_reqs_info": merge_reqs_info,
             }
             broadcast_tensor_dict(data, src=0)
         else:
@@ -250,7 +250,7 @@ class Worker:
             blocks_to_swap_in = data["blocks_to_swap_in"]
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
-            merge_req_info = data["merge_req_info"]
+            merge_reqs_info = data["merge_reqs_info"]
 
         # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
@@ -268,7 +268,7 @@ class Worker:
             return {}
         if self.deploy_config.enable_layer:
             output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                    self.gpu_cache, merge_req_info, self.trans_manager)
+                                                    self.gpu_cache, merge_reqs_info, self.trans_manager)
         else:
             output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache)
             
