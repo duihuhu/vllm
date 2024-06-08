@@ -358,9 +358,7 @@ class _AsyncLLMEngine(LLMEngine):
             return await CommEngine.async_send_to(decode_entry_point, "query_layer_kv_blocks", data)
         
     #get block num and global ranks
-    async def query_layer_kv_blocks(self, request_tracker: RequestTracker):
-        layer_blocks = {}
-        
+    async def query_layer_kv_blocks(self, request_tracker: RequestTracker):        
         categorized_groups: Dict[str, List[SequenceGroup]] = {}
 
         for seq_group in  self.scheduler.running:
@@ -369,11 +367,11 @@ class _AsyncLLMEngine(LLMEngine):
                 categorized_groups[key].append(seq_group)
             else:
                 categorized_groups[key] = [seq_group]
-                
             if self.deploy_config.enable_layer:
                 with open("prefill_send_query_kv_to_decode_layer.txt", "a+") as fd:
                     content = "prefill send query kv to decode " + seq_group.request_id + " " + str(time.time())
                     fd.write(content + "\n")
+                    
         order_kv_request_ids = []
         order_no_kv_request_ids = []
         send_seq_groups: List[List[SequenceGroup]] = []
@@ -384,6 +382,7 @@ class _AsyncLLMEngine(LLMEngine):
         layer_kv_responses = await asyncio.gather(*coroutines)
         print("res ", layer_kv_responses)
         merage_reqs = []
+        layer_blocks = {}
         for layer_kv_response, send_seq_group in zip(layer_kv_responses, send_seq_groups):
             layer_kv = LayerKvPreparedResponse(**layer_kv_response)
             layer_blocks[layer_kv.merage_request_id] = layer_kv
