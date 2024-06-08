@@ -223,7 +223,7 @@ def run_new_single_query_cached_kv_attention() -> None:
                              device = 'cuda:0')
     value_cache2.uniform_(-1e-3, 1e-3)
     for i, value_cache_item in enumerate(value_caches):
-        value_cache2[i, :, :, :, :] = value_cache_item[1, :, :, :, :].clone()
+        value_cache2[i, :, :, :] = value_cache_item[1, :, :, :].clone()
     
     # In work.py when we really set the inputmetadata, we need a set () & list [] to set the block_tables
     block_tables_list2 = [[0, 1, 9], [2, 9, 9], [3, 4, 5]]
