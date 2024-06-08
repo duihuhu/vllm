@@ -98,6 +98,7 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
     }
 
     if(is_last_layer) {
+        std::cout<< "add to send_comms_events " << request_id <<std::endl;
         if (send_comms_events.find(channel) == send_comms_events.end()) {
             auto& req_comms = send_req_events[request_id];
             send_comms_events[channel] =  std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>();
@@ -140,6 +141,7 @@ void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std:
     }
 
     if(is_last_layer) {
+        std::cout<< "add to recv_comms_events " << request_id<<std::endl;
         if (recv_comms_events.find(channel) == recv_comms_events.end()) {
             auto& req_comms = send_req_events[request_id];
             recv_comms_events[channel] =  std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>();
