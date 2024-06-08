@@ -82,9 +82,9 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
     if (send_comms_events.find(channel) == send_comms_events.end()) {
         auto events = std::vector<at::cuda::CUDAEvent*>;
         events.push_back(event);
-        auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+        auto req_comms = std::pair<int, std::vector<at::cuda::CUDAEvent*>>;
         req_comms.push_back(std::make_pair(comm_id, events));
-        send_comms_events[channel] =  std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>;
+        send_comms_events[channel] =  std::vector<std::pair<std::string, std::pair<int, std::vector<at::cuda::CUDAEvent*>>>>;
         send_comms_events[channel].push_back(std::make_pair(request_id, req_comms));
     } else {
         auto& last_reqs = send_comms_events[channel][-1];
@@ -98,7 +98,7 @@ void TransEngine::send_comms_layer_blocks(const std::string& channel, const std:
                 req_comms[comm_id].push_back(event);
             }
         } else{
-            auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+            auto req_comms = std::pair<int, std::vector<at::cuda::CUDAEvent*>>;
             auto events = std::vector<at::cuda::CUDAEvent*>;
             events.push_back(event);
             req_comms.push_back(std::make_pair(comm_id, events));
@@ -120,9 +120,9 @@ void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std:
     if (recv_comms_events.find(channel) == recv_comms_events.end()) {
         auto events = std::vector<at::cuda::CUDAEvent*>;
         events.push_back(event);
-        auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+        auto req_comms = std::pair<int, std::vector<at::cuda::CUDAEvent*>>;
         req_comms.push_back(std::make_pair(comm_id, events));
-        recv_comms_events[channel] =  std::vector<std::pair<std::string, std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>>>;
+        recv_comms_events[channel] =  std::vector<std::pair<std::string, std::pair<int, std::vector<at::cuda::CUDAEvent*>>>>;
         recv_comms_events[channel].push_back(std::make_pair(request_id, req_comms));
     } else {
         auto& last_reqs = recv_comms_events[channel][-1];
@@ -136,7 +136,7 @@ void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std:
                 req_comms[comm_id].push_back(event);
             }
         } else{
-            auto req_comms = std::pair<std::int, std::vector<at::cuda::CUDAEvent*>>;
+            auto req_comms = std::pair<int, std::vector<at::cuda::CUDAEvent*>>;
             auto events = std::vector<at::cuda::CUDAEvent*>;
             events.push_back(event);
             req_comms.push_back(std::make_pair(comm_id, events));
