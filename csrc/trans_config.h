@@ -129,9 +129,9 @@ public:
     
     void recv_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer , bool is_last_layer ,ncclComm_t& comm, c10::cuda::CUDAStream& stream);
     
-    void send_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id);
+    void send_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, int layer,  bool is_last_layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id);
 
-    void recv_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id);
+    void recv_comms_layer_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, int layer, bool is_last_layer, ncclComm_t& comm, c10::cuda::CUDAStream& stream, int comm_id);
 
     int create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice);
 
@@ -160,6 +160,10 @@ private:
 
     // std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> recv_events;
+
+    std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>> send_req_events;
+    std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>> recv_req_events;
+
 
     std::unordered_map<std::string, std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>> send_comms_events;
     std::unordered_map<std::string, std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>> recv_comms_events;
