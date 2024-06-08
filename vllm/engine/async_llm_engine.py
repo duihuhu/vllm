@@ -400,7 +400,7 @@ class _AsyncLLMEngine(LLMEngine):
             opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
             merage_req = MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
             merage_reqs.append(merage_req)
-        return merage_reqs, order_kv_request_ids + order_no_kv_request_ids
+        return merage_reqs[0], order_kv_request_ids + order_no_kv_request_ids
 
             
     async def step_async(self, request_tracker) -> List[RequestOutput]:
