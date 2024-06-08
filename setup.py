@@ -83,7 +83,7 @@ ext_modules.append(cache_extension)
 # Attention kernels.
 attention_extension = CUDAExtension(
     name="vllm.attention_ops",
-    sources=["csrc/attention.cpp", "csrc/attention/attention_kernels.cu"],
+    sources=["csrc/attention.cpp", "csrc/attention/attention_kernels.cu", "csrc/attention/new_attention_kernels.cu"],
     extra_compile_args={"cxx": CXX_FLAGS, "nvcc": NVCC_FLAGS},
 )
 ext_modules.append(attention_extension)
