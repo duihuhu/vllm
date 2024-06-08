@@ -24,7 +24,7 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel){
     ncclUniqueId uniqueId; 
     ncclGetUniqueId(&uniqueId);
     if(trans_workers.find(dst_channel) == trans_workers.end()){
-        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp);
+        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
         trans_workers[dst_channel] = task_worker;
     }
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
