@@ -10,10 +10,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 def run_new_single_query_cached_kv_attention(v) -> None:
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # 40 layers, 40 heads, 5120 dimension -> kv_heads = 10
-    torch.cuda.empty_cache()
-    print(f"Allocated: {torch.cuda.memory_allocated()} bytes")
-    print(f"Cached: {torch.cuda.memory_reserved()} bytes")
-    
     num_kv_heads = 10
 
     scale = float(1.0 / (128 ** 0.5))
@@ -24,6 +20,10 @@ def run_new_single_query_cached_kv_attention(v) -> None:
 
     layer_num = 1
     if v == 1:
+        torch.cuda.empty_cache()
+        print(f"Allocated: {torch.cuda.memory_allocated()} bytes")
+        print(f"Cached: {torch.cuda.memory_reserved()} bytes")
+
         query = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
         query.uniform_(-1e-3, 1e-3)
 
@@ -113,6 +113,65 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             print("Tolerant Errors for V1.")
         else:
             print("Wrong Code in V1!")
+        
+        output3 = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
+        tmp_output1 = torch.empty(
+                size = (3, 40, 512, 128),
+                dtype = torch.float16)
+        exp_sums1 = torch.empty(
+                size = (3, 40, 512),
+                dtype = torch.float32)
+        max_logits1 = torch.empty_like(exp_sums1)
+        ops.paged_attention_v2_block(
+                output3,
+                exp_sums1,
+                max_logits1,
+                tmp_output1,
+                query,
+                key_caches,
+                value_caches,
+                num_kv_heads,
+                scale,
+                block_tables_tensor,
+                context_lens_tensor,
+                block_size,
+                max_context_len,
+                None,
+                "auto",
+                layer_num
+            )
+        
+        output4 = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
+        tmp_output2 = torch.empty(
+                size = (3, 40, 512, 128),
+                dtype = torch.float16)
+        exp_sums2 = torch.empty(
+                size = (3, 40, 512),
+                dtype = torch.float32)
+        max_logits2 = torch.empty_like(exp_sums1)
+        ops.paged_attention_v2(
+                output4,
+                exp_sums2,
+                max_logits2,
+                tmp_output2,
+                query,
+                key_cache2,
+                value_cache2,
+                num_kv_heads,
+                scale,
+                block_tables_tensor2,
+                context_lens_tensor2,
+                block_size,
+                max_context_len,
+                None,
+                "auto"
+            )
+        
+        is_close = torch.allclose(output3, output4, atol = 1e-3, rtol = 1e-5)
+        if is_close:
+            print("Tolerant Errors for V2.")
+        else:
+            print("Wrong Code in V2!")
     else:
         torch.cuda.empty_cache()
         print(f"Allocated: {torch.cuda.memory_allocated()} bytes")
