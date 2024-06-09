@@ -101,18 +101,26 @@ class InferResults:
         }
 
 class QueryLayerKvBlocks:
-    def __init__(self, request_id , prompt_token_ids, sampling_params, global_ranks) -> None:
+    def __init__(self, request_id , prompt_token_ids, sampling_params, global_ranks, eprefill_host, eprefill_port,edecode_host, edecode_port) -> None:
         self.request_id = request_id
         self.prompt_token_ids = prompt_token_ids
         self.sampling_params = sampling_params
         self.global_ranks = global_ranks
+        self.eprefill_host = eprefill_host
+        self.eprefill_port = eprefill_port
+        self.edecode_host = edecode_host
+        self.edecode_port = edecode_port
 
     def __json__(self) -> Dict:
         return {
             "request_id": self.request_id,
             "prompt_token_ids": self.prompt_token_ids,
             "sampling_params": self.sampling_params.__json__(),
-            "global_ranks": self.global_ranks
+            "global_ranks": self.global_ranks,
+            "eprefill_host": self.eprefill_host,
+            "eprefill_port": self.eprefill_port,
+            "edecode_host": self.edecode_host,
+            "edecode_port": self.edecode_port
         }
 class PrefilledMeta:
     def __init__(self, 

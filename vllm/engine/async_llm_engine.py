@@ -348,7 +348,7 @@ class _AsyncLLMEngine(LLMEngine):
             query_blocks = []
             #gather all seq_groups
             for seq_group in seq_groups:
-                query_layer_block =  QueryLayerKvBlocks(seq_group.request_id, seq_group.prompt_token_ids, seq_group.sampling_params, self.get_global_ranks()).__json__()
+                query_layer_block =  QueryLayerKvBlocks(seq_group.request_id, seq_group.prompt_token_ids, seq_group.sampling_params, self.get_global_ranks(), seq_group.eprefill_host, seq_group.eprefill_port, seq_group.edecode_host, seq_group.edecode_port).__json__()
                 query_blocks.append(query_layer_block)
                 
             data = CommData(
@@ -1013,6 +1013,11 @@ class AsyncLLMEngine:
             request_id = meta["request_id"]
             prompt_token_ids = meta["prompt_token_ids"]
             global_ranks = meta["global_ranks"]
+            eprefill_host = meta["eprefill_host"]
+            eprefill_port = meta["eprefill_port"]
+            edecode_host = meta["edecode_host"]
+            edecode_port = meta["edecode_port"]
+            
             sampling_params_json = meta["sampling_params"]
             sampling_params =  SamplingParams(**sampling_params_json)
             arrival_time = time.time()
@@ -1030,7 +1035,7 @@ class AsyncLLMEngine:
             sampling_params.eos_token_id = seq.eos_token_id
             # Create the sequence group.
             seq_group = SequenceGroup(request_id, [seq], sampling_params,
-                                    arrival_time, None, None, None)
+                                    arrival_time, None, None, None, eprefill_host=eprefill_host, eprefill_port=eprefill_port, edecode_host=edecode_host, edecode_port=edecode_port)
             can_allocate = self.engine.scheduler.block_manager.can_allocate(seq_group)
             if can_allocate == AllocStatus.OK:
                 phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
