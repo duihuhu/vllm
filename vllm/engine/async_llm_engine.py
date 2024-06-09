@@ -1235,7 +1235,7 @@ class AsyncLLMEngine:
     
     async def create_comm(self, nccl_id, dst_channel, worker_type) -> None:
         if worker_type == "sender":
-            res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_typ="receiver")
+            res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_type="receiver")
         else:
-            res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_typ="sender")
+            res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_type="sender")
     
