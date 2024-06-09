@@ -61,14 +61,14 @@ def run_new_single_query_cached_kv_attention() -> None:
 
     output2 = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
 
-    key_cache2 = torch.empty(size = (10, 40, 128 // x, 16, x),
+    key_cache2 = torch.empty(size = (10, 10, 128 // x, 16, x),
                              dtype = torch.float16,
                              device = 'cuda')
     key_cache2.uniform_(-1e-3, 1e-3)
     for i, key_cache_item in enumerate(key_caches):
         key_cache2[i, :, :, :, :] = key_cache_item[1, :, :, :, :].clone()
 
-    value_cache2 = torch.empty(size = (10, 40, 128, 16),
+    value_cache2 = torch.empty(size = (10, 10, 128, 16),
                              dtype = torch.float16,
                              device = 'cuda')
     value_cache2.uniform_(-1e-3, 1e-3)
@@ -158,14 +158,14 @@ def run_new_single_query_cached_kv_attention() -> None:
 
     output4 = torch.empty(1, 40, 128, dtype = torch.float16, device = 'cuda')
 
-    key_cache3 = torch.empty(size = (256, 40, 128 // x, 16, x),
+    key_cache3 = torch.empty(size = (256, 10, 128 // x, 16, x),
                              dtype = torch.float16,
                              device = 'cuda')
     key_cache3.uniform_(-1e-3, 1e-3)
     for i, key_cache_item in enumerate(key_caches3):
         key_cache3[i, :, :, :, :] = key_cache_item[1, :, :, :, :].clone()
 
-    value_cache3 = torch.empty(size = (256, 40, 128, 16),
+    value_cache3 = torch.empty(size = (256, 10, 128, 16),
                              dtype = torch.float16,
                              device = 'cuda')
     value_cache3.uniform_(-1e-3, 1e-3)
