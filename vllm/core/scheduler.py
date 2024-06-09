@@ -785,8 +785,12 @@ class Scheduler:
                     seq = seq_groups.get_seqs()[0]
                     self.free_seq(seq)
                 else:
-                    for seq_group in seq_groups:
-                        seq = seq_group.get_seqs()[0]
+                    if self.deploy_config.role == "prompt":
+                        for seq_group in seq_groups:
+                            seq = seq_group.get_seqs()[0]
+                            self.free_seq(seq)
+                    else:
+                        seq = seq_groups.get_seqs()[0]
                         self.free_seq(seq)
                         
             del self.send_transfering[request_id]
