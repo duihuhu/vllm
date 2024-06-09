@@ -97,7 +97,7 @@ __device__ void paged_attention_block_kernel(
   const int max_num_blocks_per_seq,
   const float* __restrict__ alibi_slopes, // [num_heads]
   const int q_stride,
-  const int kv_block_stride,
+  const int kv_layer_stride,
   const int kv_head_stride,
   const int layer_num) {
   const int seq_idx = blockIdx.y;
@@ -480,7 +480,7 @@ __global__ void paged_attention_v2_block_kernel(
   const int kv_layer_stride,
   const int kv_head_stride,
   const int layer_num) {
-  paged_attention_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_E5M2_KV_CACHE, PARTITION_SIZE>(
+  paged_attention_block_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_E5M2_KV_CACHE, PARTITION_SIZE>(
     exp_sums, max_logits, tmp_out, q, key_cache_ptrs, key_cache_ptrs, num_kv_heads, scale,
     block_tables, context_lens, max_num_blocks_per_seq, alibi_slopes,
     q_stride, kv_layer_stride, kv_head_stride, layer_num);
