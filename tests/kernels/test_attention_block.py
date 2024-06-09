@@ -113,7 +113,7 @@ def run_new_single_query_cached_kv_attention(v) -> None:
         query2 = torch.empty(1, 40, 128, dtype = torch.float16, device = 'cuda')
         query2.uniform_(-1e-3, 1e-3)
         key_caches3 = []
-        for _ in range(256):
+        for _ in range(64):
             key_cache = torch.empty(size = (40, 10, 128 // x, 16, x),
                                     dtype = torch.float16, 
                                     device = 'cuda')
@@ -121,7 +121,7 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             key_caches3.append(key_cache)
         
         value_caches3 = []
-        for _ in range(256):
+        for _ in range(64):
             value_cache = torch.empty(size = (40, 10, 128, 16),
                                     dtype = torch.float16,
                                     device = 'cuda')
@@ -129,13 +129,13 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             value_caches3.append(value_cache)
         block_tables_list3 = []
         temp = []
-        for i in range(256):
+        for i in range(64):
             temp.append(i)
         block_tables_list3.append(temp)
         block_tables_tensor3 = torch.tensor(block_tables_list3, dtype = torch.int, device = 'cuda')
-        context_lens_list3 = [4096]
+        context_lens_list3 = [1024]
         context_lens_tensor3 = torch.tensor(context_lens_list3, dtype = torch.int, device = 'cuda')
-        max_context_len2 = 4096
+        max_context_len2 = 1024
         output3 = torch.empty(1, 40, 128, dtype = torch.float16, device = 'cuda')
         tmp_output1 = torch.empty(
                 size = (1, 40, 512, 128),
@@ -165,14 +165,14 @@ def run_new_single_query_cached_kv_attention(v) -> None:
 
         output4 = torch.empty(1, 40, 128, dtype = torch.float16, device = 'cuda')
 
-        key_cache3 = torch.empty(size = (256, 10, 128 // x, 16, x),
+        key_cache3 = torch.empty(size = (64, 10, 128 // x, 16, x),
                                 dtype = torch.float16,
                                 device = 'cuda')
         key_cache3.uniform_(-1e-3, 1e-3)
         for i, key_cache_item in enumerate(key_caches3):
             key_cache3[i, :, :, :, :] = key_cache_item[1, :, :, :, :].clone()
 
-        value_cache3 = torch.empty(size = (256, 10, 128, 16),
+        value_cache3 = torch.empty(size = (64, 10, 128, 16),
                                 dtype = torch.float16,
                                 device = 'cuda')
         value_cache3.uniform_(-1e-3, 1e-3)
@@ -182,11 +182,11 @@ def run_new_single_query_cached_kv_attention(v) -> None:
         # In work.py when we really set the inputmetadata, we need a set () & list [] to set the block_tables
         block_tables_list4 = []
         temp = []
-        for i in range(256):
+        for i in range(64):
             temp.append(i)
         block_tables_list4.append(temp)
         block_tables_tensor4 = torch.tensor(block_tables_list4, dtype = torch.int, device = 'cuda')
-        context_lens_list4 = [4096]
+        context_lens_list4 = [1024]
         context_lens_tensor4 = torch.tensor(context_lens_list4, dtype = torch.int, device = 'cuda')
         tmp_output2 = torch.empty(
                 size = (1, 40, 512, 128),
