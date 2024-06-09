@@ -86,8 +86,8 @@ __device__ void paged_attention_block_kernel(
   float* __restrict__ max_logits,         // [num_seqs, num_heads, max_num_partitions]
   scalar_t* __restrict__ out,             // [num_seqs, num_heads, max_num_partitions, head_size]
   const scalar_t* __restrict__ q,         // [num_seqs, num_heads, head_size]
-  const int64_t* key_cache_ptrs,
-  const int64_t* value_cache_ptrs,
+  int64_t* key_cache_ptrs,
+  int64_t* value_cache_ptrs,
   //const cache_t* __restrict__ k_cache,    // [num_blocks, num_kv_heads, head_size/x, block_size, x]
   //const cache_t* __restrict__ v_cache,    // [num_blocks, num_kv_heads, head_size, block_size]
   const int num_kv_heads,                 // [num_heads]
@@ -193,7 +193,7 @@ __device__ void paged_attention_block_kernel(
     // because int32 can lead to overflow when this variable is multiplied by large numbers
     // (e.g., kv_block_stride).
     const int64_t physical_block_number = static_cast<int64_t>(block_table[block_idx]);
-    const scalar_t* __restrict__ k_cache = reinterpret_cast<scalar_t*>(key_cache_ptrs[physical_block_number]);
+    scalar_t* __restrict__ k_cache = reinterpret_cast<scalar_t*>(key_cache_ptrs[physical_block_number]);
 
     // Load a key to registers.
     // Each thread in a thread group has a different part of the key.
@@ -207,7 +207,7 @@ __device__ void paged_attention_block_kernel(
 
 #pragma unroll
       for (int j = 0; j < NUM_VECS_PER_THREAD; j++) {
-        const cache_t* k_ptr = k_cache + layer_num *  kv_layer_stride //physical_block_number * kv_block_stride
+        const cache_t* k_ptr = reinterpret_cast<cache_t*>(k_cache) + layer_num *  kv_layer_stride //physical_block_number * kv_block_stride
                                        + kv_head_idx * kv_head_stride
                                        + physical_block_offset * x;
         const int vec_idx = thread_group_offset + j * THREAD_GROUP_SIZE;
@@ -324,8 +324,8 @@ __device__ void paged_attention_block_kernel(
     const int token_idx = block_idx * BLOCK_SIZE + physical_block_offset;
     L_vec logits_vec;
     from_float(logits_vec, *reinterpret_cast<Float_L_vec*>(logits + token_idx - start_token_idx));
-    const scalar_t* __restrict__ v_cache = reinterpret_cast<scalar_t*>(value_cache_ptrs[physical_block_number]);
-    const cache_t* v_ptr = v_cache + layer_num *  kv_layer_stride //physical_block_number * kv_block_stride
+    scalar_t* __restrict__ v_cache = reinterpret_cast<scalar_t*>(value_cache_ptrs[physical_block_number]);
+    const cache_t* v_ptr = reinterpret_cast<cache_t*>(v_cache) + layer_num *  kv_layer_stride //physical_block_number * kv_block_stride
                                    + kv_head_idx * kv_head_stride;
 #pragma unroll
     for (int i = 0; i < NUM_ROWS_PER_THREAD; i++) {
@@ -432,8 +432,8 @@ template<
 __global__ void paged_attention_v1_block_kernel(
   scalar_t* __restrict__ out,             // [num_seqs, num_heads, head_size]
   const scalar_t* __restrict__ q,         // [num_seqs, num_heads, head_size]
-  const int64_t* key_cache_ptrs,
-  const int64_t* value_cache_ptrs,
+  int64_t* key_cache_ptrs,
+  int64_t* value_cache_ptrs,
   //const cache_t* __restrict__ k_cache,    // [num_blocks, num_kv_heads, head_size/x, block_size, x]
   //const cache_t* __restrict__ v_cache,    // [num_blocks, num_kv_heads, head_size, block_size]
   const int num_kv_heads,                 // [num_heads]
@@ -466,8 +466,8 @@ __global__ void paged_attention_v2_block_kernel(
   float* __restrict__ max_logits,         // [num_seqs, num_heads, max_num_partitions]
   scalar_t* __restrict__ tmp_out,         // [num_seqs, num_heads, max_num_partitions, head_size]
   const scalar_t* __restrict__ q,         // [num_seqs, num_heads, head_size]
-  const int64_t* key_cache_ptrs,
-  const int64_t* value_cache_ptrs,
+  int64_t* key_cache_ptrs,
+  int64_t* value_cache_ptrs,
   //const cache_t* __restrict__ k_cache,    // [num_blocks, num_kv_heads, head_size/x, block_size, x]
   //const cache_t* __restrict__ v_cache,    // [num_blocks, num_kv_heads, head_size, block_size]
   const int num_kv_heads,                 // [num_heads]
