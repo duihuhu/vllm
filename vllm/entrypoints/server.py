@@ -254,7 +254,7 @@ async def generate_decode(request: Request) -> Response:
                     global_ranks = payload.pop("global_ranks")
                     kv_response = KvPreparedResponse(**payload)
                     kv_response.global_ranks = global_ranks
-                    print("decode finished payload ", payload)
+                    # print("decode finished payload ", payload)
                     await server.engine.add_kv_response(kv_response)
                     
             yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")

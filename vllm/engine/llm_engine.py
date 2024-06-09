@@ -299,7 +299,7 @@ class LLMEngine:
             kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
         else:
             self.scheduler.add_recv_transfering(seq_group)
-            print("recv kv request_id ", request_id, request_output.global_ranks, blocks, len(blocks))
+            # print("recv kv request_id ", request_id, request_output.global_ranks, blocks, len(blocks))
             transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
             kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
         return kv_response

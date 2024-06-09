@@ -250,9 +250,7 @@ class MergeReqInfo:
         merage_request_id: str,
         blocks: List[int],
         channel: str,
-        opposite_ranks: List[int],
     ):
         self.merage_request_id = merage_request_id
         self.blocks = blocks
         self.channel = channel
-        self.opposite_ranks = opposite_ranks

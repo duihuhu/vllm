@@ -399,7 +399,7 @@ class _AsyncLLMEngine(LLMEngine):
             self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
             self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
             opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
-            merage_req = MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel, self.send_kv_trans_scheduler.opposite_ranks)
+            merage_req = MergeReqInfo(layer_kv.merage_request_id, send_blocks, opp_channel)
             merage_reqs.append(merage_req)
         return merage_reqs, order_kv_request_ids + order_no_kv_request_ids
 
