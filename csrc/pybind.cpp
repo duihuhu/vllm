@@ -183,20 +183,17 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   py::class_<TransferTask>(trans_ops, "TransferTask")
       .def(py::init<const TransferTaskMeta&, 
                     const std::vector<uint32_t>&, 
-                    const std::vector<int>&, 
                     TaskType, 
                     int,
                     bool>(),
             py::arg("meta"),
             py::arg("blocks"),
-            py::arg("opposite_ranks"),
             py::arg("type"),
             py::arg("layer") = 0,
             py::arg("is_last_layer") = false)
 
       .def_readwrite("meta", &TransferTask::meta)
       .def_readwrite("blocks", &TransferTask::blocks)
-      .def_readwrite("opposite_ranks", &TransferTask::opposite_ranks)
       .def_readwrite("type", &TransferTask::type)
       .def_readwrite("layer", &TransferTask::layer)
       .def_readwrite("is_last_layer", &TransferTask::is_last_layer)

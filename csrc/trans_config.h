@@ -81,11 +81,10 @@ public:
 
 class TransferTask {
 public:
-    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<int>& opposite_ranks, TaskType type, int layer = 1, bool is_last_layer=false)
-        : meta(meta), blocks(blocks), opposite_ranks(opposite_ranks), type(type), layer(layer), is_last_layer(is_last_layer) {}
+    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, TaskType type, int layer = 1, bool is_last_layer=false)
+        : meta(meta), blocks(blocks), type(type), layer(layer), is_last_layer(is_last_layer) {}
     TransferTaskMeta meta;
     std::vector<uint32_t> blocks;
-    std::vector<int> opposite_ranks;
     TaskType type;
     int layer;
     bool is_last_layer;
@@ -95,7 +94,6 @@ public:
         json task;
         task["meta"] = meta.to_json();
         task["blocks"] = blocks;
-        task["opposite_ranks"] = opposite_ranks;
         task["type"] = static_cast<int>(type);  // Store TaskType as an integer
         task["layer"] = layer;  // Store TaskType as an integer
         task["is_last_layer"] = is_last_layer;  // Store TaskType as an integer
@@ -107,12 +105,11 @@ public:
         json task = json::parse(serialized_data);
         TransferTaskMeta meta = TransferTaskMeta::from_json(task.at("meta"));
         std::vector<uint32_t> blocks = task.at("blocks").get<std::vector<uint32_t>>();
-        std::vector<int> opposite_ranks = task.at("opposite_ranks").get<std::vector<int>>();
         TaskType type = static_cast<TaskType>(task.at("type").get<int>());
         int layer = task.at("layer").get<int>();
         bool is_last_layer = task.at("is_last_layer").get<bool>();
 
-        return TransferTask(meta, blocks, opposite_ranks, type, layer, is_last_layer);
+        return TransferTask(meta, blocks, type, layer, is_last_layer);
     }
 };
 
