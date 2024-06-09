@@ -292,17 +292,15 @@ class LLMEngine:
         
         blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
         computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-
         # for phy_block in phy_blocks:
         #     print("phy_block computed ", phy_block.computed)
             
         if not blocks:
-            kv_response = KvPreparedResponse(request_id, -1, "opp device has not enough memory", 0)
+            kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
         else:
-            kv_response = KvPreparedResponse(request_id, 0, None, len(computed_blocks))
             self.scheduler.add_recv_transfering(seq_group)
-            self.kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks, False)
-        
+            transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
+            kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
         return kv_response
     
     def add_kv_response(

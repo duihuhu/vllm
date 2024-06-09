@@ -224,6 +224,18 @@ async def generate_decode(request: Request) -> Response:
                 end_time=end_time
             )
             last_time = end_time
+            if server.engine.engine.deploy_config.enable_dcache and infer_result.finished==True:
+                prefill_kv_resp = asyc_forward_request(infer_result.__json__(), cfg.forward_eprefill_res_kv_url % 
+                                                                    (cfg.eprefill_host, cfg.eprefill_port))
+                async for resp in prefill_kv_resp:
+                    resp = resp.decode('utf-8')
+                    payload = json.loads(resp)
+                    global_ranks = payload.pop("global_ranks")
+                    kv_response = KvPreparedResponse(**payload)
+                    kv_response.global_ranks = global_ranks
+                    await server.engine.add_kv_response(kv_response)
+                    print("decode finished payload ", payload)
+                    
             yield (json.dumps(infer_result.__json__()) + "\0").encode("utf-8")
     
     return StreamingResponse(stream_results())
@@ -350,7 +362,7 @@ async def generate_prefill(request: Request) -> Response:
                 else:
                     if infer_results.finished != True:
                         decode_response = asyc_forward_request(layer_infer_results.__json__(), cfg.forward_edecode_url % 
-                                                                    (request_output.edecode_host, request_output.edecode_port))
+                                                                    (infer_results.edecode_host, infer_results.edecode_port))
                         d_num = 0       
                 #recv kv allocate result and deocde's decode
                 if args.enable_direct: 

@@ -14,8 +14,10 @@ from vllm.model_executor.input_metadata import InputMetadata
 from vllm.model_executor.sampling_metadata import SamplingMetadata
 
 from vllm.utils import Counter
-from vllm.xds_rtc.radix_tree_manager import RadixTreeManager
-from vllm.xds_rtc.radix_cache import TreeNode
+# from vllm.xds_rtc.radix_tree_manager import RadixTreeManager
+# from vllm.xds_rtc.radix_cache import TreeNode
+from vllm.radix_tree_ys.radix_tree_manager import RadixTreeManager
+from vllm.radix_tree_ys.radix_cache import TreeNode
 
 
 class RtcEngine:

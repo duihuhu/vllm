@@ -395,6 +395,7 @@ class _AsyncLLMEngine(LLMEngine):
                         order_kv_request_ids.append(seq_group.request_id)
                 else:
                     order_no_kv_request_ids.append(seq_group.request_id)
+                    
             self.scheduler.send_transfering[layer_kv.merage_request_id] = merge_seq_groups
             self.send_kv_trans_scheduler.add_layer_kv_request(layer_kv.merage_request_id, layer_kv.global_ranks, send_blocks)
             opp_channel = "_".join([str(rank) for rank in layer_kv.global_ranks])
@@ -783,7 +784,7 @@ class AsyncLLMEngine:
         if finished_requests:
             await self._engine_abort(finished_requests)
 
-        #recv kv_responses in , sender get allocated kv cache notify from receiver
+        #recv kv_responses in , sender get allocated kv cache notify from receiver(waht ever p or d, both all them use this)
         kv_responses = self._request_tracker.get_kv_responses()
         for kv_response in kv_responses:
             # Add the response
@@ -798,7 +799,7 @@ class AsyncLLMEngine:
             self._request_tracker.process_kv_response(
                 self.engine.get_global_ranks(), kv_response)
         
-        #d to p, if only p to d, do not care all kv_results
+        #d to p, p allocate kv cache for decode transfer data back
         kv_results_requests = self._request_tracker.get_new_kv_results_request()
         for kv_result_requests in kv_results_requests:
             kv_response = None
@@ -1031,8 +1032,6 @@ class AsyncLLMEngine:
                 merge_seq_groups.append(seq_group)
                 merge_num_blocks.append(len(computed_blocks))
                 merge_is_allocated.append(True)
-                # self.engine.scheduler.add_recv_transfering(seq_group)
-                # self.engine.recv_kv_trans_scheduler.add_kv_request(request_id, global_ranks , blocks)
                 self.engine.scheduler.kv_prepared_seq_group[request_id] = seq_group
             else:
                 merge_num_blocks.append(0)

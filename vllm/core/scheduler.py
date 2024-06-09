@@ -626,6 +626,7 @@ class Scheduler:
         self.block_manager.free(seq)
 
     def free_finished_seq_groups(self) -> None:
+        #to record req decoded  
         self.decoded = deque(seq_group for seq_group in self.running
                              if seq_group.is_finished())
         
@@ -761,17 +762,18 @@ class Scheduler:
     def _check_tranfer_finished_req(self) -> None:
         for request_id in self.send_finished_req_ids[:]:
             # if not self.enable_layer:
-            if request_id in self.req_pull_send_transfering:
-                del self.req_pull_send_transfering[request_id]
-                blocks = self.block_manager.req_pull_block_tables[request_id]
-                for block in blocks:
-                    block.ref_count = block.ref_count - 1
-                del self.block_manager.req_pull_block_tables[request_id]
-                self.send_finished_req_ids.remove(request_id)
-                continue
+            #only use in gs send decode has cache meta 
+            if self.deploy_config.enable_cache_meta:
+                if request_id in self.req_pull_send_transfering:
+                    del self.req_pull_send_transfering[request_id]
+                    blocks = self.block_manager.req_pull_block_tables[request_id]
+                    for block in blocks:
+                        block.ref_count = block.ref_count - 1
+                    del self.block_manager.req_pull_block_tables[request_id]
+                    self.send_finished_req_ids.remove(request_id)
+                    continue
             
             seq_groups = self.send_transfering[request_id]
-            
             #should free 
             # block_table = self.block_manager.block_tables[seq.seq_id]
             if self.block_manager.enable_radix_caching:
