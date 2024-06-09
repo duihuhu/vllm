@@ -10,6 +10,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 def run_new_single_query_cached_kv_attention(v) -> None:
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     # 40 layers, 40 heads, 5120 dimension -> kv_heads = 10
+    torch.cuda.empty_cache()
+    print(f"Allocated: {torch.cuda.memory_allocated()} bytes")
+    print(f"Cached: {torch.cuda.memory_reserved()} bytes")
+    
     num_kv_heads = 10
 
     scale = float(1.0 / (128 ** 0.5))
@@ -110,6 +114,10 @@ def run_new_single_query_cached_kv_attention(v) -> None:
         else:
             print("Wrong Code in V1!")
     else:
+        torch.cuda.empty_cache()
+        print(f"Allocated: {torch.cuda.memory_allocated()} bytes")
+        print(f"Cached: {torch.cuda.memory_reserved()} bytes")
+
         query2 = torch.empty(1, 40, 128, dtype = torch.float16, device = 'cuda')
         query2.uniform_(-1e-3, 1e-3)
         key_caches3 = []
