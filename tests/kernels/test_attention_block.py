@@ -1,6 +1,6 @@
 import torch
 
-from vllm import attention_ops
+from vllm._C import ops
 
 @torch.inference_mode()
 def run_new_single_query_cached_kv_attention() -> None:
@@ -43,7 +43,7 @@ def run_new_single_query_cached_kv_attention() -> None:
 
     output = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
 
-    attention_ops.paged_attention_v1_block(
+    ops.paged_attention_v1_block(
         output,
         query,
         key_caches,
@@ -82,7 +82,7 @@ def run_new_single_query_cached_kv_attention() -> None:
     context_lens_list2 = [32, 16, 48]
     context_lens_tensor2 = torch.tensor(context_lens_list2, dtype = torch.int, device = 'cuda')
 
-    attention_ops.paged_attention_v1(
+    ops.paged_attention_v1(
         output2,
         query,
         key_cache2,
@@ -137,7 +137,7 @@ def run_new_single_query_cached_kv_attention() -> None:
             size = (1, 40, 512),
             dtype=torch.float32)
     max_logits1 = torch.empty_like(exp_sums1)
-    attention_ops.paged_attention_v2_block(
+    ops.paged_attention_v2_block(
             output3,
             exp_sums1,
             max_logits1,
@@ -188,7 +188,7 @@ def run_new_single_query_cached_kv_attention() -> None:
             size = (1, 40, 512),
             dtype=torch.float32)
     max_logits2 = torch.empty_like(exp_sums2)
-    attention_ops.paged_attention_v2_block(
+    ops.paged_attention_v2_block(
             output4,
             exp_sums2,
             max_logits2,
