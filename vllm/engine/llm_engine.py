@@ -299,6 +299,7 @@ class LLMEngine:
             kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
         else:
             self.scheduler.add_recv_transfering(seq_group)
+            print("recv kv request_id ", request_id, request_output.global_ranks, blocks, len(blocks))
             transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
             kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
         return kv_response
@@ -319,6 +320,8 @@ class LLMEngine:
                 with open("prefill_add_kv_request.txt", "a+") as fd:
                     content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
                     fd.write(content + "\n")
+                    
+            print("send kv request_id ", request_id, response.global_ranks, blocks,  response.transfer_tag)
             self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
         else:
             self.scheduler.del_send_transfering(request_id)
