@@ -13,21 +13,22 @@ void TransManager::dist_worker() {
         if(!worker_task_queue.empty()) {
             auto worker_task = worker_task_queue.pop_front();
             TaskType task_type = worker_task.type;
+            TransWorker* task_worker = nullptr;
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
-                    TransWorker* task_worker = send_trans_workers[worker_task.meta.channel];
+                    task_worker = send_trans_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
-                    TransWorker* task_worker = recv_trans_workers[worker_task.meta.channel];
+                    task_worker = recv_trans_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
                 case TaskType::TRANSFER_SEND_LAYER_BLOCKS:
-                    TransWorker* task_worker = send_trans_workers[worker_task.meta.channel];
+                    task_worker = send_trans_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
                 case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
-                    TransWorker* task_worker = recv_trans_workers[worker_task.meta.channel];
+                    task_worker = recv_trans_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
                 default:

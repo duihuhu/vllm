@@ -316,7 +316,7 @@ class Worker:
 
     def get_nccl_id(
         self,
-        dst_channel, worker_type="sender")->None:
+        dst_channel, worker_type)->None:
         nccl_id = self.trans_manager.get_nccl_id(dst_channel, worker_type)
         return nccl_id
     
