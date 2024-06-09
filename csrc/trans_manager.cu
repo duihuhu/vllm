@@ -12,20 +12,45 @@ void TransManager::dist_worker() {
     while (true) {
         if(!worker_task_queue.empty()) {
             auto worker_task = worker_task_queue.pop_front();
-            TransWorker* task_worker = trans_workers[worker_task.meta.channel];
-            task_worker->add_tasks(worker_task);
+            TaskType task_type = worker_task.type;
+            switch (task_type) {
+                case TaskType::TRANSFER_SEND_BLOCKS:
+                    TransWorker* task_worker = send_trans_workers[worker_task.meta.channel];
+                    task_worker->add_tasks(worker_task);
+                    break;
+                case TaskType::TRANSFER_RECV_BLOCKS:
+                    TransWorker* task_worker = recv_trans_workers[worker_task.meta.channel];
+                    task_worker->add_tasks(worker_task);
+                    break;
+                case TaskType::TRANSFER_SEND_LAYER_BLOCKS:
+                    TransWorker* task_worker = send_trans_workers[worker_task.meta.channel];
+                    task_worker->add_tasks(worker_task);
+                    break;
+                case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
+                    TransWorker* task_worker = recv_trans_workers[worker_task.meta.channel];
+                    task_worker->add_tasks(worker_task);
+                    break;
+                default:
+                    throw std::runtime_error("invalid task_type.");
+            }
         }
     }
-
     return;
 }
 
-std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel){
+std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel, const std::string& worker_type){
     ncclUniqueId uniqueId; 
     ncclGetUniqueId(&uniqueId);
-    if(trans_workers.find(dst_channel) == trans_workers.end()){
-        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
-        trans_workers[dst_channel] = task_worker;
+    if(worker_type=="sender"){
+        if(send_trans_workers.find(dst_channel) == send_trans_workers.end()){
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
+            send_trans_workers[dst_channel] = task_worker;
+        }
+    } else{
+        if(recv_trans_workers.find(dst_channel) == recv_trans_workers.end()){
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
+            recv_trans_workers[dst_channel] = task_worker;
+        }
     }
     return std::vector<char>(uniqueId.internal, uniqueId.internal + sizeof(uniqueId.internal));
 }
@@ -36,19 +61,36 @@ void TransManager::add_tasks(const std::vector<std::string>& tasks) {
         worker_task_queue.push_back(trans_task);
     }
 }
-void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel){
-    if(trans_workers.find(dst_channel) == trans_workers.end()){
-        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
-        trans_workers[dst_channel] = task_worker;
+void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel, const std::string& worker_type){
+    if(worker_type=="sender"){
+        if(send_trans_workers.find(dst_channel) == send_trans_workers.end()){
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
+            send_trans_workers[dst_channel] = task_worker;
+        }
+        TransWorker* task_worker = send_trans_workers[dst_channel];
+        task_worker->add_comm_task(nccl_id);
+    } else{
+        if(recv_trans_workers.find(dst_channel) == recv_trans_workers.end()){
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
+            recv_trans_workers[dst_channel] = task_worker;
+        }
+        TransWorker* task_worker = recv_trans_workers[dst_channel];
+        task_worker->add_comm_task(nccl_id);
     }
-    TransWorker* task_worker = trans_workers[dst_channel];
-    task_worker->add_comm_task(nccl_id);
     return;
 }
 
 std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> TransManager::get_finished_transfer_tasks() {
     std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> finished_work_tasks;
-    for (const auto& pair : trans_workers) {
+    for (const auto& pair : send_trans_workers) {
+        // const std::string& key = pair.first;
+        TransWorker* worker = pair.second;
+        auto finished_work_task = worker->get_finished_transfer_tasks();
+        if(!finished_work_task.empty()) {
+            finished_work_tasks.emplace_back(finished_work_task);
+        }
+    }
+    for (const auto& pair : recv_trans_workers) {
         // const std::string& key = pair.first;
         TransWorker* worker = pair.second;
         auto finished_work_task = worker->get_finished_transfer_tasks();

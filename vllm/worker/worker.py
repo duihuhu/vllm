@@ -316,16 +316,17 @@ class Worker:
 
     def get_nccl_id(
         self,
-        dst_channel)->None:
-        nccl_id = self.trans_manager.get_nccl_id(dst_channel)
+        dst_channel, worker_type="sender")->None:
+        nccl_id = self.trans_manager.get_nccl_id(dst_channel, worker_type)
         return nccl_id
     
     def create_comm(
         self,
         nccl_id,
-        dst_channel
+        dst_channel,
+        worker_type
     ) -> None:
-        res = self.trans_manager.create_comm(nccl_id, dst_channel)
+        res = self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
         # print("res ", res)
     
     def get_trans_blocks_time(

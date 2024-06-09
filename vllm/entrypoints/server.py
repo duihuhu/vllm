@@ -28,13 +28,15 @@ async def create_comm(request: Request) -> Response:
     payload = await request.json()
     dst_channel = payload.pop("dst_channel")
     nccl_id =  payload.pop("nccl_id")
-    await server.engine.create_comm(nccl_id, dst_channel)
+    worker_type = payload.pop("worker_type")
+    await server.engine.create_comm(nccl_id, dst_channel, worker_type)
     
 @app.post("/get_nccl_id")
 async def get_nccl_id(request: Request) -> Response:
     payload = await request.json()
     dst_channel = payload.pop("dst_channel")
-    nccl_ids = await server.engine.get_nccl_id(dst_channel)
+    worker_type = payload.pop("worker_type")
+    nccl_ids = await server.engine.get_nccl_id(dst_channel, worker_type)
     return nccl_ids
 
 @app.post("/query_layer_kv_blocks")
