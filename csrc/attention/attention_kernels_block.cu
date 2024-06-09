@@ -207,7 +207,7 @@ __device__ void paged_attention_block_kernel(
 
 #pragma unroll
       for (int j = 0; j < NUM_VECS_PER_THREAD; j++) {
-        const cache_t* k_ptr = k_cache + layer_num *  kv_head_stride * HEAD_SIZE * BLOCK_SIZE //physical_block_number * kv_block_stride
+        const cache_t* k_ptr = k_cache + layer_num *  kv_layer_stride //physical_block_number * kv_block_stride
                                        + kv_head_idx * kv_head_stride
                                        + physical_block_offset * x;
         const int vec_idx = thread_group_offset + j * THREAD_GROUP_SIZE;
@@ -325,7 +325,7 @@ __device__ void paged_attention_block_kernel(
     L_vec logits_vec;
     from_float(logits_vec, *reinterpret_cast<Float_L_vec*>(logits + token_idx - start_token_idx));
     const scalar_t* __restrict__ v_cache = reinterpret_cast<scalar_t*>(value_cache_ptrs[physical_block_number]);
-    const cache_t* v_ptr = v_cache + layer_num *  kv_head_stride * HEAD_SIZE * BLOCK_SIZE //physical_block_number * kv_block_stride
+    const cache_t* v_ptr = v_cache + layer_num *  kv_layer_stride //physical_block_number * kv_block_stride
                                    + kv_head_idx * kv_head_stride;
 #pragma unroll
     for (int i = 0; i < NUM_ROWS_PER_THREAD; i++) {
@@ -443,13 +443,13 @@ __global__ void paged_attention_v1_block_kernel(
   const int max_num_blocks_per_seq,
   const float* __restrict__ alibi_slopes, // [num_heads]
   const int q_stride,
-  const int kv_block_stride,
+  const int kv_layer_stride,
   const int kv_head_strid,
   const int layer_num) {
   paged_attention_block_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_E5M2_KV_CACHE>(
     /* exp_sums */ nullptr, /* max_logits */ nullptr,
     out, q, key_cache_ptrs, value_cache_ptrs, num_kv_heads, scale, block_tables, context_lens,
-    max_num_blocks_per_seq, alibi_slopes, q_stride, kv_block_stride, kv_head_stride, layer_num);
+    max_num_blocks_per_seq, alibi_slopes, q_stride, kv_layer_stride, kv_head_stride, layer_num);
 }
 
 // Grid: (num_heads, num_seqs, max_num_partitions).
@@ -477,13 +477,13 @@ __global__ void paged_attention_v2_block_kernel(
   const int max_num_blocks_per_seq,
   const float* __restrict__ alibi_slopes, // [num_heads]
   const int q_stride,
-  const int kv_block_stride,
+  const int kv_layer_stride,
   const int kv_head_stride,
   const int layer_num) {
   paged_attention_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_E5M2_KV_CACHE, PARTITION_SIZE>(
     exp_sums, max_logits, tmp_out, q, key_cache_ptrs, key_cache_ptrs, num_kv_heads, scale,
     block_tables, context_lens, max_num_blocks_per_seq, alibi_slopes,
-    q_stride, kv_block_stride, kv_head_stride, layer_num);
+    q_stride, kv_layer_stride, kv_head_stride, layer_num);
 }
 
 // Grid: (num_heads, num_seqs).
@@ -604,7 +604,7 @@ __global__ void paged_attention_v2_block_reduce_kernel(
     max_num_blocks_per_seq,                                                                   \
     alibi_slopes_ptr,                                                                         \
     q_stride,                                                                                 \
-    kv_block_stride,                                                                          \
+    kv_layer_stride,                                                                          \
     kv_head_stride,                                                                           \
     layer_num);
 
@@ -634,8 +634,8 @@ void paged_attention_v1_block_launcher(
   int head_size = query.size(2);
   int max_num_blocks_per_seq = block_tables.size(1);
   int q_stride = query.stride(0);
-  int kv_block_stride = key_cache.stride(0);
-  int kv_head_stride = key_cache.stride(1);
+  int kv_layer_stride = key_caches[0].stride(0);
+  int kv_head_stride = key_caches[0].stride(1);
 
   int thread_group_size = MAX(WARP_SIZE / BLOCK_SIZE, 1);
   assert(head_size % thread_group_size == 0);
@@ -802,7 +802,7 @@ void paged_attention_v1_block(
     max_num_blocks_per_seq,                                                                   \
     alibi_slopes_ptr,                                                                         \
     q_stride,                                                                                 \
-    kv_block_stride,                                                                          \
+    kv_layer_stride,                                                                          \
     kv_head_stride,                                                                           \
     layer_num);                                                                               \
   vllm::paged_attention_v2_block_reduce_kernel<T, HEAD_SIZE, NUM_THREADS, PARTITION_SIZE>           \
@@ -842,8 +842,8 @@ void paged_attention_v2_block_launcher(
   int head_size = query.size(2);
   int max_num_blocks_per_seq = block_tables.size(1);
   int q_stride = query.stride(0);
-  int kv_block_stride = key_cache.stride(0);
-  int kv_head_stride = key_cache.stride(1);
+  int kv_layer_stride = key_caches[0].stride(0);
+  int kv_head_stride = key_caches[0].stride(1);
 
   int thread_group_size = MAX(WARP_SIZE / BLOCK_SIZE, 1);
   assert(head_size % thread_group_size == 0);
