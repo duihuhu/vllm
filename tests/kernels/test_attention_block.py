@@ -17,6 +17,8 @@ def run_new_single_query_cached_kv_attention(v) -> None:
     block_size = 16
 
     x = 16 // torch.tensor([], dtype = torch.float16).element_size()
+
+    layer_num = 1
     if v == 1:
         query = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
         query.uniform_(-1e-3, 1e-3)
@@ -45,8 +47,6 @@ def run_new_single_query_cached_kv_attention(v) -> None:
         context_lens_tensor = torch.tensor(context_lens_list, dtype = torch.int, device = 'cuda')
 
         max_context_len = 48
-
-        layer_num = 1
 
         output = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
 
