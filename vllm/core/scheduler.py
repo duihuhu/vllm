@@ -225,10 +225,10 @@ class Scheduler:
     def add_send_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the send transfering map.
         # print("add send transfering ", seq_group.request_id, time.time())
-        if not self.enable_layer:
-            self.send_transfering[seq_group.request_id] = seq_group
-        else:
-            self.send_transfering[seq_group.request_id] = TransferSequenceGroup(seq_group, self.num_workers)
+        # if not self.enable_layer:
+        self.send_transfering[seq_group.request_id] = seq_group
+        # else:
+        #     self.send_transfering[seq_group.request_id] = TransferSequenceGroup(seq_group, self.num_workers)
             
     #todo check free_seq
     #del_send_transfering: 分配block失败的时候删除

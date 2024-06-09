@@ -120,9 +120,9 @@ class LLMEngine:
                                              device_config, deploy_config, lora_config,
                                              vision_language_config)
 
-        self.send_kv_trans_scheduler = SendKvTransferScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
+        self.send_kv_trans_scheduler = SendKvTransferScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer, self.deploy_config.role)
         
-        self.recv_kv_trans_scheduler = RecvKvTransScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
+        self.recv_kv_trans_scheduler = RecvKvTransScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer, self.deploy_config.role)
         self.trans_checked_time = 0
         self.trans_running_time = 0
         self.trans_sched_time = 0 

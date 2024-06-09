@@ -228,13 +228,15 @@ class KvTransScheduler:
 class SendKvTransferScheduler:
     def __init__(self,
                  num_workers,
-                 enable_layer) -> None:
+                 enable_layer,
+                 role) -> None:
         self.channel_request_ids: Dict[str, List[PriorityRequest]] = {}
         
         self.finished_worker_count: Dict[str, int]  = {}
         self.block_ids: Dict[str, List[int]] = {}
         self.num_workers = num_workers
         
+        self.role = role
         # self.opposite_ranks = list(range(num_workers, num_workers * 2))
         
         self.channel_transfer_tag: Dict[str, int] = {}
@@ -311,7 +313,8 @@ class SendKvTransferScheduler:
 class RecvKvTransScheduler:
     def __init__(self,
                 num_workers,
-                enable_layer) -> None:
+                enable_layer,
+                role) -> None:
         self.channel_request_ids: Dict[str, List[str]] = {}
         
         self.finished_worker_count: Dict[str, int]  = {}
@@ -322,6 +325,7 @@ class RecvKvTransScheduler:
         
         self.channel_transfer_tag: Dict[str, int] = {}
         self.enable_layer = enable_layer
+        self.role = role
 
         if enable_layer:
             self.merage_reqs: Dict[str, List[SequenceGroup]] = {}
@@ -365,7 +369,7 @@ class RecvKvTransScheduler:
         for channel, request_ids in self.channel_request_ids.items():
             while request_ids:
                 request_id = request_ids.pop(0)
-                if self.enable_layer:
+                if self.enable_layer and self.role=="decoder":
                     blocks = []
                     for block_id in self.block_ids[request_id]:
                         blocks.extend(block_id)
