@@ -15,11 +15,12 @@ def run_new_single_query_cached_kv_attention(v) -> None:
     scale = float(1.0 / (128 ** 0.5))
 
     block_size = 16
+
+    x = 16 // torch.tensor([], dtype = torch.float16).element_size()
     if v == 1:
         query = torch.empty(3, 40, 128, dtype = torch.float16, device = 'cuda')
         query.uniform_(-1e-3, 1e-3)
 
-        x = 16 // torch.tensor([], dtype = torch.float16).element_size()
         key_caches = []
         for _ in range(10):
             key_cache = torch.empty(size = (40, 10, 128 // x, 16, x),
@@ -36,8 +37,6 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             value_cache.uniform_(-1e-3, 1e-3)
             value_caches.append(value_cache)
         
-        
-
         # [[0, 1, -1], [2, -1, -1], [3, 4, 5]]
         block_tables_list = [[0, 1, 9], [2, 9, 9], [3, 4, 5]]
         block_tables_tensor = torch.tensor(block_tables_list, dtype = torch.int, device = 'cuda')
