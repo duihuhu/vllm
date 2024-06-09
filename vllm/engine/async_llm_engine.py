@@ -458,6 +458,7 @@ class _AsyncLLMEngine(LLMEngine):
             output = []
 
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
+        
         processed_output_without_layer = []
         for processed_output in processed_outputs:
             if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
@@ -487,6 +488,11 @@ class _AsyncLLMEngine(LLMEngine):
                     processed_output_with_layer.append(output)
                     del self.scheduler.outputs_with_layer[seq_group.request_id]
                     del self.scheduler.seq_groups_with_layer[seq_group.request_id]
+                    
+            if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
+                decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
+                for seq_group in decoded_seq_groups:
+                    self.scheduler.add_send_transfering(seq_group)
                     
         if self.deploy_config.enable_layer:
             return processed_output_without_layer, processed_output_with_layer
