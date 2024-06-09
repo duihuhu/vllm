@@ -8,8 +8,10 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
     }
     if (nccl_local_rank >= dst_ranks[0]){
         comm_rank = nccl_local_rank % tp + tp;
+        dst_rank = comm_rank - tp;
     } else{
         comm_rank = nccl_local_rank % tp;
+        dst_rank = comm_rank + tp;
     }
     use_comm = 0;
     execute = std::thread(&TransWorker::worker, this);
@@ -36,13 +38,14 @@ void TransWorker::worker() {
             auto task_meta = task.meta;
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
-                    std::cout<< "send blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << task.opposite_ranks << " use_comm " << use_comm<<std::endl;
-                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
+                    std::cout<< "send blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << task.opposite_ranks << " " << dst_rank << " use_comm " << use_comm<<std::endl;
+                    // trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
+                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
                     use_comm = (use_comm + 1) % comms.size();
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
-                    std::cout<< "recv blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << task.opposite_ranks << " use_comm " << use_comm<<std::endl;
-                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
+                    std::cout<< "recv blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << task.opposite_ranks << " " << dst_rank  << " use_comm " << use_comm<<std::endl;
+                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
                     use_comm = (use_comm + 1) % comms.size();
                     break;
                 case TaskType::TRANSFER_SEND_LAYER_BLOCKS:

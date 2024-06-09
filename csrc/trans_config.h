@@ -196,6 +196,7 @@ private:
     std::string dst_channel;
     std::vector<int> dst_ranks;
     int comm_rank;
+    int dst_rank;
     int tp;
     int num_layer;
     std::vector<ncclComm_t> comms;
