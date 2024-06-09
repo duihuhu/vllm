@@ -14,6 +14,8 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
         dst_rank = comm_rank + tp;
     }
     use_comm = 0;
+    send_use_comm = 0;
+    recv_use_comm = 0;
     execute = std::thread(&TransWorker::worker, this);
 }
 
@@ -38,29 +40,29 @@ void TransWorker::worker() {
             auto task_meta = task.meta;
             switch (task_type) {
                 case TaskType::TRANSFER_SEND_BLOCKS:
-                    std::cout<< "send blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << dst_rank << " use_comm " << use_comm<<std::endl;
+                    // std::cout<< "send blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << dst_rank << " use_comm " << use_comm<<std::endl;
                     // trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.opposite_ranks[rank], comms[use_comm], streams[use_comm]);
-                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
-                    use_comm = (use_comm + 1) % comms.size();
+                    trans_engine.send_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, send_comms[send_use_comm], send_streams[send_use_comm]);
+                    send_use_comm = (send_use_comm + 1) % send_comms.size();
                     break;
                 case TaskType::TRANSFER_RECV_BLOCKS:
-                    std::cout<< "recv blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << dst_rank  << " use_comm " << use_comm<<std::endl;
-                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
-                    use_comm = (use_comm + 1) % comms.size();
+                    // std::cout<< "recv blocks request id " << task_meta.channel << " " << task_meta.request_id << " " << dst_rank  << " use_comm " << use_comm<<std::endl;
+                    trans_engine.recv_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, recv_comms[recv_use_comm], recv_streams[recv_use_comm]);
+                    recv_use_comm = (recv_use_comm + 1) % recv_comms.size();
                     break;
                 case TaskType::TRANSFER_SEND_LAYER_BLOCKS:
                     // std::cout<< "request id " << task_meta.request_id <<"send_layer_blocks " << task.layer << " use_comm " << use_comm<<std::endl;
                     // trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.dst_rank, task.layer, task.is_last_layer, comms[use_comm], streams[use_comm], use_comm);
-                    trans_engine.send_comms_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, task.layer, task.is_last_layer, comms[use_comm], streams[use_comm], use_comm);
-                    use_comm = (use_comm + 1) % comms.size();
+                    trans_engine.send_comms_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, task.layer, task.is_last_layer, send_comms[use_comm], send_streams[use_comm], send_use_comm);
+                    send_use_comm = (send_use_comm + 1) % send_comms.size();
                     break;
                 case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
                     //todo 40
                     for(int layer = 0 ;layer < num_layer; layer++) {
                         // std::cout<< "request id " << task_meta.request_id << "recv_layer_blocks " << layer << " use_comm " << use_comm<<std::endl;
                         // trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, layer, layer==(40-1), comms[use_comm], streams[use_comm], use_comm);
-                        trans_engine.recv_comms_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, layer, layer==(num_layer-1) , comms[use_comm], streams[use_comm], use_comm);
-                        use_comm = (use_comm + 1) % comms.size();
+                        trans_engine.recv_comms_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, layer, layer==(num_layer-1) , recv_comms[use_comm], recv_streams[use_comm], recv_use_comm);
+                        recv_use_comm = (recv_use_comm + 1) % recv_comms.size();
                     }
                     break;
                 default:
@@ -92,8 +94,14 @@ void TransWorker::worker() {
             if (trans_engine.create_nccl_comm(comm_rank, comm, uniqueId, tp * 2)!=0) {
                 throw std::runtime_error("CreateNcclFromRankTable error");
             }
-            comms.push_back(comm);
-            streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+            if(use_comm %2==0){
+                send_comms.push_back(comm);
+                send_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+            }else{
+                recv_comms.push_back(comm);
+                recv_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+            }
+
         }
     }
 }

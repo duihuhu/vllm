@@ -196,9 +196,13 @@ private:
     int dst_rank;
     int tp;
     int num_layer;
-    std::vector<ncclComm_t> comms;
-    std::vector<c10::cuda::CUDAStream> streams;
+    std::vector<ncclComm_t> send_comms;
+    std::vector<ncclComm_t> recv_comms;
+    std::vector<c10::cuda::CUDAStream> send_streams;
+    std::vector<c10::cuda::CUDAStream> recv_streams;
     int use_comm;
+    int send_use_comm;
+    int recv_use_comm;
 };
 
 class TransManager {
