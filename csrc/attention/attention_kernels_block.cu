@@ -444,7 +444,7 @@ __global__ void paged_attention_v1_block_kernel(
   const float* __restrict__ alibi_slopes, // [num_heads]
   const int q_stride,
   const int kv_layer_stride,
-  const int kv_head_strid,
+  const int kv_head_stride,
   const int layer_num) {
   paged_attention_block_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_E5M2_KV_CACHE>(
     /* exp_sums */ nullptr, /* max_logits */ nullptr,
@@ -836,7 +836,8 @@ void paged_attention_v2_block_launcher(
   torch::Tensor& block_tables,
   torch::Tensor& context_lens,
   int max_context_len,
-  const c10::optional<torch::Tensor>& alibi_slopes) {
+  const c10::optional<torch::Tensor>& alibi_slopes,
+  const int layer_num) {
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
   int head_size = query.size(2);

@@ -15,7 +15,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &paged_attention_v1_block,
     "[[num_layers, num_kv_heads, head_size, block_size]...]"
   );
-  ops.edf(
+  ops.def(
     "paged_attention_v2_block",
     &paged_attention_v2_block,
     "v2"
