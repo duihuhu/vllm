@@ -21,6 +21,8 @@ class InferResults:
         start_time: Optional[int] = 0,
         end_time: Optional[int] = 0,
         is_layer: Optional[bool] = False,
+        eprefill_host: Optional[str] = None,
+        eprefill_port: Optional[str] = None,
         edecode_host: Optional[str] = None,
         edecode_port: Optional[str] = None
     ) -> None:
@@ -43,6 +45,8 @@ class InferResults:
         self.start_time = start_time
         self.end_time = end_time
         self.is_layer = is_layer
+        self.eprefill_host = eprefill_host
+        self.eprefill_port = eprefill_port
         self.edecode_host = edecode_host
         self.edecode_port = edecode_port
     def __json__(self) -> Dict:
@@ -89,6 +93,10 @@ class InferResults:
             "n": self.n,
             "start_time": self.start_time,
             "end_time": self.end_time,   
+            "eprefill_host": self.eprefill_host,
+            "eprefill_port": self.eprefill_port,
+            "edecode_host": self.edecode_host,
+            "edecode_port": self.edecode_port,
             "is_layer": self.is_layer, 
         }
 
@@ -136,7 +144,7 @@ class PrefilledMeta:
             "request_id": self.request_id,
             "prefilled_token_id": self.prefilled_token_id,
             "output_logprobs": output_logprobs,
-            "sampling_params": self.sampling_params.__json__(),
+            "sampling_params": self.sampling_params.__json__(),   
             "is_layer": self.is_layer
         }
         

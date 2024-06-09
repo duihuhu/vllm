@@ -393,6 +393,8 @@ class SequenceGroup:
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
         cache_meta: Optional[CacheMeta] = None,
+        eprefill_host: Optional[str] = None,
+        eprefill_port: Optional[str] = None,
         edecode_host: Optional[str] = None,
         edecode_port: Optional[str] = None,
     ) -> None:
@@ -409,6 +411,8 @@ class SequenceGroup:
         self.state = SequenceGroupState()
         self.multi_modal_data = multi_modal_data
         self.cache_meta = cache_meta
+        self.eprefill_host = eprefill_host
+        self.eprefill_port = eprefill_port
         self.edecode_host = edecode_host
         self.edecode_port = edecode_port
     @property

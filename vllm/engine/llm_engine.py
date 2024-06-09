@@ -337,6 +337,8 @@ class LLMEngine:
         multi_modal_data: Optional[MultiModalData] = None,
         prefill_request_output: Optional[RequestOutput] = None,
         cache_meta: Optional[CacheMeta] = None,
+        eprefill_host: Optional[str] = None,
+        eprefill_port: Optional[str] = None,
         edecode_host: Optional[str] = None,
         edecode_port: Optional[str] = None,
         prefilled_token_id: Optional[List[int]] = None,
@@ -433,11 +435,9 @@ class LLMEngine:
         # processing
         sampling_params.eos_token_id = seq.eos_token_id
 
-       
-        
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
-                                  arrival_time, lora_request, multi_modal_data, cache_meta=cache_meta, edecode_host=edecode_host, edecode_port=edecode_port)
+                                  arrival_time, lora_request, multi_modal_data, cache_meta=cache_meta, eprefill_host=eprefill_host, eprefill_port=eprefill_port, edecode_host=edecode_host, edecode_port=edecode_port)
 
         # Add the sequence group to the scheduler.
 
@@ -454,8 +454,14 @@ class LLMEngine:
         while self.scheduler.decode_waiting:
             seq_group = self.scheduler.decode_waiting[0][0]
             prefill_request_output = self.scheduler.decode_waiting[0][1]
+
             can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
             if can_allocate == AllocStatus.OK:
+                seq_group.eprefill_host = prefill_request_output.eprefill_host
+                seq_group.eprefill_port = prefill_request_output.eprefill_port
+                seq_group.edecode_host = prefill_request_output.edecode_host
+                seq_group.edecode_port = prefill_request_output.edecode_port
+                
                 self.scheduler.decode_waiting.popleft()
                 phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
                 #reconstruct sequence

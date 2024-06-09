@@ -163,6 +163,10 @@ async def generate_decode(request: Request) -> Response:
         index = payload.pop("index")
         texts = payload.pop("texts")
         finished = payload.pop("finished")
+        eprefill_host = payload.pop("eprefill_host")
+        eprefill_port = payload.pop("eprefill_port")
+        edecode_host = payload.pop("edecode_host")
+        edecode_port = payload.pop("edecode_port")
         # print("request_id ", request_id)
         
         prompt_logprobs = pprobs_key_s2i(prompt_logprobs)
@@ -182,6 +186,10 @@ async def generate_decode(request: Request) -> Response:
             prompt_token_ids=prompt_token_ids,
             prompt_logprobs=prompt_logprobs,
             finished=finished,
+            eprefill_host=eprefill_host,
+            eprefill_port=eprefill_port,
+            edecode_host=edecode_host,
+            edecode_port=edecode_port
         )
         request_output.global_ranks = opp_ranks
         results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
@@ -223,12 +231,16 @@ async def generate_decode(request: Request) -> Response:
                 tbt = end_time - last_time,
                 n = -1,
                 start_time=start_time,
-                end_time=end_time
+                end_time=end_time,
+                eprefill_port = request_output.eprefill_host,
+                eprefill_port = request_output.eprefill_port,
+                edecode_host = request_output.edecode_host,
+                edecode_port = request_output.edecode_port
             )
             last_time = end_time
             if server.engine.engine.deploy_config.enable_dcache and infer_result.finished==True:
                 prefill_kv_resp = asyc_forward_request(infer_result.__json__(), cfg.forward_eprefill_res_kv_url % 
-                                                                    (cfg.eprefill_host, cfg.eprefill_port))
+                                                                    (infer_result.eprefill_host, infer_result.eprefill_port))
                 async for resp in prefill_kv_resp:
                     resp = resp.decode('utf-8')
                     payload = json.loads(resp)
@@ -283,6 +295,8 @@ async def generate_prefill(request: Request) -> Response:
     stream = payload.pop("stream")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
+    eprefill_host = payload.pop("eprefill_host")
+    eprefill_port = payload.pop("eprefill_port")
     edecode_host = payload.pop("edecode_host")
     edecode_port = payload.pop("edecode_port")
     
@@ -301,7 +315,7 @@ async def generate_prefill(request: Request) -> Response:
     #todo 适配prefix_req 结合本地缓存复用策略
     sampling_params = SamplingParams(**payload)
     results_generator = server.engine.generate(prompt=None, prompt_token_ids=prompt_token_ids, \
-        sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta, edecode_host=edecode_host, edecode_port=edecode_port)
+        sampling_params=sampling_params, request_id=request_id, cache_meta=cache_meta, eprefill_host=eprefill_host, eprefill_port=eprefill_port, edecode_host=edecode_host, edecode_port=edecode_port)
     #Streaming case
     n = 0 
     async def stream_results() -> AsyncGenerator[bytes, None]:
@@ -329,8 +343,10 @@ async def generate_prefill(request: Request) -> Response:
                 start_time=start_time,
                 end_time=end_time,
                 is_layer = request_output.is_layer,
-                edecode_host= request_output.edecode_host,
-                edecode_port= request_output.edecode_port
+                eprefill_port = request_output.eprefill_host,
+                eprefill_port = request_output.eprefill_port,
+                edecode_host = request_output.edecode_host,
+                edecode_port = request_output.edecode_port
             )
             if not args.enable_separate:
                 yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")
