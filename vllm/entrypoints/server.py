@@ -86,7 +86,10 @@ async def prepare_kv_result(request: Request) -> None:
     index = payload.pop("index")
     texts = payload.pop("texts")
     finished = payload.pop("finished")
-    
+    eprefill_host = payload.pop("eprefill_host")
+    eprefill_port = payload.pop("eprefill_port")
+    edecode_host = payload.pop("edecode_host")
+    edecode_port = payload.pop("edecode_port")
     prompt_logprobs = pprobs_key_s2i(prompt_logprobs)
     output_logprobs = cprobs_key_s2i(output_logprobs)
     
@@ -103,6 +106,10 @@ async def prepare_kv_result(request: Request) -> None:
         prompt_token_ids=prompt_token_ids,
         prompt_logprobs=prompt_logprobs,
         finished=finished,
+        eprefill_host=eprefill_host,
+        eprefill_port=eprefill_port,
+        edecode_host=edecode_host,
+        edecode_port=edecode_port
     )
     request_output.global_ranks = opp_ranks
     

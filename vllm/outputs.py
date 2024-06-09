@@ -147,6 +147,8 @@ class RequestOutput:
                    finished,
                    seq_group.metrics,
                    lora_request=seq_group.lora_request,
+                   eprefill_host=seq_group.edecode_host,
+                   eprefill_port=seq_group.eprefill_port,
                    edecode_host=seq_group.edecode_host,
                    edecode_port=seq_group.edecode_port)
 

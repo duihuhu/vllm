@@ -286,7 +286,7 @@ class LLMEngine:
         arrival_time = time.time()
         # Create the sequence group.
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
-                                  arrival_time, lora_request, multi_modal_data)
+                                  arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
         phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
         
