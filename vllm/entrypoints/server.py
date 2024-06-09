@@ -232,7 +232,7 @@ async def generate_decode(request: Request) -> Response:
                 n = -1,
                 start_time=start_time,
                 end_time=end_time,
-                eprefill_port = request_output.eprefill_host,
+                eprefill_host = request_output.eprefill_host,
                 eprefill_port = request_output.eprefill_port,
                 edecode_host = request_output.edecode_host,
                 edecode_port = request_output.edecode_port
