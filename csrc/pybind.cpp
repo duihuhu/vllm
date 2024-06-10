@@ -11,6 +11,17 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   // Attention ops
   ops.def(
+    "paged_attention_v1_block",
+    &paged_attention_v1_block,
+    "[[num_layers, num_kv_heads, head_size, block_size]...]"
+  );
+  ops.def(
+    "paged_attention_v2_block",
+    &paged_attention_v2_block,
+    "v2"
+  );
+  // Attention ops
+  ops.def(
     "paged_attention_v1",
     &paged_attention_v1,
     "Compute the attention between an input query and the cached keys/values using PagedAttention.");
