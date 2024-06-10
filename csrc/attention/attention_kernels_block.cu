@@ -863,7 +863,7 @@ void paged_attention_v2_block_launcher(
   T* tmp_out_ptr = reinterpret_cast<T*>(tmp_out.data_ptr());
   T* query_ptr = reinterpret_cast<T*>(query.data_ptr());
 
-  auto begin1 = std::chrono::steady_clock::now();
+  // auto begin1 = std::chrono::steady_clock::now();
   torch::Device cache_device = key_caches[0].device();
   TORCH_CHECK(cache_device.is_cuda());
   int total_blocks_num = key_caches.size();
@@ -879,8 +879,8 @@ void paged_attention_v2_block_launcher(
     value_cache_ptrs_array, {total_blocks_num}, torch::kInt64).to(cache_device);
   int64_t* key_cache_ptrs = key_cache_ptrs_tensor.data_ptr<int64_t>();    
   int64_t* value_cache_ptrs = value_cache_ptrs_tensor.data_ptr<int64_t>(); 
-  auto begin2 = std::chrono::steady_clock::now();
-  std::cout << "For v2 block execution time1 : " << std::chrono::duration_cast<std::chrono::microseconds>(begin2 - begin1).count() << " us" << std::endl;
+  // auto begin2 = std::chrono::steady_clock::now();
+  // std::cout << "For v2 block execution time1 : " << std::chrono::duration_cast<std::chrono::microseconds>(begin2 - begin1).count() << " us" << std::endl;
   //CACHE_T* key_cache_ptr = reinterpret_cast<CACHE_T*>(key_cache.data_ptr());
   //CACHE_T* value_cache_ptr = reinterpret_cast<CACHE_T*>(value_cache.data_ptr());
 
