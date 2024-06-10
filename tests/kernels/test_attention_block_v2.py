@@ -38,8 +38,8 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             key_caches = [torch.empty(40, 10, 128 // x, 16, x, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
 
             value_caches = [torch.empty(40, 10, 128, 16, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
-            block_tables_tensor = torch.tensor([[0, 1, 9], [2, 9, 9], [3, 4, 5]], dtype=torch.int, device='cuda')
-            context_lens_tensor = torch.tensor([32, 16, 48], dtype=torch.int, device='cuda')
+            block_tables_tensor = torch.tensor([[0, 1, 2 ,3], [4, 5], [6, 7, 8]], dtype=torch.int, device='cuda')
+            context_lens_tensor = torch.tensor([48, 16, 32], dtype=torch.int, device='cuda')
             max_context_len = 48
 
             key_cache2 = torch.empty(10, 10, 128 // x, 16, x, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3)
@@ -49,36 +49,34 @@ def run_new_single_query_cached_kv_attention(v) -> None:
                 key_cache2[i, :, :, :, :] = key_caches[i][1, :, :, :, :]
                 value_cache2[i, :, :, :] = value_caches[i][1, :, :, :]
 
-            block_tables_tensor2 = torch.tensor([[0, 1, 9], [2, 9, 9], [3, 4, 5]], dtype=torch.int, device='cuda')
-            context_lens_tensor2 = torch.tensor([32, 16, 48], dtype=torch.int, device='cuda')
+            block_tables_tensor2 = torch.tensor([[0, 1, 2 ,3], [4, 5], [6, 7, 8]], dtype=torch.int, device='cuda')
+            context_lens_tensor2 = torch.tensor([48, 16, 32], dtype=torch.int, device='cuda')
 
-            # print("Tolerant Errors for V1." if is_close else "Wrong Code in V1!")
-
-            # output3 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
-            # tmp_output1 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
-            # exp_sums1 = torch.empty(3, 40, 512, dtype=torch.float32, device='cuda')
-            # max_logits1 = torch.empty_like(exp_sums1, device='cuda')
-            # t1 = time.time()
-            # ops.paged_attention_v2_block(
-            #     output3,
-            #     exp_sums1,
-            #     max_logits1,
-            #     tmp_output1,
-            #     query,
-            #     key_caches,
-            #     value_caches,
-            #     num_kv_heads,
-            #     scale,
-            #     block_tables_tensor,
-            #     context_lens_tensor,
-            #     block_size,
-            #     max_context_len,
-            #     None,
-            #     "auto",
-            #     layer_num
-            # )
-            # t2 = time.time()
-            # print("v2 block ", t2-t1)
+            output3 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
+            tmp_output1 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
+            exp_sums1 = torch.empty(3, 40, 512, dtype=torch.float32, device='cuda')
+            max_logits1 = torch.empty_like(exp_sums1, device='cuda')
+            t1 = time.time()
+            ops.paged_attention_v2_block(
+                output3,
+                exp_sums1,
+                max_logits1,
+                tmp_output1,
+                query,
+                key_caches,
+                value_caches,
+                num_kv_heads,
+                scale,
+                block_tables_tensor,
+                context_lens_tensor,
+                block_size,
+                max_context_len,
+                None,
+                "auto",
+                layer_num
+            )
+            t2 = time.time()
+            print("v2 block ", t2-t1)
             
             output4 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
             tmp_output2 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
