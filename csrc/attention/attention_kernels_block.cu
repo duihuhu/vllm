@@ -492,8 +492,7 @@ __global__ void paged_attention_v2_block_kernel(
     exp_sums, max_logits, tmp_out, q, key_cache_ptrs, key_cache_ptrs, num_kv_heads, scale,
     block_tables, context_lens, max_num_blocks_per_seq, alibi_slopes,
     q_stride, kv_layer_stride, kv_head_stride, layer_num);
-  auto end = std::chrono::steady_clock::now();
-  记录结束时间
+  // 记录结束时间
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
 
