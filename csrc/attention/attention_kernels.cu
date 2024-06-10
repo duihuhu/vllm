@@ -798,6 +798,14 @@ void paged_attention_v2_launcher(
   torch::Tensor& context_lens,
   int max_context_len,
   const c10::optional<torch::Tensor>& alibi_slopes) {
+  // 创建 CUDA 事件
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+
+  // 记录开始时间
+  cudaEventRecord(start, 0);
+
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
   int head_size = query.size(2);
@@ -865,6 +873,16 @@ void paged_attention_v2_launcher(
       TORCH_CHECK(false, "Unsupported head size: ", head_size);
       break;
   }
+  // 记录结束时间
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+
+  // 计算时间
+  float milliseconds = 0;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  std::cout << "For v2 execution time: " << milliseconds << " ms" << std::endl;
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 }
 
 #define CALL_V2_LAUNCHER(T, CACHE_T, BLOCK_SIZE, IS_FP8_E5M2_KV_CACHE)           \
