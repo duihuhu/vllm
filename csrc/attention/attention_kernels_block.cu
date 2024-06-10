@@ -840,7 +840,7 @@ void paged_attention_v2_block_launcher(
   const c10::optional<torch::Tensor>& alibi_slopes,
   const int layer_num) {
 
-  auto begin = std::chrono::steady_clock::now();
+  // auto begin = std::chrono::steady_clock::now();
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
   int head_size = query.size(2);
@@ -947,8 +947,8 @@ void paged_attention_v2_block_launcher(
   // std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
   // cudaEventDestroy(start);
   // cudaEventDestroy(stop);
-  auto end = std::chrono::steady_clock::now();
-  std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
+  // auto end = std::chrono::steady_clock::now();
+  // std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::chrono::duration_cast<std::chrono::microseconds>(end - begin2 + begin1-begin).count() << std::endl;
 }
 
 #define CALL_V2_BLOCK_LAUNCHER(T, CACHE_T, BLOCK_SIZE, IS_FP8_E5M2_KV_CACHE)           \

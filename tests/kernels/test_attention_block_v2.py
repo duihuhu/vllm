@@ -101,7 +101,7 @@ def run_new_single_query_cached_kv_attention(v) -> None:
                 "auto"
             )
             t2 = time.time()
-            print("v2 us ", t2-t1, (t2-t1)*1000000)
+            print("v2 us ", (t2-t1)*1000000)
             # is_close = torch.allclose(output3, output4, atol=1e-3, rtol=1e-5)
             # print("Tolerant Errors for V2." if is_close else "Wrong Code in V2!")
             
