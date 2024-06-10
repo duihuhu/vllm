@@ -839,14 +839,6 @@ void paged_attention_v2_block_launcher(
   int max_context_len,
   const c10::optional<torch::Tensor>& alibi_slopes,
   const int layer_num) {
-  // // 创建 CUDA 事件
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  // 记录开始时间
-  cudaEventRecord(start, 0);
-
-  auto begin = std::chrono::steady_clock::now();
 
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
@@ -907,6 +899,15 @@ void paged_attention_v2_block_launcher(
   dim3 block(NUM_THREADS);
   const at::cuda::OptionalCUDAGuard device_guard(device_of(query));
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+  // // 创建 CUDA 事件
+  cudaEvent_t start, stop;
+  // cudaEventCreate(&start);
+  // cudaEventCreate(&stop);
+  cudaEventCreateWithFlags(&start, cudaEventDefault);
+  cudaEventCreateWithFlags(&stop, cudaEventDefault);
+  // 记录开始时间
+  cudaEventRecord(start, stream);
+
   switch (head_size) {
     // NOTE(woosuk): To reduce the compilation time, we only compile for the
     // head sizes that we use in the model. However, we can easily extend this
@@ -934,7 +935,7 @@ void paged_attention_v2_block_launcher(
       break;
   }
   // 记录结束时间
-  cudaEventRecord(stop, 0);
+  cudaEventRecord(stop, stream);
   cudaEventSynchronize(stop);
 
   // 计算时间
