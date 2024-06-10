@@ -648,6 +648,14 @@ void paged_attention_v1_block_launcher(
   T* out_ptr = reinterpret_cast<T*>(out.data_ptr());
   T* query_ptr = reinterpret_cast<T*>(query.data_ptr());
   
+  // 创建 CUDA 事件
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+
+  // 记录开始时间
+  cudaEventRecord(start, 0);
+
   torch::Device cache_device = key_caches[0].device();
   TORCH_CHECK(cache_device.is_cuda());
   int total_blocks_num = key_caches.size();
@@ -663,6 +671,17 @@ void paged_attention_v1_block_launcher(
     value_cache_ptrs_array, {total_blocks_num}, torch::kInt64).to(cache_device);
   int64_t* key_cache_ptrs = key_cache_ptrs_tensor.data_ptr<int64_t>();    
   int64_t* value_cache_ptrs = value_cache_ptrs_tensor.data_ptr<int64_t>(); 
+
+  // 记录结束时间
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+
+  // 计算时间
+  float milliseconds = 0;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  std::cout << "For v1 block execution time: " << milliseconds << " ms" << std::endl;
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
 
   //CACHE_T* key_cache_ptr = reinterpret_cast<CACHE_T*>(key_cache.data_ptr());
   //CACHE_T* value_cache_ptr = reinterpret_cast<CACHE_T*>(value_cache.data_ptr());
@@ -890,7 +909,7 @@ void paged_attention_v2_block_launcher(
   // 计算时间
   float milliseconds = 0;
   cudaEventElapsedTime(&milliseconds, start, stop);
-  std::cout << "For execution time: " << milliseconds << " ms" << std::endl;
+  std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
 

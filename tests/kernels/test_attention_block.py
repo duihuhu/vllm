@@ -1,5 +1,6 @@
 import os
 import torch
+import time
 from vllm._C import ops
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
@@ -31,137 +32,146 @@ def run_new_single_query_cached_kv_attention(v) -> None:
     if v == 1:
         torch.cuda.empty_cache()
         print_cuda_memory()
-
-        query = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3)
-        print(f"query shape: {query.shape}, device: {query.device}, values: {query[:1, :1, :5]}")
-        check_tensor_device(query, "query")
-        check_for_invalid_values(query, "query")
-
-        key_caches = [torch.empty(40, 10, 128 // x, 16, x, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
-        for i, key_cache in enumerate(key_caches):
-            print(f"key_cache[{i}] shape: {key_cache.shape}, device: {key_cache.device}, values: {key_cache[0, 0, :1, :1, :5]}")
-            check_tensor_device(key_cache, f"key_cache[{i}]")
-            check_for_invalid_values(key_cache, f"key_cache[{i}]")
-
-        value_caches = [torch.empty(40, 10, 128, 16, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
-        for i, value_cache in enumerate(value_caches):
-            print(f"value_cache[{i}] shape: {value_cache.shape}, device: {value_cache.device}, values: {value_cache[0, 0, :1, :5]}")
-            check_tensor_device(value_cache, f"value_cache[{i}]")
-            check_for_invalid_values(value_cache, f"value_cache[{i}]")
-
-        block_tables_tensor = torch.tensor([[0, 1, 9], [2, 9, 9], [3, 4, 5]], dtype=torch.int, device='cuda')
-        context_lens_tensor = torch.tensor([32, 16, 48], dtype=torch.int, device='cuda')
-        max_context_len = 48
-
-        output = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
-
-        ops.paged_attention_v1_block(
-            output,
-            query,
-            key_caches,
-            value_caches,
-            num_kv_heads,
-            scale,
-            block_tables_tensor,
-            context_lens_tensor,
-            block_size,
-            max_context_len,
-            None,
-            "auto",
-            layer_num
-        )
-        print(f"output shape: {output.shape}, device: {output.device}, values: {output[:1, :1, :5]}")
-        check_tensor_device(output, "output")
-        check_for_invalid_values(output, "output")
-
-        output2 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
-
-        key_cache2 = torch.empty(10, 10, 128 // x, 16, x, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3)
-        value_cache2 = torch.empty(10, 10, 128, 16, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3)
-
         for i in range(10):
-            key_cache2[i, :, :, :, :] = key_caches[i][1, :, :, :, :]
-            value_cache2[i, :, :, :] = value_caches[i][1, :, :, :]
+            query = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3)
+            # print(f"query shape: {query.shape}, device: {query.device}, values: {query[:1, :1, :5]}")
+            # check_tensor_device(query, "query")
+            # check_for_invalid_values(query, "query")
 
-        block_tables_tensor2 = torch.tensor([[0, 1, 9], [2, 9, 9], [3, 4, 5]], dtype=torch.int, device='cuda')
-        context_lens_tensor2 = torch.tensor([32, 16, 48], dtype=torch.int, device='cuda')
+            key_caches = [torch.empty(40, 10, 128 // x, 16, x, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
+            for i, key_cache in enumerate(key_caches):
+                print(f"key_cache[{i}] shape: {key_cache.shape}, device: {key_cache.device}, values: {key_cache[0, 0, :1, :1, :5]}")
+                check_tensor_device(key_cache, f"key_cache[{i}]")
+                check_for_invalid_values(key_cache, f"key_cache[{i}]")
 
-        ops.paged_attention_v1(
-            output2,
-            query,
-            key_cache2,
-            value_cache2,
-            num_kv_heads,
-            scale,
-            block_tables_tensor2,
-            context_lens_tensor2,
-            block_size,
-            max_context_len,
-            None,
-            "auto"
-        )
-        print(f"output2 shape: {output2.shape}, device: {output2.device}, values: {output2[:1, :1, :5]}")
-        check_tensor_device(output2, "output2")
-        check_for_invalid_values(output2, "output2")
+            value_caches = [torch.empty(40, 10, 128, 16, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
+            # for i, value_cache in enumerate(value_caches):
+            #     print(f"value_cache[{i}] shape: {value_cache.shape}, device: {value_cache.device}, values: {value_cache[0, 0, :1, :5]}")
+            #     check_tensor_device(value_cache, f"value_cache[{i}]")
+            #     check_for_invalid_values(value_cache, f"value_cache[{i}]")
 
-        is_close = torch.allclose(output, output2, atol=1e-3, rtol=1e-5)
-        print("Tolerant Errors for V1." if is_close else "Wrong Code in V1!")
+            block_tables_tensor = torch.tensor([[0, 1, 9], [2, 9, 9], [3, 4, 5]], dtype=torch.int, device='cuda')
+            context_lens_tensor = torch.tensor([32, 16, 48], dtype=torch.int, device='cuda')
+            max_context_len = 48
 
-        output3 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
-        tmp_output1 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
-        exp_sums1 = torch.empty(3, 40, 512, dtype=torch.float32, device='cuda')
-        max_logits1 = torch.empty_like(exp_sums1, device='cuda')
+            output = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
+            t1 = time.time()
+            ops.paged_attention_v1_block(
+                output,
+                query,
+                key_caches,
+                value_caches,
+                num_kv_heads,
+                scale,
+                block_tables_tensor,
+                context_lens_tensor,
+                block_size,
+                max_context_len,
+                None,
+                "auto",
+                layer_num
+            )
+            t2 = time.time()
+            print("v1 block ", t2-t1)
+            # print(f"output shape: {output.shape}, device: {output.device}, values: {output[:1, :1, :5]}")
+            # check_tensor_device(output, "output")
+            # check_for_invalid_values(output, "output")
 
-        ops.paged_attention_v2_block(
-            output3,
-            exp_sums1,
-            max_logits1,
-            tmp_output1,
-            query,
-            key_caches,
-            value_caches,
-            num_kv_heads,
-            scale,
-            block_tables_tensor,
-            context_lens_tensor,
-            block_size,
-            max_context_len,
-            None,
-            "auto",
-            layer_num
-        )
-        print(f"output3 shape: {output3.shape}, device: {output3.device}, values: {output3[:1, :1, :5]}")
-        check_tensor_device(output3, "output3")
-        check_for_invalid_values(output3, "output3")
-        output4 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
-        tmp_output2 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
-        exp_sums2 = torch.empty(3, 40, 512, dtype=torch.float32, device='cuda')
-        max_logits2 = torch.empty_like(exp_sums2, device='cuda')
-        ops.paged_attention_v2(
-            output4,
-            exp_sums2,
-            max_logits2,
-            tmp_output2,
-            query,
-            key_cache2,
-            value_cache2,
-            num_kv_heads,
-            scale,
-            block_tables_tensor2,
-            context_lens_tensor2,
-            block_size,
-            max_context_len,
-            None,
-            "auto"
-        )
-        print(f"output4 shape: {output4.shape}, device: {output4.device}, values: {output4[:1, :1, :5]}")
-        check_tensor_device(output4, "output4")
-        check_for_invalid_values(output4, "output4")
+            output2 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
 
-        is_close = torch.allclose(output3, output4, atol=1e-3, rtol=1e-5)
-        print("Tolerant Errors for V2." if is_close else "Wrong Code in V2!")
-        
-        if torch.isnan(output4).any():
-            print("output4 contains NaN values")
+            key_cache2 = torch.empty(10, 10, 128 // x, 16, x, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3)
+            value_cache2 = torch.empty(10, 10, 128, 16, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3)
+
+            for i in range(10):
+                key_cache2[i, :, :, :, :] = key_caches[i][1, :, :, :, :]
+                value_cache2[i, :, :, :] = value_caches[i][1, :, :, :]
+
+            block_tables_tensor2 = torch.tensor([[0, 1, 9], [2, 9, 9], [3, 4, 5]], dtype=torch.int, device='cuda')
+            context_lens_tensor2 = torch.tensor([32, 16, 48], dtype=torch.int, device='cuda')
+            t1 = time.time()
+            ops.paged_attention_v1(
+                output2,
+                query,
+                key_cache2,
+                value_cache2,
+                num_kv_heads,
+                scale,
+                block_tables_tensor2,
+                context_lens_tensor2,
+                block_size,
+                max_context_len,
+                None,
+                "auto"
+            )
+            t2 = time.time()
+            print("v1 ", t2-t1)
+            # print(f"output2 shape: {output2.shape}, device: {output2.device}, values: {output2[:1, :1, :5]}")
+            # check_tensor_device(output2, "output2")
+            # check_for_invalid_values(output2, "output2")
+
+            is_close = torch.allclose(output, output2, atol=1e-3, rtol=1e-5)
+            print("Tolerant Errors for V1." if is_close else "Wrong Code in V1!")
+
+            output3 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
+            tmp_output1 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
+            exp_sums1 = torch.empty(3, 40, 512, dtype=torch.float32, device='cuda')
+            max_logits1 = torch.empty_like(exp_sums1, device='cuda')
+            t1 = time.time()
+            ops.paged_attention_v2_block(
+                output3,
+                exp_sums1,
+                max_logits1,
+                tmp_output1,
+                query,
+                key_caches,
+                value_caches,
+                num_kv_heads,
+                scale,
+                block_tables_tensor,
+                context_lens_tensor,
+                block_size,
+                max_context_len,
+                None,
+                "auto",
+                layer_num
+            )
+            t2 = time.time()
+            print("v2 block ", t2-t1)
+            # print(f"output3 shape: {output3.shape}, device: {output3.device}, values: {output3[:1, :1, :5]}")
+            # check_tensor_device(output3, "output3")
+            # check_for_invalid_values(output3, "output3")
+            output4 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
+            tmp_output2 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
+            exp_sums2 = torch.empty(3, 40, 512, dtype=torch.float32, device='cuda')
+            max_logits2 = torch.empty_like(exp_sums2, device='cuda')
+            t1 = time.time()
+            ops.paged_attention_v2(
+                output4,
+                exp_sums2,
+                max_logits2,
+                tmp_output2,
+                query,
+                key_cache2,
+                value_cache2,
+                num_kv_heads,
+                scale,
+                block_tables_tensor2,
+                context_lens_tensor2,
+                block_size,
+                max_context_len,
+                None,
+                "auto"
+            )
+            t2 = time.time()
+            print("v2 ", t2-t1)
+            # print(f"output4 shape: {output4.shape}, device: {output4.device}, values: {output4[:1, :1, :5]}")
+            # check_tensor_device(output4, "output4")
+            # check_for_invalid_values(output4, "output4")
+
+            is_close = torch.allclose(output3, output4, atol=1e-3, rtol=1e-5)
+            print("Tolerant Errors for V2." if is_close else "Wrong Code in V2!")
+            
+            if torch.isnan(output4).any():
+                print("output4 contains NaN values")
 
 run_new_single_query_cached_kv_attention(1)
