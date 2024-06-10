@@ -27,6 +27,7 @@
 #endif
 
 #include <algorithm>
+#include <chrono>
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -799,6 +800,14 @@ void paged_attention_v2_launcher(
   int max_context_len,
   const c10::optional<torch::Tensor>& alibi_slopes) {
 
+  // 创建 CUDA 事件
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  // 记录开始时间
+  cudaEventRecord(start, 0);
+  auto begin = std::chrono::steady_clock::now();
+
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
   int head_size = query.size(2);
@@ -822,14 +831,6 @@ void paged_attention_v2_launcher(
   T* query_ptr = reinterpret_cast<T*>(query.data_ptr());
   CACHE_T* key_cache_ptr = reinterpret_cast<CACHE_T*>(key_cache.data_ptr());
   CACHE_T* value_cache_ptr = reinterpret_cast<CACHE_T*>(value_cache.data_ptr());
-
-  // 创建 CUDA 事件
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-
-  // 记录开始时间
-  cudaEventRecord(start, 0);
 
   int* block_tables_ptr = block_tables.data_ptr<int>();
   int* context_lens_ptr = context_lens.data_ptr<int>();
@@ -876,15 +877,17 @@ void paged_attention_v2_launcher(
       break;
   }
   // 记录结束时间
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
+  // cudaEventRecord(stop, 0);
+  // cudaEventSynchronize(stop);
 
-  // 计算时间
-  float milliseconds = 0;
-  cudaEventElapsedTime(&milliseconds, start, stop);
-  std::cout << "For v2 execution time: " << milliseconds << " ms" << std::endl;
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
+  // // 计算时间
+  // float milliseconds = 0;
+  // cudaEventElapsedTime(&milliseconds, start, stop);
+  // std::cout << "For v2 execution time: " << milliseconds << " ms" << std::endl;
+  // cudaEventDestroy(start);
+  // cudaEventDestroy(stop);
+  auto end = std::chrono::steady_clock::now();
+  std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
 }
 
 #define CALL_V2_LAUNCHER(T, CACHE_T, BLOCK_SIZE, IS_FP8_E5M2_KV_CACHE)           \
