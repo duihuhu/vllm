@@ -481,29 +481,10 @@ __global__ void paged_attention_v2_block_kernel(
   const int kv_layer_stride,
   const int kv_head_stride,
   const int layer_num) {
-  // 创建 CUDA 事件
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  // 记录开始时间
-  cudaEventRecord(start, 0);
-  auto begin = std::chrono::steady_clock::now();
   paged_attention_block_kernel<scalar_t, cache_t, HEAD_SIZE, BLOCK_SIZE, NUM_THREADS, IS_FP8_E5M2_KV_CACHE, PARTITION_SIZE>(
     exp_sums, max_logits, tmp_out, q, key_cache_ptrs, key_cache_ptrs, num_kv_heads, scale,
     block_tables, context_lens, max_num_blocks_per_seq, alibi_slopes,
     q_stride, kv_layer_stride, kv_head_stride, layer_num);
-  // 记录结束时间
-  cudaEventRecord(stop, 0);
-  cudaEventSynchronize(stop);
-
-  // 计算时间
-  float milliseconds = 0;
-  cudaEventElapsedTime(&milliseconds, start, stop);
-  std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
-  auto end = std::chrono::steady_clock::now();
-  std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
 }
 
 // Grid: (num_heads, num_seqs).
@@ -858,14 +839,14 @@ void paged_attention_v2_block_launcher(
   int max_context_len,
   const c10::optional<torch::Tensor>& alibi_slopes,
   const int layer_num) {
-  // // // 创建 CUDA 事件
-  // cudaEvent_t start, stop;
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // // 记录开始时间
-  // cudaEventRecord(start, 0);
+  // // 创建 CUDA 事件
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  // 记录开始时间
+  cudaEventRecord(start, 0);
 
-  // auto begin = std::chrono::steady_clock::now();
+  auto begin = std::chrono::steady_clock::now();
 
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
@@ -953,17 +934,17 @@ void paged_attention_v2_block_launcher(
       break;
   }
   // 记录结束时间
-  // cudaEventRecord(stop, 0);
-  // cudaEventSynchronize(stop);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
 
-  // // 计算时间
-  // float milliseconds = 0;
-  // cudaEventElapsedTime(&milliseconds, start, stop);
-  // std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
-  // cudaEventDestroy(start);
-  // cudaEventDestroy(stop);
-  // auto end = std::chrono::steady_clock::now();
-  // std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
+  // 计算时间
+  float milliseconds = 0;
+  cudaEventElapsedTime(&milliseconds, start, stop);
+  std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
+  auto end = std::chrono::steady_clock::now();
+  std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
 }
 
 #define CALL_V2_BLOCK_LAUNCHER(T, CACHE_T, BLOCK_SIZE, IS_FP8_E5M2_KV_CACHE)           \
