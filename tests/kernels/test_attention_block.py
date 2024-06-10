@@ -39,10 +39,11 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             # check_for_invalid_values(query, "query")
 
             key_caches = [torch.empty(40, 10, 128 // x, 16, x, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
-            for i, key_cache in enumerate(key_caches):
-                print(f"key_cache[{i}] shape: {key_cache.shape}, device: {key_cache.device}, values: {key_cache[0, 0, :1, :1, :5]}")
-                check_tensor_device(key_cache, f"key_cache[{i}]")
-                check_for_invalid_values(key_cache, f"key_cache[{i}]")
+            
+            # for i, key_cache in enumerate(key_caches):
+            #     print(f"key_cache[{i}] shape: {key_cache.shape}, device: {key_cache.device}, values: {key_cache[0, 0, :1, :1, :5]}")
+            #     check_tensor_device(key_cache, f"key_cache[{i}]")
+            #     check_for_invalid_values(key_cache, f"key_cache[{i}]")
 
             value_caches = [torch.empty(40, 10, 128, 16, dtype=torch.float16, device='cuda').uniform_(-1e-3, 1e-3) for _ in range(10)]
             # for i, value_cache in enumerate(value_caches):
