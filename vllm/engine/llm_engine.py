@@ -25,7 +25,7 @@ from vllm.transformers_utils.tokenizer_group import (BaseTokenizerGroup,
 from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter
-from vllm.core.kv_trans_scheduler import KvTransScheduler, SendKvTransferScheduler, RecvKvTransScheduler
+from vllm.core.kv_trans_scheduler import SendKvTransferScheduler, RecvKvTransScheduler
 from vllm.entrypoints.comm import CacheMeta
 from vllm.core.interfaces import AllocStatus
 

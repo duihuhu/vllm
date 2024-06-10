@@ -28,12 +28,16 @@ num_comm = 0
 #key: host_(service_port)_(machine_type)
 #value: InstanceInfo 
 instance_table: Dict[str, InstanceInfo] = {}
+
 #record request and mprefill info
 request_table: Dict[str, ReqCacheInfo] = {}
-#record infight req id
-infight_req: Set[str] = ()
+
+#record infight req id & decode instance, to use in d->p
+infight_req: Dict[str, InstanceInfo] = ()
+
 #record req id with its PrefixReqInfo
 reqs_prefix_table: Dict[str, PrefixReqInfo] = {}
+
 #record req id with mp\md information
 req_engine_info: Dict[str, List[str]] = {}
 
