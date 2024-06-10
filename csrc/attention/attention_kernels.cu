@@ -800,13 +800,13 @@ void paged_attention_v2_launcher(
   int max_context_len,
   const c10::optional<torch::Tensor>& alibi_slopes) {
 
-  // 创建 CUDA 事件
-  cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
-  // 记录开始时间
-  cudaEventRecord(start, 0);
-  auto begin = std::chrono::steady_clock::now();
+  // // 创建 CUDA 事件
+  // cudaEvent_t start, stop;
+  // cudaEventCreate(&start);
+  // cudaEventCreate(&stop);
+  // // 记录开始时间
+  // cudaEventRecord(start, 0);
+  // auto begin = std::chrono::steady_clock::now();
 
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
@@ -886,8 +886,8 @@ void paged_attention_v2_launcher(
   // std::cout << "For v2 execution time: " << milliseconds << " ms" << std::endl;
   // cudaEventDestroy(start);
   // cudaEventDestroy(stop);
-  auto end = std::chrono::steady_clock::now();
-  std::cout << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
+  // auto end = std::chrono::steady_clock::now();
+  // std::cout << "For v2 execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
 }
 
 #define CALL_V2_LAUNCHER(T, CACHE_T, BLOCK_SIZE, IS_FP8_E5M2_KV_CACHE)           \
