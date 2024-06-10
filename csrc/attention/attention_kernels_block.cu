@@ -944,8 +944,8 @@ void paged_attention_v2_block_launcher(
   std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
   cudaEventDestroy(start);
   cudaEventDestroy(stop);
-  auto end = std::chrono::steady_clock::now();
-  std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
+  // auto end = std::chrono::steady_clock::now();
+  // std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
 }
 
 #define CALL_V2_BLOCK_LAUNCHER(T, CACHE_T, BLOCK_SIZE, IS_FP8_E5M2_KV_CACHE)           \
