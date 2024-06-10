@@ -840,6 +840,7 @@ void paged_attention_v2_block_launcher(
   const c10::optional<torch::Tensor>& alibi_slopes,
   const int layer_num) {
 
+  auto begin = std::chrono::steady_clock::now();
   int num_seqs = query.size(0);
   int num_heads = query.size(1);
   int head_size = query.size(2);
@@ -934,18 +935,18 @@ void paged_attention_v2_block_launcher(
       TORCH_CHECK(false, "Unsupported head size: ", head_size);
       break;
   }
-  // 记录结束时间
-  cudaEventRecord(stop, stream);
-  cudaEventSynchronize(stop);
+  // // 记录结束时间
+  // cudaEventRecord(stop, stream);
+  // cudaEventSynchronize(stop);
 
-  // 计算时间
-  float milliseconds = 0;
-  cudaEventElapsedTime(&milliseconds, start, stop);
-  std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
-  // auto end = std::chrono::steady_clock::now();
-  // std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
+  // // 计算时间
+  // float milliseconds = 0;
+  // cudaEventElapsedTime(&milliseconds, start, stop);
+  // std::cout << "For v2 block execution time: " << milliseconds << " ms" << std::endl;
+  // cudaEventDestroy(start);
+  // cudaEventDestroy(stop);
+  auto end = std::chrono::steady_clock::now();
+  std::cout << "For v2 block execution time: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << " us" << std::endl;
 }
 
 #define CALL_V2_BLOCK_LAUNCHER(T, CACHE_T, BLOCK_SIZE, IS_FP8_E5M2_KV_CACHE)           \
