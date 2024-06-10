@@ -52,7 +52,7 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             block_tables_tensor2 = torch.tensor([[0, 1, 9], [2, 9, 9], [3, 4, 5]], dtype=torch.int, device='cuda')
             context_lens_tensor2 = torch.tensor([32, 16, 48], dtype=torch.int, device='cuda')
 
-            print("Tolerant Errors for V1." if is_close else "Wrong Code in V1!")
+            # print("Tolerant Errors for V1." if is_close else "Wrong Code in V1!")
 
             output3 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
             tmp_output1 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
@@ -107,7 +107,7 @@ def run_new_single_query_cached_kv_attention(v) -> None:
             # is_close = torch.allclose(output3, output4, atol=1e-3, rtol=1e-5)
             # print("Tolerant Errors for V2." if is_close else "Wrong Code in V2!")
             
-            if torch.isnan(output4).any():
-                print("output4 contains NaN values")
+            # if torch.isnan(output4).any():
+            #     print("output4 contains NaN values")
 
 run_new_single_query_cached_kv_attention(1)
