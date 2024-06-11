@@ -818,7 +818,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in block_table[len(seqs.computed_block):-1]:
             if block.computed == True:
                 seqs.computed_block.append(block.block_number)
-        print("seqs.computed_block ", block_table)
+                print("seqs.computed_block ", seqs.computed_block)
+        print("block_table ", block_table)
         return seqs.computed_block
 
 
