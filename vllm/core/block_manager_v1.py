@@ -82,7 +82,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
         self.radix_cache: RadixCache = RadixCache()
         
-        self.radix_tree_manager: RadixTreeManager = RadixTreeManager()
+        self.radix_tree_manager: RadixTreeManager = RadixTreeManager(self.block_size)
 
     def allocate_block(self, block_hash: int,
                        num_hashed_tokens: int) -> PhysicalTokenBlock:
