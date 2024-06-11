@@ -12,6 +12,8 @@ from vllm.sequence import Sequence, SequenceGroup, SequenceStatus
 from vllm.utils import Device
 from vllm.core.radix_tree import RadixCache
 
+from vllm.radix_tree_ys.radix_tree_manager import RadixTreeManager
+
 logger = init_logger(__name__)
 
 
@@ -79,6 +81,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
         self.default_hash_ctr = count()
 
         self.radix_cache: RadixCache = RadixCache()
+        
+        self.radix_tree_manager: RadixTreeManager = RadixTreeManager()
 
     def allocate_block(self, block_hash: int,
                        num_hashed_tokens: int) -> PhysicalTokenBlock:
@@ -278,6 +282,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Mapping: seq_id -> BlockTable
         # record seq_id and blocktable, when tranfering data
         # after data transfered, move to block_tables
+        # but maybe need not
         self.kv_block_tables: Dict[int, BlockTable] = {}
         
         #record block num in radix tree(only for eaily use orignal allocate fuction )
