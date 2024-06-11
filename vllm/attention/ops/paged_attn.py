@@ -46,9 +46,13 @@ class PagedAttention:
         block_size: int,
         num_kv_heads: int,
         head_size: int,
+        layer_num: Optional[int] = None
     ) -> Tuple[int, ...]:
-        return (2, num_blocks, block_size * num_kv_heads * head_size)
-
+        if layer_num is not None:
+            return (2, layer_num, block_size * num_kv_heads * head_size)
+        else:
+            return (2, num_blocks, block_size * num_kv_heads * head_size)
+        
     @staticmethod
     def split_kv_cache(
         kv_cache: torch.Tensor,
@@ -82,12 +86,34 @@ class PagedAttention:
             slot_mapping.flatten(),
             kv_cache_dtype,
         )
+    
+    @staticmethod
+    def write_to_agg_paged_cache(
+        key: torch.Tensor,
+        value: torch.Tensor,
+        key_caches_addresses: torch.Tensor,
+        value_caches_addresses: torch.Tensor,
+        slot_mapping: torch.Tensor,
+        kv_cache_dtype: str,
+        block_size: int,
+        x: int
+    ) -> None:
+        cache_ops.reshape_and_cache_agg(
+            key,
+            value,
+            key_caches_addresses,
+            value_caches_addresses,
+            slot_mapping,
+            kv_cache_dtype,
+            block_size,
+            x
+        )
 
     @staticmethod
     def forward_decode(
         query: torch.Tensor,
-        key_cache: torch.Tensor,
-        value_cache: torch.Tensor,
+        key_cache: torch.Tensor, # In agg-block this is a tensor for addrs
+        value_cache: torch.Tensor, # In agg-block this is a tensor for addrs
         block_tables: torch.Tensor,
         context_lens: torch.Tensor,
         max_context_len: int,
@@ -95,6 +121,10 @@ class PagedAttention:
         num_kv_heads: int,
         scale: float,
         alibi_slopes: Optional[torch.Tensor],
+        use_agg_block: Optional[bool] = False,
+        layer_id: Optional[int] = -1,
+        layer_stride: Optional[int] = -1,
+        head_stride: Optional[int] = -1
     ) -> torch.Tensor:
         output = torch.empty_like(query)
 
@@ -113,20 +143,39 @@ class PagedAttention:
                   and (max_num_partitions == 1 or num_seqs * num_heads > 512))
         if use_v1:
             # Run PagedAttention V1.
-            ops.paged_attention_v1(
-                output,
-                query,
-                key_cache,
-                value_cache,
-                num_kv_heads,
-                scale,
-                block_tables,
-                context_lens,
-                block_size,
-                max_context_len,
-                alibi_slopes,
-                kv_cache_dtype,
-            )
+            if use_agg_block is False:
+                ops.paged_attention_v1(
+                    output,
+                    query,
+                    key_cache,
+                    value_cache,
+                    num_kv_heads,
+                    scale,
+                    block_tables,
+                    context_lens,
+                    block_size,
+                    max_context_len,
+                    alibi_slopes,
+                    kv_cache_dtype,
+                )
+            else:
+                ops.paged_attention_v1_block(
+                    output,
+                    query,
+                    key_cache,
+                    value_cache,
+                    num_kv_heads,
+                    scale,
+                    block_tables,
+                    context_lens,
+                    block_size,
+                    max_context_len,
+                    alibi_slopes,
+                    kv_cache_dtype,
+                    layer_id,
+                    layer_stride,
+                    head_stride
+                )
         else:
             # Run PagedAttention V2.
             assert _PARTITION_SIZE % block_size == 0
@@ -141,23 +190,45 @@ class PagedAttention:
                 device=output.device,
             )
             max_logits = torch.empty_like(exp_sums)
-            ops.paged_attention_v2(
-                output,
-                exp_sums,
-                max_logits,
-                tmp_output,
-                query,
-                key_cache,
-                value_cache,
-                num_kv_heads,
-                scale,
-                block_tables,
-                context_lens,
-                block_size,
-                max_context_len,
-                alibi_slopes,
-                kv_cache_dtype,
-            )
+            if use_agg_block is False:
+                ops.paged_attention_v2(
+                    output,
+                    exp_sums,
+                    max_logits,
+                    tmp_output,
+                    query,
+                    key_cache,
+                    value_cache,
+                    num_kv_heads,
+                    scale,
+                    block_tables,
+                    context_lens,
+                    block_size,
+                    max_context_len,
+                    alibi_slopes,
+                    kv_cache_dtype,
+                )
+            else:
+                ops.paged_attention_v2_block(
+                    output,
+                    exp_sums,
+                    max_logits,
+                    tmp_output,
+                    query,
+                    key_cache,
+                    value_cache,
+                    num_kv_heads,
+                    scale,
+                    block_tables,
+                    context_lens,
+                    block_size,
+                    max_context_len,
+                    alibi_slopes,
+                    kv_cache_dtype,
+                    layer_id,
+                    layer_stride,
+                    head_stride
+                )
         return output
 
     @staticmethod
@@ -214,3 +285,29 @@ class PagedAttention:
         key_caches = [kv_cache[0] for kv_cache in kv_caches]
         value_caches = [kv_cache[1] for kv_cache in kv_caches]
         cache_ops.copy_blocks(key_caches, value_caches, src_to_dists)
+
+    @staticmethod
+    def swap_blocks_agg (
+        src_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
+        dst_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
+        src_to_dst: Dict[int, int],
+        block_size_in_bytes: int) -> None:
+        src_key_cache_addresses = src_kv_addresses[0]
+        dst_key_cache_addresses = dst_kv_addresses[0]
+        cache_ops.swap_blocks_agg(src_key_cache_addresses, dst_key_cache_addresses, src_to_dst, block_size_in_bytes)
+
+        src_value_cache_addresses = src_kv_addresses[1]
+        dst_value_cache_addresses = dst_kv_addresses[1]
+        cache_ops.swap_blocks_agg(src_value_cache_addresses, dst_value_cache_addresses, src_to_dst, block_size_in_bytes)
+
+    @staticmethod
+    def copy_blocks_agg (
+        kv_cache_addresses: Tuple[torch.Tensor, torch.Tensor],
+        data_type_tensor: torch.Tensor,
+        src_to_dists: Dict[int, List[int]],
+        num_layers: int,
+        numel_per_layer: int
+    ) -> None:
+        key_caches_addresses = kv_cache_addresses[0]
+        value_caches_addresses = kv_cache_addresses[1]
+        cache_ops.copy_blocks_agg(key_caches_addresses, value_caches_addresses, data_type_tensor, src_to_dists, num_layers, numel_per_layer)

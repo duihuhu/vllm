@@ -54,6 +54,8 @@ class Worker:
         kv_cache_dtype: Optional[str] = "auto",
         is_driver_worker: bool = False,
         device_id: Optional[int] = 0,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1
     ) -> None:
         self.model_config = model_config
         self.parallel_config = parallel_config
@@ -66,6 +68,8 @@ class Worker:
         self.is_driver_worker = is_driver_worker
         self.deploy_config = deploy_config
         self.device_id = device_id
+        self.use_agg_block = use_agg_block
+        self.block_size2 = block_size
         if self.is_driver_worker:
             assert self.rank == 0, "The driver worker must have rank 0."
 
@@ -82,7 +86,9 @@ class Worker:
             lora_config=self.lora_config,
             kv_cache_dtype=kv_cache_dtype,
             is_driver_worker=is_driver_worker,
-            vision_language_config=vision_language_config)
+            vision_language_config=vision_language_config,
+            use_agg_block=self.use_agg_block,
+            block_size=self.block_size2)
         # Uninitialized cache engine. Will be initialized by
         # self.init_cache_engine().
         self.cache_config = None
@@ -186,9 +192,15 @@ class Worker:
     def init_cache_engine(self, cache_config: CacheConfig) -> None:
         self.cache_config = cache_config
         self.cache_engine = CacheEngine(self.cache_config, self.model_config,
-                                        self.parallel_config, self.deploy_config, self.rank)
+                                        self.parallel_config, self.deploy_config, self.rank, self.use_agg_block)
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
+        if self.use_agg_block:
+            self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
+            self.caches_addresses_tensors_cpu = self.cache_engine.get_tensor_for_caches_address(gpu=False)
+        else:
+            self.caches_addresses_tensors_gpu = None
+            self.caches_addresses_tensors_cpu = None
 
     def init_trans_worker(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
@@ -214,11 +226,35 @@ class Worker:
         # Issue cache operations.
         # TODO(woosuk): Profile swapping overhead and optimize if needed.
         if blocks_to_swap_in:
-            self.cache_engine.swap_in(blocks_to_swap_in)
+            if self.use_agg_block:
+                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu[0],
+                                              self.caches_addresses_tensors_gpu[0],
+                                              blocks_to_swap_in,
+                                              "test")
+                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu[1],
+                                              self.caches_addresses_tensors_gpu[1],
+                                              blocks_to_swap_in,
+                                              "test")
+            else:
+                self.cache_engine.swap_in(blocks_to_swap_in)
         if blocks_to_swap_out:
-            self.cache_engine.swap_out(blocks_to_swap_out)
+            if self.use_agg_block:
+                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu[0],
+                                              self.caches_addresses_tensors_cpu[0],
+                                              blocks_to_swap_out,
+                                              "test")
+                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu[1],
+                                              self.caches_addresses_tensors_cpu[1],
+                                              blocks_to_swap_out,
+                                              "test")
+            else:
+                self.cache_engine.swap_out(blocks_to_swap_out)
         if blocks_to_copy:
-            self.cache_engine.copy(blocks_to_copy)
+            if self.use_agg_block:
+                self.cache_engine.copy_agg(self.caches_addresses_tensors_gpu,
+                                           blocks_to_copy)
+            else:
+                self.cache_engine.copy(blocks_to_copy)
 
     @torch.inference_mode()
     def execute_model(
@@ -252,7 +288,9 @@ class Worker:
             blocks_to_copy = data["blocks_to_copy"]
             merge_reqs_info = data["merge_reqs_info"]
 
-        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        #TODO for hhy
+        #Is is already?
+        #self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         #todo hucc
         # if wait_for_swap_out:
@@ -268,9 +306,12 @@ class Worker:
             return {}
         if self.deploy_config.enable_layer:
             output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                    self.gpu_cache, merge_reqs_info, self.trans_manager)
+                                                    self.gpu_cache, 
+                                                    self.caches_addresses_tensors_gpu,
+                                                    merge_reqs_info, 
+                                                    self.trans_manager)
         else:
-            output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache)
+            output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache, self.caches_addresses_tensors_gpu)
             
         swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)

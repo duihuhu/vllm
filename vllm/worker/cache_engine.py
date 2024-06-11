@@ -1,5 +1,5 @@
 """CacheEngine class for managing the KV cache."""
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 
 import torch
@@ -10,7 +10,7 @@ from vllm.logger import init_logger
 from vllm.utils import STR_DTYPE_TO_TORCH_DTYPE, is_pin_memory_available
 
 
-from vllm._C import gpu_ops
+from vllm._C import gpu_ops, ops
 
 from vllm.core.kv_trans_scheduler import TransferTaskMeta
 
@@ -33,10 +33,12 @@ class CacheEngine:
         deploy_config: DeployConfig,
         worker_rank: int,
         request_id_size: int = 32,
+        use_agg_block: Optional[bool] = False
     ) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
         self.parallel_config = parallel_config
+        self.use_agg_block = use_agg_block
 
         self.head_size = model_config.get_head_size()
         self.num_layers = model_config.get_num_layers(parallel_config)
@@ -85,8 +87,8 @@ class CacheEngine:
         self.attn_backend = get_attn_backend(model_config.dtype)
 
         # Initialize the cache.
-        self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda")
-        self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu")
+        self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda", self.use_agg_block)
+        self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu", self.use_agg_block)
 
         # if self.deploy_config.role == "prompt":
         #     self.recv_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
@@ -107,19 +109,51 @@ class CacheEngine:
         self,
         num_blocks: int,
         device: str,
+        use_agg_block: Optional[bool] = False
     ) -> List[torch.Tensor]:
         """Allocates KV cache on the specified device."""
-        kv_cache_shape = self.attn_backend.get_kv_cache_shape(
-            num_blocks, self.block_size, self.num_heads, self.head_size)
         pin_memory = is_pin_memory_available() if device == "cpu" else False
         kv_cache: List[torch.Tensor] = []
-        for _ in range(self.num_layers):
-            kv_cache.append(
-                torch.empty(kv_cache_shape,
-                            dtype=self.dtype,
-                            pin_memory=pin_memory,
-                            device=device))
+        if use_agg_block:
+            kv_cache_shape = self.attn_backend.get_kv_cache_shape(
+            num_blocks, self.block_size, self.num_heads, self.head_size, self.num_layers)
+            for _ in range(self.num_gpu_blocks):
+                kv_cache.append(
+                    torch.empty(
+                        kv_cache_shape,
+                        dtype=self.dtype,
+                        pin_memory=pin_memory,
+                        device=device))
+        else:
+            kv_cache_shape = self.attn_backend.get_kv_cache_shape(
+                num_blocks, self.block_size, self.num_heads, self.head_size, None)
+            for _ in range(self.num_layers):
+                kv_cache.append(
+                    torch.empty(kv_cache_shape,
+                                dtype=self.dtype,
+                                pin_memory=pin_memory,
+                                device=device))
         return kv_cache
+    
+    def get_tensor_for_caches_address(self, gpu: bool) -> Tuple[torch.Tensor, torch.Tensor]:
+        if self.use_agg_block:
+            key_caches = []
+            value_caches = []
+            if gpu == True:
+                for cache_block in self.gpu_cache:
+                    key_caches.append(cache_block[0])
+                    value_caches.append(cache_block[1])
+                key_caches_ptrs_tensor = ops.tensor_for_caches_addresses(key_caches)
+                value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
+            else:
+                for cache_block in self.cpu_cache:
+                    key_caches.append(cache_block[0])
+                    value_caches.append(cache_block[1])
+                key_caches_ptrs_tensor = ops.tensor_for_caches_addresses(key_caches)
+                value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
+            return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
+        else:
+            return (None, None)
 
     # def swap_in(self, src_to_dst: Dict[int, int]) -> None:
     #     for i in range(self.num_layers):
@@ -137,6 +171,18 @@ class CacheEngine:
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         with torch.cuda.stream(self.swap_in_stream):
             gpu_ops.copy_blocks_in_layer(gpu_cache, cpu_cache, src_to_dst, self.cache_size_per_block, True)
+            event = torch.cuda.Event()
+            event.record()
+        self.swap_in_events[key] = event
+    
+    def swap_by_agg(self,
+                    src_addresses: torch.Tensor,
+                    dst_addresses: torch.Tensor,
+                    src_to_dst: Dict[int, int], 
+                    key: str) -> None:
+        block_size_in_bytes = self.gpu_cache[0][0].element_size() * self.gpu_cache[0][0].numel()
+        with torch.cuda.stream(self.swap_in_stream):
+            ops.swap_blocks_agg(src_addresses, dst_addresses, src_to_dst, block_size_in_bytes)
             event = torch.cuda.Event()
             event.record()
         self.swap_in_events[key] = event
@@ -214,7 +260,12 @@ class CacheEngine:
 
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         self.attn_backend.copy_blocks(self.gpu_cache, src_to_dsts)
-
+    
+    def copy_agg(self, kv_cache_addresses: Tuple[torch.Tensor, torch.Tensor],
+                 src_to_dsts: Dict[int, List[int]]) -> None:
+        num_layers = self.gpu_cache[0][0].shape[0]
+        numel_per_layer = self.gpu_cache[0][0].stride(0)
+        self.attn_backend.copy_blocks_agg(kv_cache_addresses, src_to_dsts, num_layers, numel_per_layer)
 
     def wait_for_swap_out_events(self, wait_for_swap_out: List[str]) -> None:
         for key in wait_for_swap_out:

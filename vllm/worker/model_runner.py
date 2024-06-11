@@ -55,12 +55,16 @@ class ModelRunner:
         kv_cache_dtype: Optional[str] = "auto",
         is_driver_worker: bool = False,
         vision_language_config: Optional[VisionLanguageConfig] = None,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1
     ):
         self.model_config = model_config
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
         self.lora_config = lora_config
         self.is_driver_worker = is_driver_worker
+        self.use_agg_block = use_agg_block
+        self.block_size2 = block_size
 
         # model_config can be None in tests/samplers/test_sampler.py.
         # FIXME(woosuk): This is a hack to make the tests work. Refactor this.
@@ -99,6 +103,8 @@ class ModelRunner:
             self.model = get_model(
                 self.model_config,
                 self.device_config,
+                self.use_agg_block,
+                self.block_size2,
                 lora_config=self.lora_config,
                 vision_language_config=self.vision_language_config,
                 parallel_config=self.parallel_config,
@@ -645,6 +651,7 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
+        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> Optional[SamplerOutput]:
@@ -667,6 +674,7 @@ class ModelRunner:
                 "input_ids": input_tokens,
                 "positions": input_positions,
                 "kv_caches": kv_caches,
+                "kv_cache_address": kv_cache_address,
                 "attn_metadata": attn_metadata,
                 "merge_reqs_info": merge_reqs_info,
                 "trans_manager": trans_manager
@@ -676,6 +684,7 @@ class ModelRunner:
                 "input_ids": input_tokens,
                 "positions": input_positions,
                 "kv_caches": kv_caches,
+                "kv_cache_address": kv_cache_address,
                 "attn_metadata": attn_metadata,
             }
         if self.vision_language_config:

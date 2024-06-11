@@ -77,6 +77,7 @@ class LLMEngine:
         executor_class: Type[ExecutorBase],
         log_stats: bool,
         usage_context: UsageContext = UsageContext.ENGINE_CONTEXT,
+        use_agg_block: Optional[bool] = False
     ) -> None:
         logger.info(
             f"Initializing an LLM engine (v{vllm.__version__}) with config: "
@@ -109,6 +110,7 @@ class LLMEngine:
         self.device_config = device_config
         self.deploy_config = deploy_config
         self.log_stats = log_stats
+        self.use_agg_block = use_agg_block
         self._verify_args()
 
         self._init_tokenizer()
@@ -118,7 +120,8 @@ class LLMEngine:
         self.model_executor = executor_class(model_config, cache_config,
                                              parallel_config, scheduler_config,
                                              device_config, deploy_config, lora_config,
-                                             vision_language_config)
+                                             vision_language_config,
+                                             use_agg_block)
 
         self.send_kv_trans_scheduler = SendKvTransferScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
         
@@ -181,6 +184,7 @@ class LLMEngine:
     def from_engine_args(
         cls,
         engine_args: EngineArgs,
+        use_agg_block: Optional[bool] = False,
         usage_context: UsageContext = UsageContext.ENGINE_CONTEXT,
     ) -> "LLMEngine":
         """Creates an LLM engine from the engine arguments."""
@@ -209,6 +213,7 @@ class LLMEngine:
             executor_class=executor_class,
             log_stats=not engine_args.disable_log_stats,
             usage_context=usage_context,
+            use_agg_block=use_agg_block
         )
         return engine
 

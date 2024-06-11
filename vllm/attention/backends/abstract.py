@@ -25,6 +25,7 @@ class AttentionBackend(ABC):
         block_size: int,
         num_kv_heads: int,
         head_size: int,
+        layer_num: Optional[int] = None
     ) -> Tuple[int, ...]:
         raise NotImplementedError
 
@@ -36,6 +37,16 @@ class AttentionBackend(ABC):
         src_to_dst: Dict[int, int],
     ) -> None:
         raise NotImplementedError
+    
+    @staticmethod
+    @abstractmethod
+    def swap_blocks_agg(
+        src_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
+        dst_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
+        src_to_dst: Dict[int, int],
+        block_size_in_bytes: int
+    ) -> None:
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
@@ -44,7 +55,17 @@ class AttentionBackend(ABC):
         src_to_dists: Dict[int, List[int]],
     ) -> None:
         raise NotImplementedError
-
+    
+    @staticmethod
+    @abstractmethod
+    def copy_blocks_agg (
+        kv_cache_addresses: Tuple[torch.Tensor, torch.Tensor],
+        data_type_tensor: torch.Tensor,
+        src_to_dists: Dict[int, List[int]],
+        num_layers: int,
+        numel_per_layer: int
+    ) -> None:
+        raise NotImplementedError
 
 @dataclass
 class AttentionMetadata:
@@ -70,6 +91,8 @@ class AttentionImpl(ABC):
         num_kv_heads: Optional[int] = None,
         alibi_slopes: Optional[List[float]] = None,
         sliding_window: Optional[int] = None,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1
     ) -> None:
         raise NotImplementedError
 
@@ -80,6 +103,8 @@ class AttentionImpl(ABC):
         key: torch.Tensor,
         value: torch.Tensor,
         kv_cache: torch.Tensor,
+        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
+        layer_id: Optional[int] = -1
     ) -> torch.Tensor:
         raise NotImplementedError

@@ -11,6 +11,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   // Attention ops
   ops.def(
+    "tensor_for_caches_addresses",
+    &tensor_for_caches_addresses,
+    "Get a tensor from the addresses of key or value caches."
+  );
+  ops.def(
     "paged_attention_v1_block",
     &paged_attention_v1_block,
     "[[num_layers, num_kv_heads, head_size, block_size]...]"
@@ -90,6 +95,18 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   // Cache ops
   pybind11::module cache_ops = m.def_submodule("cache_ops", "vLLM cache ops");
+  cache_ops.def(
+    "swap_blocks_agg",
+    &swap_blocks_agg,
+    "Swap blocks in agg");
+  cache_ops.def(
+    "copy_blocks_agg",
+    &copy_blocks_agg,
+    "Copy blocks in agg");
+  cache_ops.def(
+    "reshape_and_cache_agg",
+    &reshape_and_cache_agg,
+    "Store KV Cache in agg");
   cache_ops.def(
     "swap_blocks",
     &swap_blocks,
