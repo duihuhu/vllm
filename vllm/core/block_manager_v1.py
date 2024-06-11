@@ -363,6 +363,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         #TODO 
         if not is_kv_prepared:
+            seq.cache_blocks_to_insert = block_table
             self.radix_tree_manager.insert(seq=seq, free_call_back=self.cpu_allocator.free_radix_manager_cache)
             
     def allocate_radix_cache(self, seq_group: SequenceGroup, is_kv_prepared=None) -> None:
