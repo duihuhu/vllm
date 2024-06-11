@@ -39,10 +39,14 @@ class RadixTreeManager:
         seq.data.cache_token_len = len(nodes)*self.block_size
         # seq.data.set_num_computed_tokens(len(nodes)*self.block_size)
         seq.cache_nodes = nodes
-        seq.data.prefix_block_ids = [
-            node.value.physicalTokenBlock.block_number for node in nodes]
-        seq.data.prefix_blocks = [
-            node.value.physicalTokenBlock for node in nodes]
+        # seq.data.prefix_block_ids = [
+        #     node.value.physicalTokenBlock.block_number for node in nodes]
+        # seq.data.prefix_blocks = [
+        #     node.value.physicalTokenBlock for node in nodes]
+        for node in nodes:
+            node.value.physicalTokenBlock.ref_count += 1
+            seq.data.prefix_block_ids.append(node.value.physicalTokenBlock.block_number)
+            seq.data.prefix_blocks.append(node.value.physicalTokenBlock)
         # 检查匹配到的block是不是正在swap，如果正在swap则匹配失败
         for node in nodes:
             if node.value.progressStatus != kvCacheProgressStatus.STABLE:

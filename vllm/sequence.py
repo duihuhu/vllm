@@ -127,8 +127,8 @@ class SequenceData:
         
         #to fit for radix tree manager
         self.cache_token_len = 0
-        self.prefix_block_ids = None
-        self.prefix_blocks = None
+        self.prefix_block_ids = []
+        self.prefix_blocks = []
     
     def set_num_computed_tokens(self, num_computed_tokens: int)->None:
         self._num_computed_tokens = num_computed_tokens
