@@ -345,7 +345,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         num_prompt_blocks = len(seq.logical_token_blocks)     
         self.radix_tree_manager.match(seq=seq)
-        print()
         block_table: BlockTable  = []
         if seq.data.prefix_blocks:
             block_table = seq.data.prefix_blocks
