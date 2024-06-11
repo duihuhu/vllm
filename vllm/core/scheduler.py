@@ -759,6 +759,13 @@ class Scheduler:
             passed_delay = True
         return passed_delay
 
+    def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
+        for seq_group in finished_seq_groups:
+            seq = seq_group.get_seqs()[0]
+            block_table = self.block_manager.block_tables[seq.seq_id]
+            seq.cache_blocks_to_insert = block_table
+            self.block_manager.radix_tree_manager.insert(seq=seq, free_call_back=self.block_manager.cpu_allocator.free_radix_manager_cache)
+
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
         for request_id in self.send_finished_req_ids[:]:
@@ -823,6 +830,8 @@ class Scheduler:
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
                     self.block_manager.move_kv_blocks_meta(seq_group)
+                    #when data pass back, update radix tree
+                    self.radix_manager_update([seq_group])
                     for seq in seq_group.get_seqs():
                         self.block_manager.free(seq)    
                 
@@ -835,4 +844,4 @@ class Scheduler:
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
             self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
-
+            
