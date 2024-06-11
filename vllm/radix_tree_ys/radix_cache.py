@@ -235,7 +235,7 @@ class RadixCache:
             # 往下insert
             if not key and not block_table:
                 return 1
-            return 1 + self._insert_helper(new_node, key, block_table, free_call_back)
+            return 1 + self._insert_helper(new_node, key, block_table, cpu_free_call_back)
         return 0
 
     def _print_helper(self, node: TreeNode, indent):
