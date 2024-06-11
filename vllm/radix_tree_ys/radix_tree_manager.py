@@ -55,9 +55,8 @@ class RadixTreeManager:
         # 添加lora id作为前缀
         lora_id = seq.lora_request.lora_id if seq.lora_request else 0
         # 推理完成后，保存token和block到radix tree
-        num_path = self._insert(seq.data.prompt_token_ids+seq.data.output_token_ids[:-1],
+        self._insert(seq.data.prompt_token_ids+seq.data.output_token_ids[:-1],
                      seq.cache_blocks_to_insert, free_call_back, lora_id=lora_id)
-        print("num_path ", num_path)
         return True
 
     # 淘汰函数说明：
@@ -116,7 +115,6 @@ class RadixTreeManager:
     def _insert(self, key: List[int], value: List[PhysicalTokenBlock], free_call_back, lora_id: int = 0):
         splited_key: List[Tuple] = []
         height = 0
-        print("_insert ", len(key), len(value))
         while len(key) >= self.block_size:
             # lora id == 0说明不使用lora
             # 在第0层添加lora id，分开存储不同lora的cache
