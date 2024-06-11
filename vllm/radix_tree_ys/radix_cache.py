@@ -56,7 +56,7 @@ def match(key: Tuple, seq: Tuple):
 class RadixCache:
     def __init__(self, block_size: int):
         self.root_node = TreeNode()
-        self.root_node.value = TreeNodeValue(PhysicalTokenBlock(None, 0, 0))
+        self.root_node.value = TreeNodeValue(PhysicalTokenBlock(None, 0, block_size, -1, -1))
         self.block_size = block_size
 
 
