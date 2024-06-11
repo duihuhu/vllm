@@ -74,9 +74,9 @@ class RadixCache:
         self, 
         key : List[Tuple], 
         block_table : List[PhysicalTokenBlock],
-        free_call_back,
+        cpu_free_call_back,
     ) -> int:
-        return self._insert_helper(self.root_node, key, block_table, free_call_back)
+        return self._insert_helper(self.root_node, key, block_table, cpu_free_call_back)
 
     def pretty_print(self):
         logger.info("root node")
@@ -196,7 +196,7 @@ class RadixCache:
         node: TreeNode, 
         key : List[Tuple], 
         block_table : List[PhysicalTokenBlock],
-        free_call_back,
+        cpu_free_call_back,
     ) -> int:
         node.last_access_time = time.time()
 
@@ -213,14 +213,15 @@ class RadixCache:
                     child.value.progressStatus == kvCacheProgressStatus.SWAPPING_OUT):
                     return 0
                 if child.value.physicalTokenBlock.device == Device.CPU:
-                    free_call_back([child.value.physicalTokenBlock])
+                    cpu_free_call_back([child.value.physicalTokenBlock])
                     child.value.progressStatus = kvCacheProgressStatus.STABLE
                     child.value.physicalTokenBlock = block_table[0]
                     block_table[0].ref_count += 1
+                # if child.value.physicalTokenBlock.block_number != block_table[0].block_number:
                 #往下insert
                 key.pop(0)
                 block_table.pop(0)
-                return 1 + self._insert_helper(child, key, block_table, free_call_back)
+                return 1 + self._insert_helper(child, key, block_table, cpu_free_call_back)
 
         #所有叶子节点完全不匹配，新增一个child
         if not is_match:

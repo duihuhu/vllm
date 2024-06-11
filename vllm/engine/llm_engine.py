@@ -753,7 +753,8 @@ class LLMEngine:
                 # iteration
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
-                
+    
+    #TODO I think when update, insert should return the same key token with different phyical token list
     def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
         self.scheduler.radix_manager_update(finished_seq_groups)
 

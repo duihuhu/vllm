@@ -55,12 +55,12 @@ class RadixTreeManager:
             f"matched: {len(nodes)} nodes. passing {min(len(nodes), self.max_blocks_allowed)} blocks")
         return True
 
-    def insert(self, seq: Sequence, free_call_back) -> bool:
+    def insert(self, seq: Sequence, cpu_free_call_back) -> bool:
         # 添加lora id作为前缀
         lora_id = seq.lora_request.lora_id if seq.lora_request else 0
         # 推理完成后，保存token和block到radix tree
         self._insert(seq.data.prompt_token_ids+seq.data.output_token_ids[:-1],
-                     seq.cache_blocks_to_insert, free_call_back, lora_id=lora_id)
+                     seq.cache_blocks_to_insert, cpu_free_call_back, lora_id=lora_id)
         return True
 
     # 淘汰函数说明：
@@ -116,7 +116,7 @@ class RadixTreeManager:
 
     # 根据原始key插入block到radix tree， prompt_token_ids按block切分，与value中的block一一映射
     # 返回插入到radix tree的路径段数
-    def _insert(self, key: List[int], value: List[PhysicalTokenBlock], free_call_back, lora_id: int = 0):
+    def _insert(self, key: List[int], value: List[PhysicalTokenBlock], cpu_free_call_back, lora_id: int = 0):
         splited_key: List[Tuple] = []
         height = 0
         while len(key) >= self.block_size:
@@ -131,4 +131,4 @@ class RadixTreeManager:
         if len(splited_key) == 0:
             return 0
         value = value[:len(splited_key)]
-        return self.tree_cache.insert(splited_key, value, free_call_back)
+        return self.tree_cache.insert(splited_key, value, cpu_free_call_back)

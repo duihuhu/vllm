@@ -78,11 +78,16 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
         self.evictor: Evictor = make_evictor(eviction_policy)
 
+        self.radix_evictor: Evictor = make_evictor(eviction_policy)
+
         self.default_hash_ctr = count()
 
         self.radix_cache: RadixCache = RadixCache()
     
     def radix_manager_allocate_block(self) -> PhysicalTokenBlock:
+        if self.current_num_blocks == self.num_blocks:
+            block = self.radix_evictor.evict()
+            return block
         block = PhysicalTokenBlock(device=self.device,
                                    block_number=self.current_num_blocks,
                                    block_size=self.block_size,
@@ -161,6 +166,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
+        if block.ref_count == 0:
+            self.radix_evictor.add(block)
 
     #todo if only manage block.ref_count there, use background thread to release
     #not need self.evictor.add(block)
