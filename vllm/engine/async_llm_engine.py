@@ -471,6 +471,8 @@ class _AsyncLLMEngine(LLMEngine):
         if not self.deploy_config.enable_layer:
             if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
+                if self.scheduler.block_manager.enable_radix_caching:
+                    self.radix_manager_update(prefilled_seq_groups)
                 for seq_group in prefilled_seq_groups:
                     self.scheduler.add_send_transfering(seq_group)
             
@@ -483,7 +485,6 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 if self.scheduler.block_manager.enable_radix_caching:
-                    print("radix_manager_update ")
                     self.radix_manager_update(prefilled_seq_groups)
                 for seq_group in prefilled_seq_groups:
                     output = self.scheduler.outputs_with_layer[seq_group.request_id]
