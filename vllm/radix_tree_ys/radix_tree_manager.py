@@ -116,6 +116,7 @@ class RadixTreeManager:
     def _insert(self, key: List[int], value: List[PhysicalTokenBlock], free_call_back, lora_id: int = 0):
         splited_key: List[Tuple] = []
         height = 0
+        print("_insert ", len(key), len(value))
         while len(key) >= self.block_size:
             # lora id == 0说明不使用lora
             # 在第0层添加lora id，分开存储不同lora的cache
