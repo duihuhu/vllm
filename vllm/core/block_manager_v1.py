@@ -361,10 +361,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.kv_block_tables[seq.seq_id] = block_table.copy()
 
-        #TODO 
-        if not is_kv_prepared:
-            seq.cache_blocks_to_insert = block_table
-            self.radix_tree_manager.insert(seq=seq, free_call_back=self.cpu_allocator.free_radix_manager_cache)
+        #when allocate seq, we should insert it before next seq coming 
+        self.radix_tree_manager.insert(seq=seq, free_call_back=self.cpu_allocator.free_radix_manager_cache)
             
     def allocate_radix_cache(self, seq_group: SequenceGroup, is_kv_prepared=None) -> None:
          #todo if mcache open, should consider cache in dram
