@@ -829,9 +829,8 @@ class Scheduler:
                             
             if self.deploy_config.role == "prompt":
                 if self.deploy_config.enable_dcache:
-                    #when data pass back, update block table and radix tree
+                    #when data pass back, update block table
                     self.block_manager.move_kv_blocks_meta(seq_group)
-                    self.radix_manager_update([seq_group])
                     for seq in seq_group.get_seqs():
                         self.block_manager.free(seq)    
                 
