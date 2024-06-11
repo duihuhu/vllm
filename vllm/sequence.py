@@ -125,6 +125,14 @@ class SequenceData:
 
         self.radix_token_id = tuple(prompt_token_ids)
         
+        #to fit for radix tree manager
+        self.cache_token_len = 0
+        self.prefix_block_ids = None
+        self.prefix_blocks = None
+    
+    def set_num_computed_tokens(self, num_computed_tokens: int)->None:
+        self._num_computed_tokens = num_computed_tokens
+        
     def append_token_id(self, token_id: int, logprob: float) -> None:
         self.output_token_ids.append(token_id)
         self.cumulative_logprob += logprob
@@ -233,6 +241,11 @@ class Sequence:
         self.prefix_len = 0
         self.last_node_matched_len = 0
         self.computed_block = []
+        
+        #to fit radix tree manager
+        self.cache_nodes = None
+        self.cache_blocks_to_insert = None
+
 
     @property
     def lora_int_id(self) -> int:

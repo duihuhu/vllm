@@ -753,8 +753,16 @@ class LLMEngine:
                 # iteration
                 seq_group.remove(seq.seq_id)
                 self.scheduler.free_seq(seq)
+                
+    def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
+        for seq_group in finished_seq_groups:
+            seq = seq_group.get_seqs()[0]
+            block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
+            seq.cache_blocks_to_insert = block_table
+            self.scheduler.block_manager.radix_tree_manager.insert(seq=seq)
+            
     #todo need record seq last node when transfering 
-    def update_radix_tree(self, finished_seq_groups):
+    def update_radix_tree(self, finished_seq_groups: List[SequenceGroup]):
         for seq_group in finished_seq_groups:
             seq = seq_group.get_seqs()[0]
             radix_token_ids = seq.data.get_radix_token_ids()
@@ -788,7 +796,9 @@ class LLMEngine:
                 or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
                     and self.deploy_config.role == "decoder"):
                 # start_time = time.time()
-                self.update_radix_tree(finished_seq_groups)
+                # self.update_radix_tree(finished_seq_groups)
+                self.radix_manager_update(finished_seq_groups)
+                
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 

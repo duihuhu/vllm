@@ -41,6 +41,8 @@ class RadixTreeManager:
         seq.cache_nodes = nodes
         seq.data.prefix_block_ids = [
             node.value.physicalTokenBlock.block_number for node in nodes]
+        seq.data.prefix_blocks = [
+            node.value.physicalTokenBlock for node in nodes]
         # 检查匹配到的block是不是正在swap，如果正在swap则匹配失败
         for node in nodes:
             if node.value.progressStatus != kvCacheProgressStatus.STABLE:

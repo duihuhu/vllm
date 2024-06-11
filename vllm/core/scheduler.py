@@ -638,7 +638,8 @@ class Scheduler:
     
     def _allocate(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
         if self.block_manager.enable_radix_caching:
-            self.block_manager.allocate_radix_cache(seq_group, is_kv_prepared)
+            # self.block_manager.allocate_radix_cache(seq_group, is_kv_prepared)
+            self.block_manager.radix_manager_allocate(seq_group=seq_group, is_kv_prepared=is_kv_prepared)
         else:
             self.block_manager.allocate(seq_group, is_kv_prepared)
             
