@@ -172,7 +172,6 @@ class ModelRunner:
             token_chunk_size = seq_group_metadata.token_chunk_size
             seq_data = seq_group_metadata.seq_data[seq_id]
             computed_len = seq_data.get_num_computed_tokens()
-            print("computed_len ", computed_len)
             # We should use get_len here because in case of preemption
             # it contains output tokens.
             prefill_end = min(seq_data.get_len(),
@@ -198,6 +197,8 @@ class ModelRunner:
                 # Right now, prefill start is always 0. However, this
                 # assumption can be changed once chunked prefill is introduced.
                 assert computed_len == 0
+                
+            print("computed_len ", computed_block_nums, computed_len)
 
             # actual prompt lens
             context_lens.append(computed_len)
