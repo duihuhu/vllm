@@ -352,7 +352,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for idx in range(num_prompt_blocks - len(seq.data.prefix_blocks)):
             block = self.gpu_allocator.radix_manager_allocate()
             block_table.append(block)
-    
+            
+        seq.cache_blocks_to_insert = block_table
         if not is_kv_prepared:
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.block_tables[seq.seq_id] = block_table.copy()     
