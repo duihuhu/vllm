@@ -179,8 +179,8 @@ async def add_request(request: Request) -> Response:
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
         edecode_host, edecode_port, cdecode_blocks  = cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
     
-    eprefill_port = random.choice([cfg.eprefill_port])
-    edecode_port = random.choice([cfg.edecode_port])
+    eprefill_port = random.choice([cfg.eprefill_port,cfg.eprefill_port1])
+    edecode_port = random.choice([cfg.edecode_port, cfg.edecode_port1])
     request_dict["eprefill_host"] = eprefill_host
     request_dict["eprefill_port"] = eprefill_port
     request_dict["edecode_host"] = edecode_host

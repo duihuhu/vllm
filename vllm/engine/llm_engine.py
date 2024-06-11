@@ -759,7 +759,6 @@ class LLMEngine:
             seq = seq_group.get_seqs()[0]
             block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
             seq.cache_blocks_to_insert = block_table
-            print("radix_manager_update ")
             self.scheduler.block_manager.radix_tree_manager.insert(seq=seq, free_call_back=self.scheduler.block_manager.cpu_allocator.free_radix_manager_cache)
             
     #todo need record seq last node when transfering 

@@ -815,9 +815,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return []
         # print("get_common_computed_block_ids_one_seq ",  self.block_tables[seqs.seq_id])
         block_table = self.block_tables[seqs.seq_id]
-        for block in block_table[len(seqs.computed_block):]:
+        for block in block_table[len(seqs.computed_block):-1]:
             if block.computed == True:
                 seqs.computed_block.append(block.block_number)
+        print("seqs.computed_block ", seqs.computed_block)
         return seqs.computed_block
 
 
