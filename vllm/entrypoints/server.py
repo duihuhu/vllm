@@ -148,11 +148,11 @@ def cprobs_key_s2i(cumulative_logprob):
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
     payload = await request.json()
-    request_id = payload.pop("request_id")
-    print("generate decode ", request_id, time.time())
+    # print("generate decode ", request_id, time.time())
     start_time = time.time()
     is_layer = payload.pop("is_layer")
     if not is_layer:
+        request_id = payload.pop("request_id")
         opp_ranks = payload.pop("opp_ranks")
         prompt_token_ids = payload.pop("prompt_token_ids")
         prompt_logprobs = payload.pop("prompt_logprobs")
@@ -187,7 +187,7 @@ async def generate_decode(request: Request) -> Response:
         results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
                                                 prompt_token_ids=prompt_token_ids, prefill_request_output=request_output, is_layer=is_layer)
     else:
-        # request_id = payload.pop("request_id")
+        request_id = payload.pop("request_id")
         prefilled_token_id = payload.pop("prefilled_token_id")
         output_logprobs = payload.pop("output_logprobs")
         sampling_params_json = payload.pop("sampling_params")
@@ -340,7 +340,7 @@ async def generate_prefill(request: Request) -> Response:
                             with open("prefill_send_query_kv_to_decode.txt", "a+") as fd:
                                 content = "prefill send query kv to decode " + infer_results.request_id + " " + str(time.time())
                                 fd.write(content + "\n")
-                        print("generate prefill ", request_id, time.time())
+                        # print("generate prefill ", request_id, time.time())
                         decode_response = asyc_forward_request(infer_results.__json__(), cfg.forward_edecode_url % 
                                                                     (cfg.edecode_host, cfg.edecode_port))
                         d_num = 0
