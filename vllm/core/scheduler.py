@@ -759,6 +759,12 @@ class Scheduler:
             passed_delay = True
         return passed_delay
 
+    def check_hbm_usage(self):
+        pass
+    
+    def evict_hbm_caches(self):
+        pass
+    
     def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
         for seq_group in finished_seq_groups:
             seq = seq_group.get_seqs()[0]

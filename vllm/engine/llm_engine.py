@@ -392,9 +392,10 @@ class LLMEngine:
             for token_id, output_logprob in zip(prefilled_token_id, output_logprobs):
                 seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
             if request_id in self.scheduler.decode_recv_finished:
-                with open("decode_add_request_to_running_layer.txt", "a+") as fd:
-                    content = "decoder finshed recv data append request to running " + request_id + " " + str(time.time())
-                    fd.write(content + "\n")
+                if self.deploy_config.enable_breakdown:
+                    with open("decode_add_request_to_running_layer.txt", "a+") as fd:
+                        content = "decoder finshed recv data append request to running " + request_id + " " + str(time.time())
+                        fd.write(content + "\n")
                 self.scheduler.running.append(seq_group)
                 self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
             else:

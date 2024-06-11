@@ -367,7 +367,7 @@ class _AsyncLLMEngine(LLMEngine):
                 categorized_groups[key].append(seq_group)
             else:
                 categorized_groups[key] = [seq_group]
-            if self.deploy_config.enable_layer:
+            if self.deploy_config.enable_layer and self.deploy_config.enable_breakdown:
                 with open("prefill_send_query_kv_to_decode_layer.txt", "a+") as fd:
                     content = "prefill send query kv to decode " + seq_group.request_id + " " + str(time.time())
                     fd.write(content + "\n")
@@ -415,6 +415,18 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         self.scheduler._check_tranfer_finished_req()
+        
+        #TODO evict block from gpu to dram in radix tree
+        # if self.scheduler.block_manager.enable_radix_caching:    
+        #     num_blocks = self.scheduler.check_hbm_usage()
+            # if num_blocks:
+            #     cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
+            #     if cache_blocks_to_swap_out:
+            #         await self.model_executor._run_workers_async(
+            #             "swap_kv_cache",
+            #             blocks_to_swap_out=cache_blocks_to_swap_out
+            #         )
+
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
