@@ -350,7 +350,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if seq.data.prefix_blocks:
             block_table = seq.data.prefix_blocks
         print("prefix blocks", seq.data.prefix_blocks)
-        for idx in range(len(seq.data.prefix_blocks), num_prompt_blocks):
+        for idx in range(num_prompt_blocks - len(seq.data.prefix_blocks)):
             block = self.gpu_allocator.radix_manager_allocate()
             block_table.append(block)
     

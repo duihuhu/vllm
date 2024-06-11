@@ -37,7 +37,7 @@ class RadixTreeManager:
         nodes = self._match_prefix(seq.get_token_ids(), lora_id=lora_id)
         nodes = nodes[:self.max_blocks_allowed]
         seq.data.cache_token_len = len(nodes)*self.block_size
-        seq.data.set_num_computed_tokens(len(nodes)*self.block_size)
+        # seq.data.set_num_computed_tokens(len(nodes)*self.block_size)
         seq.cache_nodes = nodes
         seq.data.prefix_block_ids = [
             node.value.physicalTokenBlock.block_number for node in nodes]
