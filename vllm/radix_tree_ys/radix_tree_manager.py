@@ -55,8 +55,9 @@ class RadixTreeManager:
         # 添加lora id作为前缀
         lora_id = seq.lora_request.lora_id if seq.lora_request else 0
         # 推理完成后，保存token和block到radix tree
-        self._insert(seq.data.prompt_token_ids+seq.data.output_token_ids[:-1],
+        num_path = self._insert(seq.data.prompt_token_ids+seq.data.output_token_ids[:-1],
                      seq.cache_blocks_to_insert, free_call_back, lora_id=lora_id)
+        print("num_path ", num_path)
         return True
 
     # 淘汰函数说明：

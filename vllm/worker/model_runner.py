@@ -198,8 +198,6 @@ class ModelRunner:
                 # assumption can be changed once chunked prefill is introduced.
                 assert computed_len == 0
                 
-            print("computed_len ", computed_block_nums, computed_len)
-
             # actual prompt lens
             context_lens.append(computed_len)
             subquery_lens.append(prompt_len - computed_len)
