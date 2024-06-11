@@ -780,7 +780,7 @@ class Scheduler:
             if self.block_manager.enable_radix_caching:
                 for seq in seq_groups.get_seqs():
                     self.block_manager.free(seq)    
-                del self.block_manager.block_tables[seq.seq_id]
+                    del self.block_manager.block_tables[seq.seq_id]
             else:
                 if not self.enable_layer:
                     seq = seq_groups.get_seqs()[0]
