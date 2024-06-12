@@ -124,7 +124,7 @@ def search_prefix(radix_tree, token_ids):
         return False, [], [], 0
 
 
-def select_instance(prompt_token_ids):
+def select_disagg_instance(prompt_token_ids):
     if args.dist_policy == DistPolicy.RANDOM:
         return random_choice()
     elif args.dist_policy == DistPolicy.RR:
@@ -136,6 +136,8 @@ def select_instance(prompt_token_ids):
     else:
         print("policy not finished ")
 
+def select_agg_instance(prompt_token_ids):
+    
 def search_cdecode():
     return 
 
@@ -200,8 +202,10 @@ async def add_request(request: Request) -> Response:
     
     #TODO select ep/ed or epd instance for request 
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
-        edecode_host, edecode_port, cdecode_blocks = select_instance(prompt_token_ids)
+        edecode_host, edecode_port, cdecode_blocks = select_disagg_instance(prompt_token_ids)
     
+    #
+    select_agg_instance(EngineType.EPD)
     eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
     edecode_host, edecode_port, cdecode_blocks  = cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
          

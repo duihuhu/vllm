@@ -171,7 +171,5 @@ if __name__ == "__main__":
     # print("reqs ", reqs)    
     # reqs = [(None, [1,1,1,1,1], 5, 5), (None, [2,2,2,2], 4, 6)]
     asyncio.run(main(args, reqs))
-    time.sleep(1)
-    asyncio.run(main(args, reqs))
 
     
