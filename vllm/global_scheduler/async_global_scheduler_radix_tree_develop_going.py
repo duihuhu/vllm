@@ -219,8 +219,8 @@ async def add_request(request: Request) -> Response:
     #TODO select ep and ed instance for request 
     ep_instance, ed_instance  = select_disagg_instance(prompt_token_ids)
     
-    #TODO select epd instance for request 
-    epd_host, epd_port = select_agg_instance(prompt_token_ids)
+    # #TODO select epd instance for request 
+    # epd_instance = select_agg_instance(prompt_token_ids)
 
     request_dict["eprefill_host"] = ep_instance.host
     request_dict["eprefill_port"] = ep_instance.service_port
@@ -239,7 +239,7 @@ async def add_request(request: Request) -> Response:
                 ep_token_tree.insert(resp['prompt_token_ids'], ep_instance)
             if resp['finished'] == True:
                 ed_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], ed_instance)
-                # epd_token_tree.insert(
+                # epd_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], epd_instance)
                 
             yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     return StreamingResponse(stream_results_prefill())
