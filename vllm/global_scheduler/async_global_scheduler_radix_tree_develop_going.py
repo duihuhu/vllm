@@ -4,13 +4,12 @@ import json
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 import uvicorn
-from vllm.global_scheduler.global_radix_tree import RadixCache
-from vllm.global_scheduler.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, TransDataType
+from vllm.global_scheduler.radix_cache_ys import RadixCache
+from vllm.global_scheduler.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, DistPolicy
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.global_scheduler.entrypoints_config as cfg
 from typing import Dict, Set, List, Optional, AsyncGenerator
-import asyncio
 import aiohttp
 import requests
 import random
@@ -20,10 +19,6 @@ TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
 tokenizer = None
-
-#config instance:gs first to read instance.json to know how many instance 
-config_instance_table: Dict[str, InstanceInfo] = {}
-num_comm = 0
 
 #key: host_(service_port)_(machine_type)
 #value: InstanceInfo 
@@ -43,33 +38,18 @@ req_engine_info: Dict[str, List[str]] = {}
 
 coroutines: Dict[str, List] = {}
 
-# gs_ptoken_tree = RadixCache()
-# gs_dtoken_tree = RadixCache()
+rr_num = 0
+
+block_size = 16
+gs_ptoken_tree = RadixCache(block_size)
+gs_dtoken_tree = RadixCache(block_size)
+gs_pdtoken_tree = RadixCache(block_size)
+
 
 def post_request(api_url, request_dict: Optional[Dict] = {}):
     headers = {"User-Agent": "Test Client"}
     response = requests.post(api_url, headers=headers, json=request_dict)
     return response
-
-#to init comm between instances
-def create_comm(src_instance: InstanceInfo, dst_instance: InstanceInfo):
-    uniqe_id_api_url = cfg.comm_uniqe_id_url % (src_instance.host, src_instance.service_port)
-    dst_channel = "_".join([str(rank) for rank in dst_instance.global_ranks])
-    response = post_request(uniqe_id_api_url, {"dst_channel": dst_channel})
-
-    # create_comm_url = cfg.create_comm_url % (dst_instance.host, dst_instance.service_port)
-    # response = post_request(create_comm_url, response.json())
-
-@app.post("/init_comm")
-async def init_comm(request: Request) -> Response:
-    config_instances = [config_instance_table.values()]
-    instances: List[InstanceInfo] = [instance_table.values()]
-    if len(instances) == config_instances:
-        for src_comm in range(len(instances)):
-            for dst_comm in range(src_comm + 1, len(instances)):
-                for num in range(num_comm):
-                    create_comm(instances[src_comm], instances[dst_comm])
-            
 
 @app.post("/monitor_report")
 async def monitor_report(request: Request) -> Response:
@@ -143,42 +123,88 @@ def search_prefix(radix_tree, token_ids):
     else:
         return False, [], [], 0
 
-def get_epd_cached_meta(ptree, dtree, token_ids):
-    ep_host = None
-    ep_port = None
-    cd_host = None
-    cd_port = None
-    cd_ranks = None
-    cd_blocks = 0
-    ed_host = None
-    ed_port = None
-    p_matched, p_tokens, p_node, p_last_node_matched_len = search_prefix(ptree, token_ids)
-    if p_matched:
-        ep_host, ep_port = p_node.split("_")
-    else:
-        ep_host, ep_port = cfg.eprefill_host, cfg.eprefill_port
-    d_matched, d_tokens, d_node, d_last_node_matched_len = search_prefix(dtree, token_ids)
-    if d_matched:
-        cd_host, cd_port = d_node.split("_")
-        # print("d_node ", d_node)
-        # print("d_tokens ", d_tokens, len(d_tokens), len(p_tokens))
-        instance = instance_table.get(d_node + "_" + cfg.edecode_label)
-        cd_ranks = instance.global_ranks
-        cd_blocks = len(d_tokens)
-    else:
-        cd_host, cd_port = None, None
-    ed_host = cfg.edecode_host
-    ed_port = cfg.edecode_port
-    return ep_host, ep_port, cd_host, cd_port, cd_ranks, ed_host, ed_port, cd_blocks
 
+def select_instance(prompt_token_ids):
+    if args.dist_policy == DistPolicy.RANDOM:
+        return random_choice()
+    elif args.dist_policy == DistPolicy.RR:
+        return rr_choice()
+    elif args.dist_policy == DistPolicy.PREFIX_CACHE:
+        return prefix_cache_choice(prompt_token_ids)
+    elif args.dist_policy == DistPolicy.LEAST_LOAD:
+        return least_load_choice()
+    else:
+        print("policy not finished ")
+
+def search_cdecode():
+    return 
+
+def random_instance(type):
+    instances = []
+    for key, value in instance_table.items():
+        if type in key:
+            instances.append(value)
+    return random.choice(instances)
+
+def random_choice():
+    eprefill_host, eprefill_port, edecode_host, edecode_port = random_instance()
+    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
+    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
+
+def rr_instance(type):
+    instances = []
+    for key, value in instance_table.items():
+        if type in key:
+            instances.append(value)
+    instance = instances[rr_num] 
+    rr_num = (rr_num + 1) % len(instances)
+    return instance
+
+def rr_choice():
+    eprefill_host, eprefill_port, edecode_host, edecode_port = rr_instance()
+    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
+    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
+
+def search_cached_instance(type):
+    if type == EngineType.EPREFILL:
+        gs_ptoken_tree.match_prefix()
+    elif type == EngineType.EDECODE:
+        gs_dtoken_tree.match_prefix()
+    elif type == EngineType.EPD:
+        gs_pdtoken_tree.match_prefix()
+    return
+
+def prefix_cache_choice(prompt_token_ids):
+    eprefill_host, eprefill_port, edecode_host, edecode_port = search_cached_instance(prompt_token_ids)
+    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
+    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
+
+def search_least_load_instance(type):
+    instances = []
+    for key, value in instance_table.items():
+        if type in key:
+            instances.append(value)
+    return 
+
+def least_load_choice():
+    eprefill_host, eprefill_port = search_least_load_instance(EngineType.EPREFILL)
+    edecode_host, edecode_port = search_least_load_instance(EngineType.EDECODE)
+    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
+    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
+
+    
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()   
     prompt_token_ids = request_dict["prompt_token_ids"]
-
-    eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
-        edecode_host, edecode_port, cdecode_blocks  = cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
     
+    #TODO select ep/ed or epd instance for request 
+    eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
+        edecode_host, edecode_port, cdecode_blocks = select_instance(prompt_token_ids)
+    
+    eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
+    edecode_host, edecode_port, cdecode_blocks  = cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
+         
     eprefill_port = random.choice([cfg.eprefill_port])
     edecode_port = random.choice([cfg.edecode_port])
     request_dict["eprefill_host"] = eprefill_host
@@ -192,6 +218,9 @@ async def add_request(request: Request) -> Response:
         async for resp in prefill_response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
+            #update gs prompt tree and decode tree
+            if resp['finished'] == True:
+                
             yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     return StreamingResponse(stream_results_prefill())
 
@@ -204,6 +233,7 @@ if __name__ == "__main__":
     parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
     parser.add_argument("--enable-separate",  action="store_true")
     parser.add_argument("--enable-layer",  action="store_true")
+    parser.add_argument("--dist-policy",  type="str", default="random")
 
     args = parser.parse_args()
     if args.tokenizer is None:

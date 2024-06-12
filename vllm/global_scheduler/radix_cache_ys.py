@@ -43,6 +43,7 @@ class TreeNode:
         self.parent: TreeNode = None
         self.value: TreeNodeValue = None
         self.last_access_time = time.time()
+        self.node_addr
 
     def __lt__(self, other):
         return self.last_access_time < other.last_access_time

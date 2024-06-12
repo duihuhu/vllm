@@ -62,3 +62,10 @@ class PrefixReqInfo:
       self.edecode_host = edecode_host
       self.edecode_port = edecode_port
       self.data_type = data_type
+
+class DistPolicy(Enum):
+    RANDOM = "random"
+    RR = "rr"
+    PREFIX_CACHE = "prefix"
+    LEAST_LOAD = "least"
+    

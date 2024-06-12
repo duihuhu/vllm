@@ -1,6 +1,6 @@
 #!/bin/bash
 dirname="e2e_exp"
-type="disagg_pd_4comms"
+type="disagg_pd_layer_3comms"
 dirtype="${dirname}/${type}"
 if [ -d "$dirtype" ]; then
     rm -rf ${dirtype}
@@ -23,11 +23,10 @@ else
     fi
 fi
 
-input_lens=(64 128 256 512 1024)
+input_lens=(64 128 256 512 1024 2048)
 output_lens=(16 32)
 request_rates=(10 20 40 80 160)
 num_requests=256
-
 for input_len in "${input_lens[@]}"; do
   for output_len in "${output_lens[@]}"; do
     for request_rate in "${request_rates[@]}"; do
