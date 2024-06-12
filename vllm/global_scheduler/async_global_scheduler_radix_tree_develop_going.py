@@ -9,7 +9,7 @@ from vllm.global_scheduler.global_meta import InstanceInfo, ReqCacheInfo, Prefix
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.global_scheduler.entrypoints_config as cfg
-from typing import Dict, Set, List, Optional, AsyncGenerator
+from typing import Dict, Set, List, Optional, AsyncGenerator, Tuple
 import aiohttp
 import requests
 import random
@@ -38,12 +38,14 @@ req_engine_info: Dict[str, List[str]] = {}
 
 coroutines: Dict[str, List] = {}
 
-rr_num = 0
+ep_rr_num = 0
+ed_rr_num = 0
+epd_rr_num = 0
 
 block_size = 16
-gs_ptoken_tree = RadixCache(block_size)
-gs_dtoken_tree = RadixCache(block_size)
-gs_pdtoken_tree = RadixCache(block_size)
+ep_token_tree = RadixCache(block_size)
+ed_token_tree = RadixCache(block_size)
+epd_token_tree = RadixCache(block_size)
 
 
 def post_request(api_url, request_dict: Optional[Dict] = {}):
@@ -124,106 +126,120 @@ def search_prefix(radix_tree, token_ids):
         return False, [], [], 0
 
 
-def select_disagg_instance(prompt_token_ids):
-    if args.dist_policy == DistPolicy.RANDOM:
-        return random_choice()
-    elif args.dist_policy == DistPolicy.RR:
-        return rr_choice()
-    elif args.dist_policy == DistPolicy.PREFIX_CACHE:
-        return prefix_cache_choice(prompt_token_ids)
-    elif args.dist_policy == DistPolicy.LEAST_LOAD:
-        return least_load_choice()
+def select_instance(prompt_token_ids, policy, instance_type):
+    if policy == DistPolicy.RANDOM:
+        return random_choice(instance_type)
+    elif policy == DistPolicy.RR:
+        return rr_choice(instance_type)
+    elif policy == DistPolicy.PREFIX_CACHE:
+        return prefix_cache_choice(prompt_token_ids, instance_type)
+    elif policy == DistPolicy.LEAST_LOAD:
+        return least_load_choice(instance_type)
     else:
         print("policy not finished ")
-
-def select_agg_instance(prompt_token_ids):
     
-def search_cdecode():
-    return 
+def select_disagg_instance(prompt_token_ids, prefill_policy, decode_policy) -> Tuple[InstanceInfo, InstanceInfo]:
+    ep_instance = select_instance(prompt_token_ids, prefill_policy, EngineType.EPREFILL)
+    ed_instance  = select_instance(prompt_token_ids, decode_policy, EngineType.EDECODE)
+    return ep_instance, ed_instance
 
-def random_instance(type):
+def select_agg_instance(prompt_token_ids, policy):
+    epd_instance = select_instance(prompt_token_ids, policy, EngineType.EPD)
+    return epd_instance
+
+def random_instance(instance_type):
     instances = []
     for key, value in instance_table.items():
-        if type in key:
+        if instance_type in key:
             instances.append(value)
     return random.choice(instances)
 
-def random_choice():
-    eprefill_host, eprefill_port, edecode_host, edecode_port = random_instance()
-    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
-    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
-
-def rr_instance(type):
-    instances = []
-    for key, value in instance_table.items():
-        if type in key:
-            instances.append(value)
-    instance = instances[rr_num] 
-    rr_num = (rr_num + 1) % len(instances)
+def random_choice(instance_type):
+    instance = random_instance(instance_type)
     return instance
 
-def rr_choice():
-    eprefill_host, eprefill_port, edecode_host, edecode_port = rr_instance()
-    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
-    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
-
-def search_cached_instance(type):
-    if type == EngineType.EPREFILL:
-        gs_ptoken_tree.match_prefix()
-    elif type == EngineType.EDECODE:
-        gs_dtoken_tree.match_prefix()
-    elif type == EngineType.EPD:
-        gs_pdtoken_tree.match_prefix()
-    return
-
-def prefix_cache_choice(prompt_token_ids):
-    eprefill_host, eprefill_port, edecode_host, edecode_port = search_cached_instance(prompt_token_ids)
-    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
-    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
-
-def search_least_load_instance(type):
+def rr_instance(instance_type):
     instances = []
+    instance = None
     for key, value in instance_table.items():
-        if type in key:
+        if instance_type in key:
             instances.append(value)
-    return 
+    if instance_type == EngineType.EPD:    
+        instance = instances[epd_rr_num] 
+        epd_rr_num = (epd_rr_num + 1) % len(instances)
+    elif instance_type == EngineType.EPREFILL:
+        instance = instances[ep_rr_num] 
+        ep_rr_num = (ep_rr_num + 1) % len(instances)
+    elif instance_type == EngineType.EDECODE:
+        instance = instances[ed_rr_num] 
+        ed_rr_num = (ed_rr_num + 1) % len(instances)
+    return instance
 
-def least_load_choice():
-    eprefill_host, eprefill_port = search_least_load_instance(EngineType.EPREFILL)
-    edecode_host, edecode_port = search_least_load_instance(EngineType.EDECODE)
-    cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks  = search_cdecode()
-    return eprefill_host, eprefill_port, edecode_host, edecode_port, cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks
+def rr_choice(instance_type):
+    instance = rr_instance(instance_type)
+    return instance
 
-    
+##TODO build radix tree 
+def prefix_cache_instance(prompt_token_ids, instance_type):
+    instance = None
+    if instance_type == EngineType.EPREFILL:
+        instance = ep_token_tree.match_prefix(prompt_token_ids)
+    elif instance_type == EngineType.EDECODE:
+        instance = ed_token_tree.match_prefix(prompt_token_ids)
+    elif instance_type == EngineType.EPD:
+        instance = epd_token_tree.match_prefix(prompt_token_ids)
+    return instance
+
+def prefix_cache_choice(prompt_token_ids, instance_type):
+    instance = prefix_cache_instance(prompt_token_ids, instance_type)    
+    return instance
+
+def least_load_instance(instance_type):
+    instance = None
+    least_load = 0
+    for key, value in instance_table.items():
+        if instance_type in key:
+            if instance == None:
+                instance = value
+            else:
+                if value.num_unfinished_reqs < least_load:
+                    instance = value
+                    least_load = value.num_unfinished_reqs
+    return instance 
+
+def least_load_choice(instance_type):
+    instance = least_load_instance(instance_type)
+    return instance
+
 @app.post("/add_request")
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()   
     prompt_token_ids = request_dict["prompt_token_ids"]
     
-    #TODO select ep/ed or epd instance for request 
-    eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
-        edecode_host, edecode_port, cdecode_blocks = select_disagg_instance(prompt_token_ids)
+    #TODO select ep and ed instance for request 
+    ep_instance, ed_instance  = select_disagg_instance(prompt_token_ids)
     
-    #
-    select_agg_instance(EngineType.EPD)
-    eprefill_host, eprefill_port, cdecode_host, cdecode_port, cdecode_ranks,\
-    edecode_host, edecode_port, cdecode_blocks  = cfg.eprefill_host, cfg.eprefill_port, None, None, None, cfg.edecode_host, cfg.edecode_port, None
-         
-    eprefill_port = random.choice([cfg.eprefill_port])
-    edecode_port = random.choice([cfg.edecode_port])
-    request_dict["eprefill_host"] = eprefill_host
-    request_dict["eprefill_port"] = eprefill_port
-    request_dict["edecode_host"] = edecode_host
-    request_dict["edecode_port"] = edecode_port
+    #TODO select epd instance for request 
+    epd_host, epd_port = select_agg_instance(prompt_token_ids)
+
+    request_dict["eprefill_host"] = ep_instance.host
+    request_dict["eprefill_port"] = ep_instance.service_port
+    request_dict["edecode_host"] = ed_instance.host
+    request_dict["edecode_port"] = ed_instance.port
+    
     prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
-                                                        (eprefill_host, eprefill_port), cdecode_host, cdecode_port, cdecode_ranks, cdecode_blocks)
+                                                        (ep_instance.host, ep_instance.service_port))
     
     async def stream_results_prefill() -> AsyncGenerator[bytes, None]:
         async for resp in prefill_response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
             #update gs prompt tree and decode tree
+            if resp['n'] == 0:
+                ep_token_tree.insert(resp['prompt_token_ids'], ep_instance)
             if resp['finished'] == True:
+                ed_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], ed_instance)
+                # epd_token_tree.insert(
                 
             yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     return StreamingResponse(stream_results_prefill())
