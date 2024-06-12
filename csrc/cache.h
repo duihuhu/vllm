@@ -52,3 +52,7 @@ void reshape_and_cache(
 void convert_fp8_e5m2(
   torch::Tensor& src_cache,
   torch::Tensor& dst_cache);
+
+void convert_fp8_e5m2_agg(
+  torch::Tensor& src_cache,
+  torch::Tensor& dst_cache);

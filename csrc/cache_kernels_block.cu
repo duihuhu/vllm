@@ -296,7 +296,7 @@ void reshape_and_cache_agg(
 namespace vllm {
 
 template<typename Tout, typename Tin>
-__global__ void convert_fp8_e5m2_kernel(
+__global__ void convert_fp8_e5m2_agg_kernel(
   const Tin* __restrict__ src_cache,
   Tout* __restrict__ dst_cache,
   const int64_t block_stride) {
@@ -313,13 +313,13 @@ __global__ void convert_fp8_e5m2_kernel(
 
 } // namespace vllm
 
-#define CALL_CONVERT_FP8_E5M2(Tout, Tin)                                 \
-  vllm::convert_fp8_e5m2_kernel<Tout, Tin><<<grid, block, 0, stream>>>(  \
+#define CALL_CONVERT_FP8_E5M2_AGG(Tout, Tin)                                 \
+  vllm::convert_fp8_e5m2_agg_kernel<Tout, Tin><<<grid, block, 0, stream>>>(  \
     reinterpret_cast<Tin*>(src_cache.data_ptr()),                        \
     reinterpret_cast<Tout*>(dst_cache.data_ptr()),                       \
     block_stride);
 
-void convert_fp8_e5m2(
+void convert_fp8_e5m2_agg(
   torch::Tensor& src_cache,
   torch::Tensor& dst_cache)
 {
@@ -331,16 +331,16 @@ void convert_fp8_e5m2(
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
   if (src_cache.dtype() == at::ScalarType::Float) {
-    CALL_CONVERT_FP8_E5M2(uint8_t, float);
+    CALL_CONVERT_FP8_E5M2_AGG(uint8_t, float);
   } else if (src_cache.dtype() == at::ScalarType::Half) {
-    CALL_CONVERT_FP8_E5M2(uint8_t, uint16_t);
+    CALL_CONVERT_FP8_E5M2_AGG(uint8_t, uint16_t);
   } else if (src_cache.dtype() == at::ScalarType::BFloat16) {
-    CALL_CONVERT_FP8_E5M2(uint8_t, __nv_bfloat16);
+    CALL_CONVERT_FP8_E5M2_AGG(uint8_t, __nv_bfloat16);
   } else if (dst_cache.dtype() == at::ScalarType::Float) {
-    CALL_CONVERT_FP8_E5M2(float, uint8_t);
+    CALL_CONVERT_FP8_E5M2_AGG(float, uint8_t);
   } else if (dst_cache.dtype() == at::ScalarType::Half) {
-    CALL_CONVERT_FP8_E5M2(uint16_t, uint8_t);
+    CALL_CONVERT_FP8_E5M2_AGG(uint16_t, uint8_t);
   } else if (dst_cache.dtype() == at::ScalarType::BFloat16) {
-    CALL_CONVERT_FP8_E5M2(__nv_bfloat16, uint8_t);
+    CALL_CONVERT_FP8_E5M2_AGG(__nv_bfloat16, uint8_t);
   }
 }
