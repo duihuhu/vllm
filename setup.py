@@ -6,9 +6,7 @@ import subprocess
 import sys
 from shutil import which
 from typing import List
-import pybind11
-from pybind11.setup_helpers import Pybind11Extension
-# , build_ext
+
 
 import torch
 from packaging.version import Version, parse
