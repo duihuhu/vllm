@@ -27,7 +27,8 @@ void reshape_and_cache_agg(
   torch::Tensor& slot_mapping,  
   const std::string& kv_cache_dtype,
   const int block_size,
-  const int x);
+  const int x,
+  const int num_layer);
 
 void swap_blocks(
   torch::Tensor& src,

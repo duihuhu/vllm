@@ -53,8 +53,8 @@ void swap_blocks_agg(
     //int64_t src_offset = src_block_number * block_size_in_bytes;
     //int64_t dst_offset = dst_block_number * block_size_in_bytes;
     cudaMemcpyAsync(
-      dst_ptr[dst_block_number], //dst_offset,
-      src_ptr[src_block_number], //src_offset,
+      dst_ptr + dst_block_number, //dst_offset,
+      src_ptr + src_block_number, //src_offset,
       block_size_in_bytes, //layer_size_in_bytes, //block_size_in_bytes,
       memcpy_type,
       stream);
@@ -106,8 +106,8 @@ void copy_blocks_agg(
   const std::map<int64_t, std::vector<int64_t>>& block_mapping,
   const int num_layers,
   const int numel_per_layer) {
-  int num_blocks = key_caches_addresses.size();
-  TORCH_CHECK(num_blocks == value_caches_addresses.size());
+  int num_blocks = key_caches_addresses.size(0);
+  TORCH_CHECK(num_blocks == value_caches_addresses.size(0));
   if (num_blocks == 0) {
     return;
   }
@@ -217,8 +217,8 @@ __global__ void reshape_and_cache_agg_kernel(
 #ifdef ENABLE_FP8_E5M2
       //key_cache[tgt_key_idx] = fp8_e5m2_unscaled::vec_conversion<uint8_t, scalar_t>(tgt_key);
       //value_cache[tgt_value_idx] = fp8_e5m2_unscaled::vec_conversion<uint8_t, scalar_t>(tgt_value);
-      tgt_key_idx_ptr = p8_e5m2_unscaled::vec_conversion<uint8_t*, scalar_t*>(tgt_key);
-      tgt_value_idx_ptr = p8_e5m2_unscaled::vec_conversion<uint8_t*, scalar_t*>(tgt_value);
+      tgt_key_idx_ptr = fp8_e5m2_unscaled::vec_conversion<uint8_t*, scalar_t*>(tgt_key);
+      tgt_value_idx_ptr = fp8_e5m2_unscaled::vec_conversion<uint8_t*, scalar_t*>(tgt_value);
 #else
       assert(false);
 #endif
@@ -233,7 +233,7 @@ __global__ void reshape_and_cache_agg_kernel(
 
 } // namespace vllm
 
-#define CALL_RESHAPE_AND_CACHE(KV_T, CACHE_T, IS_FP8_E5M2_KV_CACHE)                                \
+#define CALL_RESHAPE_AND_CACHE_AGG(KV_T, CACHE_T, IS_FP8_E5M2_KV_CACHE)                                \
   vllm::reshape_and_cache_agg_kernel<KV_T, CACHE_T, IS_FP8_E5M2_KV_CACHE><<<grid, block, 0, stream>>>( \
     reinterpret_cast<KV_T*>(key.data_ptr()),                                                       \
     reinterpret_cast<KV_T*>(value.data_ptr()),                                                     \
@@ -256,7 +256,8 @@ void reshape_and_cache_agg(
   torch::Tensor& slot_mapping,  // [num_tokens]
   const std::string& kv_cache_dtype,
   const int block_size,
-  const int x)
+  const int x,
+  const int num_layer)
 {
   int num_tokens = key.size(0);
   int num_heads = key.size(1);
@@ -273,19 +274,19 @@ void reshape_and_cache_agg(
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
   if (kv_cache_dtype == "auto") {
     if (key.dtype() == at::ScalarType::Float) {
-      CALL_RESHAPE_AND_CACHE(float, float, false);
+      CALL_RESHAPE_AND_CACHE_AGG(float, float, false);
     } else if (key.dtype() == at::ScalarType::Half) {
-      CALL_RESHAPE_AND_CACHE(uint16_t, uint16_t, false);
+      CALL_RESHAPE_AND_CACHE_AGG(uint16_t, uint16_t, false);
     } else if (key.dtype() == at::ScalarType::BFloat16) {
-      CALL_RESHAPE_AND_CACHE(__nv_bfloat16, __nv_bfloat16, false);
+      CALL_RESHAPE_AND_CACHE_AGG(__nv_bfloat16, __nv_bfloat16, false);
     }
   } else if (kv_cache_dtype == "fp8_e5m2") {
     if (key.dtype() == at::ScalarType::Float) {
-      CALL_RESHAPE_AND_CACHE(float, uint8_t, true);
+      CALL_RESHAPE_AND_CACHE_AGG(float, uint8_t, true);
     } else if (key.dtype() == at::ScalarType::Half) {
-      CALL_RESHAPE_AND_CACHE(uint16_t, uint8_t, true);
+      CALL_RESHAPE_AND_CACHE_AGG(uint16_t, uint8_t, true);
     } else if (key.dtype() == at::ScalarType::BFloat16) {
-      CALL_RESHAPE_AND_CACHE(__nv_bfloat16, uint8_t, true);
+      CALL_RESHAPE_AND_CACHE_AGG(__nv_bfloat16, uint8_t, true);
     }
   } else {
     TORCH_CHECK(false, "Unsupported data type of kv cache: ", kv_cache_dtype);

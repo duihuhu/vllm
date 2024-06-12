@@ -96,7 +96,8 @@ class PagedAttention:
         slot_mapping: torch.Tensor,
         kv_cache_dtype: str,
         block_size: int,
-        x: int
+        x: int,
+        num_layer: int
     ) -> None:
         cache_ops.reshape_and_cache_agg(
             key,
@@ -106,7 +107,8 @@ class PagedAttention:
             slot_mapping,
             kv_cache_dtype,
             block_size,
-            x
+            x,
+            num_layer
         )
 
     @staticmethod

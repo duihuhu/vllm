@@ -216,7 +216,8 @@ class FlashAttentionImpl(AttentionImpl):
                                                         kv_cache_address[1], attn_metadata.slot_mapping,
                                                         attn_metadata.kv_cache_dtype,
                                                         self.block_size,
-                                                        16 // key.element_size())
+                                                        16 // key.element_size(),
+                                                        layer_id)
             #TODO for hhy
             #write_to_agg_paged_cache -> Done
 
