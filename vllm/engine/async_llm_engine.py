@@ -449,7 +449,6 @@ class _AsyncLLMEngine(LLMEngine):
         merge_reqs_info = None    
         if self.deploy_config.enable_layer and self.deploy_config.role == "prompt" and seq_group_metadata_list:
             merge_reqs_info, order_request_ids = await self.query_layer_kv_blocks(request_tracker)
-            print("aaaaaa")
             #sort by merge req info's request id order to send block 
             order_request_ids_index: Dict[int, int] = {rid: index for index, rid in enumerate(order_request_ids)}
             seq_group_metadata_list.sort(key=lambda x: order_request_ids_index[x.request_id])
@@ -507,6 +506,7 @@ class _AsyncLLMEngine(LLMEngine):
                     self.scheduler.add_send_transfering(seq_group)
                     
         if self.deploy_config.enable_layer:
+            print("processed_output_without_layer ",processed_output_without_layer,  processed_output_with_layer)
             return processed_output_without_layer, processed_output_with_layer
         return processed_output_without_layer, []
 
