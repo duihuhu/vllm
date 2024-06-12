@@ -211,8 +211,8 @@ __global__ void reshape_and_cache_agg_kernel(
                                   + head_idx * head_size * block_size
                                   + head_offset * block_size
                                   + block_offset;
-    scalar_t tgt_key = key + src_key_idx;
-    scalar_t tgt_value = value + src_value_idx;
+    scalar_t tgt_key = key[src_key_idx];
+    scalar_t tgt_value = value[src_value_idx];
     if constexpr (is_fp8_e5m2_kv_cache) {
 #ifdef ENABLE_FP8_E5M2
       //key_cache[tgt_key_idx] = fp8_e5m2_unscaled::vec_conversion<uint8_t, scalar_t>(tgt_key);
