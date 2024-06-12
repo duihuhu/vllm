@@ -201,32 +201,32 @@ __global__ void reshape_and_cache_agg_kernel(
     const int x_offset = head_offset % x;
 
     cache_t* __restrict__ key_cache = reinterpret_cast<cache_t*>(key_cache_ptrs[block_idx]);
-    cache_t* tgt_key_idx_ptr = key_cache + num_layer * num_heads * (head_size / x) * block_size * x //block_idx * num_heads * (head_size / x) * block_size * x
+    const int64_t tgt_key_idx_ptr = num_layer * num_heads * (head_size / x) * block_size * x //block_idx * num_heads * (head_size / x) * block_size * x
                                 + head_idx * (head_size / x) * block_size * x
                                 + x_idx * block_size * x
                                 + block_offset * x
                                 + x_offset;
     cache_t* __restrict__ value_cache = reinterpret_cast<cache_t*>(value_cache_ptrs[block_idx]);
-    cache_t* tgt_value_idx_ptr = value_cache + num_layer * num_heads * head_size * block_size //block_idx * num_heads * head_size * block_size
+    const int64_t tgt_value_idx_ptr = num_layer * num_heads * head_size * block_size //block_idx * num_heads * head_size * block_size
                                   + head_idx * head_size * block_size
                                   + head_offset * block_size
                                   + block_offset;
-    scalar_t* tgt_key = key + src_key_idx;
-    scalar_t* tgt_value = value + src_value_idx;
+    scalar_t tgt_key = key + src_key_idx;
+    scalar_t tgt_value = value + src_value_idx;
     if constexpr (is_fp8_e5m2_kv_cache) {
 #ifdef ENABLE_FP8_E5M2
       //key_cache[tgt_key_idx] = fp8_e5m2_unscaled::vec_conversion<uint8_t, scalar_t>(tgt_key);
       //value_cache[tgt_value_idx] = fp8_e5m2_unscaled::vec_conversion<uint8_t, scalar_t>(tgt_value);
-      tgt_key_idx_ptr = fp8_e5m2_unscaled::vec_conversion<uint8_t*, scalar_t*>(tgt_key);
-      tgt_value_idx_ptr = fp8_e5m2_unscaled::vec_conversion<uint8_t*, scalar_t*>(tgt_value);
+      key_cache[tgt_key_idx_ptr] = fp8_e5m2_unscaled::vec_conversion<uint8_t, scalar_t>(tgt_key);
+      value_cache[tgt_value_idx_ptr] = fp8_e5m2_unscaled::vec_conversion<uint8_t, scalar_t>(tgt_value);
 #else
       assert(false);
 #endif
     } else {
       //key_cache[tgt_key_idx] = tgt_key;
       //value_cache[tgt_value_idx] = tgt_value;
-      tgt_key_idx_ptr = reinterpret_cast<cache_t*>(tgt_key);
-      tgt_value_idx_ptr = reinterpret_cast<cache_t*>(tgt_value);
+      key_cache[tgt_key_idx_ptr] = tgt_key;
+      value_cache[tgt_value_idx_ptr] = tgt_value;
     }
   }
 }
