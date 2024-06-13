@@ -89,15 +89,15 @@ else:
 key = torch.zeros(size = (16, 10, 128), dtype=torch.float16, device='cuda')
 value = torch.zeros(size = (16, 10, 128), dtype=torch.float16, device='cuda')
 slots = [i for i in range(16)]
-slots = torch.Tensor(slots, device='cuda')
+slots2 = torch.Tensor(slots, dtype=torch.long, device='cuda')
 
 t9 = time.time()
-cache_ops.reshape_and_cache_agg(key, value, key_blocks_addresses, value_blocks_addresses, slots, "auto", 
+cache_ops.reshape_and_cache_agg(key, value, key_blocks_addresses, value_blocks_addresses, slots2, "auto", 
                                 block_size, x, 0)
 t10 = time.time()
 
 t11 = time.time()
-cache_ops.reshape_and_cache(key, value, key_cache[1], value_cache[1], slots, "auto")
+cache_ops.reshape_and_cache(key, value, key_cache[1], value_cache[1], slots2, "auto")
 t12 = time.time()
 
 print(f"reshape_and_cache_agg costs {t10-t9}, reshape_and_cache costs {t12-t11}")
