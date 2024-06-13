@@ -136,6 +136,7 @@ def select_agg_instance(prompt_token_ids, policy):
 def random_instance(instance_type):
     instances = []
     for key, value in instance_table.items():
+        print("instance_type ", instance_type, key, value)
         if instance_type in key:
             instances.append(value)
     return random.choice(instances)
