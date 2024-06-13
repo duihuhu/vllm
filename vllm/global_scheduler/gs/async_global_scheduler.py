@@ -135,7 +135,6 @@ def select_agg_instance(prompt_token_ids, policy):
 
 def random_instance(instance_type):
     instances = []
-    print(instance_table)
     for key, value in instance_table.items():
         if instance_type in key:
             instances.append(value)
@@ -151,13 +150,13 @@ def rr_instance(instance_type):
     for key, value in instance_table.items():
         if instance_type in key:
             instances.append(value)
-    if instance_type == EngineType.EPD:    
+    if instance_type == EngineType.EPD.value:    
         instance = instances[epd_rr_num] 
         epd_rr_num = (epd_rr_num + 1) % len(instances)
-    elif instance_type == EngineType.EPREFILL:
+    elif instance_type == EngineType.EPREFILL.value:
         instance = instances[ep_rr_num] 
         ep_rr_num = (ep_rr_num + 1) % len(instances)
-    elif instance_type == EngineType.EDECODE:
+    elif instance_type == EngineType.EDECODE.value:
         instance = instances[ed_rr_num] 
         ed_rr_num = (ed_rr_num + 1) % len(instances)
     return instance
