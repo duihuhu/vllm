@@ -685,7 +685,7 @@ class ModelRunner:
         print("eeeeee3")
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
-        print("logits", output)
+        print("logits", logits)
         # Only perform sampling in the driver worker.
         if not sampling_metadata.perform_sampling:
             return None
