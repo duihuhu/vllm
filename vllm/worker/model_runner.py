@@ -685,7 +685,7 @@ class ModelRunner:
         print("eeeeee3")
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
-        print("eeeeee41")
+        print("logits", output)
         # Only perform sampling in the driver worker.
         if not sampling_metadata.perform_sampling:
             return None
@@ -694,7 +694,7 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-        print("eeeeee42")
+        print("output", output)
         return output
 
     @torch.inference_mode()
