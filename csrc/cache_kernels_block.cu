@@ -39,8 +39,8 @@ void swap_blocks_agg(
     TORCH_CHECK(false, "Invalid device combination");
   }
 
-  const int64_t* __restrict__ src_ptr = src_addresses.data_ptr<int64_t>();
-  const int64_t* __restrict__ dst_ptr = dst_addresses.data_ptr<int64_t>();
+  int64_t* src_ptr = src_addresses.data_ptr<int64_t>();
+  int64_t* dst_ptr = dst_addresses.data_ptr<int64_t>();
 
   //const int64_t block_size_in_bytes = src_addresses.element_size() * src_addresses[0].numel(); // find loc
   //const int64_t layer_offset = layer_size_in_bytes * layer_id;
@@ -50,8 +50,8 @@ void swap_blocks_agg(
   for (const auto& pair : block_mapping) {
     int64_t src_block_number = pair.first;
     int64_t dst_block_number = pair.second;
-    char* __restrict__ d_ptr = reinterpret_cast<char*>(dst_ptr[dst_block_number]);
-    char* __restrict__ s_ptr = reinterpret_cast<char*>(src_ptr[src_block_number]);
+    char* d_ptr = reinterpret_cast<char*>(dst_ptr[dst_block_number]);
+    char* s_ptr = reinterpret_cast<char*>(src_ptr[src_block_number]);
     //int64_t src_offset = src_block_number * block_size_in_bytes;
     //int64_t dst_offset = dst_block_number * block_size_in_bytes;
     cudaMemcpyAsync(
