@@ -215,6 +215,9 @@ async def add_request(request: Request) -> Response:
     #TODO select ep and ed instance for request 
     ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
     
+    print("ep instance ", ep_instance)
+    print("ep instance ", ep_instance)
+
     # #TODO select epd instance for request 
     # epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
 
@@ -246,9 +249,6 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=9000)
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
-    parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
-    parser.add_argument("--enable-separate",  action="store_true")
-    parser.add_argument("--enable-layer",  action="store_true")
     parser.add_argument("--ep-policy",  type=str, default="random")
     parser.add_argument("--ed-policy",  type=str, default="random")
     parser.add_argument("--epd-policy",  type=str, default="random")
