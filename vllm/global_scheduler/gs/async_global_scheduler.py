@@ -127,12 +127,12 @@ def select_instance(prompt_token_ids, policy, instance_type):
         print("policy not finished ")
     
 def select_disagg_instance(prompt_token_ids, prefill_policy, decode_policy) -> Tuple[InstanceInfo, InstanceInfo]:
-    ep_instance = select_instance(prompt_token_ids, prefill_policy, EngineType.EPREFILL)
-    ed_instance  = select_instance(prompt_token_ids, decode_policy, EngineType.EDECODE)
+    ep_instance = select_instance(prompt_token_ids, prefill_policy, EngineType.EPREFILL.value)
+    ed_instance  = select_instance(prompt_token_ids, decode_policy, EngineType.EDECODE.value)
     return ep_instance, ed_instance
 
 def select_agg_instance(prompt_token_ids, policy):
-    epd_instance = select_instance(prompt_token_ids, policy, EngineType.EPD)
+    epd_instance = select_instance(prompt_token_ids, policy, EngineType.EPD.value)
     return epd_instance
 
 def random_instance(instance_type):
