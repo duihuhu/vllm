@@ -113,13 +113,13 @@ async def asyc_forward_request_resp(request_dict, api_url):
 
 def select_instance(prompt_token_ids, policy, instance_type):
     policy = DistPolicy(policy)
-    if policy == DistPolicy.RANDOM:
+    if policy == DistPolicy.RANDOM.value:
         return random_choice(instance_type)
-    elif policy == DistPolicy.RR:
+    elif policy == DistPolicy.RR.value:
         return rr_choice(instance_type)
-    elif policy == DistPolicy.PREFIX_CACHE:
+    elif policy == DistPolicy.PREFIX_CACHE.value:
         return prefix_cache_choice(prompt_token_ids, instance_type)
-    elif policy == DistPolicy.LEAST_LOAD:
+    elif policy == DistPolicy.LEAST_LOAD.value:
         return least_load_choice(instance_type)
     else:
         print("policy not finished ")
@@ -181,13 +181,11 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
     if not nodes:
         # instance = least_load_choice(instance_type=instance_type)
         instance = random_choice(instance_type=instance_type)
-        print("no match prefix ", instance.service_port)
     else:
         start_instances = nodes[0].instances
         end_instances = nodes[-1].instances
         instances = list(set(start_instances) & set(end_instances))
         instance = random.choice(instances)
-        print("match prefix ", instance.service_port)
     return instance
 
 def prefix_cache_choice(prompt_token_ids, instance_type):
@@ -223,7 +221,7 @@ async def add_request(request: Request) -> Response:
     print("ed instance ", ed_instance.host, ed_instance.service_port)
 
     # #TODO select epd instance for request 
-    # epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
+    epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
 
     #add prefill and decode info in request_dict, belong to one request
     request_dict["eprefill_host"] = ep_instance.host
