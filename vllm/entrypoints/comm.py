@@ -25,7 +25,7 @@ class CommonHeader:
             return {
                 "host": self.host,
                 "port": str(self.port),
-                "engine_type": self.engine_type.name
+                "engine_type": self.engine_type.value
             }
         else:
             return {
