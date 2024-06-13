@@ -139,7 +139,6 @@ def random_instance(instance_type):
     instances = []
     print(instance_table)
     for key, value in instance_table.items():
-        print("key ", key, " instance type " ,instance_type)
         if instance_type in key:
             instances.append(value)
     return random.choice(instances)
@@ -218,8 +217,8 @@ async def add_request(request: Request) -> Response:
     #TODO select ep and ed instance for request 
     ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
     
-    print("ep instance ", ep_instance)
-    print("ep instance ", ep_instance)
+    print("ep instance ", ep_instance.host, ep_instance.service_port)
+    print("ed instance ", ed_instance.host, ed_instance.service_port)
 
     # #TODO select epd instance for request 
     # epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
