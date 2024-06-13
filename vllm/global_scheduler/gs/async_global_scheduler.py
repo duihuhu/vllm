@@ -171,11 +171,11 @@ def rr_choice(instance_type):
 def prefix_cache_instance(prompt_token_ids, instance_type):
     instances = None
     instance = None
-    if instance_type == EngineType.EPREFILL:
+    if instance_type == EngineType.EPREFILL.value:
         instances = ep_token_tree.match(prompt_token_ids)
-    elif instance_type == EngineType.EDECODE:
+    elif instance_type == EngineType.EDECODE.value:
         instances = ed_token_tree.match(prompt_token_ids)
-    elif instance_type == EngineType.EPD:
+    elif instance_type == EngineType.EPD.value:
         instances = epd_token_tree.match(prompt_token_ids)
     #if not find, Degrade to other policy
     if instances == None:
