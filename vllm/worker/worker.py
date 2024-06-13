@@ -273,7 +273,6 @@ class Worker:
             output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache)
             
         swap_finished_req_ids = self.cache_engine.check_finished_events()
-        print("eeee5")
         return (output, swap_finished_req_ids)
 
     def add_lora(self, lora_request: LoRARequest) -> bool:

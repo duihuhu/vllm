@@ -1081,6 +1081,7 @@ class AsyncLLMEngine:
                     "(AsyncEngineDeadError).")
         else:
             self._request_tracker.new_requests_event.set()
+        #TODO there may has some isuue when decode without hbm
         if merge_seq_groups:
             return merge_request_id, merge_num_blocks, current_transfer_tag, merge_is_allocated
         else:

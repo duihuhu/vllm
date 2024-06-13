@@ -281,7 +281,6 @@ class LlamaModel(nn.Module):
             )
             if merge_reqs_info:
                 for merge_req_info in merge_reqs_info:
-                    print("add tasks ", i)
                     trans_manager.add_tasks([trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize()])
         hidden_states, _ = self.norm(hidden_states, residual)
         return hidden_states

@@ -459,7 +459,6 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
         blocks_to_copy: Dict[int, List[int]],
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
     ) -> SamplerOutput:
-        print("eeeeeee")
         all_outputs = await self._run_workers_async(
             "execute_model",
             # seq_group_metadata_list=seq_group_metadata_list,
@@ -470,7 +469,6 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
                 "blocks_to_copy": blocks_to_copy,
                 "merge_reqs_info": merge_reqs_info,
             })
-        print("eeeeeee1")
 
         # Only the driver worker returns the sampling results.
         # output = all_outputs[0]
