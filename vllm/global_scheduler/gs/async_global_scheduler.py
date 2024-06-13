@@ -114,6 +114,7 @@ async def asyc_forward_request_resp(request_dict, api_url):
             return await response.text()
 
 def select_instance(prompt_token_ids, policy, instance_type):
+    policy = DistPolicy[policy]
     if policy == DistPolicy.RANDOM:
         return random_choice(instance_type)
     elif policy == DistPolicy.RR:
