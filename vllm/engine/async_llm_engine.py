@@ -1069,16 +1069,18 @@ class AsyncLLMEngine:
         if merge_seq_groups:
             self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
             current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
-            self._request_tracker.new_requests_event.set()
         if not self.is_running:
             if self.start_engine_loop:
                 self.start_background_loop()
+                self._request_tracker.new_requests_event.set()
             else:
                 raise AsyncEngineDeadError(
                     "Background loop is not running. If it was running, "
                     "inspect the output to find the stacktrace of the "
                     "error that caused the background loop to stop "
                     "(AsyncEngineDeadError).")
+        else:
+            self._request_tracker.new_requests_event.set()
         if merge_seq_groups:
             return merge_request_id, merge_num_blocks, current_transfer_tag, merge_is_allocated
         else:
