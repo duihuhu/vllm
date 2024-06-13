@@ -1066,8 +1066,10 @@ class AsyncLLMEngine:
             else:
                 merge_num_blocks.append(0)
                 merge_is_allocated.append(False)
-        self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
-        current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
+        if merge_seq_groups:
+            self.engine.scheduler.recv_transfering[merge_request_id] = merge_seq_groups
+            current_transfer_tag = self.engine.recv_kv_trans_scheduler.add_layer_kv_request(merge_request_id, global_ranks , merge_blocks)
+            self._request_tracker.new_requests_event.set()
         if not self.is_running:
             if self.start_engine_loop:
                 self.start_background_loop()
