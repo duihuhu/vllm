@@ -177,6 +177,7 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
         instances = ed_token_tree.match(prompt_token_ids)
     elif instance_type == EngineType.EPD.value:
         instances = epd_token_tree.match(prompt_token_ids)
+    print("match ", instances)
     #if not find, Degrade to other policy
     if instances == None:
         instance = least_load_choice(instance_type=instance_type)
@@ -237,8 +238,10 @@ async def add_request(request: Request) -> Response:
             resp = json.loads(resp)
             #update gs prompt tree and decode tree
             if resp['n'] == 0:
+                print("resp['prompt_token_ids'] ", resp['prompt_token_ids'])
                 ep_token_tree.insert(resp['prompt_token_ids'], ep_instance)
             if resp['finished'] == True:
+                print("resp['prompt_token_ids'] + resp['prefilled_token_id'] ", resp['prompt_token_ids'])
                 ed_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], ed_instance)
                 # epd_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], epd_instance)
                 
