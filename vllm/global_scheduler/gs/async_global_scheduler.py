@@ -145,9 +145,7 @@ def random_choice(instance_type):
     return instance
 
 def rr_instance(instance_type):
-    global ep_rr_num
-    global ed_rr_num
-    global epd_rr_num
+    global ep_rr_num, ed_rr_num, epd_rr_num
     instances = []
     instance = None
     for key, value in instance_table.items():
@@ -169,6 +167,7 @@ def rr_choice(instance_type):
     return instance
 
 def prefix_cache_instance(prompt_token_ids, instance_type):
+    global ep_token_tree, ed_token_tree, epd_token_tree
     instances = None
     instance = None
     if instance_type == EngineType.EPREFILL.value:
@@ -179,7 +178,7 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
         nodes = epd_token_tree.match(prompt_token_ids)
         
     #if not find, Degrade to other policy
-    if not instances:
+    if not nodes:
         instance = least_load_choice(instance_type=instance_type)
         print("no match prefix ", instance.service_port)
     else:
