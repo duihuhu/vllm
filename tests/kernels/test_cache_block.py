@@ -42,7 +42,8 @@ for _ in range(num_layers):
                                  device='cuda').uniform_(-1e-3, 1e-3)
     value_cache.append(value_block_tensor2)
 
-block_mapping = {0:2}
+block_mapping = {}
+block_mapping[0] = 2
 
 block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size()
 
@@ -63,7 +64,8 @@ if is_close:
 else:
     print("Error in Swap")
 
-block_mapping2 = {0:[3,4]}
+block_mapping2 = {}
+block_mapping2[0] = [3,4]
 
 t5 = time.time()
 cache_ops.copy_blocks_agg(key_blocks_addresses, value_blocks_addresses, key_agg_blocks[0][0,0,:,0,:], 
