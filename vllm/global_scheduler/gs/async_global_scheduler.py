@@ -113,13 +113,13 @@ async def asyc_forward_request_resp(request_dict, api_url):
 
 def select_instance(prompt_token_ids, policy, instance_type):
     policy = DistPolicy(policy)
-    if policy == DistPolicy.RANDOM.value:
+    if policy == DistPolicy.RANDOM:
         return random_choice(instance_type)
-    elif policy == DistPolicy.RR.value:
+    elif policy == DistPolicy.RR:
         return rr_choice(instance_type)
-    elif policy == DistPolicy.PREFIX_CACHE.value:
+    elif policy == DistPolicy.PREFIX_CACHE:
         return prefix_cache_choice(prompt_token_ids, instance_type)
-    elif policy == DistPolicy.LEAST_LOAD.value:
+    elif policy == DistPolicy.LEAST_LOAD:
         return least_load_choice(instance_type)
     else:
         print("policy not finished ")
