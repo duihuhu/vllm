@@ -255,6 +255,12 @@ class UncachedBlockAllocator(BlockAllocatorBase):
     def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
         pass
     
+    def get_radix_num_used_blocks(self) -> int:
+        pass
+    
+    def get_num_used_blocks(self) -> int:
+        return self.num_blocks - len(self.free_blocks)
+    
     def get_num_free_blocks(self) -> int:
         return len(self.free_blocks)
 
