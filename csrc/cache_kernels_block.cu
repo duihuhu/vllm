@@ -50,14 +50,14 @@ void swap_blocks_agg(
   for (const auto& pair : block_mapping) {
     int64_t src_block_number = pair.first;
     int64_t dst_block_number = pair.second;
-    char *d_ptr = reinterpret_cast<char*>(dst_ptr[dst_block_number])
-    char *s_ptr = reinterpret_cast<char*>(src_ptr[src_block_number])
+    char *d_ptr = reinterpret_cast<char*>(dst_ptr[dst_block_number]);
+    char *s_ptr = reinterpret_cast<char*>(src_ptr[src_block_number]);
     //int64_t src_offset = src_block_number * block_size_in_bytes;
     //int64_t dst_offset = dst_block_number * block_size_in_bytes;
     cudaMemcpyAsync(
-      d_ptr, //dst_ptr + dst_offset + layer_offset, //dst_offset,
-      s_ptr, //src_ptr + src_offset + layer_offset, //src_offset,
-      block_size_in_bytes, //layer_size_in_bytes, //, //block_size_in_bytes,
+      d_ptr, 
+      s_ptr, 
+      block_size_in_bytes, 
       memcpy_type,
       stream);
   }
