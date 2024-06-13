@@ -497,7 +497,7 @@ class EngineArgs:
             vision_language_config = None
 
         deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
-            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown)
+            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.enable_radix_caching)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 

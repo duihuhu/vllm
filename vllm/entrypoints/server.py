@@ -449,18 +449,35 @@ class Server:
         self.reporter = threading.Thread(target=self.report_local_info, args=(server_args.report_interval_time,))
         self.reporter.start()
     
+    def get_used_gpu_blocks(self):
+        if self.engine.engine.deploy_config.enable_radix_caching:
+            return self.engine.engine.scheduler.block_manager.get_radix_num_used_blocks()
+        else:
+            return self.engine.engine.scheduler.block_manager.get_radix_num_used_blocks()
+        
+    def get_remained_gpu_blocks(self):
+        if self.engine.engine.deploy_config.enable_radix_caching:
+            return self.engine.engine.scheduler.block_manager.get_radix_num_free_blocks()
+        else:
+            return self.engine.engine.scheduler.block_manager.get_num_free_gpu_blocks()
+        
+    def get_num_unfinished_requests(self):
+        return len(self.engine.engine.scheduler.waiting) + len(self.engine.engine.scheduler.running) \
+            + len(self.engine.engine.scheduler.swapped) + len(self.engine.engine.scheduler.kv_prepared_seq_group) \
+            + len(self.engine.engine.scheduler.decode_recv_finished) + len( self.engine.engine.scheduler.meta_recv_finished)
+    
     def report_local_info(self, report_interval_time: float):
         #todo 从engine中获得相关负载信息，目前手动构造
         while True:
             time.sleep(report_interval_time)
             load_info = VLLMLoadInfo(
-                used_gpu_blocks=0,
-                used_cpu_blocks=0,
-                remained_gpu_blocks=0,
-                remained_cpu_blocks=0,
-                num_unfinished_requests=0,
+                used_gpu_blocks = self.get_used_gpu_blocks(),
+                used_cpu_blocks = 0,
+                remained_gpu_blocks = self.get_used_gpu_blocks(),
+                remained_cpu_blocks = 0,
+                num_unfinished_requests = self.get_num_unfinished_requests(),
                 global_ranks = self.global_ranks,
-                timestamp=time.time()
+                timestamp = time.time()
             )
             data = CommData(
                 headers=CommonHeader(self.local_entry_point[0], self.local_entry_point[1],

@@ -178,7 +178,17 @@ class CachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             assert block.block_hash not in self.evictor
             self.evictor.add(block)
-            
+    
+    def get_radix_num_free_blocks(self) -> int:
+        return (self.num_blocks - self.current_num_blocks +
+                self.radix_evictor.num_blocks)
+        
+    def get_radix_num_used_blocks(self) -> int:
+        return self.current_num_blocks - self.radix_evictor.num_blocks        
+
+    def get_num_used_blocks(self) -> int:
+        return self.current_num_blocks - self.evictor.num_blocks
+                
     def get_num_free_blocks(self) -> int:
         return (self.num_blocks - self.current_num_blocks +
                 self.evictor.num_blocks)
@@ -767,8 +777,17 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_table = self.block_tables[seq.seq_id]
         return [block.block_number for block in block_table]
 
+    def get_radix_num_free_blocks(self) -> int:
+        return self.gpu_allocator.get_radix_num_free_blocks()
+
+    def get_radix_num_used_blocks(self) -> int:
+        return self.gpu_allocator.get_radix_num_used_blocks()
+
     def get_num_free_gpu_blocks(self) -> int:
         return self.gpu_allocator.get_num_free_blocks()
+
+    def get_num_used_gpu_blocks(self) -> int:
+        return self.gpu_allocator.get_num_used_blocks()
 
     def get_num_free_cpu_blocks(self) -> int:
         return self.cpu_allocator.get_num_free_blocks()
