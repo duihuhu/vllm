@@ -2,7 +2,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Tuple, List
-from vllm.global_scheduler.global_meta import InstanceInfo
+from vllm.global_scheduler.gs.global_meta import InstanceInfo
 from vllm.logger import init_logger
 
 logger = init_logger(__name__)

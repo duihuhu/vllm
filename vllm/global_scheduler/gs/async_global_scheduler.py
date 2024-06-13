@@ -4,7 +4,7 @@ import json
 from fastapi import FastAPI, Request
 from fastapi.responses import Response, StreamingResponse
 import uvicorn
-from vllm.global_scheduler.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, DistPolicy
+from vllm.global_scheduler.gs.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, DistPolicy
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.global_scheduler.entrypoints_config as cfg
@@ -114,7 +114,7 @@ async def asyc_forward_request_resp(request_dict, api_url):
             return await response.text()
 
 def select_instance(prompt_token_ids, policy, instance_type):
-    policy = DistPolicy[policy]
+    policy = DistPolicy(policy)
     if policy == DistPolicy.RANDOM:
         return random_choice(instance_type)
     elif policy == DistPolicy.RR:
