@@ -437,11 +437,11 @@ class Server:
         
         role = engine_args.role
         if not enable_separate:
-            self.engine_type = EngineType.EPD
+            self.engine_type = EngineType.EPD.value
         elif role == 'prompt':
-            self.engine_type = EngineType.EPREFILL
+            self.engine_type = EngineType.EPREFILL.value
         else:
-            self.engine_type = EngineType.EDECODE
+            self.engine_type = EngineType.EDECODE.value
         
         self.engine = AsyncLLMEngine.from_engine_args(engine_args=engine_args)
         self.global_ranks = self.engine.engine.get_global_ranks()
