@@ -96,7 +96,7 @@ def run_new_single_query_cached_kv_attention(v) -> None:
                 "auto"
             )
             b2 = time.time()
-            print("v1 block us ", (b2-a2)*1000000)
+            print("v1 us ", (b2-a2)*1000000)
 
             output3 = torch.empty(3, 40, 128, dtype=torch.float16, device='cuda')
             tmp_output1 = torch.empty(3, 40, 512, 128, dtype=torch.float16, device='cuda')
@@ -149,10 +149,10 @@ def run_new_single_query_cached_kv_attention(v) -> None:
                 "auto"
             )
             t4 = time.time()
-            print("v2 us ", (t3-t4)*1000000)
+            print("v2 us ", (t4-t3)*1000000)
 
             is_close1 = torch.allclose(output1, output2, atol=1e-3, rtol=1e-5)
-            print("Tolerant Errors for V2." if is_close1 else "Wrong Code in V2!")
+            print("Tolerant Errors for V1." if is_close1 else "Wrong Code in V1!")
 
             is_close2 = torch.allclose(output3, output4, atol=1e-3, rtol=1e-5)
             print("Tolerant Errors for V2." if is_close2 else "Wrong Code in V2!")
