@@ -293,14 +293,15 @@ class PagedAttention:
         src_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
         dst_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
         src_to_dst: Dict[int, int],
-        block_size_in_bytes: int) -> None:
+        layer_size_in_bytes: int,
+        layer_id: int) -> None:
         src_key_cache_addresses = src_kv_addresses[0]
         dst_key_cache_addresses = dst_kv_addresses[0]
-        cache_ops.swap_blocks_agg(src_key_cache_addresses, dst_key_cache_addresses, src_to_dst, block_size_in_bytes)
+        cache_ops.swap_blocks_agg(src_key_cache_addresses, dst_key_cache_addresses, src_to_dst, layer_size_in_bytes, layer_id)
 
         src_value_cache_addresses = src_kv_addresses[1]
         dst_value_cache_addresses = dst_kv_addresses[1]
-        cache_ops.swap_blocks_agg(src_value_cache_addresses, dst_value_cache_addresses, src_to_dst, block_size_in_bytes)
+        cache_ops.swap_blocks_agg(src_value_cache_addresses, dst_value_cache_addresses, src_to_dst, layer_size_in_bytes, layer_id)
 
     @staticmethod
     def copy_blocks_agg (

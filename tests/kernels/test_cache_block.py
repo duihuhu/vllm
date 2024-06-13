@@ -45,11 +45,11 @@ for _ in range(num_layers):
 block_mapping = {}
 block_mapping[0] = 2
 
-block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size()
+block_size_in_bytes = key_agg_blocks[0][0].numel() * key_agg_blocks[0][0].element_size()
 
 #copy from keys to values -> simplize the test
 t1 = time.time()
-cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes)
+cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes, 0)
 t2 = time.time()
 
 t3 = time.time()
@@ -58,7 +58,7 @@ t4 = time.time()
 
 print(f"swap_blocks_agg costs {t2-t1}, swap_blocks costs {t4-t3}")
 
-is_close = torch.allclose(key_agg_blocks[0], key_agg_blocks[2], atol=1e-3, rtol=1e-5)
+is_close = torch.allclose(key_agg_blocks[0][0], key_agg_blocks[2][0], atol=1e-3, rtol=1e-5)
 if is_close:
     print("Pass for Swap")
 else:

@@ -222,6 +222,7 @@ class Worker:
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
+        layer_id: int
     ) -> None:
         # Issue cache operations.
         # TODO(woosuk): Profile swapping overhead and optimize if needed.
@@ -230,10 +231,12 @@ class Worker:
                 self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu[0],
                                               self.caches_addresses_tensors_gpu[0],
                                               blocks_to_swap_in,
+                                              layer_id,
                                               "test")
                 self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu[1],
                                               self.caches_addresses_tensors_gpu[1],
                                               blocks_to_swap_in,
+                                              layer_id,
                                               "test")
             else:
                 self.cache_engine.swap_in(blocks_to_swap_in)
@@ -242,10 +245,12 @@ class Worker:
                 self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu[0],
                                               self.caches_addresses_tensors_cpu[0],
                                               blocks_to_swap_out,
+                                              layer_id,
                                               "test")
                 self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu[1],
                                               self.caches_addresses_tensors_cpu[1],
                                               blocks_to_swap_out,
+                                              layer_id,
                                               "test")
             else:
                 self.cache_engine.swap_out(blocks_to_swap_out)

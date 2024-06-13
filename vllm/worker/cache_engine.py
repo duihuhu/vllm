@@ -179,10 +179,11 @@ class CacheEngine:
                     src_addresses: torch.Tensor,
                     dst_addresses: torch.Tensor,
                     src_to_dst: Dict[int, int], 
+                    layer_id: int,
                     key: str) -> None:
-        block_size_in_bytes = self.gpu_cache[0][0].element_size() * self.gpu_cache[0][0].numel()
+        layer_size_in_bytes = self.gpu_cache[0][0][0].element_size() * self.gpu_cache[0][0][0].numel()
         with torch.cuda.stream(self.swap_in_stream):
-            ops.swap_blocks_agg(src_addresses, dst_addresses, src_to_dst, block_size_in_bytes)
+            ops.swap_blocks_agg(src_addresses, dst_addresses, src_to_dst, layer_size_in_bytes, layer_id)
             event = torch.cuda.Event()
             event.record()
         self.swap_in_events[key] = event

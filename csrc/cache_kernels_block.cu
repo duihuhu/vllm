@@ -22,7 +22,8 @@ void swap_blocks_agg(
   torch::Tensor& src_addresses,
   torch::Tensor& dst_addresses,
   const std::map<int64_t, int64_t>& block_mapping,
-  const int64_t block_size_in_bytes) {
+  const int64_t layer_size_in_bytes,
+  const int64_t layer_id) {
   torch::Device src_device = src_addresses.device();
   torch::Device dst_device = dst_addresses.device();
   cudaMemcpyKind memcpy_type;
@@ -42,20 +43,20 @@ void swap_blocks_agg(
   char *src_ptr = static_cast<char*>(src_addresses.data_ptr());
   char *dst_ptr = static_cast<char*>(dst_addresses.data_ptr());
 
-  //const int64_t block_size_in_bytes = src.element_size() * src[0].numel();
-  //const int64_t layer_offset = layer_size_in_bytes * layer_id;
+  const int64_t block_size_in_bytes = src.element_size() * src[0].numel(); // find loc
+  const int64_t layer_offset = layer_size_in_bytes * layer_id;
   const at::cuda::OptionalCUDAGuard device_guard(src_device.is_cuda() ? src_device : dst_device);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
   // NOTE(woosuk): This can be slow if the number of blocks is large.
   for (const auto& pair : block_mapping) {
     int64_t src_block_number = pair.first;
     int64_t dst_block_number = pair.second;
-    //int64_t src_offset = src_block_number * block_size_in_bytes;
-    //int64_t dst_offset = dst_block_number * block_size_in_bytes;
+    int64_t src_offset = src_block_number * block_size_in_bytes;
+    int64_t dst_offset = dst_block_number * block_size_in_bytes;
     cudaMemcpyAsync(
-      dst_ptr + dst_block_number, //dst_offset,
-      src_ptr + src_block_number, //src_offset,
-      block_size_in_bytes, //layer_size_in_bytes, //block_size_in_bytes,
+      dst_ptr + dst_offset + layer_offset, //dst_offset,
+      src_ptr + src_offset + layer_offset, //src_offset,
+      layer_size_in_bytes, //, //block_size_in_bytes,
       memcpy_type,
       stream);
   }
