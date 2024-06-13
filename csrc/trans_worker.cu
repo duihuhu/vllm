@@ -53,6 +53,7 @@ void TransWorker::worker() {
                     // trans_engine.send_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.dst_rank, task.layer, task.is_last_layer, comms[use_comm], streams[use_comm], use_comm);
                     trans_engine.send_comms_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, task.layer, task.is_last_layer, comms[use_comm], streams[use_comm], use_comm);
                     use_comm = (use_comm + 1) % comms.size();
+                    std::cout << "send_comms_layer_blocks " << use_comm << " " << task_meta.channel << " " << task_meta.request_id<<std::endl;
                     break;
                 case TaskType::TRANSFER_RECV_LAYER_BLOCKS:
                     //todo 40
@@ -61,6 +62,7 @@ void TransWorker::worker() {
                         // trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, layer, layer==(40-1), comms[use_comm], streams[use_comm], use_comm);
                         trans_engine.recv_comms_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, layer, layer==(num_layer-1) , comms[use_comm], streams[use_comm], use_comm);
                         use_comm = (use_comm + 1) % comms.size();
+                        std::cout << "recv_comms_layer_blocks " << use_comm << " " << task_meta.channel << " " << task_meta.request_id<<std::endl;
                     }
                     break;
                 default:
