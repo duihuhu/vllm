@@ -78,7 +78,7 @@ async def monitor_report(request: Request) -> Response:
         instance.timestamp = timestamp
     else:
       instance = InstanceInfo(host, port, num_unfinished_requests, used_gpu_blocks,
-                              used_cpu_blocks, remained_gpu_blocks, remained_cpu_blocks, EngineType[engine_type], timestamp, global_ranks)
+                              used_cpu_blocks, remained_gpu_blocks, remained_cpu_blocks, EngineType(engine_type), timestamp, global_ranks)
       instance_table[key] = instance
 
     ret = {"result": 'monitor_report succ'}
