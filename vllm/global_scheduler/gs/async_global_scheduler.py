@@ -177,7 +177,7 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
         instances = ed_token_tree.match(prompt_token_ids)
     elif instance_type == EngineType.EPD.value:
         instances = epd_token_tree.match(prompt_token_ids)
-    print("match ", instances)
+    print("match instances ", instances)
     #if not find, Degrade to other policy
     if instances == None:
         instance = least_load_choice(instance_type=instance_type)

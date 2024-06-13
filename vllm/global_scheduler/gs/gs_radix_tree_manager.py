@@ -26,7 +26,7 @@ class RadixTreeManager:
         nodes = self._match_prefix(token_ids)
         nodes = nodes[:self.max_blocks_allowed]
 
-        return True
+        return nodes
 
     def insert(self, token_ids: List[int], instance: str) -> bool:
         # 添加lora id作为前缀
