@@ -89,6 +89,7 @@ else:
 key = torch.zeros(size = (16, 10, 128), dtype=torch.float16, device='cuda')
 value = torch.zeros(size = (16, 10, 128), dtype=torch.float16, device='cuda')
 slots = [i for i in range(16)]
+slots = torch.Tensor(slots, device='cuda')
 
 t9 = time.time()
 cache_ops.reshape_and_cache_agg(key, value, key_blocks_addresses, value_blocks_addresses, slots, "auto", 
