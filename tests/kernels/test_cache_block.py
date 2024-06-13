@@ -43,7 +43,7 @@ for _ in range(num_layers):
     value_cache.append(value_block_tensor2)
 
 block_mapping = {}
-block_mapping[0] = 2
+block_mapping[2] = 4
 
 block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size()
 
@@ -58,7 +58,7 @@ t4 = time.time()
 
 print(f"swap_blocks_agg costs {t2-t1}, swap_blocks costs {t4-t3}")
 
-is_close = torch.allclose(key_agg_blocks[0], key_agg_blocks[2], atol=1e-3, rtol=1e-5)
+is_close = torch.allclose(key_agg_blocks[2], key_agg_blocks[4], atol=1e-3, rtol=1e-5)
 if is_close:
     print("Pass for Swap")
 else:
@@ -89,7 +89,7 @@ else:
 key = torch.zeros(size = (16, 10, 128), dtype=torch.float16, device='cuda')
 value = torch.zeros(size = (16, 10, 128), dtype=torch.float16, device='cuda')
 slots = [i for i in range(16)]
-slots2 = torch.Tensor(slots, dtype=torch.long, device='cuda')
+slots2 = torch.tensor(slots, dtype=torch.long).to('cuda')
 
 t9 = time.time()
 cache_ops.reshape_and_cache_agg(key, value, key_blocks_addresses, value_blocks_addresses, slots2, "auto", 
