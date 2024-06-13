@@ -237,10 +237,11 @@ async def add_request(request: Request) -> Response:
             resp = resp.decode('utf-8')
             resp = json.loads(resp)
             #update gs prompt tree and decode tree
-            if resp['n'] == 0:
+            if resp['n'] == 0 and args.ep_policy == "prefix":
                 print("resp['prompt_token_ids'] ", resp['prompt_token_ids'])
                 ep_token_tree.insert(resp['prompt_token_ids'], ep_instance)
-            if resp['finished'] == True:
+                
+            if resp['finished'] == True and args.ed_policy == "prefix":
                 print("resp['prompt_token_ids'] + resp['prefilled_token_id'] ", resp['prompt_token_ids'])
                 ed_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], ed_instance)
                 # epd_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], epd_instance)
