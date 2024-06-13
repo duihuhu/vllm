@@ -1,18 +1,17 @@
 import argparse
 import json
 
-from fastapi import BackgroundTasks, FastAPI, Request
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import Response, StreamingResponse
 import uvicorn
-from vllm.global_scheduler.radix_cache_ys import RadixCache
 from vllm.global_scheduler.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, DistPolicy
 from vllm.entrypoints.comm import EngineType
 from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.global_scheduler.entrypoints_config as cfg
-from typing import Dict, Set, List, Optional, AsyncGenerator, Tuple
+from typing import Dict, Set, List, AsyncGenerator, Tuple
 import aiohttp
-import requests
 import random
+from vllm.global_scheduler.gs.gs_radix_tree_manager import RadixTreeManager
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
@@ -43,15 +42,11 @@ ed_rr_num = 0
 epd_rr_num = 0
 
 block_size = 16
-ep_token_tree = RadixCache(block_size)
-ed_token_tree = RadixCache(block_size)
-epd_token_tree = RadixCache(block_size)
 
+ep_token_tree = RadixTreeManager(block_size)
+ed_token_tree = RadixTreeManager(block_size)
+epd_token_tree = RadixTreeManager(block_size)
 
-def post_request(api_url, request_dict: Optional[Dict] = {}):
-    headers = {"User-Agent": "Test Client"}
-    response = requests.post(api_url, headers=headers, json=request_dict)
-    return response
 
 @app.post("/monitor_report")
 async def monitor_report(request: Request) -> Response:
@@ -117,14 +112,6 @@ async def asyc_forward_request_resp(request_dict, api_url):
         async with session.post(url=api_url, json=request_dict,
                                 headers=headers) as response:
             return await response.text()
-        
-def search_prefix(radix_tree, token_ids):
-    value, node, last_node_matched_len = radix_tree.only_match_prefix(tuple(token_ids))
-    if value:
-        return True, value, node.node_addr[0], last_node_matched_len
-    else:
-        return False, [], [], 0
-
 
 def select_instance(prompt_token_ids, policy, instance_type):
     if policy == DistPolicy.RANDOM:
@@ -179,15 +166,24 @@ def rr_choice(instance_type):
     instance = rr_instance(instance_type)
     return instance
 
-##TODO build radix tree 
 def prefix_cache_instance(prompt_token_ids, instance_type):
+    instances = None
     instance = None
     if instance_type == EngineType.EPREFILL:
-        instance = ep_token_tree.match_prefix(prompt_token_ids)
+        instances = ep_token_tree.match(prompt_token_ids)
     elif instance_type == EngineType.EDECODE:
-        instance = ed_token_tree.match_prefix(prompt_token_ids)
+        instances = ed_token_tree.match(prompt_token_ids)
     elif instance_type == EngineType.EPD:
-        instance = epd_token_tree.match_prefix(prompt_token_ids)
+        instances = epd_token_tree.match(prompt_token_ids)
+    #if not find, Degrade to other policy
+    if instances == None:
+        instance = least_load_choice(instance_type=instance_type)
+    else:
+        start_instances = instances[0]
+        end_instances = instances[-1]
+        instances = list(set(start_instances) & set(end_instances))
+        instance = random.choice(instances)
+        
     return instance
 
 def prefix_cache_choice(prompt_token_ids, instance_type):
@@ -217,16 +213,16 @@ async def add_request(request: Request) -> Response:
     prompt_token_ids = request_dict["prompt_token_ids"]
     
     #TODO select ep and ed instance for request 
-    ep_instance, ed_instance  = select_disagg_instance(prompt_token_ids)
+    ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
     
     # #TODO select epd instance for request 
-    # epd_instance = select_agg_instance(prompt_token_ids)
+    # epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
 
+    #add prefill and decode info in request_dict, belong to one request
     request_dict["eprefill_host"] = ep_instance.host
     request_dict["eprefill_port"] = ep_instance.service_port
     request_dict["edecode_host"] = ed_instance.host
-    request_dict["edecode_port"] = ed_instance.port
-    
+    request_dict["edecode_port"] = ed_instance.service_port
     prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
                                                         (ep_instance.host, ep_instance.service_port))
     
@@ -253,7 +249,10 @@ if __name__ == "__main__":
     parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
     parser.add_argument("--enable-separate",  action="store_true")
     parser.add_argument("--enable-layer",  action="store_true")
-    parser.add_argument("--dist-policy",  type="str", default="random")
+    parser.add_argument("--ep-policy",  type="str", default="random")
+    parser.add_argument("--ed-policy",  type="str", default="random")
+    parser.add_argument("--epd-policy",  type="str", default="random")
+
 
     args = parser.parse_args()
     if args.tokenizer is None:
