@@ -145,6 +145,9 @@ def random_choice(instance_type):
     return instance
 
 def rr_instance(instance_type):
+    global ep_rr_num
+    global ed_rr_num
+    global epd_rr_num
     instances = []
     instance = None
     for key, value in instance_table.items():
