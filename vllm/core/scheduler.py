@@ -791,9 +791,15 @@ class Scheduler:
             #should free 
             # block_table = self.block_manager.block_tables[seq.seq_id]
             if self.block_manager.enable_radix_caching:
-                for seq in seq_groups.get_seqs():
-                    self.block_manager.free(seq)    
-                    del self.block_manager.block_tables[seq.seq_id]
+                if not self.enable_layer:
+                    for seq in seq_groups.get_seqs():
+                        self.block_manager.free(seq)    
+                        del self.block_manager.block_tables[seq.seq_id]
+                else:
+                    for seq_group in seq_groups:
+                        for seq in seq_group.get_seqs():
+                            self.block_manager.free(seq)    
+                            del self.block_manager.block_tables[seq.seq_id]
             else:
                 if not self.enable_layer:
                     seq = seq_groups.get_seqs()[0]
@@ -848,5 +854,8 @@ class Scheduler:
 
             del self.recv_transfering[request_id]
             self.recv_finished_req_ids.remove(request_id)
-            self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
+            if self.enable_layer and  self.deploy_config.role == "decoder":
+                self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
+            else:
+                self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
             
