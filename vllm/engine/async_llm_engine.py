@@ -1079,7 +1079,10 @@ class AsyncLLMEngine:
                     "inspect the output to find the stacktrace of the "
                     "error that caused the background loop to stop "
                     "(AsyncEngineDeadError).")
-        return merge_request_id, merge_num_blocks, current_transfer_tag, merge_is_allocated
+        if merge_seq_groups:
+            return merge_request_id, merge_num_blocks, current_transfer_tag, merge_is_allocated
+        else:
+            return None, 0, -1, False
 
     async def pull_kv_blocks(self, query_meta):
         self.engine.pull_kv_blocks(query_meta)
