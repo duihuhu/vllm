@@ -60,7 +60,6 @@ void TransManager::add_tasks(const std::vector<std::string>& tasks) {
     for (const auto& task : tasks) {
         auto trans_task = TransferTask::deserialize(task);
         worker_task_queue.push_back(trans_task);
-        print("add to worker ")
     }
 }
 void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel, const std::string& worker_type){
