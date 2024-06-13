@@ -18,6 +18,40 @@
   typedef __hip_bfloat16 __nv_bfloat16;
 #endif
 
+void swap_agg_block(
+  torch::Tensor& src,
+  torch::Tensor& dst,
+  const int64_t block_size_in_bytes) {
+  torch::Device src_device = src.device();
+  torch::Device dst_device = dst.device();
+  cudaMemcpyKind memcpy_type;
+  if (src_device.is_cuda() && dst_device.is_cuda()) {
+    TORCH_CHECK(
+      src_device.index() == dst_device.index(),
+      "src and dst must be on the same GPU");
+    memcpy_type = cudaMemcpyDeviceToDevice;
+  } else if (src_device.is_cuda() && dst_device.is_cpu()) {
+    memcpy_type = cudaMemcpyDeviceToHost;
+  } else if (src_device.is_cpu() && dst_device.is_cuda()) {
+    memcpy_type = cudaMemcpyHostToDevice;
+  } else {
+    TORCH_CHECK(false, "Invalid device combination");
+  }
+
+  char *src_ptr = static_cast<char*>(src.data_ptr());
+  char *dst_ptr = static_cast<char*>(dst.data_ptr());
+
+  const at::cuda::OptionalCUDAGuard device_guard(src_device.is_cuda() ? src_device : dst_device);
+  const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+
+  cudaMemcpyAsync(
+      dst_ptr,
+      src_ptr,
+      block_size_in_bytes,
+      memcpy_type,
+      stream);
+}
+
 void swap_blocks_agg(
   torch::Tensor& src_addresses,
   torch::Tensor& dst_addresses,

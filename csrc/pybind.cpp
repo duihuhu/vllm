@@ -96,6 +96,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   // Cache ops
   pybind11::module cache_ops = m.def_submodule("cache_ops", "vLLM cache ops");
   cache_ops.def(
+    "swap_agg_block",
+    &swap_agg_block,
+    "Just swap blocks in tensor");
+  cache_ops.def(
     "swap_blocks_agg",
     &swap_blocks_agg,
     "Swap blocks in agg");

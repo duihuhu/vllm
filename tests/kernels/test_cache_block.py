@@ -49,7 +49,8 @@ block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size
 
 #copy from keys to values -> simplize the test
 t1 = time.time()
-cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes)
+#cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes)
+cache_ops.swap_agg_block(key_agg_blocks[2], key_agg_blocks[4], block_size_in_bytes)
 t2 = time.time()
 
 t3 = time.time()

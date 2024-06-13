@@ -5,6 +5,11 @@
 #include <map>
 #include <vector>
 
+void swap_agg_block(
+  torch::Tensor& src,
+  torch::Tensor& dst,
+  const int64_t block_size_in_bytes);
+
 void swap_blocks_agg(
   torch::Tensor& src_addresses,
   torch::Tensor& dst_addresses,
