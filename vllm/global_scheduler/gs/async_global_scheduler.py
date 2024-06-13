@@ -249,9 +249,9 @@ if __name__ == "__main__":
     parser.add_argument("--enable-dcache",  action="store_true", help=('enable pass decode to prefill cache '))
     parser.add_argument("--enable-separate",  action="store_true")
     parser.add_argument("--enable-layer",  action="store_true")
-    parser.add_argument("--ep-policy",  type="str", default="random")
-    parser.add_argument("--ed-policy",  type="str", default="random")
-    parser.add_argument("--epd-policy",  type="str", default="random")
+    parser.add_argument("--ep-policy",  type=str, default="random")
+    parser.add_argument("--ed-policy",  type=str, default="random")
+    parser.add_argument("--epd-policy",  type=str, default="random")
 
 
     args = parser.parse_args()
