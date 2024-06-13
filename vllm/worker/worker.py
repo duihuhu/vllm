@@ -226,16 +226,18 @@ class Worker:
         # TODO(woosuk): Profile swapping overhead and optimize if needed.
         if blocks_to_swap_in:
             if self.use_agg_block:
-                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu,
-                                              self.caches_addresses_tensors_gpu,
-                                              blocks_to_swap_in)
+                #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu,
+                #                              self.caches_addresses_tensors_gpu,
+                #                              blocks_to_swap_in)
+                self.cache_engine.swap_by_agg2_in(blocks_to_swap_in)
             else:
                 self.cache_engine.swap_in(blocks_to_swap_in)
         if blocks_to_swap_out:
             if self.use_agg_block:
-                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu,
-                                              self.caches_addresses_tensors_cpu,
-                                              blocks_to_swap_out)
+                #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu,
+                #                              self.caches_addresses_tensors_cpu,
+                #                              blocks_to_swap_out)
+                self.cache_engine.swap_by_agg2_out(blocks_to_swap_out)
             else:
                 self.cache_engine.swap_out(blocks_to_swap_out)
         if blocks_to_copy:

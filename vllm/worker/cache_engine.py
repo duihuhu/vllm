@@ -185,6 +185,17 @@ class CacheEngine:
             self.attn_backend.swap_blocks(self.gpu_cache[i], self.cpu_cache[i],
                                           src_to_dst)
     
+    def swap_by_agg2_in(self, src_to_dst: Dict[int, int]) -> None:
+        block_size_in_bytes = self.gpu_cache[0].element_size() * self.gpu_cache[0].numel()
+        for src, dst in src_to_dst.items():
+            self.attn_backend.swap_blocks_agg2(self.cpu_cache[src], self.gpu_cache[dst], block_size_in_bytes)
+    
+    def swap_by_agg2_out(self, src_to_dst: Dict[int, int]) -> None:
+        block_size_in_bytes = self.gpu_cache[0].element_size() * self.gpu_cache[0].numel()
+        for src, dst in src_to_dst.items():
+            self.attn_backend.swap_blocks_agg2(self.gpu_cache[src], self.cpu_cache[dst], block_size_in_bytes)
+
+
     def swap_by_agg(self,
                     src_addresses: Tuple[torch.Tensor, torch.Tensor],
                     dst_addresses: Tuple[torch.Tensor, torch.Tensor],

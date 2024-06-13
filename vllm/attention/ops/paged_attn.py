@@ -301,6 +301,13 @@ class PagedAttention:
         src_value_cache_addresses = src_kv_addresses[1]
         dst_value_cache_addresses = dst_kv_addresses[1]
         cache_ops.swap_blocks_agg(src_value_cache_addresses, dst_value_cache_addresses, src_to_dst, block_size_in_bytes)
+    
+    @staticmethod
+    def swap_blocks_agg2 (
+        src_kv: torch.Tensor,
+        dst_kv: torch.Tensor,
+        block_size_in_bytes: int) -> None:
+        cache_ops.swap_blocks_agg(src_kv, dst_kv, block_size_in_bytes)
 
     @staticmethod
     def copy_blocks_agg (

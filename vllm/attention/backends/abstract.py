@@ -46,6 +46,14 @@ class AttentionBackend(ABC):
         src_to_dst: Dict[int, int],
         block_size_in_bytes: int) -> None:
         raise NotImplementedError
+    
+    @staticmethod
+    @abstractmethod
+    def swap_blocks_agg2(
+        src_kv: torch.Tensor,
+        dst_kv: torch.Tensor,
+        block_size_in_bytes: int) -> None:
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
