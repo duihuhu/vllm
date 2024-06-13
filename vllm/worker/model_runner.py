@@ -680,8 +680,9 @@ class ModelRunner:
             }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        
+        print("eeeeee2")
         hidden_states = model_executable(**execute_model_kwargs)
+        print("eeeeee3")
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
 
