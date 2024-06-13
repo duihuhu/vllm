@@ -43,7 +43,7 @@ void swap_blocks_agg(
   char *src_ptr = static_cast<char*>(src_addresses.data_ptr());
   char *dst_ptr = static_cast<char*>(dst_addresses.data_ptr());
 
-  const int64_t block_size_in_bytes = src.element_size() * src[0].numel(); // find loc
+  const int64_t block_size_in_bytes = src_addresses.element_size() * src_addresses[0].numel(); // find loc
   const int64_t layer_offset = layer_size_in_bytes * layer_id;
   const at::cuda::OptionalCUDAGuard device_guard(src_device.is_cuda() ? src_device : dst_device);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
