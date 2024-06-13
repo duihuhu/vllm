@@ -694,6 +694,7 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
+        print("eeeeee4")
         return output
 
     @torch.inference_mode()
