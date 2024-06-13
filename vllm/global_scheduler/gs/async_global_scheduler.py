@@ -214,14 +214,15 @@ async def add_request(request: Request) -> Response:
     request_dict = await request.json()   
     prompt_token_ids = request_dict["prompt_token_ids"]
     
-    #TODO select ep and ed instance for request 
+    #TODO decide when use ep/ed and when use epd
+    #select ep and ed instance for request 
     ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
     
     print("ep instance ", ep_instance.host, ep_instance.service_port)
     print("ed instance ", ed_instance.host, ed_instance.service_port)
-
-    # #TODO select epd instance for request 
-    epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
+    
+    # select epd instance for request 
+    # epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
 
     #add prefill and decode info in request_dict, belong to one request
     request_dict["eprefill_host"] = ep_instance.host
