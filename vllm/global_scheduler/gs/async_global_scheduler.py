@@ -6,7 +6,6 @@ from fastapi.responses import Response, StreamingResponse
 import uvicorn
 from vllm.global_scheduler.gs.global_meta import InstanceInfo, ReqCacheInfo, PrefixReqInfo, DistPolicy
 from vllm.entrypoints.comm import EngineType
-from vllm.transformers_utils.tokenizer import get_tokenizer
 import vllm.global_scheduler.entrypoints_config as cfg
 from typing import Dict, Set, List, AsyncGenerator, Tuple
 import aiohttp
@@ -17,7 +16,6 @@ AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
 TIMEOUT_TO_PREVENT_DEADLOCK = 1  # seconds.
 app = FastAPI()
-tokenizer = None
 
 #key: host_(service_port)_(machine_type)
 #value: InstanceInfo 
@@ -249,7 +247,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=9000)
-    parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
     parser.add_argument("--ep-policy",  type=str, default="random")
     parser.add_argument("--ed-policy",  type=str, default="random")
@@ -257,9 +254,6 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
-    if args.tokenizer is None:
-        args.tokenizer = args.model
-    tokenizer = get_tokenizer(args.tokenizer)
     uvicorn.run(app,
                 host=cfg.global_scheduler_ip,
                 port=cfg.global_scheduler_port,
