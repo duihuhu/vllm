@@ -45,11 +45,11 @@ for _ in range(num_layers):
 block_mapping = {}
 block_mapping[0] = 2
 
-block_size_in_bytes = key_agg_blocks[0][0].numel() * key_agg_blocks[0][0].element_size()
+block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size()
 
 #copy from keys to values -> simplize the test
 t1 = time.time()
-cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes, 0)
+cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes)
 t2 = time.time()
 
 t3 = time.time()
@@ -58,7 +58,7 @@ t4 = time.time()
 
 print(f"swap_blocks_agg costs {t2-t1}, swap_blocks costs {t4-t3}")
 
-is_close = torch.allclose(key_agg_blocks[0][0], key_agg_blocks[2][0], atol=1e-3, rtol=1e-5)
+is_close = torch.allclose(key_agg_blocks[0], key_agg_blocks[2], atol=1e-3, rtol=1e-5)
 if is_close:
     print("Pass for Swap")
 else:
@@ -68,8 +68,8 @@ block_mapping2 = {}
 block_mapping2[1] = [3,4]
 
 t5 = time.time()
-cache_ops.copy_blocks_agg(key_blocks_addresses, key_blocks_addresses, key_agg_blocks[0][0,0,:,0,:], 
-                          block_mapping2, num_layers, key_agg_blocks[0][0,:,:,:,:].numel())
+cache_ops.copy_blocks_agg(key_blocks_addresses, key_blocks_addresses, value_agg_blocks[0][0,0,:,0], 
+                          block_mapping2, num_layers, key_agg_blocks[0][0].numel())
 t6 = time.time()
 
 t7 = time.time()
@@ -102,7 +102,7 @@ t12 = time.time()
 
 print(f"reshape_and_cache_agg costs {t10-t9}, reshape_and_cache costs {t12-t11}")
 
-all_zero = torch.all(key_agg_blocks[0][0,:,:,:,:] == 0)
+all_zero = torch.all(key_agg_blocks[0][0] == 0)
 if all_zero:
     print("Pass for Store")
 else:

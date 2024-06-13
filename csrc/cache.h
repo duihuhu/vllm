@@ -9,8 +9,7 @@ void swap_blocks_agg(
   torch::Tensor& src_addresses,
   torch::Tensor& dst_addresses,
   const std::map<int64_t, int64_t>& block_mapping,
-  const int64_t layer_size_in_bytes,
-  const int64_t layer_id);
+  const int64_t block_size_in_bytes);
 
 void copy_blocks_agg(
   torch::Tensor& key_caches_addresses, 

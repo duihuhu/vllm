@@ -44,9 +44,7 @@ class AttentionBackend(ABC):
         src_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
         dst_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
         src_to_dst: Dict[int, int],
-        layer_size_in_bytes: int,
-        layer_id: int
-    ) -> None:
+        block_size_in_bytes: int) -> None:
         raise NotImplementedError
 
     @staticmethod

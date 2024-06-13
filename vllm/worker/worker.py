@@ -221,37 +221,21 @@ class Worker:
         self,
         blocks_to_swap_in: Dict[int, int],
         blocks_to_swap_out: Dict[int, int],
-        blocks_to_copy: Dict[int, List[int]],
-        layer_id: int
-    ) -> None:
+        blocks_to_copy: Dict[int, List[int]]) -> None:
         # Issue cache operations.
         # TODO(woosuk): Profile swapping overhead and optimize if needed.
         if blocks_to_swap_in:
             if self.use_agg_block:
-                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu[0],
-                                              self.caches_addresses_tensors_gpu[0],
-                                              blocks_to_swap_in,
-                                              layer_id,
-                                              "test")
-                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu[1],
-                                              self.caches_addresses_tensors_gpu[1],
-                                              blocks_to_swap_in,
-                                              layer_id,
-                                              "test")
+                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu,
+                                              self.caches_addresses_tensors_gpu,
+                                              blocks_to_swap_in)
             else:
                 self.cache_engine.swap_in(blocks_to_swap_in)
         if blocks_to_swap_out:
             if self.use_agg_block:
-                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu[0],
-                                              self.caches_addresses_tensors_cpu[0],
-                                              blocks_to_swap_out,
-                                              layer_id,
-                                              "test")
-                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu[1],
-                                              self.caches_addresses_tensors_cpu[1],
-                                              blocks_to_swap_out,
-                                              layer_id,
-                                              "test")
+                self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu,
+                                              self.caches_addresses_tensors_cpu,
+                                              blocks_to_swap_out)
             else:
                 self.cache_engine.swap_out(blocks_to_swap_out)
         if blocks_to_copy:
@@ -295,7 +279,7 @@ class Worker:
 
         #TODO for hhy
         #Is is already?
-        #self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         #todo hucc
         # if wait_for_swap_out:

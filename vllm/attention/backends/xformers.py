@@ -60,9 +60,8 @@ class XFormersBackend(AttentionBackend):
         src_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
         dst_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
         src_to_dst: Dict[int, int],
-        layer_size_in_bytes: int,
-        layer_id) -> None:
-        PagedAttention.swap_blocks_agg(src_kv_addresses, dst_kv_addresses, src_to_dst, layer_size_in_bytes, layer_id)
+        block_size_in_bytes: int) -> None:
+        PagedAttention.swap_blocks_agg(src_kv_addresses, dst_kv_addresses, src_to_dst, block_size_in_bytes)
 
     @staticmethod
     def copy_blocks_agg (

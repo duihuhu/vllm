@@ -22,8 +22,7 @@ void swap_blocks_agg(
   torch::Tensor& src_addresses,
   torch::Tensor& dst_addresses,
   const std::map<int64_t, int64_t>& block_mapping,
-  const int64_t layer_size_in_bytes,
-  const int64_t layer_id) {
+  const int64_t block_size_in_bytes) {
   torch::Device src_device = src_addresses.device();
   torch::Device dst_device = dst_addresses.device();
   cudaMemcpyKind memcpy_type;
@@ -40,23 +39,25 @@ void swap_blocks_agg(
     TORCH_CHECK(false, "Invalid device combination");
   }
 
-  char *src_ptr = static_cast<char*>(src_addresses.data_ptr());
-  char *dst_ptr = static_cast<char*>(dst_addresses.data_ptr());
+  int64_t *src_ptr = src_addresses.data_ptr<int64_t>();
+  int64_t *dst_ptr = dst_addresses.data_ptr<int64_t>();
 
-  const int64_t block_size_in_bytes = src_addresses.element_size() * src_addresses[0].numel(); // find loc
-  const int64_t layer_offset = layer_size_in_bytes * layer_id;
+  //const int64_t block_size_in_bytes = src_addresses.element_size() * src_addresses[0].numel(); // find loc
+  //const int64_t layer_offset = layer_size_in_bytes * layer_id;
   const at::cuda::OptionalCUDAGuard device_guard(src_device.is_cuda() ? src_device : dst_device);
   const cudaStream_t stream = at::cuda::getCurrentCUDAStream();
   // NOTE(woosuk): This can be slow if the number of blocks is large.
   for (const auto& pair : block_mapping) {
     int64_t src_block_number = pair.first;
     int64_t dst_block_number = pair.second;
-    int64_t src_offset = src_block_number * block_size_in_bytes;
-    int64_t dst_offset = dst_block_number * block_size_in_bytes;
+    char *d_ptr = reinterpret_cast<char*>(dst_ptr[dst_block_number])
+    char *s_ptr = reinterpret_cast<char*>(src_ptr[src_block_number])
+    //int64_t src_offset = src_block_number * block_size_in_bytes;
+    //int64_t dst_offset = dst_block_number * block_size_in_bytes;
     cudaMemcpyAsync(
-      dst_ptr + dst_offset + layer_offset, //dst_offset,
-      src_ptr + src_offset + layer_offset, //src_offset,
-      layer_size_in_bytes, //, //block_size_in_bytes,
+      d_ptr, //dst_ptr + dst_offset + layer_offset, //dst_offset,
+      s_ptr, //src_ptr + src_offset + layer_offset, //src_offset,
+      block_size_in_bytes, //layer_size_in_bytes, //, //block_size_in_bytes,
       memcpy_type,
       stream);
   }
