@@ -172,18 +172,18 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
     instances = None
     instance = None
     if instance_type == EngineType.EPREFILL.value:
-        instances = ep_token_tree.match(prompt_token_ids)
+        nodes = ep_token_tree.match(prompt_token_ids)
     elif instance_type == EngineType.EDECODE.value:
-        instances = ed_token_tree.match(prompt_token_ids)
+        nodes = ed_token_tree.match(prompt_token_ids)
     elif instance_type == EngineType.EPD.value:
-        instances = epd_token_tree.match(prompt_token_ids)
-    print("match instances ", instances)
+        nodes = epd_token_tree.match(prompt_token_ids)
+    print("match instances ", nodes)
     #if not find, Degrade to other policy
     if not instances:
         instance = least_load_choice(instance_type=instance_type)
     else:
-        start_instances = instances[0]
-        end_instances = instances[-1]
+        start_instances = nodes[0].instances
+        end_instances = nodes[-1].instances
         instances = list(set(start_instances) & set(end_instances))
         instance = random.choice(instances)
         
