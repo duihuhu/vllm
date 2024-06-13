@@ -53,7 +53,7 @@ cache_ops.swap_blocks_agg(key_blocks_addresses, value_blocks_addresses, block_ma
 t2 = time.time()
 
 t3 = time.time()
-cache_ops.swap_blocks(key_cache, value_cache, block_mapping)
+cache_ops.swap_blocks(key_cache[0], value_cache[0], block_mapping)
 t4 = time.time()
 
 print(f"swap_blocks_agg costs {t2-t1}, swap_blocks costs {t4-t3}")
@@ -96,7 +96,7 @@ cache_ops.reshape_and_cache_agg(key, value, key_blocks_addresses, value_blocks_a
 t10 = time.time()
 
 t11 = time.time()
-cache_ops.reshape_and_cache(key, value, key_cache, value_cache, slots, "auto")
+cache_ops.reshape_and_cache(key, value, key_cache[1], value_cache[1], slots, "auto")
 t12 = time.time()
 
 print(f"reshape_and_cache_agg costs {t10-t9}, reshape_and_cache costs {t12-t11}")
