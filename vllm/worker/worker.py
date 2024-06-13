@@ -252,7 +252,7 @@ class Worker:
             blocks_to_copy = data["blocks_to_copy"]
             merge_reqs_info = data["merge_reqs_info"]
 
-        # self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
+        self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         #todo hucc
         # if wait_for_swap_out:

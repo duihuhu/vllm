@@ -121,35 +121,35 @@ class CacheEngine:
                             device=device))
         return kv_cache
 
-    # def swap_in(self, src_to_dst: Dict[int, int]) -> None:
-    #     for i in range(self.num_layers):
-    #         self.attn_backend.swap_blocks(self.cpu_cache[i], self.gpu_cache[i],
-    #                                       src_to_dst)
+    def swap_in(self, src_to_dst: Dict[int, int]) -> None:
+        for i in range(self.num_layers):
+            self.attn_backend.swap_blocks(self.cpu_cache[i], self.gpu_cache[i],
+                                          src_to_dst)
 
-    # def swap_out(self, src_to_dst: Dict[int, int]) -> None:
-    #     for i in range(self.num_layers):
-    #         self.attn_backend.swap_blocks(self.gpu_cache[i], self.cpu_cache[i],
-    #                                       src_to_dst)
+    def swap_out(self, src_to_dst: Dict[int, int]) -> None:
+        for i in range(self.num_layers):
+            self.attn_backend.swap_blocks(self.gpu_cache[i], self.cpu_cache[i],
+                                          src_to_dst)
 
-    #hucc
-    def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
-        cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
-        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        with torch.cuda.stream(self.swap_in_stream):
-            gpu_ops.copy_blocks_in_layer(gpu_cache, cpu_cache, src_to_dst, self.cache_size_per_block, True)
-            event = torch.cuda.Event()
-            event.record()
-        self.swap_in_events[key] = event
+    # #hucc
+    # def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
+    #     cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
+    #     gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+    #     with torch.cuda.stream(self.swap_in_stream):
+    #         gpu_ops.copy_blocks_in_layer(gpu_cache, cpu_cache, src_to_dst, self.cache_size_per_block, True)
+    #         event = torch.cuda.Event()
+    #         event.record()
+    #     self.swap_in_events[key] = event
 
-    #todo  share one stream or two stream
-    def swap_out(self, src_to_dst: Dict[int, int], key: str) -> None:
-        cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
-        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        with torch.cuda.stream(self.swap_in_stream):
-            gpu_ops.copy_blocks_in_layer(cpu_cache, gpu_cache, src_to_dst, self.cache_size_per_block, False)
-            event = torch.cuda.Event()
-            event.record()
-        self.swap_in_events[key] = event
+    # #todo  share one stream or two stream
+    # def swap_out(self, src_to_dst: Dict[int, int], key: str) -> None:
+    #     cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
+    #     gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+    #     with torch.cuda.stream(self.swap_in_stream):
+    #         gpu_ops.copy_blocks_in_layer(cpu_cache, gpu_cache, src_to_dst, self.cache_size_per_block, False)
+    #         event = torch.cuda.Event()
+    #         event.record()
+    #     self.swap_in_events[key] = event
 
     # pull语义, 由send方法调用
     def recv_request_id(self, channel: str, opposite_rank: int) -> str:
