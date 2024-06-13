@@ -791,20 +791,17 @@ class Scheduler:
             #should free 
             # block_table = self.block_manager.block_tables[seq.seq_id]
             if self.block_manager.enable_radix_caching:
-                if not self.enable_layer:
-                    for seq in seq_groups.get_seqs():
-                        self.block_manager.free(seq)    
-                        del self.block_manager.block_tables[seq.seq_id]
-                else:
+                if self.enable_layer and self.deploy_config.role=="prompt":
                     for seq_group in seq_groups:
                         for seq in seq_group.get_seqs():
                             self.block_manager.free(seq)    
                             del self.block_manager.block_tables[seq.seq_id]
-            else:
-                if not self.enable_layer:
-                    seq = seq_groups.get_seqs()[0]
-                    self.free_seq(seq)
                 else:
+                    for seq in seq_groups.get_seqs():
+                        self.block_manager.free(seq)    
+                        del self.block_manager.block_tables[seq.seq_id]
+            else:
+                if self.enable_layer:
                     if self.deploy_config.role == "prompt":
                         for seq_group in seq_groups:
                             seq = seq_group.get_seqs()[0]
@@ -812,6 +809,9 @@ class Scheduler:
                     else:
                         seq = seq_groups.get_seqs()[0]
                         self.free_seq(seq)
+                else:
+                    seq = seq_groups.get_seqs()[0]
+                    self.free_seq(seq)
                         
             del self.send_transfering[request_id]
             self.send_finished_req_ids.remove(request_id)
