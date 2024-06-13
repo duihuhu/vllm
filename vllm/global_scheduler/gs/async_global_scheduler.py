@@ -181,13 +181,13 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
     #if not find, Degrade to other policy
     if not instances:
         instance = least_load_choice(instance_type=instance_type)
-        print("prefix ", instance.service_port)
+        print("no match prefix ", instance.service_port)
     else:
         start_instances = nodes[0].instances
         end_instances = nodes[-1].instances
         instances = list(set(start_instances) & set(end_instances))
         instance = random.choice(instances)
-        print("prefix ", instance.service_port)
+        print("match prefix ", instance.service_port)
     return instance
 
 def prefix_cache_choice(prompt_token_ids, instance_type):
