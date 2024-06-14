@@ -651,7 +651,7 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
-        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
+        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> Optional[SamplerOutput]:

@@ -267,7 +267,7 @@ class FlashAttentionImpl(AttentionImpl):
                 )
         else:
             # Decoding run.
-            if self.use_agg_block is False:
+            if self.use_agg_block is False or kv_cache_address is None:
                 output = PagedAttention.forward_decode(
                     query,
                     key_cache,

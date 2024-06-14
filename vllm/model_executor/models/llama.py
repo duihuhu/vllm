@@ -232,7 +232,7 @@ class LlamaDecoderLayer(nn.Module):
         else:
             hidden_states, residual = self.input_layernorm(
                 hidden_states, residual)
-        if self.use_agg_block is False:
+        if self.use_agg_block is False or kv_cache_address is None:
             hidden_states = self.self_attn(
                 positions=positions,
                 hidden_states=hidden_states,
@@ -315,7 +315,7 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            if self.use_agg_block is False:
+            if self.use_agg_block is False or kv_cache_address is None:
                 hidden_states, residual = layer(
                     positions,
                     hidden_states,
@@ -410,7 +410,7 @@ class LlamaForCausalLM(nn.Module):
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> torch.Tensor:
-        if self.use_agg_block is False:
+        if self.use_agg_block is False or kv_cache_address is None:
             hidden_states = self.model(input_ids, positions, kv_caches, None,
                                     attn_metadata, merge_reqs_info, trans_manager)
         else:
