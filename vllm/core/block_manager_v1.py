@@ -675,8 +675,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 new_block = self._allocate_last_physical_block(seq)
 
             block_table[-1] = new_block
+            print("append slot ", last_block.ref_count, last_block.block_number, new_block.block_number)
             self.gpu_allocator.free(last_block)
-            print("append slot ", last_block.block_number, new_block.block_number)
             return last_block.block_number, new_block.block_number
 
     def fork(self, parent_seq: Sequence, child_seq: Sequence) -> None:
