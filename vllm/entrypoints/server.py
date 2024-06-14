@@ -303,10 +303,13 @@ async def generate_prefill(request: Request) -> Response:
     stream = payload.pop("stream")
     prompt_token_ids = payload.pop("prompt_token_ids")
     request_id = payload.pop("request_id")
-    eprefill_host = payload.pop("eprefill_host")
-    eprefill_port = payload.pop("eprefill_port")
-    edecode_host = payload.pop("edecode_host")
-    edecode_port = payload.pop("edecode_port")
+    if args.enable_separate:
+        eprefill_host = payload.pop("eprefill_host")
+        eprefill_port = payload.pop("eprefill_port")
+        edecode_host = payload.pop("edecode_host")
+        edecode_port = payload.pop("edecode_port")
+    else:
+        eprefill_host, eprefill_port, edecode_host, edecode_port = None, None, None, None
     
     if args.enable_breakdown:
         with open("prefill_request_in.txt", "a+") as fd:
