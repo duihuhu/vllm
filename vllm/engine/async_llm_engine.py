@@ -635,7 +635,7 @@ class AsyncLLMEngine:
     def __init__(self,
                  worker_use_ray: bool,
                  engine_use_ray: bool,
-                 use_agg_block: Optional[bool] = False,
+                 #use_agg_block: Optional[bool] = False,
                  *args,
                  log_requests: bool = True,
                  max_log_len: Optional[int] = None,
@@ -643,7 +643,7 @@ class AsyncLLMEngine:
                  **kwargs) -> None:
         self.worker_use_ray = worker_use_ray
         self.engine_use_ray = engine_use_ray
-        self.use_agg_block = use_agg_block
+        #self.use_agg_block = use_agg_block
         self.log_requests = log_requests
         self.max_log_len = max_log_len
         self.engine = self._init_engine(*args, **kwargs)
@@ -663,7 +663,7 @@ class AsyncLLMEngine:
     def from_engine_args(
         cls,
         engine_args: AsyncEngineArgs,
-        use_agg_block: Optional[bool] = False,
+        #use_agg_block: Optional[bool] = False,
         start_engine_loop: bool = True,
         usage_context: UsageContext = UsageContext.ENGINE_CONTEXT,
     ) -> "AsyncLLMEngine":
@@ -689,7 +689,7 @@ class AsyncLLMEngine:
         engine = cls(
             parallel_config.worker_use_ray,
             engine_args.engine_use_ray,
-            use_agg_block,
+            #se_agg_block,
             *engine_configs,
             executor_class,
             log_requests=not engine_args.disable_log_requests,

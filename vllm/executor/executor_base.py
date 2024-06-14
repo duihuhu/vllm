@@ -25,7 +25,7 @@ class ExecutorBase(ABC):
         device_config: DeviceConfig,
         lora_config: Optional[LoRAConfig],
         vision_language_config: Optional[VisionLanguageConfig],
-        use_agg_block: Optional[int] = False
+        use_agg_block: Optional[bool] = False
     ) -> None:
         raise NotImplementedError
 
