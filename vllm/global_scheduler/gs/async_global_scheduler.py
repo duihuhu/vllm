@@ -216,21 +216,23 @@ async def add_request(request: Request) -> Response:
     
     #TODO decide when use ep/ed and when use epd
     #select ep and ed instance for request 
-    ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
-    
-    print("ep instance ", ep_instance.host, ep_instance.service_port)
-    print("ed instance ", ed_instance.host, ed_instance.service_port)
-    
-    # select epd instance for request 
-    # epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
-
-    #add prefill and decode info in request_dict, belong to one request
-    request_dict["eprefill_host"] = ep_instance.host
-    request_dict["eprefill_port"] = ep_instance.service_port
-    request_dict["edecode_host"] = ed_instance.host
-    request_dict["edecode_port"] = ed_instance.service_port
-    prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
+    if args.enable_separate:
+        ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
+        
+        print("ep instance ", ep_instance.host, ep_instance.service_port)
+        print("ed instance ", ed_instance.host, ed_instance.service_port)
+        #add prefill and decode info in request_dict, belong to one request
+        request_dict["eprefill_host"] = ep_instance.host
+        request_dict["eprefill_port"] = ep_instance.service_port
+        request_dict["edecode_host"] = ed_instance.host
+        request_dict["edecode_port"] = ed_instance.service_port
+        prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
                                                         (ep_instance.host, ep_instance.service_port))
+    else:
+        # select epd instance for request 
+        epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
+        prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
+                                                            (epd_instance.host, epd_instance.service_port))
     
     async def stream_results_prefill() -> AsyncGenerator[bytes, None]:
         async for resp in prefill_response:
@@ -254,6 +256,7 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=9000)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
+    parser.add_argument('--enable-separate', action="store_true", help=('separate or not '))
     parser.add_argument("--ep-policy",  type=str, default="random")
     parser.add_argument("--ed-policy",  type=str, default="random")
     parser.add_argument("--epd-policy",  type=str, default="random")

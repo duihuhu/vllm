@@ -499,7 +499,7 @@ if __name__ == "__main__":
     parser.add_argument("--local_port", type=int)
     parser.add_argument("--enable-direct", action="store_true")
     parser.add_argument("--enable-breakdown", action="store_true")
-    parser.add_argument("--enable-spee", action="store_true")
+    # parser.add_argument("--enable-spee", action="store_true")
     parser.add_argument("--enable-layer", action="store_true")
     parser.add_argument('--enable-separate', action="store_true", help=('separate or not '))
     
