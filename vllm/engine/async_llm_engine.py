@@ -417,11 +417,11 @@ class _AsyncLLMEngine(LLMEngine):
         self.scheduler._check_tranfer_finished_req()
         
         #TODO evict block from gpu to dram in radix tree
-        evicted_block_swap_out = None
+        evicted_blocks_to_swap_out = None
         if self.scheduler.block_manager.enable_radix_caching:    
             # is_evict = self.scheduler.check_hbm_usage()
             # if is_evict:
-            evicted_block_swap_out = self.scheduler.get_evicted_blocks()
+            evicted_blocks_to_swap_out = self.scheduler.get_evicted_blocks()
 
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
@@ -458,7 +458,7 @@ class _AsyncLLMEngine(LLMEngine):
                 blocks_to_swap_out = scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy = scheduler_outputs.blocks_to_copy,
                 merge_reqs_info = merge_reqs_info,
-                evicted_block_swap_out = evicted_block_swap_out)
+                evicted_blocks_to_swap_out = evicted_blocks_to_swap_out)
 
             self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.
