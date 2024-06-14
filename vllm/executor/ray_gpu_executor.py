@@ -70,8 +70,10 @@ class RayGPUExecutor(ExecutorBase):
 
 
         if self.deploy_config.enable_separate:
-            # self._init_trans_worker()
             self._init_trans_manager()
+        
+        if self.deploy_config.enable_radix_caching:
+            self._init_swap_manager()
             
         self.forward_dag = None
         if USE_RAY_COMPILED_DAG:
@@ -268,8 +270,8 @@ class RayGPUExecutor(ExecutorBase):
         # if enforce_eager is False.
         self._run_workers("warm_up_model")
 
-    def _init_trans_worker(self) -> None:
-        self._run_workers("init_trans_worker")
+    def _init_swap_manager(self) -> None:
+        self._run_workers("init_swap_manager")
 
     def _init_trans_manager(self) -> None:
         self._run_workers("init_trans_manager")
@@ -460,6 +462,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
         blocks_to_copy: Dict[int, List[int]],
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         evicted_blocks_to_swap_out: Optional[Dict[PhysicalTokenBlock, PhysicalTokenBlock]] = None,
+        swap_id: Optional[str] = None,
     ) -> SamplerOutput:
         all_outputs = await self._run_workers_async(
             "execute_model",
@@ -471,6 +474,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
                 "blocks_to_copy": blocks_to_copy,
                 "merge_reqs_info": merge_reqs_info,
                 "evicted_blocks_to_swap_out": evicted_blocks_to_swap_out,
+                "swap_id": swap_id,
             })
 
         # Only the driver worker returns the sampling results.

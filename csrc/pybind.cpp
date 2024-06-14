@@ -3,6 +3,7 @@
 #include "gpu_ops.h"
 #include "ops.h"
 #include "trans_config.h"
+#include "swap_config.h"
 #include <torch/extension.h>
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -202,7 +203,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
             py::arg("type"),
             py::arg("layer") = 0,
             py::arg("is_last_layer") = false)
-
       .def_readwrite("meta", &TransferTask::meta)
       .def_readwrite("blocks", &TransferTask::blocks)
       .def_readwrite("type", &TransferTask::type)
@@ -211,7 +211,23 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def("serialize", &TransferTask::serialize)
       .def_static("deserialize", &TransferTask::deserialize);
 
-            
+
+  pybind11::module swap_ops = m.def_submodule("swap_ops", "vLLM swap hbm to dram");
+
+  py::class_<SwapManager>(swap_ops, "SwapManager")
+      .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, std::vector<std::pair<at::Tensor, at::Tensor>>&, bool>())
+      .def("add_swap_tasks", &SwapManager::add_swap_tasks, "add_swap_tasks")
+      .def("get_finished_swap_tasks", &SwapManager::get_finished_swap_tasks, "get_finished_swap_tasks");
+
+  py::class_<SwapTask>(swap_ops, "SwapTask")
+      .def(py::init<const std::string& swap_id, const std::map<int, int>& evicted_blocks, SwapType type>(),
+            py::arg("swap_id"),
+            py::arg("evicted_blocks"),
+            py::arg("type"))
+      .def_readwrite("swap_id", &SwapTask::swap_id)
+      .def_readwrite("evicted_blocks", &SwapTask::evicted_blocks)
+      .def_readwrite("type", &SwapTask::type)
+
 #ifndef USE_ROCM
   // Custom all-reduce kernels
   pybind11::module custom_ar = m.def_submodule("custom_ar", "custom allreduce");

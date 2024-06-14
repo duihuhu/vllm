@@ -230,5 +230,4 @@ private:
     int num_layer;
 
 };
-
 #endif // TRANS_CONFIG_H

@@ -418,11 +418,22 @@ class _AsyncLLMEngine(LLMEngine):
         
         #TODO evict block from gpu to dram in radix tree
         evicted_blocks_to_swap_out = None
+        swap_id = None
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
             # is_evict = self.scheduler.check_hbm_usage()
             # if is_evict:
-            evicted_blocks_to_swap_out = self.scheduler.get_evicted_blocks()
+            
+            can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
+            evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
+            for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+            if evicted_blocks_to_swap_out:
+                swap_id = random_uuid()
+                self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
+
             print("evicted_blocks_to_swap_out ", evicted_blocks_to_swap_out)
+            
+            self.scheduler._check_swap_finished()
+            
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
@@ -458,7 +469,8 @@ class _AsyncLLMEngine(LLMEngine):
                 blocks_to_swap_out = scheduler_outputs.blocks_to_swap_out,
                 blocks_to_copy = scheduler_outputs.blocks_to_copy,
                 merge_reqs_info = merge_reqs_info,
-                evicted_blocks_to_swap_out = evicted_blocks_to_swap_out)
+                evicted_blocks_to_swap_out = evicted_blocks_to_swap_out,
+                swap_id=swap_id)
 
             self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.
@@ -622,6 +634,19 @@ class _AsyncLLMEngine(LLMEngine):
             self.trans_sched_time = self.trans_checked_time + t3 - t2
             self.trans_running_time = self.trans_running_time + t4 - t3
             self.trans_kv_turns  = self.trans_kv_turns + 1
+            
+    async def swap_step_aysnc(self) -> None:
+        if not self.scheduler.radix_swapping:
+            return
+        
+        finished_swap_tasks = await self.model_executor._run_workers_async(
+            "get_finished_swap_tasks",
+        )
+        for finished_tasks in finished_swap_tasks:
+            for swap_finished_task in finished_tasks:
+                real_swap_finished_swap_ids = self.radix_swap_scheduler.add_finished_tasks(swap_finished_task)
+                self.scheduler.add_swap_out_finished(real_swap_finished_swap_ids)
+                
 class AsyncLLMEngine:
     """An asynchronous wrapper for LLMEngine.
 
@@ -846,6 +871,8 @@ class AsyncLLMEngine:
                 t4 = time.time()
                 self.engine_time = self.engine_time + t4 - t2
 
+            if self.engine.scheduler.cache_config.enable_radix_caching and self.engine.scheduler.cache_config.enable_radix_evictor:  
+                await self.engine.swap_step_aysnc()
         # Put the outputs into the corresponding streams.
         for request_output in request_outputs:
             self._request_tracker.process_request_output(

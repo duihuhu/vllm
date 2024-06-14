@@ -209,6 +209,7 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
             // Remove finished events from the list
             request_ids_and_events.erase(request_ids_and_events.begin(), request_ids_and_events.begin() + num_finished_events);
         }
+        
     }
     return recv_blocks_finished;
 }

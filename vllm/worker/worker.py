@@ -24,7 +24,7 @@ from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 from vllm.outputs import MergeReqInfo
 
-from vllm._C import gpu_ops, trans_ops
+from vllm._C import gpu_ops, trans_ops, swap_ops
 from vllm.logger import init_logger
 import ray
 #no TransferRequestIdTask, TransferBlocksTask
@@ -190,14 +190,17 @@ class Worker:
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
 
-    def init_trans_worker(self):
+    def init_swap_manager(self, evict_block_table):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        # self.trans_worker = trans_ops.TransWorker(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank)
+        cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+        self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, evict_block_table)
+
 
     def init_trans_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank, self.parallel_config.tensor_parallel_size, self.model_config.get_num_layers(self.parallel_config))
         
+    
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
             self.model_runner.capture_model(self.gpu_cache)
@@ -234,6 +237,7 @@ class Worker:
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         evicted_blocks_to_swap_out: Optional[Dict[int, int]] = None,
+        swap_id:  Optional[int] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
@@ -248,6 +252,7 @@ class Worker:
                 "blocks_to_copy": blocks_to_copy,
                 "merge_reqs_info": merge_reqs_info,
                 "evicted_blocks_to_swap_out": evicted_blocks_to_swap_out,
+                "swap_id": swap_id,
             }
             broadcast_tensor_dict(data, src=0)
         else:
@@ -263,12 +268,9 @@ class Worker:
 
         #todo hucc
         if evicted_blocks_to_swap_out:
-            self.cache_swap_evicted_blocks(evicted_blocks_to_swap_out)
-                
-        # if num_seq_groups == 0:
-        #     swap_finished_req_ids = self.cache_engine.check_finished_events()
-    
-        #     return ([[]], swap_finished_req_ids)
+            # self.cache_swap_evicted_blocks(evicted_blocks_to_swap_out)
+            self.swap_manager.add_swap_tasks(
+                swap_ops.SwapTask(swap_id,evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
         
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
@@ -343,7 +345,10 @@ class Worker:
     
     def get_finished_transfer_tasks(self) -> List[List[Tuple[List[trans_ops.TransferTaskMeta],List[trans_ops.TransferTaskMeta]]]]:
         return self.trans_manager.get_finished_transfer_tasks() 
-        
+    
+    def get_finished_swap_tasks(self) -> List[List[str]]:
+        return self.swap_manager.get_finished_swap_tasks()
+    
 def init_distributed_environment(
     parallel_config: ParallelConfig,
     rank: int,

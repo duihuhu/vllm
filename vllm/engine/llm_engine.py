@@ -25,7 +25,7 @@ from vllm.transformers_utils.tokenizer_group import (BaseTokenizerGroup,
 from vllm.usage.usage_lib import (UsageContext, is_usage_stats_enabled,
                                   usage_message)
 from vllm.utils import Counter
-from vllm.core.kv_trans_scheduler import SendKvTransferScheduler, RecvKvTransScheduler
+from vllm.core.kv_trans_scheduler import SendKvTransferScheduler, RecvKvTransScheduler, RadixSwapScheduler
 from vllm.entrypoints.comm import CacheMeta
 from vllm.core.interfaces import AllocStatus
 
@@ -127,6 +127,8 @@ class LLMEngine:
         self.trans_running_time = 0
         self.trans_sched_time = 0 
         self.trans_kv_turns = 0 
+        
+        self.radix_swap_scheduler = RadixSwapScheduler(self.parallel_config.tensor_parallel_size)
 
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():

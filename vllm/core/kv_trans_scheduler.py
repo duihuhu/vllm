@@ -219,13 +219,12 @@ class RecvKvTransScheduler:
     def schedule(self) -> List[trans_ops.TransferTask]:
         return self._get_task_for_recv_blocks()
     
-
     def _process_recv_blocks_finished(
         self,
-        recv_finished_taks: List[trans_ops.TransferTaskMeta]
+        recv_finished_tasks: List[trans_ops.TransferTaskMeta]
     ) -> List[str]:
         real_finished_req_ids = []
-        for task_meta in recv_finished_taks:
+        for task_meta in recv_finished_tasks:
             self.finished_worker_count[task_meta.request_id] -=1
             if self.finished_worker_count[task_meta.request_id] == 0:
                 del self.block_ids[task_meta.request_id]
@@ -239,3 +238,34 @@ class RecvKvTransScheduler:
         recv_finished_tasks: List[trans_ops.TransferTaskMeta],
     ) -> List[str]:
         return self._process_recv_blocks_finished(recv_finished_tasks)
+    
+class RadixSwapScheduler:
+    def __init__(self,
+                num_workers) -> None:        
+        self.finished_worker_count: Dict[str, int]  = {}
+        self.num_workers = num_workers
+        
+    def add_swap_task(
+        self,
+        swap_id: str,
+    ) -> None:
+        self.finished_worker_count[swap_id] = self.num_workers
+    
+    def _process_recv_blocks_finished(
+        self,
+        recv_finished_tasks: List[str]
+    ) -> List[str]:
+        real_finished_swap_ids = []
+        for swap_id in recv_finished_tasks:
+            self.finished_worker_count[swap_id] -=1
+            if self.finished_worker_count[swap_id] == 0:
+                del self.finished_worker_count[swap_id]
+                real_finished_swap_ids.append(swap_id)   
+        return real_finished_swap_ids
+    
+    def add_finished_tasks(
+        self,
+        recv_finished_tasks: List[str],
+    ) -> List[str]:
+        return self._process_recv_blocks_finished(recv_finished_tasks)
+    

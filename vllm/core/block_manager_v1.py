@@ -370,20 +370,15 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     def get_num_nodes_can_swap_out(self):
         return self.radix_tree_manager.get_num_nodes_can_swap_out()
     
-    def get_evicted_nodes(self, can_evicted_num):
+    def get_evicted_nodes(self, can_evicted_num) -> List[TreeNode]:
         return self.radix_tree_manager.swap_out(can_evicted_num)
     
-    def get_evicted_block_table(self, can_evicted_nodes: List[TreeNode]):
-        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
-        for node in can_evicted_nodes:
-            cpu_block = self.cpu_allocator.allocate()
-            mapping[node.value.physicalTokenBlock] = cpu_block
-
-        block_number_mapping = {
-            gpu_block.block_number: cpu_block.block_number
-            for gpu_block, cpu_block in mapping.items()
-        }
-        return block_number_mapping
+    def get_evicted_cpu_blocks(self, can_evicted_nodes: List[TreeNode]) -> List[PhysicalTokenBlock]:
+        cpu_blocks: List[PhysicalTokenBlock] = []
+        for i in range(len(can_evicted_nodes)):
+            cpu_block = self.cpu_allocator.radix_manager_allocate_block()
+            cpu_blocks.append(cpu_block)
+        return cpu_blocks 
     
     #use radix manager allocate kv caches
     def radix_manager_allocate(self, seq_group: SequenceGroup, is_kv_prepared = None) -> None:

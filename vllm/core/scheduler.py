@@ -13,6 +13,9 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceStatus)
 
 from vllm.outputs import RequestOutput
+from vllm.block import PhysicalTokenBlock
+from vllm.radix_tree_ys.radix_cache import TreeNode, kvCacheProgressStatus
+
 
 
 logger = init_logger(__name__)
@@ -180,8 +183,7 @@ class Scheduler:
         self.last_prompt_latency = 0.0
         
         self.swap_finished_req_ids: List[Tuple[List[str], List[str]]] = []
-        self.swapping_in: List[SwappingSequenceGroup] = []
-        self.swapping_out: List[SwappingSequenceGroup] = []
+
         
         self.send_finished_req_ids: List[str] = []
         self.recv_finished_req_ids: List[str] = []
@@ -207,6 +209,8 @@ class Scheduler:
         self.decode_recv_finished: Dict[str, SequenceGroup] = {}
         self.meta_recv_finished: Dict[str, SequenceGroup] = {}
         
+        self.radix_swapping: Dict[str, Tuple[List[TreeNode], List[PhysicalTokenBlock]]] = {}
+        self.swap_finished_ids: List[str] = []
     @property
     def lora_enabled(self) -> bool:
         return bool(self.lora_config)
@@ -248,10 +252,16 @@ class Scheduler:
         # print("recv_finished_req_ids ", request_ids)
         self.recv_finished_req_ids.extend(request_ids)
     
+    def add_swap_out_finished(self, swap_ids: List[str]):
+        self.swap_finished_ids.extend(swap_ids)
+        
     def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the recv transfering map
         self.recv_transfering[seq_group.request_id] = seq_group
 
+    def add_swaping_out(self, swap_id: str, evicted_blocks: Tuple[List[TreeNode], List[PhysicalTokenBlock]]) -> None:
+        self.radix_swapping[swap_id] = evicted_blocks
+        
     def abort_seq_group(self, request_id: Union[str, Iterable[str]]) -> None:
         """Aborts a sequence group with the given ID.
 
@@ -289,8 +299,7 @@ class Scheduler:
                     self.free_seq(seq)
 
     def has_unfinished_seqs(self) -> bool:
-        return (self.waiting or self.running or self.swapped or
-                self.swapping_in or self.swapping_out)
+        return (self.waiting or self.running or self.swapped)
 
     def fetch_decoded_seq_groups(self) -> List[SequenceGroup]:
         decoded_seq_groups = []
@@ -762,17 +771,17 @@ class Scheduler:
     def check_hbm_usage(self):
         pass
     
-    def get_evicted_blocks(self):
+    def get_evicted_blocks(self) ->  Tuple[List[TreeNode], List[PhysicalTokenBlock]]:
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
         num_nodes = self.block_manager.get_num_nodes()
         print("can_evicted_num ", can_evicted_num, num_nodes)
     
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
-            evicted_block_swap_out = self.block_manager.get_evicted_block_table(can_evicted_nodes)
-            return evicted_block_swap_out
+            cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
+            return can_evicted_nodes, cpu_blocks
         else:
-            return None
+            return None, None
         
     def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
         for seq_group in finished_seq_groups:
@@ -867,4 +876,19 @@ class Scheduler:
                 self.block_manager.mark_groups_blocks_as_computed(seq_groups=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
             else:
                 self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
+            
+
+    #TODO swap
+    def _check_swap_finished(self) -> None:
+        for swap_id in self.swap_finished_ids[:]:
+            evicted_blocks = self.radix_swapping[swap_id]
+            evicted_nodes, cpu_blocks = evicted_blocks[0], evicted_blocks[1]
+            for node, cpu_block in zip(evicted_nodes, cpu_blocks):
+                self.block_manager.gpu_allocator.free_radix_manager_cache(node.value.physicalTokenBlock)
+                cpu_block.computed = True
+                cpu_block.ref_count = cpu_block.ref_count + 1
+                node.value.physicalTokenBlock = cpu_block                    
+                node.value.progressStatus = kvCacheProgressStatus.STABLE
+
+                
             
