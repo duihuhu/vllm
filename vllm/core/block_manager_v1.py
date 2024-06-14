@@ -13,6 +13,7 @@ from vllm.utils import Device
 from vllm.core.radix_tree import RadixCache
 
 from vllm.radix_tree_ys.radix_tree_manager import RadixTreeManager
+from vllm.radix_tree_ys.radix_cache import  TreeNode
 
 logger = init_logger(__name__)
 
@@ -362,6 +363,24 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         print("decode mathch cache, ", len(blocks), query_cache_meta.request_id)
         self.req_pull_block_tables[query_cache_meta.request_id] = blocks
         return len(blocks)
+    
+    def get_num_nodes_can_swap_out(self):
+        return self.radix_tree_manager.get_num_nodes_can_swap_out()
+    
+    def get_evicted_nodes(self, can_evicted_num):
+        return self.radix_tree_manager.swap_out(can_evicted_num)
+    
+    def get_evicted_block_table(self, can_evicted_nodes: List[TreeNode]):
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+        for node in can_evicted_nodes:
+            cpu_block = self.cpu_allocator.allocate()
+            mapping[node.value.physicalTokenBlock] = cpu_block
+
+        block_number_mapping = {
+            gpu_block.block_number: cpu_block.block_number
+            for gpu_block, cpu_block in mapping.items()
+        }
+        return block_number_mapping
     
     #use radix manager allocate kv caches
     def radix_manager_allocate(self, seq_group: SequenceGroup, is_kv_prepared = None) -> None:

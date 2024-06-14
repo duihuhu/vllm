@@ -219,6 +219,11 @@ class Worker:
             self.cache_engine.swap_out(blocks_to_swap_out)
         if blocks_to_copy:
             self.cache_engine.copy(blocks_to_copy)
+            
+    def cache_swap_evicted_blocks(self,
+        evicted_blocks_to_swap_out: Dict[int, int]) -> None:
+        if evicted_blocks_to_swap_out:
+            self.cache_engine.swap_out_evicted_blocks(evicted_blocks_to_swap_out, "label")
 
     @torch.inference_mode()
     def execute_model(
@@ -228,7 +233,7 @@ class Worker:
         blocks_to_swap_out: Optional[Dict[int, int]] = None,
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
-        wait_for_swap_out: Optional[List[str]] = None,
+        evicted_blocks_to_swap_out: Optional[Dict[int, int]] = None,
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
@@ -242,6 +247,7 @@ class Worker:
                 "blocks_to_swap_out": blocks_to_swap_out,
                 "blocks_to_copy": blocks_to_copy,
                 "merge_reqs_info": merge_reqs_info,
+                "evicted_blocks_to_swap_out": evicted_blocks_to_swap_out,
             }
             broadcast_tensor_dict(data, src=0)
         else:
@@ -251,12 +257,13 @@ class Worker:
             blocks_to_swap_out = data["blocks_to_swap_out"]
             blocks_to_copy = data["blocks_to_copy"]
             merge_reqs_info = data["merge_reqs_info"]
+            evicted_blocks_to_swap_out = data["evicted_blocks_to_swap_out"]
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
         #todo hucc
-        # if wait_for_swap_out:
-        #     self.cache_engine.wait_for_swap_out_events(wait_for_swap_out)
+        if evicted_blocks_to_swap_out:
+            self.cache_swap_evicted_blocks(evicted_blocks_to_swap_out)
                 
         # if num_seq_groups == 0:
         #     swap_finished_req_ids = self.cache_engine.check_finished_events()

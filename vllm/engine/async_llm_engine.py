@@ -417,15 +417,11 @@ class _AsyncLLMEngine(LLMEngine):
         self.scheduler._check_tranfer_finished_req()
         
         #TODO evict block from gpu to dram in radix tree
-        # if self.scheduler.block_manager.enable_radix_caching:    
-        #     num_blocks = self.scheduler.check_hbm_usage()
-            # if num_blocks:
-            #     cache_blocks_to_swap_out = self.scheduler.evict_hbm_caches(num_blocks)
-            #     if cache_blocks_to_swap_out:
-            #         await self.model_executor._run_workers_async(
-            #             "swap_kv_cache",
-            #             blocks_to_swap_out=cache_blocks_to_swap_out
-            #         )
+        evicted_block_swap_out = None
+        if self.scheduler.block_manager.enable_radix_caching:    
+            # is_evict = self.scheduler.check_hbm_usage()
+            # if is_evict:
+            evicted_block_swap_out = self.scheduler.get_evicted_blocks()
 
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
@@ -457,10 +453,12 @@ class _AsyncLLMEngine(LLMEngine):
         if not scheduler_outputs.is_empty():
             # Execute the model.
             all_outputs = await self.model_executor.execute_model_async(
-                seq_group_metadata_list, scheduler_outputs.blocks_to_swap_in,
-                scheduler_outputs.blocks_to_swap_out,
-                scheduler_outputs.blocks_to_copy,
-                merge_reqs_info)
+                seq_group_metadata_list = seq_group_metadata_list, 
+                blocks_to_swap_in = scheduler_outputs.blocks_to_swap_in,
+                blocks_to_swap_out = scheduler_outputs.blocks_to_swap_out,
+                blocks_to_copy = scheduler_outputs.blocks_to_copy,
+                merge_reqs_info = merge_reqs_info,
+                evicted_block_swap_out = evicted_block_swap_out)
 
             self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.

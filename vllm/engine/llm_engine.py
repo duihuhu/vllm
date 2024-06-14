@@ -821,36 +821,7 @@ class LLMEngine:
     def trans_kv_step(self):
         if not self.deploy_config.enable_separate:
             return
-
-        finished_tasks =  self.model_executor._run_workers(
-            "check_finished_transfer_task",
-            # get_all_outputs=True
-        )
-        for worker_finished_tasks in finished_tasks:
-            real_send_finished_req_ids, real_recv_finished_req_ids = self.kv_trans_scheduler.add_finished_tasks(*worker_finished_tasks)
-            if real_send_finished_req_ids:
-                self.scheduler.add_send_finished(real_send_finished_req_ids)
-            if real_recv_finished_req_ids:
-                self.scheduler.add_recv_finished(real_recv_finished_req_ids)
-                
-        scheduler_outputs = self.kv_trans_scheduler.schedule()
-        if scheduler_outputs.task_for_send_blocks:
-            self.model_executor._run_workers(
-                "send_blocks",
-                scheduler_outputs.task_for_send_blocks
-            )
-            
-        if scheduler_outputs.task_for_recv_request_id:
-            self.model_executor._run_workers(
-                "recv_request_id",
-                scheduler_outputs.task_for_recv_request_id
-            )
-            
-        if scheduler_outputs.task_for_recv_blocks:
-            self.model_executor._run_workers(
-                "recv_blocks",
-                scheduler_outputs.task_for_recv_blocks
-            )
+        #TODO add sync interface if need 
 
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.

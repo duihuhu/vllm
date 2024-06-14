@@ -16,6 +16,7 @@ from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.utils import (get_distributed_init_method, get_ip, get_open_port,
                         make_async, set_cuda_visible_devices)
 from vllm.outputs import MergeReqInfo
+from vllm.block import BlockTable, PhysicalTokenBlock
 
 if ray is not None:
     from ray.util.scheduling_strategies import PlacementGroupSchedulingStrategy
@@ -458,6 +459,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
         blocks_to_swap_out: Dict[int, int],
         blocks_to_copy: Dict[int, List[int]],
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
+        evicted_block_swap_out: Optional[Dict[PhysicalTokenBlock, PhysicalTokenBlock]] = None,
     ) -> SamplerOutput:
         all_outputs = await self._run_workers_async(
             "execute_model",
@@ -468,6 +470,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
                 "blocks_to_swap_out": blocks_to_swap_out,
                 "blocks_to_copy": blocks_to_copy,
                 "merge_reqs_info": merge_reqs_info,
+                "evicted_block_swap_out": evicted_block_swap_out,
             })
 
         # Only the driver worker returns the sampling results.

@@ -120,8 +120,6 @@ class RadixTreeManager:
         splited_key: List[Tuple] = []
         height = 0
         while len(key) >= self.block_size:
-            # lora id == 0说明不使用lora
-            # 在第0层添加lora id，分开存储不同lora的cache
             if height == 0:
                 splited_key.append(tuple([lora_id] + key[:self.block_size]))
                 height += 1

@@ -131,6 +131,15 @@ class CacheEngine:
             self.attn_backend.swap_blocks(self.gpu_cache[i], self.cpu_cache[i],
                                           src_to_dst)
 
+    def swap_out_evicted_blocks(self, src_to_dst: Dict[int, int], key: str) -> None:
+        pass
+        # with torch.cuda.stream(self.swap_in_stream):
+    #         for i in range(self.num_layers):
+    #             gpu_ops.copy_blocks(self.gpu_cache[i], self.cpu_cache[i], src_to_dst)
+    #         event = torch.cuda.Event()
+    #         event.record()
+    #     self.swap_in_events[key] = event
+    
     # #hucc
     # def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
     #     cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
@@ -151,76 +160,9 @@ class CacheEngine:
     #         event.record()
     #     self.swap_in_events[key] = event
 
-    # pull语义, 由send方法调用
-    def recv_request_id(self, channel: str, opposite_rank: int) -> str:
-        if channel not in self.recv_streams:
-            self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
-            
-        with torch.cuda.stream(self.recv_streams[channel]):
-            tensor_of_request_id = torch.zeros(size=(self.request_id_size,),
-                                               dtype=torch.uint8).cuda()
-            gpu_ops.RecvRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
-            self.recv_waiting_request_ids[channel] = tensor_of_request_id
-            event = torch.cuda.Event()
-            event.record()
-        self.recv_events[channel] = (None, event)
-        
-    def recv_blocks(self, channel: str, request_id: str, src_blocks: List[int], opposite_rank: int) -> None:      
-        if channel not in self.recv_streams:
-            self.recv_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
-        # print("recv_blocks ", len(src_blocks))
-        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        with torch.cuda.stream(self.recv_streams[channel]):
-            gpu_ops.RecvBlocksRemote(gpu_cache, src_blocks, self.cache_size_per_block, opposite_rank)
-            event = torch.cuda.Event()
-            event.record()
-        self.recv_events[channel] = (request_id, event)
-
-    def send_blocks(self, channel: str, request_id: str, dst_blocks: List[int], opposite_rank: int) -> str: 
-        if channel not in self.send_streams:
-            self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
-        # print("send_blocks ", len(dst_blocks))
-        gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        with torch.cuda.stream(self.send_streams[channel]):
-            tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
-            self.send_waiting_request_ids[request_id] = tensor_of_request_id
-            gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
-            gpu_ops.SendBlocksRemote(gpu_cache, dst_blocks, self.cache_size_per_block, opposite_rank)
-            event = torch.cuda.Event()
-            event.record() 
-        if channel not in self.send_events:
-            self.send_events[channel] = [(request_id, event)]
-        else:
-            self.send_events[channel].append((request_id, event))
-            
-    def send_request_id(self, channel: str, request_id: str, opposite_rank: List[int]) -> str: 
-        if channel not in self.send_streams:
-            self.send_streams[channel] = torch.cuda.Stream(device=torch.cuda.current_device())
-        with torch.cuda.stream(self.send_streams[channel]):
-            tensor_of_request_id = torch.Tensor([int(data, 16) for data in list(request_id)]).byte().cuda()
-            self.send_waiting_request_ids[request_id] = tensor_of_request_id
-            gpu_ops.SendRequestRemote(tensor_of_request_id.data_ptr(), self.request_id_size, opposite_rank)
-
-        
-    def set_event(self, channel: str, request_id: str):
-        with torch.cuda.stream(self.send_streams[channel]):
-            event = torch.cuda.Event()
-            event.record() 
-        if channel not in self.send_events:
-            self.send_events[channel] = [(request_id, event)]
-        else:
-            self.send_events[channel].append((request_id, event))
-            
-
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         self.attn_backend.copy_blocks(self.gpu_cache, src_to_dsts)
 
-
-    def wait_for_swap_out_events(self, wait_for_swap_out: List[str]) -> None:
-        for key in wait_for_swap_out:
-            event = self.swap_out_events.pop(key)
-            event.synchronize()
-    
     def check_finished_events(self) -> Tuple[List[str], List[str]]:
         #swap in events
         swap_in_finished_req_ids: List[str] = []
