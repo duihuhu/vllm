@@ -1,18 +1,7 @@
-
 #ifndef SWAP_H
 #define SWAP_H
 
-#include <torch/extension.h>
-#include <torch/torch.h>
-#include <torch/cuda.h>
-#include <vector>
-#include <unordered_map>
-#include <c10/cuda/CUDAStream.h>
-#include <ATen/cuda/CUDAEvent.h>
-#include "trans_queue.h"
-#include <nlohmann/json.hpp>  // Include the JSON library
-#include <iostream>
-#include <cuda_runtime.h>
+#include "trans_config.h"
 
 // 定义TaskType枚举类型，用于区分不同的任务类型
 enum class SwapType {
@@ -34,7 +23,7 @@ public:
     ~SwapManager();
     void add_swap_tasks(const SwapTask& tasks);
     void worker();
-    void swap_out(const std::string& swap_id, const map<int, int>& evicted_blocks);
+    void swap_out(const std::string& swap_id, const std::map<int, int>& evicted_blocks);
     void check_finished_swap_out_events();
     std::vector<std::vector<std::string>> get_finished_swap_tasks();
 

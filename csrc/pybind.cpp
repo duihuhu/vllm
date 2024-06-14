@@ -3,7 +3,6 @@
 #include "gpu_ops.h"
 #include "ops.h"
 #include "trans_config.h"
-#include "swap_config.h"
 #include <torch/extension.h>
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
@@ -227,6 +226,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def_readwrite("swap_id", &SwapTask::swap_id)
       .def_readwrite("evicted_blocks", &SwapTask::evicted_blocks)
       .def_readwrite("type", &SwapTask::type)
+
+  py::enum_<SwapType>(trans_ops, "SwapType")
+      .value("SWAP_OUT_BLOCKS", SwapType::SWAP_OUT_BLOCKS)
+      .value("SWAP_IN_BLOCKS", SwapType::SWAP_IN_BLOCKS)
+      .export_values();
 
 #ifndef USE_ROCM
   // Custom all-reduce kernels

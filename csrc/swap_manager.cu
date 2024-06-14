@@ -41,7 +41,7 @@ void SwapManager::add_swap_tasks(const SwapTask& task) {
     task_queue.push_back(task);
 }
 
-void SwapManager::swap_out(const std::string& swap_id, const map<int, int>& evicted_blocks){
+void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>& evicted_blocks){
     c10::cuda::CUDAStreamGuard guard(swap_out_stream);
     cudaMemcpyKind memcpy_type = cudaMemcpyDeviceToHost;
     for (int i=0; i < layerNum; i++) {
