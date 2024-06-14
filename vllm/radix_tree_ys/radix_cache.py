@@ -300,7 +300,7 @@ class RadixCache:
                     child_node.value.progressStatus == kvCacheProgressStatus.STABLE):
                     gpu_child.append(child_node)
             
-            print("cur_node.children.values(): ", cur_node.value, cur_node.children.values():)
+            print("cur_node.children.values(): ", cur_node.value, cur_node.children.values())
             if len(gpu_child) == 0 and child_node.value.physicalTokenBlock.ref_count == 1:
                 ret_list.append(cur_node)
 
