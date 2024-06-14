@@ -1,7 +1,18 @@
+
 #ifndef SWAP_H
 #define SWAP_H
 
-#include "trans_config.h"
+#include <torch/extension.h>
+#include <torch/torch.h>
+#include <torch/cuda.h>
+#include <vector>
+#include <unordered_map>
+#include <c10/cuda/CUDAStream.h>
+#include <ATen/cuda/CUDAEvent.h>
+#include "trans_queue.h"
+#include <nlohmann/json.hpp>  // Include the JSON library
+#include <iostream>
+#include <cuda_runtime.h>
 
 // 定义TaskType枚举类型，用于区分不同的任务类型
 enum class SwapType {

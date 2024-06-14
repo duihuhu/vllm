@@ -1,3 +1,4 @@
+#pragma once
 #include "cache.h"
 #include "cuda_utils.h"
 #include "gpu_ops.h"
@@ -219,13 +220,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def("get_finished_swap_tasks", &SwapManager::get_finished_swap_tasks, "get_finished_swap_tasks");
 
   py::class_<SwapTask>(swap_ops, "SwapTask")
-      .def(py::init<const std::string& swap_id, const std::map<int, int>& evicted_blocks, SwapType type>(),
-            py::arg("swap_id"),
-            py::arg("evicted_blocks"),
-            py::arg("type"))
+      .def(py::init<const std::string& swap_id, const std::map<int, int>& evicted_blocks, SwapType type>())
       .def_readwrite("swap_id", &SwapTask::swap_id)
       .def_readwrite("evicted_blocks", &SwapTask::evicted_blocks)
-      .def_readwrite("type", &SwapTask::type)
+      .def_readwrite("type", &SwapTask::type);
 
   py::enum_<SwapType>(trans_ops, "SwapType")
       .value("SWAP_OUT_BLOCKS", SwapType::SWAP_OUT_BLOCKS)
