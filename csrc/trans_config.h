@@ -14,6 +14,7 @@
 #include <nlohmann/json.hpp>  // Include the JSON library
 #include <iostream>
 #include <cuda_runtime.h>
+#include "swap_config.h"
 
 using json = nlohmann::json;
 #define CUDACHECK(cmd) do {                         \

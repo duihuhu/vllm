@@ -2,9 +2,7 @@
 #include "cuda_utils.h"
 #include "gpu_ops.h"
 #include "ops.h"
-#include "trans_queue.h"
 #include "trans_config.h"
-#include "swap_config.h"
 #include <torch/extension.h>
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
