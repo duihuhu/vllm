@@ -195,6 +195,11 @@ class Worker:
         if self.use_agg_block:
             self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
             self.caches_addresses_tensors_cpu = self.cache_engine.get_tensor_for_caches_address(gpu=False)
+            print(f"Check addr tensor in worker")
+            if self.caches_addresses_tensors_gpu[0] is None:
+                print(f"Key addr tensor is None again")
+            if self.caches_addresses_tensors_gpu[1] is None:
+                print(f"Value addr tensor is None again")
         else:
             self.caches_addresses_tensors_gpu = None
             self.caches_addresses_tensors_cpu = None
