@@ -145,13 +145,14 @@ class CacheEngine:
                     value_caches.append(cache_block[1])
                 key_caches_ptrs_tensor = ops.tensor_for_caches_addresses(key_caches)
                 value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
+                return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
             else:
                 for cache_block in self.cpu_cache:
                     key_caches.append(cache_block[0])
                     value_caches.append(cache_block[1])
                 key_caches_ptrs_tensor = ops.tensor_for_caches_addresses(key_caches)
                 value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
-            return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
+                return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
         else:
             return (None, None)
 
