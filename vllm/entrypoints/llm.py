@@ -87,7 +87,6 @@ class LLM:
         enforce_eager: bool = False,
         max_context_len_to_capture: int = 8192,
         disable_custom_all_reduce: bool = True,
-        use_agg_block: Optional[bool] = False,
         **kwargs,
     ) -> None:
         if "disable_log_stats" not in kwargs:
@@ -112,7 +111,6 @@ class LLM:
         )
         self.llm_engine = LLMEngine.from_engine_args(
             engine_args,
-            use_agg_block, 
             usage_context=UsageContext.LLM_CLASS)
         self.request_counter = Counter()
 
