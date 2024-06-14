@@ -97,7 +97,7 @@ class CacheEngine:
                 if block is None:
                     print(f"The {i} block is None")
                 else:
-                    print(f"The {i} block's shape is block.shape")
+                    print(f"The {i} block's shape is {block.shape}")
         # if self.deploy_config.role == "prompt":
         #     self.recv_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
         #     self.send_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
@@ -147,7 +147,7 @@ class CacheEngine:
         if self.use_agg_block:
             key_caches = []
             value_caches = []
-            if gpu == True:
+            if gpu is True:
                 for cache_block in self.gpu_cache:
                     key_caches.append(cache_block[0])
                     value_caches.append(cache_block[1])
@@ -171,6 +171,7 @@ class CacheEngine:
                 value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
                 return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
         else:
+            print(f"In get_tensor_for_caches_address the use-agg-block is False")
             return (None, None)
 
     # def swap_in(self, src_to_dst: Dict[int, int]) -> None:
