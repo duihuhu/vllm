@@ -364,6 +364,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self.req_pull_block_tables[query_cache_meta.request_id] = blocks
         return len(blocks)
     
+    def get_num_nodes(self):
+        return self.radix_tree_manager.get_num_nodes()
+    
     def get_num_nodes_can_swap_out(self):
         return self.radix_tree_manager.get_num_nodes_can_swap_out()
     
