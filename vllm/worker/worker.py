@@ -66,6 +66,7 @@ class Worker:
         self.deploy_config = deploy_config
         self.device_id = device_id
         self.use_agg_block = self.deploy_config.use_agg_block
+        self.block_size2 = self.deploy_config.block_size
         if self.is_driver_worker:
             assert self.rank == 0, "The driver worker must have rank 0."
 
@@ -84,7 +85,7 @@ class Worker:
             is_driver_worker=is_driver_worker,
             vision_language_config=vision_language_config,
             use_agg_block=self.use_agg_block,
-            block_size=self.cache_config.block_size)
+            block_size=self.block_size2)
         # Uninitialized cache engine. Will be initialized by
         # self.init_cache_engine().
         self.cache_config = None

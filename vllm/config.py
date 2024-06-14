@@ -842,7 +842,8 @@ class DeployConfig:
         enable_theory: bool = False,
         enable_debug: bool = False, 
         enable_breakdown: bool = False,
-        use_agg_block: bool = False
+        use_agg_block: bool = False,
+        block_size: int = -1
         ) -> None: 
             self.enable_separate = enable_separate
             self.role = role
@@ -857,6 +858,7 @@ class DeployConfig:
             self.enable_debug = enable_debug
             self.enable_breakdown = enable_breakdown
             self.use_agg_block = use_agg_block
+            self.block_size = block_size
             self._verify_args()
     
     def _verify_args(self) -> None:
