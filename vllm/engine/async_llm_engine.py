@@ -422,7 +422,7 @@ class _AsyncLLMEngine(LLMEngine):
             # is_evict = self.scheduler.check_hbm_usage()
             # if is_evict:
             evicted_blocks_to_swap_out = self.scheduler.get_evicted_blocks()
-
+            print("evicted_blocks_to_swap_out ", evicted_blocks_to_swap_out)
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
