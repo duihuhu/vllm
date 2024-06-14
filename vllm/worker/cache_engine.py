@@ -32,13 +32,11 @@ class CacheEngine:
         parallel_config: ParallelConfig,
         deploy_config: DeployConfig,
         worker_rank: int,
-        request_id_size: int = 32,
-        use_agg_block: Optional[bool] = False
-    ) -> None:
+        request_id_size: int = 32) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
         self.parallel_config = parallel_config
-        self.use_agg_block = use_agg_block
+        self.use_agg_block = deploy_config.use_agg_block
 
         self.head_size = model_config.get_head_size()
         self.num_layers = model_config.get_num_layers(parallel_config)
