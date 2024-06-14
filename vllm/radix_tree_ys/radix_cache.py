@@ -301,7 +301,7 @@ class RadixCache:
                     gpu_child.append(child_node)
             
             # if len(gpu_child) == 0 and child_node.value.physicalTokenBlock.ref_count == 1:
-            if len(gpu_child) == 0 and child_node.value.physicalTokenBlock.ref_count == 1:
+            if len(gpu_child) == 0 and cur_node.value.physicalTokenBlock.ref_count == 1:
                 ret_list.append(cur_node)
 
             for x in gpu_child:
