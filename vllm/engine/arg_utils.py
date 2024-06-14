@@ -75,6 +75,7 @@ class EngineArgs:
     enable_theory: bool = False
     enable_debug: bool = False
     enable_breakdown: bool = False
+    use_agg_block: bool = False
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -425,6 +426,11 @@ class EngineArgs:
             action="store_true",
             help=('enable debug'))
          
+        parser.add_argument(
+            '--use-agg-block',
+            action="store_true",
+            help=('enable debug'))
+         
         return parser
         
     @classmethod
@@ -497,7 +503,7 @@ class EngineArgs:
             vision_language_config = None
 
         deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
-            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown)
+            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.use_agg_block)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 
