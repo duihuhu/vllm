@@ -123,7 +123,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
 
     def radix_manager_allocate(self) -> PhysicalTokenBlock:
         block = self.radix_manager_allocate_block()
-        block.ref_count += 1
+        # block.ref_count += 1
         return block
 
     def allocate_radix_cache(self, token, num_tokens: int = 0) -> PhysicalTokenBlock:
