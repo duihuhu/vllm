@@ -126,11 +126,12 @@ class PagedAttention:
         use_agg_block: Optional[bool] = False,
         layer_id: Optional[int] = -1,
         layer_stride: Optional[int] = -1,
-        head_stride: Optional[int] = -1
+        head_stride: Optional[int] = -1,
+        block_size: Optional[int] = 16
     ) -> torch.Tensor:
         output = torch.empty_like(query)
 
-        block_size = value_cache.shape[3]
+        #block_size = value_cache.shape[3]
         num_seqs, num_heads, head_size = query.shape
         max_num_partitions = ((max_context_len + _PARTITION_SIZE - 1) //
                               _PARTITION_SIZE)

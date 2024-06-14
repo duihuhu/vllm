@@ -87,7 +87,7 @@ class CacheEngine:
         # Initialize the cache.
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda", self.use_agg_block)
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu", self.use_agg_block)
-        print(f"Check Cache initialize")
+        '''print(f"Check Cache initialize")
         if self.gpu_cache is None:
             print(f"Fail in initialize")
         else:
@@ -95,7 +95,7 @@ class CacheEngine:
                 if block is None:
                     print(f"The {i} block is None")
                 else:
-                    print(f"The {i} block's shape is {block.shape}")
+                    print(f"The {i} block's shape is {block.shape}")'''
         # if self.deploy_config.role == "prompt":
         #     self.recv_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
         #     self.send_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
@@ -149,17 +149,17 @@ class CacheEngine:
                 for cache_block in self.gpu_cache:
                     key_caches.append(cache_block[0])
                     value_caches.append(cache_block[1])
-                print(f"Check in get_tensor_for_caches_address (GPU)")
+                '''print(f"Check in get_tensor_for_caches_address (GPU)")
                 if key_caches is None:
                     print(f"The Key Cache is None")
                 if value_caches is None:
-                    print(f"The Value Cache is None")    
+                    print(f"The Value Cache is None")'''
                 key_caches_ptrs_tensor = ops.tensor_for_caches_addresses(key_caches)
                 value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
-                if key_caches_ptrs_tensor is None:
+                '''if key_caches_ptrs_tensor is None:
                     print(f"The addr tensor of key cache is None")
                 if value_caches_ptrs_tensor is None:
-                    print(f"The addr tensor of value cache is None")
+                    print(f"The addr tensor of value cache is None")'''
                 return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
             else:
                 for cache_block in self.cpu_cache:
@@ -169,7 +169,7 @@ class CacheEngine:
                 value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
                 return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
         else:
-            print(f"In get_tensor_for_caches_address the use-agg-block is False")
+            #print(f"In get_tensor_for_caches_address the use-agg-block is False")
             return (None, None)
 
     # def swap_in(self, src_to_dst: Dict[int, int]) -> None:

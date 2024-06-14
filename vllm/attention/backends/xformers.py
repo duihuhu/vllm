@@ -329,6 +329,7 @@ class XFormersImpl(AttentionImpl):
                     self.num_kv_heads,
                     self.scale,
                     self.alibi_slopes,
+                    block_size=self.block_size
                 )
             else:
                 layer_stride = self.num_kv_heads * self.head_size * self.block_size
@@ -347,7 +348,8 @@ class XFormersImpl(AttentionImpl):
                     self.use_agg_block,
                     layer_id,
                     layer_stride,
-                    head_stride
+                    head_stride,
+                    self.block_size
                 )
         # Reshape the output tensor.
         return output.view(-1, self.num_heads * self.head_size)
