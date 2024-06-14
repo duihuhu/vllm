@@ -320,6 +320,7 @@ class RadixCache:
                 num_nodes += 1
             
             for child_node in cur_node.children.values():
+                print("child_node block_number " , child_node.value.physicalTokenBlock.block_number)
                 num_nodes += dfs_(child_node)
             
             return num_nodes
