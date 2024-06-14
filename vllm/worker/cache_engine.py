@@ -132,13 +132,14 @@ class CacheEngine:
                                           src_to_dst)
 
     def swap_out_evicted_blocks(self, src_to_dst: Dict[int, int], key: str) -> None:
+        with torch.cuda.stream(self.swap_in_stream):
+            for i in range(self.num_layers):
+                gpu_ops.copy_blocks_in_layer(self.gpu_cache[i], self.cpu_cache[i], src_to_dst)
+            event = torch.cuda.Event()
+            event.record()
+        self.swap_in_events[key] = event
         pass
-        # with torch.cuda.stream(self.swap_in_stream):
-    #         for i in range(self.num_layers):
-    #             gpu_ops.copy_blocks(self.gpu_cache[i], self.cpu_cache[i], src_to_dst)
-    #         event = torch.cuda.Event()
-    #         event.record()
-    #     self.swap_in_events[key] = event
+
     
     # #hucc
     # def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
