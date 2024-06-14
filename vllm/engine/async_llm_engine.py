@@ -418,7 +418,7 @@ class _AsyncLLMEngine(LLMEngine):
         
         #TODO evict block from gpu to dram in radix tree
         evicted_blocks_to_swap_out = None
-        if self.scheduler.block_manager.enable_radix_caching:    
+        if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
             # is_evict = self.scheduler.check_hbm_usage()
             # if is_evict:
             evicted_blocks_to_swap_out = self.scheduler.get_evicted_blocks()

@@ -75,6 +75,8 @@ class EngineArgs:
     enable_theory: bool = False
     enable_debug: bool = False
     enable_breakdown: bool = False
+    enable_radix_evictor: bool = False
+
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -214,6 +216,10 @@ class EngineArgs:
         parser.add_argument('--enable-radix-caching',
                             action='store_true',
                             help='radix caching')
+        
+        parser.add_argument('--enable-radix-evictor',
+                            action='store_true',
+                            help='enable radix evict to dram')
         
         parser.add_argument('--use-v2-block-manager',
                             action='store_true',
@@ -454,7 +460,8 @@ class EngineArgs:
                                    self.forced_num_gpu_blocks,
                                    model_config.get_sliding_window(),
                                    self.enable_prefix_caching,
-                                   self.enable_radix_caching)
+                                   self.enable_radix_caching,
+                                   self.enable_radix_evictor)
         parallel_config = ParallelConfig(
             self.pipeline_parallel_size, self.tensor_parallel_size,
             self.worker_use_ray, self.max_parallel_loading_workers,

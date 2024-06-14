@@ -339,6 +339,7 @@ class CacheConfig:
         sliding_window: Optional[int] = None,
         enable_prefix_caching: bool = False,
         enable_radix_caching: bool = False,
+        enable_radix_evictor: bool = False
     ) -> None:
         self.block_size = block_size
         self.gpu_memory_utilization = gpu_memory_utilization
@@ -348,6 +349,7 @@ class CacheConfig:
         self.sliding_window = sliding_window
         self.enable_prefix_caching = enable_prefix_caching
         self.enable_radix_caching = enable_radix_caching
+        self.enable_radix_evictor = enable_radix_evictor
         self._verify_args()
         self._verify_cache_dtype()
 
