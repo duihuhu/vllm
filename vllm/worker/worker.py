@@ -299,6 +299,7 @@ class Worker:
                                                     merge_reqs_info, 
                                                     self.trans_manager)
         else:
+            print(self.caches_addresses_tensors_gpu.shape)
             output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache, self.caches_addresses_tensors_gpu)
             
         swap_finished_req_ids = self.cache_engine.check_finished_events()
