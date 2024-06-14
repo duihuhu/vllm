@@ -21,13 +21,14 @@ torch::Tensor tensor_for_caches_addresses(
     //TORCH_CHECK(caches_device.is_cuda());
     //The swap_block_agg will use a tensor in CPU for the addresses of kv caches in CPU
 
-    int64_t caches_ptrs[num_blocks];
+    //int64_t caches_ptrs[num_blocks];
+    std::vector<int64_t> caches_ptrs(num_blocks);
     for (int i = 0; i < num_blocks; ++i) {
         caches_ptrs[i] = reinterpret_cast<int64_t>(caches[i].data_ptr());
     }
 
     torch::Tensor caches_ptrs_tensor = torch::from_blob(
-        caches_ptrs, {num_blocks}, torch::kInt64).to(caches_device);
+        caches_ptrs.data(), {num_blocks}, torch::kInt64).to(caches_device).clone();
     
     return caches_ptrs_tensor;
 }

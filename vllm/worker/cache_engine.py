@@ -140,12 +140,9 @@ class CacheEngine:
             key_caches = []
             value_caches = []
             if gpu == True:
-                for i, cache_block in enumerate(self.gpu_cache):
+                for cache_block in self.gpu_cache:
                     key_caches.append(cache_block[0])
                     value_caches.append(cache_block[1])
-                    print(f"Addr of block {i}")
-                    print(f"Addr of key {cache_block[0].data_ptr()}")
-                    print(f"Addr of value {cache_block[1].data_ptr()}")
                 key_caches_ptrs_tensor = ops.tensor_for_caches_addresses(key_caches)
                 value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
             else:
