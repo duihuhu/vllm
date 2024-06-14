@@ -641,7 +641,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Allocate a new physical block.
                 if self.enable_radix_caching:
                     # new_block = self._allocate_last_physical_block_radix_cache(seq)
-                    new_block = self._allocate_last_physical_block_radix_manager_cache(seq)
+                    new_block = self._allocate_last_physical_block_radix_manager_cache()
                 else:
                     new_block = self._allocate_last_physical_block(seq)
                 block_table.append(new_block)
