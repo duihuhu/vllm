@@ -764,8 +764,9 @@ class Scheduler:
     
     def get_evicted_blocks(self):
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
-        can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
-        evicted_block_swap_out = self.block_manager.get_evicted_block_table(can_evicted_nodes)
+        print("can_evicted_num ", can_evicted_num)
+        # can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
+        # evicted_block_swap_out = self.block_manager.get_evicted_block_table(can_evicted_nodes)
         
     def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
         for seq_group in finished_seq_groups:
