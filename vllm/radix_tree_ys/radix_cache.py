@@ -228,7 +228,7 @@ class RadixCache:
             new_node = TreeNode()
             new_node.parent = node
             block = block_table.pop(0)
-            block.ref_count += 1
+            # block.ref_count += 1
             new_node.value = TreeNodeValue(block)
             node.children[key.pop(0)] = new_node
 
