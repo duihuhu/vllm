@@ -241,6 +241,10 @@ class XFormersImpl(AttentionImpl):
                                                     attn_metadata.slot_mapping,
                                                     attn_metadata.kv_cache_dtype)
             else:
+                print("kv cache address 0")
+                print(kv_cache_address[0].to('cpu'))
+                print("kv cache address 1")
+                print(kv_cache_address[1].to('cpu'))
                 PagedAttention.write_to_agg_paged_cache(key, value, kv_cache_address[0],
                                                         kv_cache_address[1], attn_metadata.slot_mapping,
                                                         attn_metadata.kv_cache_dtype,
