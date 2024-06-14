@@ -109,7 +109,6 @@ class LLMEngine:
         self.device_config = device_config
         self.deploy_config = deploy_config
         self.log_stats = log_stats
-        self.use_agg_block = deploy_config.use_agg_block
         self._verify_args()
 
         self._init_tokenizer()
@@ -119,8 +118,7 @@ class LLMEngine:
         self.model_executor = executor_class(model_config, cache_config,
                                              parallel_config, scheduler_config,
                                              device_config, deploy_config, lora_config,
-                                             vision_language_config,
-                                             self.use_agg_block)
+                                             vision_language_config)
 
         self.send_kv_trans_scheduler = SendKvTransferScheduler(self.parallel_config.tensor_parallel_size, self.deploy_config.enable_layer)
         

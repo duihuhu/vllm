@@ -53,10 +53,7 @@ class Worker:
         vision_language_config: Optional[VisionLanguageConfig] = None,
         kv_cache_dtype: Optional[str] = "auto",
         is_driver_worker: bool = False,
-        device_id: Optional[int] = 0,
-        use_agg_block: Optional[bool] = False,
-        block_size: Optional[int] = -1
-    ) -> None:
+        device_id: Optional[int] = 0) -> None:
         self.model_config = model_config
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
@@ -68,8 +65,7 @@ class Worker:
         self.is_driver_worker = is_driver_worker
         self.deploy_config = deploy_config
         self.device_id = device_id
-        self.use_agg_block = use_agg_block
-        self.block_size2 = block_size
+        self.use_agg_block = self.deploy_config.use_agg_block
         if self.is_driver_worker:
             assert self.rank == 0, "The driver worker must have rank 0."
 
@@ -88,7 +84,7 @@ class Worker:
             is_driver_worker=is_driver_worker,
             vision_language_config=vision_language_config,
             use_agg_block=self.use_agg_block,
-            block_size=self.block_size2)
+            block_size=self.cache_config.block_size)
         # Uninitialized cache engine. Will be initialized by
         # self.init_cache_engine().
         self.cache_config = None

@@ -24,9 +24,7 @@ class ExecutorBase(ABC):
         scheduler_config: SchedulerConfig,
         device_config: DeviceConfig,
         lora_config: Optional[LoRAConfig],
-        vision_language_config: Optional[VisionLanguageConfig],
-        use_agg_block: Optional[bool] = False
-    ) -> None:
+        vision_language_config: Optional[VisionLanguageConfig]) -> None:
         raise NotImplementedError
 
     @abstractmethod

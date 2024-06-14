@@ -42,9 +42,7 @@ class RayGPUExecutor(ExecutorBase):
         device_config: DeviceConfig,
         deploy_config: DeployConfig,
         lora_config: Optional[LoRAConfig],
-        vision_language_config: Optional[VisionLanguageConfig],
-        use_agg_block: Optional[bool] = False
-    ) -> None:
+        vision_language_config: Optional[VisionLanguageConfig]) -> None:
         self.model_config = model_config
         self.cache_config = cache_config
         self.lora_config = lora_config
@@ -53,7 +51,6 @@ class RayGPUExecutor(ExecutorBase):
         self.device_config = device_config
         self.deploy_config = deploy_config
         self.vision_language_config = vision_language_config
-        self.use_agg_block = use_agg_block
 
         assert self.parallel_config.worker_use_ray
         placement_group = self.parallel_config.placement_group
@@ -181,10 +178,7 @@ class RayGPUExecutor(ExecutorBase):
                     distributed_init_method,
                     deploy_config=self.deploy_config,
                     lora_config=lora_config,
-                    kv_cache_dtype=kv_cache_dtype,
-                    use_agg_block = self.use_agg_block,
-                    block_size = self.cache_config.block_size
-                ))
+                    kv_cache_dtype=kv_cache_dtype))
 
         # Initialize the driver worker with the Worker class.
         driver_rank = 0
@@ -202,10 +196,7 @@ class RayGPUExecutor(ExecutorBase):
             vision_language_config=self.vision_language_config,
             kv_cache_dtype=kv_cache_dtype,
             is_driver_worker=True,
-            device_id = driver_device_id,
-            use_agg_block = self.use_agg_block,
-            block_size = self.cache_config.block_size
-        )
+            device_id = driver_device_id)
 
         global_ranks = self._run_workers("init_device")
         self.deploy_config.set_global_ranks(global_ranks)

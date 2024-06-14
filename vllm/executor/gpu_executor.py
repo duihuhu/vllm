@@ -23,9 +23,7 @@ class GPUExecutor(ExecutorBase):
         scheduler_config: SchedulerConfig,
         device_config: DeviceConfig,
         lora_config: Optional[LoRAConfig],
-        vision_language_config: Optional[VisionLanguageConfig],
-        use_agg_block: Optional[bool] = False
-    ) -> None:
+        vision_language_config: Optional[VisionLanguageConfig]) -> None:
         self.model_config = model_config
         self.cache_config = cache_config
         self.lora_config = lora_config
@@ -33,7 +31,6 @@ class GPUExecutor(ExecutorBase):
         self.scheduler_config = scheduler_config
         self.device_config = device_config
         self.vision_language_config = vision_language_config
-        self.use_agg_block = use_agg_block
 
         # Instantiate the worker and load the model to GPU.
         self._init_worker()
@@ -62,10 +59,7 @@ class GPUExecutor(ExecutorBase):
             lora_config=self.lora_config,
             vision_language_config=self.vision_language_config,
             kv_cache_dtype=self.cache_config.cache_dtype,
-            is_driver_worker=True,
-            use_agg_block = self.use_agg_block,
-            block_size = self.cache_config.block_size
-        )
+            is_driver_worker=True)
         self.driver_worker.init_device()
         self.driver_worker.load_model()
 
