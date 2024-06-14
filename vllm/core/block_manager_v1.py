@@ -573,6 +573,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     ) -> PhysicalTokenBlock:
         if not self.enable_caching and not self.enable_radix_caching:
             return self.gpu_allocator.allocate()
+        
         new_block = self.gpu_allocator.radix_manager_allocate()
         return new_block
 
@@ -640,7 +641,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Allocate a new physical block.
                 if self.enable_radix_caching:
                     # new_block = self._allocate_last_physical_block_radix_cache(seq)
-                    new_block = self._allocate_last_physical_block_radix_manager_cache()
+                    new_block = self._allocate_last_physical_block_radix_manager_cache(seq)
                 else:
                     new_block = self._allocate_last_physical_block(seq)
                 block_table.append(new_block)
