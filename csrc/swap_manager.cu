@@ -20,10 +20,8 @@ void SwapManager::worker() {
             auto swap_id = task.swap_id;
             auto evicted_blocks = task.evicted_blocks;
             SwapType swap_type = task.type;
-            std::cout<<"swap out typpe"<< " " <<std::endl;
             switch (swap_type) {
                 case SwapType::SWAP_OUT_BLOCKS:
-                    std::cout<<"swap out "<<std::endl;
                     swap_out(swap_id, evicted_blocks);
                     break;
                 case SwapType::SWAP_IN_BLOCKS:
@@ -40,7 +38,6 @@ void SwapManager::worker() {
 }
 
 void SwapManager::add_swap_tasks(const SwapTask& task) {
-    std::cout<<"add_swap_tasks "<<std::endl;
     task_queue.push_back(task);
 }
 
@@ -88,7 +85,6 @@ std::vector<std::string> SwapManager::check_finished_swap_out_events(){
         const std::string& swap_id = it->first;
         auto& event = it->second;
         if (event->query()) {
-            std::cout<<"check_finished_swap_out_events "<<std::endl;
             swap_out_finished.emplace_back(swap_id);
             it = swap_out_events.erase(it);
         } else {
