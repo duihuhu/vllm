@@ -201,6 +201,7 @@ std::vector<std::string> TransEngine::check_send_finished_events() {
             at::cuda::CUDAEvent *event = it->second;
 
             if (event->query()) {
+                std::cout<<"check_send_finished_events " << request_id<< std::endl;
                 send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
                 ++num_finished_events;
             } else {
@@ -230,6 +231,7 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
             at::cuda::CUDAEvent *event = it->second;
 
             if (event->query()) {
+                std::cout<<"check_recv_finished_events " << request_id<< std::endl;
                 recv_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
                 ++num_finished_events;
             } else {
