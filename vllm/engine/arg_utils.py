@@ -509,6 +509,7 @@ class EngineArgs:
         else:
             vision_language_config = None
 
+        print("self.block_size ", self.block_size)
         deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
             self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.enable_radix_caching, self.use_agg_block, self.block_size)
         return (model_config, cache_config, parallel_config, scheduler_config,
