@@ -214,7 +214,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   pybind11::module swap_ops = m.def_submodule("swap_ops", "vLLM swap hbm to dram");
 
   py::class_<SwapManager>(swap_ops, "SwapManager")
-      .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, std::vector<std::pair<at::Tensor, at::Tensor>>&, bool>())
+      .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, std::vector<std::pair<at::Tensor, at::Tensor>>&, bool, int>())
       .def("add_swap_tasks", &SwapManager::add_swap_tasks, "add_swap_tasks")
       .def("get_finished_swap_tasks", &SwapManager::get_finished_swap_tasks, "get_finished_swap_tasks");
 
