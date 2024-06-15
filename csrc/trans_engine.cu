@@ -460,7 +460,8 @@ void TransEngine::RecvFullBlocks(std::pair<at::Tensor, at::Tensor>& dstCaches, \
 
     for (int j = 0; j < dstBlocks.size(); j++) {
         int blockIdx = dstBlocks[j];
-        void *dstBlockPtr = dstKeyCaches[blockIdx];
+        void *dstBlockPtr = dstKeyCaches[blockIdx].data();
+        std::cout << "tensor " << dstKeyCaches[blockIdx].data(); << std::endl;
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclFloat, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
@@ -480,7 +481,7 @@ void TransEngine::SendFullBlocks(std::pair<at::Tensor, at::Tensor>& srcCaches, \
 
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
-        void *srcBlockPtr = srcKeyCaches[blockIdx];
+        void *srcBlockPtr = srcKeyCaches[blockIdx].data();
         if (ncclSuccess != ncclRecv(srcBlockPtr, cacheSize, ncclFloat, destRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
