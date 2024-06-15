@@ -179,7 +179,6 @@ void TransEngine::send_full_blocks(const std::string& channel, const std::string
     c10::cuda::CUDAStreamGuard guard(stream);
     SendFullBlocks(blocks_gpu_cache, dst_blocks, cache_block_size, opposite_rank, comm);
 
-    // at::cuda::CUDAEvent event;
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
     event->record();
     if (send_events.find(channel) == send_events.end()) {
@@ -465,6 +464,7 @@ void TransEngine::RecvFullBlocks(std::vector<int64_t>& dstCaches, \
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
+        std::cout<<"RecvFullBlocks " << blockIdx <<std::endl;
     }
     NCCLCHECK(ncclGroupEnd());
 }
@@ -484,6 +484,7 @@ void TransEngine::SendFullBlocks(std::vector<int64_t>& srcCaches, \
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
+        std::cout<<"SendFullBlocks " << blockIdx<<std::endl;
     }
     NCCLCHECK(ncclGroupEnd());
 }
