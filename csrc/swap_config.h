@@ -49,6 +49,7 @@ private:
     int layerNum;
     c10::cuda::CUDAStream swap_out_stream;
     c10::cuda::CUDAStream swap_in_stream;
+    std::thread execute;
 };
 
 

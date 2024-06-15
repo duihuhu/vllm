@@ -52,7 +52,7 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
         at::Tensor dstValueCache = cpu_cache[i].second;
         for (const auto& pair : evicted_blocks) {
             void *srcKeyCachePtr = srcKeyCache.index({pair.first}).data_ptr();
-            void *srcValueCachePtr = srcValueCache.index({pair.first}).data_ptr();
+            void *dstKeyCachePtr = dstKeyCache.index({pair.second}).data_ptr();
             cudaMemcpyAsync(
             srcKeyCachePtr,
             dstKeyCachePtr,
@@ -60,7 +60,7 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
             memcpy_type,
             swap_out_stream);
 
-            void *dstKeyCachePtr = dstKeyCache.index({pair.second}).data_ptr();
+            void *srcValueCachePtr = srcValueCache.index({pair.first}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({pair.second}).data_ptr();
 
             cudaMemcpyAsync(
@@ -79,20 +79,18 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
 
 void SwapManager::check_finished_swap_out_events(){
     std::vector<std::string> swap_out_finished;
-    size_t num_finished_events = 0;
-    for (auto& kv : swap_out_events) {
-        const std::string& swap_id = kv.first;
-        auto& event = kv.second;
+    
+    auto it = swap_out_events.begin();
+    while (it != swap_out_events.end()) {
+        const std::string& swap_id = it->first;
+        auto& event = kv->second;
         if (event->query()) {
             swap_out_finished.emplace_back(swap_id);
+            it = swap_out_events.erase(it);
             ++num_finished_events;
         } else {
-            break;
+            ++it;
         }
-    }
-    if (num_finished_events > 0) {
-        // Remove finished events from the list
-        swap_out_events.erase(swap_out_events.begin(), swap_out_events.begin() + num_finished_events);
     }
     return swap_out_finished;
 }
