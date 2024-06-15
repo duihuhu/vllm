@@ -798,7 +798,9 @@ class ModelRunner:
         return self.lora_manager.list_loras()
 
     @torch.inference_mode()
-    def capture_model(self, kv_caches: List[torch.Tensor]) -> None:
+    def capture_model(self, 
+                      kv_caches: List[torch.Tensor],
+                      kv_cache_address: Tuple[torch.Tensor, torch.Tensor]) -> None:
         """Cuda graph capture a model.
 
         Note that CUDA graph's performance gain is negligible if number
@@ -879,13 +881,24 @@ class ModelRunner:
                     self.set_active_loras(set(), lora_mapping)
 
                 graph_runner = CUDAGraphRunner(self.model)
-                graph_runner.capture(
-                    input_tokens[:batch_size],
-                    input_positions[:batch_size],
-                    kv_caches,
-                    attn_metadata,
-                    memory_pool=self.graph_memory_pool,
-                )
+                if kv_caches is not None:
+                    graph_runner.capture(
+                        input_tokens[:batch_size],
+                        input_positions[:batch_size],
+                        kv_caches,
+                        None,
+                        attn_metadata,
+                        memory_pool=self.graph_memory_pool,
+                    )
+                else:
+                    graph_runner.capture(
+                        input_tokens[:batch_size],
+                        input_positions[:batch_size],
+                        None,
+                        kv_cache_address,
+                        attn_metadata,
+                        memory_pool=self.graph_memory_pool,
+                    )
                 self.graph_memory_pool = graph_runner.graph.pool()
                 self.graph_runners[batch_size] = graph_runner
 

@@ -214,7 +214,7 @@ class Worker:
         
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
-            self.model_runner.capture_model(self.gpu_cache)
+            self.model_runner.capture_model(self.gpu_cache, self.caches_addresses_tensors_gpu)
         # Reset the seed to ensure that the random state is not affected by
         # the model initialization and profiling.
         set_random_seed(self.model_config.seed)
