@@ -47,8 +47,9 @@ private:
     TransQueue<std::vector<std::string>> swap_result_queue;
     std::unordered_map<std::string, at::cuda::CUDAEvent*> swap_out_events;
     int layerNum;
-    c10::cuda::CUDAStream swap_out_stream;
-    c10::cuda::CUDAStream swap_in_stream;
+    
+    std::vector<c10::cuda::CUDAStream> swap_out_streams;
+
     std::thread execute;
 };
 

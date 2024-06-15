@@ -1,8 +1,8 @@
 #include "swap_config.h"
 
 SwapManager::SwapManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, std::vector<std::pair<at::Tensor, at::Tensor>> &cpu_cache, bool is_layer): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cpu_cache(cpu_cache), is_layer(is_layer), layerNum(layerNum) {
-    swap_out_stream = c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
-    swap_in_stream = c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true));
+    swap_out_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+
     execute = std::thread(&SwapManager::worker, this);
 }
 
@@ -42,7 +42,7 @@ void SwapManager::add_swap_tasks(const SwapTask& task) {
 }
 
 void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>& evicted_blocks){
-    c10::cuda::CUDAStreamGuard guard(swap_out_stream);
+    c10::cuda::CUDAStreamGuard guard(swap_out_stream[0]);
     cudaMemcpyKind memcpy_type = cudaMemcpyDeviceToHost;
     for (int i=0; i < layerNum; i++) {
         at::Tensor srcKeyCache = gpu_cache[i].first;
@@ -58,7 +58,7 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
             dstKeyCachePtr,
             cache_size_per_block,
             memcpy_type,
-            swap_out_stream);
+            swap_out_stream[0]);
 
             void *srcValueCachePtr = srcValueCache.index({pair.first}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({pair.second}).data_ptr();
@@ -68,7 +68,7 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
             dstValueCachePtr,
             cache_size_per_block,
             memcpy_type,
-            swap_out_stream);
+            swap_out_stream[0]);
         }
     }
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
