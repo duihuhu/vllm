@@ -888,6 +888,7 @@ class Scheduler:
                 cpu_block.computed = True
                 cpu_block.ref_count = cpu_block.ref_count + 1
                 node.value.physicalTokenBlock = cpu_block                    
-                node.value.progressStatus = kvCacheProgressStatus.STABLE                
+                node.value.progressStatus = kvCacheProgressStatus.STABLE    
+                print("node.value.physicalTokenBlock ", node.value.physicalTokenBlock.device)            
             del self.radix_swapping[swap_id]
             self.send_finished_req_ids.remove(swap_id)
