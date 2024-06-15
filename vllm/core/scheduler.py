@@ -877,8 +877,6 @@ class Scheduler:
             else:
                 self.block_manager.mark_blocks_as_computed(seq_group=seq_group, enable_cache_meta=self.deploy_config.enable_cache_meta)
             
-
-    #TODO swap
     def _check_swap_finished(self) -> None:
         for swap_id in self.swap_finished_ids[:]:
             evicted_blocks = self.radix_swapping[swap_id]
@@ -889,6 +887,5 @@ class Scheduler:
                 cpu_block.ref_count = cpu_block.ref_count + 1
                 node.value.physicalTokenBlock = cpu_block                    
                 node.value.progressStatus = kvCacheProgressStatus.STABLE    
-                print("node.value.physicalTokenBlock ", node.value.physicalTokenBlock.device)            
             del self.radix_swapping[swap_id]
-            self.send_finished_req_ids.remove(swap_id)
+            self.swap_finished_ids.remove(swap_id)
