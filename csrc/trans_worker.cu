@@ -1,6 +1,6 @@
 #include "trans_config.h"
 
-TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache): trans_engine(cache_size_per_block, gpu_cache, cache_block_size, blocks_gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
+TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache): trans_engine(cache_size_per_block, gpu_cache, cache_block_size, blocks_gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
     std::stringstream ss(dst_channel);
     std::string token;
     while (std::getline(ss, token, '_')) {

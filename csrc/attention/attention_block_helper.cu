@@ -32,3 +32,18 @@ torch::Tensor tensor_for_caches_addresses(
     
     return caches_ptrs_tensor;
 }
+
+
+std::vector<int64_t> tensor_for_blocks_address(
+    std::vector<torch::Tensor>& caches
+) {
+    int num_blocks = caches.size();
+    TORCH_CHECK(num_blocks > 0, "Cache Blocks are Empty!")
+
+    torch::Device caches_device = caches[0].device();
+    std::vector<int64_t> caches_ptrs(num_blocks);
+    for (int i = 0; i < num_blocks; ++i) {
+        caches_ptrs[i] = reinterpret_cast<int64_t>(caches[i].data_ptr());
+    }
+    return caches_ptrs;
+}

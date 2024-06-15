@@ -1,7 +1,7 @@
 #include "trans_config.h"
 #include <stdexcept>
 #include <iostream>
-TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache)
+TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache)
     : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache){
     // Initialize parameters from config dictionaries
 }
@@ -449,7 +449,7 @@ void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
     NCCLCHECK(ncclGroupEnd());
 }
 
-void TransEngine::RecvFullBlocks(std::pair<at::Tensor, at::Tensor>& dstCaches, \
+void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
 {
     auto dstKeyCaches = dstCaches.first;
@@ -470,7 +470,7 @@ void TransEngine::RecvFullBlocks(std::pair<at::Tensor, at::Tensor>& dstCaches, \
 }
 
 
-void TransEngine::SendFullBlocks(std::pair<at::Tensor, at::Tensor>& srcCaches, \
+void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
     const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm)
 {
     auto srcKeyCaches = srcCaches.first;

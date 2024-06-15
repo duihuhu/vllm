@@ -118,7 +118,7 @@ public:
 // TransEngine类，负责管理KV缓存并执行发送和接收操作
 class TransEngine {
 public:
-    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache);
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
 
     void recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
     
@@ -160,7 +160,7 @@ public:
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
-    std::pair<at::Tensor, at::Tensor> blocks_gpu_cache; // key/value address in tensor 
+    std::vector<uint64_t> blocks_gpu_cache; // key/value address in tensor 
 
     int cache_size_per_block;
     int cache_block_size;
@@ -181,7 +181,7 @@ private:
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache);
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
 
     ~TransWorker();
 
@@ -215,7 +215,7 @@ private:
 
 class TransManager {
 public:
-    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache);
+    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
 
 
     ~TransManager();
@@ -233,7 +233,7 @@ private:
 
     int cache_size_per_block;
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
-    std::pair<at::Tensor, at::Tensor> blocks_gpu_cache;
+    std::vector<uint64_t> blocks_gpu_cache;
 
     TransQueue<TransferTask> worker_task_queue;
     int rank;

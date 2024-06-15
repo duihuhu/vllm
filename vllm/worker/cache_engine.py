@@ -121,6 +121,22 @@ class CacheEngine:
             #print(f"In get_tensor_for_caches_address the use-agg-block is False")
             return (None, None)
 
+    def get_blocks_address(self, gpu: bool) -> List[int]:
+        if self.use_agg_block:
+            key_caches = []
+            if gpu is True:
+                for cache_block in self.gpu_cache:
+                    key_caches.append(cache_block[0])
+                blocks_address = ops.tensor_for_blocks_address(key_caches)
+            else:
+                for cache_block in self.cpu_cache:
+                    key_caches.append(cache_block[0])
+                blocks_address = ops.tensor_for_blocks_address(key_caches)
+                return blocks_address
+        else:
+            return None
+
+
     def swap_in(self, src_to_dst: Dict[int, int]) -> None:
         for i in range(self.num_layers):
             self.attn_backend.swap_blocks(self.cpu_cache[i], self.gpu_cache[i],

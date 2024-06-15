@@ -16,6 +16,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     "Get a tensor from the addresses of key or value caches."
   );
   ops.def(
+    "tensor_for_blocks_address",
+    &tensor_for_blocks_address,
+    "Get a tensor from the addresses of key or value caches."
+  );
+  ops.def(
     "paged_attention_v1_block",
     &paged_attention_v1_block,
     "[[num_layers, num_kv_heads, head_size, block_size]...]"
@@ -191,7 +196,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
 
   py::class_<TransManager>(trans_ops, "TransManager")
-      .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int, int, int, int, std::pair<at::Tensor, at::Tensor>& >())
+      .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int, int, int, int, std::vector<uint64_t>& >())
       .def("get_nccl_id", &TransManager::get_nccl_id, "A function that returns NCCL unique ID as a list of characters")
       .def("create_comm", &TransManager::create_comm, "A function create comm")
       .def("add_tasks", &TransManager::add_tasks, "add_tasks")
