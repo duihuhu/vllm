@@ -452,7 +452,7 @@ void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
 void TransEngine::RecvFullBlocks(std::pair<at::Tensor, at::Tensor>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
 {
-    auto dstKeyCaches = dstCaches->first();
+    auto dstKeyCaches = dstCaches.first;
 
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
@@ -473,7 +473,7 @@ void TransEngine::RecvFullBlocks(std::pair<at::Tensor, at::Tensor>& dstCaches, \
 void TransEngine::SendFullBlocks(std::pair<at::Tensor, at::Tensor>& srcCaches, \
     const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm)
 {
-    auto srcKeyCaches = srcCaches->first();
+    auto srcKeyCaches = srcCaches.first;
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
     NCCLCHECK(ncclGroupStart());
@@ -481,7 +481,7 @@ void TransEngine::SendFullBlocks(std::pair<at::Tensor, at::Tensor>& srcCaches, \
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
         void *srcBlockPtr = srcKeyCaches[blockIdx];
-        if (ncclSuccess != ncclRecv(srcBlockPtr, cacheSize, ncclFloat, srcRank,\
+        if (ncclSuccess != ncclRecv(srcBlockPtr, cacheSize, ncclFloat, destRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
