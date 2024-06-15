@@ -42,7 +42,9 @@ enum class TaskType {
     TRANSFER_RECV_BLOCKS,
     TRANSFER_SEND_LAYER_BLOCKS,
     TRANSFER_RECV_LAYER_BLOCKS,
-    CREATE_NCCL_COMM,
+    //use in full blocks 
+    TRANSFER_SEND_FULL_BLOCKS,
+    TRANSFER_RECV_FULL_BLOCKS,
 };
 
 // TransferTaskMeta结构体，用于存储传输任务的元信息
@@ -116,7 +118,8 @@ public:
 // TransEngine类，负责管理KV缓存并执行发送和接收操作
 class TransEngine {
 public:
-    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache);
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache);
+
     void recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
     
     void send_blocks(const std::string& channel, const std::string& request_id,const std::vector<uint32_t>& dst_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
@@ -141,16 +144,22 @@ public:
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
     void RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, \
         const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
+        
     void SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, uint32_t layer, ncclComm_t& comm);
     void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm);
 
+    void RecvFullBlocks(std::pair<at::Tensor, at::Tensor>& dstCaches, \
+        const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
+    void SendFullBlocks(std::pair<at::Tensor, at::Tensor>& srcCaches, \
+        const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
 private:
-    std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache; // Add this member variable
+    std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
+    std::pair<at::Tensor, at::Tensor> blocks_gpu_cache; // key/value address in tensor 
 
     int cache_size_per_block;
-
+    int cache_block_size;
     // std::unordered_map<std::string, c10::cuda::CUDAStream*> send_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> send_events;
 
@@ -168,7 +177,7 @@ private:
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer);
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache);
 
     ~TransWorker();
 
@@ -202,8 +211,8 @@ private:
 
 class TransManager {
 public:
+    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache);
 
-    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer);
 
     ~TransManager();
     std::vector<char> get_nccl_id(const std::string& dst_channel, const std::string& worker_type);
@@ -220,6 +229,7 @@ private:
 
     int cache_size_per_block;
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
+    std::pair<at::Tensor, at::Tensor> blocks_gpu_cache;
 
     TransQueue<TransferTask> worker_task_queue;
     int rank;
@@ -227,6 +237,7 @@ private:
     int nccl_local_rank;
     int tp;
     int num_layer;
+    int cache_block_size;
 
 };
 #endif // TRANS_CONFIG_H

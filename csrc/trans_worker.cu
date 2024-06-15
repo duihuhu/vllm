@@ -1,6 +1,6 @@
 #include "trans_config.h"
 
-TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer): trans_engine(cache_size_per_block, gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
+TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache): trans_engine(cache_size_per_block, gpu_cache, cache_block_size, blocks_gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
     std::stringstream ss(dst_channel);
     std::string token;
     while (std::getline(ss, token, '_')) {
@@ -64,6 +64,15 @@ void TransWorker::worker() {
                         use_comm = (use_comm + 1) % comms.size();
                         // std::cout << "recv_comms_layer_blocks " << use_comm << " " << task_meta.channel << " " << task_meta.request_id<<std::endl;
                     }
+                    break;
+
+                case TaskType::TRANSFER_SEND_FULL_BLOCKS:
+                    trans_engine.send_full_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
+                    use_comm = (use_comm + 1) % comms.size();
+                    break;
+                case TaskType::TRANSFER_RECV_FULL_BLOCKS:
+                    trans_engine.recv_full_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
+                    use_comm = (use_comm + 1) % comms.size();
                     break;
                 default:
                     throw std::runtime_error("invalid task_type.");

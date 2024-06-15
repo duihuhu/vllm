@@ -1,5 +1,6 @@
 #include "trans_config.h"
-TransManager::TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), tp(tp), num_layer(num_layer) {
+
+TransManager::TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), tp(tp), num_layer(num_layer), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache){
     execute = std::thread(&TransManager::dist_worker, this);
 }
 
@@ -31,6 +32,14 @@ void TransManager::dist_worker() {
                     task_worker = recv_trans_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
+                case TaskType::TRANSFER_SEND_FULL_BLOCKS:
+                    task_worker = send_trans_workers[worker_task.meta.channel];
+                    task_worker->add_tasks(worker_task);
+                    break;
+                case TaskType::TRANSFER_RECV_FULL_BLOCKS:
+                    task_worker = recv_trans_workers[worker_task.meta.channel];
+                    task_worker->add_tasks(worker_task);
+                    break;
                 default:
                     throw std::runtime_error("invalid task_type.");
             }
@@ -44,12 +53,12 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel, cons
     ncclGetUniqueId(&uniqueId);
     if(worker_type=="sender"){
         if(send_trans_workers.find(dst_channel) == send_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache);
             send_trans_workers[dst_channel] = task_worker;
         }
     } else{
         if(recv_trans_workers.find(dst_channel) == recv_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache);
             recv_trans_workers[dst_channel] = task_worker;
         }
     }

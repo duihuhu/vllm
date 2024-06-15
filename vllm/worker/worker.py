@@ -196,11 +196,6 @@ class Worker:
         if self.use_agg_block:
             self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
             self.caches_addresses_tensors_cpu = self.cache_engine.get_tensor_for_caches_address(gpu=False)
-            '''print(f"Check addr tensor in worker")
-            if self.caches_addresses_tensors_gpu[0] is None:
-                print(f"Key addr tensor is None again")
-            if self.caches_addresses_tensors_gpu[1] is None:
-                print(f"Value addr tensor is None again")'''
         else:
             self.caches_addresses_tensors_gpu = None
             self.caches_addresses_tensors_cpu = None
@@ -213,7 +208,7 @@ class Worker:
 
     def init_trans_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank, self.parallel_config.tensor_parallel_size, self.model_config.get_num_layers(self.parallel_config))
+        self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank, self.parallel_config.tensor_parallel_size, self.model_config.get_num_layers(self.parallel_config, self.cache_engine.cache_block_size, self.caches_addresses_tensors_gpu))
         
     
     def warm_up_model(self) -> None:
@@ -233,17 +228,11 @@ class Worker:
         # TODO(woosuk): Profile swapping overhead and optimize if needed.
         if blocks_to_swap_in:
             if self.use_agg_block:
-                #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu,
-                #                              self.caches_addresses_tensors_gpu,
-                #                              blocks_to_swap_in)
                 self.cache_engine.swap_by_agg2_in(blocks_to_swap_in)
             else:
                 self.cache_engine.swap_in(blocks_to_swap_in)
         if blocks_to_swap_out:
             if self.use_agg_block:
-                #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu,
-                #                              self.caches_addresses_tensors_cpu,
-                #                              blocks_to_swap_out)
                 self.cache_engine.swap_by_agg2_out(blocks_to_swap_out)
             else:
                 self.cache_engine.swap_out(blocks_to_swap_out)
@@ -252,13 +241,8 @@ class Worker:
                 self.cache_engine.copy_agg(self.caches_addresses_tensors_gpu,
                                            blocks_to_copy)
             else:
-            	self.cache_engine.copy(blocks_to_copy)
-            
-    def cache_swap_evicted_blocks(self,
-        evicted_blocks_to_swap_out: Dict[int, int]) -> None:
-        if evicted_blocks_to_swap_out:
-            self.cache_engine.swap_out_evicted_blocks(evicted_blocks_to_swap_out, "label")
-
+                self.cache_engine.copy(blocks_to_copy)
+             
     @torch.inference_mode()
     def execute_model(
         self,
@@ -300,8 +284,6 @@ class Worker:
 
         #todo hucc
         if evicted_blocks_to_swap_out:
-            # self.cache_swap_evicted_blocks(evicted_blocks_to_swap_out)
-            print("evicted_blocks_to_swap_out in model ", evicted_blocks_to_swap_out)
             self.swap_manager.add_swap_tasks(
                 swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
         

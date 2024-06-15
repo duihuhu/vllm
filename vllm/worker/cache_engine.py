@@ -32,7 +32,6 @@ class CacheEngine:
         parallel_config: ParallelConfig,
         deploy_config: DeployConfig,
         worker_rank: int,
-        request_id_size: int = 32,
     ) -> None:
         self.cache_config = cache_config
         self.model_config = model_config
@@ -57,31 +56,12 @@ class CacheEngine:
 
         #hucc
         self.cache_size_per_block = self.block_size *self.num_heads * self.head_size * _get_dtype_size(self.dtype)
-        self.request_id_size = request_id_size
-
-        #hucc Initialize the stream for caching operations
-        self.swap_in_stream = torch.cuda.Stream(device=torch.cuda.current_device())
-        self.swap_out_stream = torch.cuda.Stream(device=torch.cuda.current_device())
-    
+        self.cache_block_size =  self.num_layers * self.num_heads * self.head_size * self.block_size
         
         #Initizlize the events for stream synchronization
         self.swap_in_events: Dict[str, torch.cuda.Event] = {}
         self.swap_out_events: Dict[str, torch.cuda.Event] = {}
-        #send方在一个channel对应的Stream中只能有一个未完成时间，可能是传请求时间也可能是传数据时间
-        #todo list FSM
-        #send放在一个channel对应的Stream中可以有多个未完成时间，传请求和传数据绑定在一个事件中
-        
-        #request_id to request tensor
-        #channel to request tensor
-        
-        self.send_streams: Dict[str, torch.cuda.Stream] = {}
-        self.send_events: Dict[str, Tuple[str, torch.cuda.Event]] = {}
-        self.send_waiting_request_ids: Dict[str, torch.Tensor] = {}
-        
-        self.recv_streams: Dict[str, torch.cuda.Stream] = {}
-        self.recv_events: Dict[str, List[Tuple[str, torch.cuda.Event]]] = {}
-        self.recv_waiting_request_ids: Dict[str, torch.Tensor] = {}
-        
+                
         # Get attention backend.
         self.attn_backend = get_attn_backend(model_config.dtype)
 
@@ -89,21 +69,6 @@ class CacheEngine:
         self.gpu_cache = self._allocate_kv_cache(self.num_gpu_blocks, "cuda", self.use_agg_block)
         self.cpu_cache = self._allocate_kv_cache(self.num_cpu_blocks, "cpu", self.use_agg_block)
 
-        # if self.deploy_config.role == "prompt":
-        #     self.recv_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
-        #     self.send_streams[str(1)] = torch.cuda.Stream(device=torch.cuda.current_device())
-        # else:
-        #     self.recv_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
-        #     self.send_streams[str(0)] = torch.cuda.Stream(device=torch.cuda.current_device())
-
-    #hucc
-    #for request id: send gpu->gpu , copy request id from gpu to cpu 
-    def get_request_id_from_tensor(self, device_tensor: torch.Tensor) -> str:
-        cpu_tensor = torch.ones(size=(self.request_id_size,), dtype=torch.uint8)
-        cpu_tensor = device_tensor
-        data_int = cpu_tensor.tolist()
-        return ''.join([hex(data)[2:] for data in data_int])
-    
     def _allocate_kv_cache(
         self,
         num_blocks: int,
@@ -142,17 +107,8 @@ class CacheEngine:
                 for cache_block in self.gpu_cache:
                     key_caches.append(cache_block[0])
                     value_caches.append(cache_block[1])
-                '''print(f"Check in get_tensor_for_caches_address (GPU)")
-                if key_caches is None:
-                    print(f"The Key Cache is None")
-                if value_caches is None:
-                    print(f"The Value Cache is None")'''
                 key_caches_ptrs_tensor = ops.tensor_for_caches_addresses(key_caches)
                 value_caches_ptrs_tensor = ops.tensor_for_caches_addresses(value_caches)
-                '''if key_caches_ptrs_tensor is None:
-                    print(f"The addr tensor of key cache is None")
-                if value_caches_ptrs_tensor is None:
-                    print(f"The addr tensor of value cache is None")'''
                 return (key_caches_ptrs_tensor, value_caches_ptrs_tensor)
             else:
                 for cache_block in self.cpu_cache:
@@ -194,36 +150,6 @@ class CacheEngine:
         self.attn_backend.swap_blocks_agg(src_addresses, dst_addresses, src_to_dst, block_size_in_bytes)
 
 
-    def swap_out_evicted_blocks(self, src_to_dst: Dict[int, int], key: str) -> None:
-        with torch.cuda.stream(self.swap_in_stream):
-            for i in range(self.num_layers):
-                gpu_ops.copy_blocks_in_layer(self.gpu_cache[i], self.cpu_cache[i], src_to_dst)
-            event = torch.cuda.Event()
-            event.record()
-        self.swap_in_events[key] = event
-        pass
-
-    
-    # #hucc
-    # def swap_in(self, src_to_dst: Dict[int, int], key: str) -> None:
-    #     cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
-    #     gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-    #     with torch.cuda.stream(self.swap_in_stream):
-    #         gpu_ops.copy_blocks_in_layer(gpu_cache, cpu_cache, src_to_dst, self.cache_size_per_block, True)
-    #         event = torch.cuda.Event()
-    #         event.record()
-    #     self.swap_in_events[key] = event
-
-    # #todo  share one stream or two stream
-    # def swap_out(self, src_to_dst: Dict[int, int], key: str) -> None:
-    #     cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
-    #     gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-    #     with torch.cuda.stream(self.swap_in_stream):
-    #         gpu_ops.copy_blocks_in_layer(cpu_cache, gpu_cache, src_to_dst, self.cache_size_per_block, False)
-    #         event = torch.cuda.Event()
-    #         event.record()
-    #     self.swap_in_events[key] = event
-
     def copy(self, src_to_dsts: Dict[int, List[int]]) -> None:
         self.attn_backend.copy_blocks(self.gpu_cache, src_to_dsts)
 		
@@ -252,51 +178,7 @@ class CacheEngine:
         for key in swap_out_finished_req_ids:
             self.swap_out_events.pop(key)
         return (swap_in_finished_req_ids, swap_out_finished_req_ids)
-    
-    #todo Tuple
-    def check_send_finished_events(self) -> List[TransferTaskMeta]:
-        #process send events
-        send_finished_events: List[Tuple[str, List[int]]] = []
-        send_blocks_finished: List[TransferTaskMeta] = []
-        for channel, request_ids_and_events in self.send_events.items():
-            for idx, (request_id, event) in enumerate(request_ids_and_events):
-                if event.query():
-                    send_blocks_finished.append(TransferTaskMeta(channel, request_id))
-                    send_finished_events.append((channel, idx))
-                    # request_tensor = self.remote_recv_waiting_request_ids[request_id]
-                    del self.send_waiting_request_ids[request_id]
-                else:
-                    break
-        for channel, idx in send_finished_events:
-            self.send_events[channel].pop(idx)
 
-        return send_blocks_finished
-    
-    def check_recv_finished_events(self) -> Tuple[List[TransferTaskMeta], List[TransferTaskMeta]]:
-        #process recv events
-        recv_finished_events: List[str] = []
-        recv_request_id_finished: List[TransferTaskMeta] = []
-        recv_blocks_finished: List[TransferTaskMeta] = []
-        for channel, (request_id, event) in self.recv_events.items():
-            if event.query():
-                recv_finished_events.append(channel)
-                #接收请求结束或发送数据结束
-                if not request_id:
-                    request_tensor = self.recv_waiting_request_ids[channel]
-                    #提取请求request_id
-                    finished_request_id = self.get_request_id_from_tensor(request_tensor)
-                    recv_request_id_finished.append(TransferTaskMeta(channel, finished_request_id))
-                    #删除request_tensor
-                    del self.recv_waiting_request_ids[channel]
-                else:
-                    recv_blocks_finished.append(TransferTaskMeta(channel,request_id))
-                    # gpu_ops.HandleNcclCommDestroy()
-        # release recv events
-        for channel in recv_finished_events:
-            self.recv_events.pop(channel)
-            
-        return recv_request_id_finished, recv_blocks_finished
-    
     @staticmethod
     def get_cache_block_size(
         block_size: int,

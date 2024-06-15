@@ -1,8 +1,8 @@
 #include "trans_config.h"
 #include <stdexcept>
 #include <iostream>
-TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache)
-    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache){
+TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::pair<at::Tensor, at::Tensor>& blocks_gpu_cache)
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache){
     // Initialize parameters from config dictionaries
 }
 
@@ -154,6 +154,39 @@ void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std:
             recv_req_events.erase(request_id);
         }
     }
+}
+
+
+void TransEngine::recv_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
+
+    c10::cuda::CUDAStreamGuard guard(stream);
+    RecvFullBlocks(blocks_gpu_cache, src_blocks, cache_block_size, opposite_rank, comm);
+
+    at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
+
+    event->record();
+
+    if (recv_events.find(channel) == recv_events.end()) {
+        recv_events[channel] = std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>();
+        recv_events[channel].push_back(std::make_pair(std::string(request_id), event));
+    }
+    else
+        recv_events[channel].push_back(std::make_pair(request_id, event));
+}
+
+void TransEngine::send_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
+
+    c10::cuda::CUDAStreamGuard guard(stream);
+    SendFullBlocks(blocks_gpu_cache, dst_blocks, cache_block_size, opposite_rank, comm);
+
+    // at::cuda::CUDAEvent event;
+    at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
+    event->record();
+    if (send_events.find(channel) == send_events.end()) {
+        send_events[channel] = std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>();
+        send_events[channel].push_back(std::make_pair(request_id, event));
+    } else
+        send_events[channel].push_back(std::make_pair(request_id, event));
 }
 
 std::vector<std::string> TransEngine::check_send_finished_events() {
@@ -411,6 +444,46 @@ void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
         if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
+        }
+    }
+    NCCLCHECK(ncclGroupEnd());
+}
+
+void TransEngine::RecvFullBlocks(std::pair<at::Tensor, at::Tensor>& dstCaches, \
+    const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
+{
+    auto dstKeyCaches = dstCaches->first();
+
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclGroupStart());
+
+    for (int j = 0; j < dstBlocks.size(); j++) {
+        int blockIdx = dstBlocks[j];
+        void *dstBlockPtr = dstKeyCaches[blockIdx];
+        if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclFloat, srcRank,\
+            comm, cudaStream)) {
+            std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
+        }
+    }
+    NCCLCHECK(ncclGroupEnd());
+}
+
+
+void TransEngine::SendFullBlocks(std::pair<at::Tensor, at::Tensor>& srcCaches, \
+    const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm)
+{
+    auto srcKeyCaches = srcCaches->first();
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    auto cudaStream = gpuStream.stream();
+    NCCLCHECK(ncclGroupStart());
+
+    for (int j = 0; j < srcBlocks.size(); j++) {
+        int blockIdx = srcBlocks[j];
+        void *srcBlockPtr = srcKeyCaches[blockIdx];
+        if (ncclSuccess != ncclRecv(srcBlockPtr, cacheSize, ncclFloat, srcRank,\
+            comm, cudaStream)) {
+            std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
     }
     NCCLCHECK(ncclGroupEnd());
