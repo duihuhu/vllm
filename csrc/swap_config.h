@@ -35,7 +35,7 @@ public:
     void add_swap_tasks(const SwapTask& tasks);
     void worker();
     void swap_out(const std::string& swap_id, const std::map<int, int>& evicted_blocks);
-    void check_finished_swap_out_events();
+    std::vector<std::string> check_finished_swap_out_events();
     std::vector<std::vector<std::string>> get_finished_swap_tasks();
 
 private:

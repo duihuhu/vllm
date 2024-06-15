@@ -77,17 +77,16 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
 }
 
 
-void SwapManager::check_finished_swap_out_events(){
+std::vector<std::string> SwapManager::check_finished_swap_out_events(){
     std::vector<std::string> swap_out_finished;
-    
+
     auto it = swap_out_events.begin();
     while (it != swap_out_events.end()) {
         const std::string& swap_id = it->first;
-        auto& event = kv->second;
+        auto& event = it->second;
         if (event->query()) {
             swap_out_finished.emplace_back(swap_id);
             it = swap_out_events.erase(it);
-            ++num_finished_events;
         } else {
             ++it;
         }
