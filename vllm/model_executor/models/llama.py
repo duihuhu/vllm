@@ -283,7 +283,7 @@ class LlamaModel(nn.Module):
         self.block_size = block_size
         if self.use_agg_block is False:
             self.layers = nn.ModuleList([
-                LlamaDecoderLayer(config, -1, False, -1, linear_method)
+                LlamaDecoderLayer(config, -1, False, self.block_size, linear_method)
                 for _ in range(config.num_hidden_layers)
             ])
         else:
