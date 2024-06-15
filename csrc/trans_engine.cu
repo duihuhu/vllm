@@ -467,6 +467,7 @@ void TransEngine::RecvFullBlocks(std::vector<int64_t>& dstCaches, \
         std::cout<<"RecvFullBlocks " << blockIdx <<std::endl;
     }
     NCCLCHECK(ncclGroupEnd());
+    std::cout<<"end RecvFullBlocks " <<std::endl;
 }
 
 
@@ -487,4 +488,5 @@ void TransEngine::SendFullBlocks(std::vector<int64_t>& srcCaches, \
         std::cout<<"SendFullBlocks " << blockIdx<<std::endl;
     }
     NCCLCHECK(ncclGroupEnd());
+    std::cout<<"end SendFullBlocks "<<std::endl;
 }
