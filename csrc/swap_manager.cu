@@ -20,7 +20,7 @@ void SwapManager::worker() {
             auto swap_id = task.swap_id;
             auto evicted_blocks = task.evicted_blocks;
             SwapType swap_type = task.type;
-            std::cout<<"swap out typpe"<< " " << swap_type<<std::endl;
+            std::cout<<"swap out typpe"<< " " <<std::endl;
             switch (swap_type) {
                 case SwapType::SWAP_OUT_BLOCKS:
                     std::cout<<"swap out "<<std::endl;
