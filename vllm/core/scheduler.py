@@ -885,12 +885,8 @@ class Scheduler:
             evicted_nodes, cpu_blocks = evicted_blocks[0], evicted_blocks[1]
             for node, cpu_block in zip(evicted_nodes, cpu_blocks):
                 self.block_manager.gpu_allocator.free_radix_manager_cache(node.value.physicalTokenBlock)
-                print("cpu_block ", cpu_block.block_number)
                 cpu_block.computed = True
                 cpu_block.ref_count = cpu_block.ref_count + 1
                 node.value.physicalTokenBlock = cpu_block                    
-                node.value.progressStatus = kvCacheProgressStatus.STABLE
-                print("cpu_block ", node.value.physicalTokenBlock.block_number)
-
-                
+                node.value.progressStatus = kvCacheProgressStatus.STABLE                
             
