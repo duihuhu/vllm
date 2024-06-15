@@ -881,20 +881,10 @@ class ModelRunner:
                     self.set_active_loras(set(), lora_mapping)
 
                 graph_runner = CUDAGraphRunner(self.model)
-                if kv_caches is not None:
-                    graph_runner.capture(
+                graph_runner.capture(
                         input_tokens[:batch_size],
                         input_positions[:batch_size],
                         kv_caches,
-                        None,
-                        attn_metadata,
-                        memory_pool=self.graph_memory_pool,
-                    )
-                else:
-                    graph_runner.capture(
-                        input_tokens[:batch_size],
-                        input_positions[:batch_size],
-                        None,
                         kv_cache_address,
                         attn_metadata,
                         memory_pool=self.graph_memory_pool,
@@ -935,6 +925,7 @@ class CUDAGraphRunner:
         input_ids: torch.Tensor,
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
+        kv_cache_address: Tuple[torch.Tensor, torch.Tensor],
         attn_metadata: AttentionMetadata,
         memory_pool,
         **kwargs,
@@ -948,6 +939,7 @@ class CUDAGraphRunner:
                 input_ids,
                 positions,
                 kv_caches,
+                kv_cache_address,
                 attn_metadata,
                 **kwargs,
             )
@@ -962,6 +954,7 @@ class CUDAGraphRunner:
                     input_ids,
                     positions,
                     kv_caches,
+                    kv_cache_address,
                     attn_metadata,
                     **kwargs,
                 )
@@ -971,6 +964,7 @@ class CUDAGraphRunner:
             "input_ids": input_ids,
             "positions": positions,
             "kv_caches": kv_caches,
+            "kv_cache_address": kv_cache_address,
             "slot_mapping": attn_metadata.slot_mapping,
             "context_lens": attn_metadata.context_lens,
             "block_tables": attn_metadata.block_tables,
@@ -983,11 +977,13 @@ class CUDAGraphRunner:
         input_ids: torch.Tensor,
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
+        kv_cache_address: Tuple[torch.Tensor, torch.Tensor],
         attn_metadata: AttentionMetadata,
         **kwargs,
     ) -> torch.Tensor:
         # KV caches are fixed tensors, so we don't need to copy them.
-        del kv_caches        
+        del kv_caches       
+        del kv_cache_address 
 
         # Copy the input tensors to the input buffers.
         self.input_buffers["input_ids"].copy_(input_ids, non_blocking=True)
