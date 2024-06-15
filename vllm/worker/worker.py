@@ -310,6 +310,12 @@ class Worker:
         return CacheEngine.get_cache_block_size(block_size, cache_dtype,
                                                 self.model_config,
                                                 self.parallel_config)
+
+    def evict_blocks(self,
+                     swap_id: str,
+                     evicted_blocks_to_swap_out: Dict[int,int]) -> None:
+        self.swap_manager.add_swap_tasks(swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
+
     def trans_blocks(
         self,
         send_tasks: List[trans_ops.TransferTask],

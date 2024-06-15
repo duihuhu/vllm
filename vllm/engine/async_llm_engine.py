@@ -473,9 +473,16 @@ class _AsyncLLMEngine(LLMEngine):
             self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.
             output = all_outputs[0][0]
+            evicted_blocks_to_swap_out = None
         else:
             output = []
 
+        if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor and evicted_blocks_to_swap_out:
+            all_outputs = await self.model_executor._run_workers_async(
+                "evict_blocks",
+                evicted_blocks_to_swap_out = evicted_blocks_to_swap_out,
+                swap_id=swap_id)
+                
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         
         processed_output_without_layer = []
@@ -640,7 +647,7 @@ class _AsyncLLMEngine(LLMEngine):
         finished_swap_tasks = await self.model_executor._run_workers_async(
             "get_finished_swap_tasks",
         )
-        print("finished_swap_tasks ", finished_swap_tasks)
+        # print("finished_swap_tasks ", finished_swap_tasks)
         for finished_tasks in finished_swap_tasks:
             for swap_finished_task in finished_tasks:
                 real_swap_finished_swap_ids = self.radix_swap_scheduler.add_finished_tasks(swap_finished_task)
