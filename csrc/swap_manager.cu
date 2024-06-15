@@ -58,7 +58,7 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
             dstKeyCachePtr,
             cache_size_per_block,
             memcpy_type,
-            swap_out_stream[0]);
+            swap_out_streams[0]);
 
             void *srcValueCachePtr = srcValueCache.index({pair.first}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({pair.second}).data_ptr();
@@ -68,7 +68,7 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
             dstValueCachePtr,
             cache_size_per_block,
             memcpy_type,
-            swap_out_stream[0]);
+            swap_out_streams[0]);
         }
     }
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
