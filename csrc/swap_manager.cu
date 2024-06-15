@@ -42,7 +42,7 @@ void SwapManager::add_swap_tasks(const SwapTask& task) {
 }
 
 void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>& evicted_blocks){
-    c10::cuda::CUDAStreamGuard guard(swap_out_stream[0]);
+    c10::cuda::CUDAStreamGuard guard(swap_out_streams[0]);
     cudaMemcpyKind memcpy_type = cudaMemcpyDeviceToHost;
     for (int i=0; i < layerNum; i++) {
         at::Tensor srcKeyCache = gpu_cache[i].first;
