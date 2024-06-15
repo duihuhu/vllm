@@ -249,14 +249,16 @@ class RadixSwapScheduler:
         self,
         swap_id: str,
     ) -> None:
+        print("add swap id ", swap_id)
         self.finished_worker_count[swap_id] = self.num_workers
     
-    def _process_recv_blocks_finished(
+    def _process_swap_blocks_finished(
         self,
-        recv_finished_tasks: List[str]
+        swap_finished_tasks: List[str]
     ) -> List[str]:
         real_finished_swap_ids = []
-        for swap_id in recv_finished_tasks:
+        for swap_id in swap_finished_tasks:
+            print("finished swap id ", swap_id)
             self.finished_worker_count[swap_id] -=1
             if self.finished_worker_count[swap_id] == 0:
                 del self.finished_worker_count[swap_id]
@@ -265,7 +267,7 @@ class RadixSwapScheduler:
     
     def add_finished_tasks(
         self,
-        recv_finished_tasks: List[str],
+        swap_finished_tasks: List[str],
     ) -> List[str]:
-        return self._process_recv_blocks_finished(recv_finished_tasks)
+        return self._process_swap_blocks_finished(swap_finished_tasks)
     
