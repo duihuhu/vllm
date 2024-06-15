@@ -775,7 +775,7 @@ class Scheduler:
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
         # num_nodes = self.block_manager.get_num_nodes()
         # print("can_evicted_num ", can_evicted_num, num_nodes)
-    
+        
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
             cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
@@ -887,6 +887,5 @@ class Scheduler:
                 cpu_block.ref_count = cpu_block.ref_count + 1
                 node.value.physicalTokenBlock = cpu_block                    
                 node.value.progressStatus = kvCacheProgressStatus.STABLE
-                print("node.value.physicalTokenBlock ", node.value.physicalTokenBlock.device)
             del self.radix_swapping[swap_id]
             self.swap_finished_ids.remove(swap_id)
