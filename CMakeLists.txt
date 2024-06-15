@@ -158,6 +158,7 @@ set(VLLM_EXT_SRC
   "csrc/trans_manager.cu"
   "csrc/trans_engine.cu"
   "csrc/trans_worker.cu"
+  "csrc/swap_manager.cu"
   "csrc/pybind.cpp")
 
 if(VLLM_GPU_LANG STREQUAL "CUDA")
