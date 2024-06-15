@@ -198,7 +198,6 @@ std::vector<std::string> TransEngine::check_send_finished_events() {
         for (auto it = request_ids_and_events.begin(); it != request_ids_and_events.end(); ++it) {
             const std::string& request_id = it->first;
             at::cuda::CUDAEvent *event = it->second;
-            std::cout<<"check_send_finished_events no " << request_id<< std::endl;
             if (event->query()) {
                 std::cout<<"check_send_finished_events " << request_id<< std::endl;
                 send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
@@ -228,8 +227,6 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
         for (auto it = request_ids_and_events.begin(); it != request_ids_and_events.end(); ++it) {
             const std::string& request_id = it->first;
             at::cuda::CUDAEvent *event = it->second;
-            std::cout<<"check_recv_finished_events no " << request_id<< std::endl;
-
             if (event->query()) {
                 std::cout<<"check_recv_finished_events " << request_id<< std::endl;
                 recv_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
@@ -461,7 +458,7 @@ void TransEngine::RecvFullBlocks(std::vector<int64_t>& dstCaches, \
     for (int j = 0; j < dstBlocks.size(); j++) {
         int blockIdx = dstBlocks[j];
         void *dstBlockPtr = (void*)dstCaches[blockIdx];
-        if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclFloat, srcRank,\
+        if (ncclSuccess != ncclRecv(dstBlockPtr, 10, ncclFloat, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
@@ -482,7 +479,7 @@ void TransEngine::SendFullBlocks(std::vector<int64_t>& srcCaches, \
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
         void *srcBlockPtr = (void*)srcCaches[blockIdx];
-        if (ncclSuccess != ncclRecv(srcBlockPtr, cacheSize, ncclFloat, destRank,\
+        if (ncclSuccess != ncclRecv(srcBlockPtr, 10, ncclFloat, destRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
