@@ -128,6 +128,7 @@ class CacheEngine:
                 for cache_block in self.gpu_cache:
                     key_caches.append(cache_block[0])
                 blocks_address = ops.tensor_for_blocks_address(key_caches)
+                return blocks_address
             else:
                 for cache_block in self.cpu_cache:
                     key_caches.append(cache_block[0])
