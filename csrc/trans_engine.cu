@@ -198,7 +198,7 @@ std::vector<std::string> TransEngine::check_send_finished_events() {
         for (auto it = request_ids_and_events.begin(); it != request_ids_and_events.end(); ++it) {
             const std::string& request_id = it->first;
             at::cuda::CUDAEvent *event = it->second;
-
+            std::cout<<"check_send_finished_events no " << request_id<< std::endl;
             if (event->query()) {
                 std::cout<<"check_send_finished_events " << request_id<< std::endl;
                 send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
@@ -228,6 +228,7 @@ std::vector<std::string> TransEngine::check_recv_finished_events() {
         for (auto it = request_ids_and_events.begin(); it != request_ids_and_events.end(); ++it) {
             const std::string& request_id = it->first;
             at::cuda::CUDAEvent *event = it->second;
+            std::cout<<"check_recv_finished_events no " << request_id<< std::endl;
 
             if (event->query()) {
                 std::cout<<"check_recv_finished_events " << request_id<< std::endl;
