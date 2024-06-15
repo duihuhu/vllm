@@ -898,8 +898,7 @@ class AsyncLLMEngine:
         has_requests_in_progress = False
         while True:
             if (not has_requests_in_progress and
-                not self.engine.scheduler.swapping_in and
-                not self.engine.scheduler.swapping_out and
+                not self.engine.scheduler.radix_swapping and
                 not self.engine.scheduler.recv_transfering and
                 not self.engine.scheduler.send_transfering and
                 not self.engine.scheduler.req_pull_send_transfering 
