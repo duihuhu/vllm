@@ -424,11 +424,12 @@ class _AsyncLLMEngine(LLMEngine):
             # if is_evict:
             
             can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
-            evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
-            for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
-            if evicted_blocks_to_swap_out:
-                swap_id = random_uuid()
-                self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
+            if can_evicted_nodes:
+                evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
+                for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+                if evicted_blocks_to_swap_out:
+                    swap_id = random_uuid()
+                    self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
 
             print("evicted_blocks_to_swap_out ", evicted_blocks_to_swap_out)
             
