@@ -163,7 +163,7 @@ class LlamaAttention(nn.Module):
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
-        if self.use_agg_block is False:
+        if not self.use_agg_block:
             attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)
         else:
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
@@ -232,7 +232,7 @@ class LlamaDecoderLayer(nn.Module):
         else:
             hidden_states, residual = self.input_layernorm(
                 hidden_states, residual)
-        if self.use_agg_block is False or kv_cache_address is None:
+        if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.self_attn(
                 positions=positions,
                 hidden_states=hidden_states,
@@ -281,9 +281,9 @@ class LlamaModel(nn.Module):
         )
         self.use_agg_block = use_agg_block
         self.block_size = block_size
-        if self.use_agg_block is False:
+        if not self.use_agg_block:
             self.layers = nn.ModuleList([
-                LlamaDecoderLayer(config, -1, False, -1, linear_method)
+                LlamaDecoderLayer(config, -1, False, self.block_size, linear_method)
                 for _ in range(config.num_hidden_layers)
             ])
         else:
@@ -315,7 +315,7 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            if self.use_agg_block is False or kv_cache_address is None:
+            if not self.use_agg_block or not kv_cache_address:
                 hidden_states, residual = layer(
                     positions,
                     hidden_states,
@@ -410,7 +410,7 @@ class LlamaForCausalLM(nn.Module):
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> torch.Tensor:
-        if self.use_agg_block is False or kv_cache_address is None:
+        if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.model(input_ids, positions, kv_caches, None,
                                     attn_metadata, merge_reqs_info, trans_manager)
         else:

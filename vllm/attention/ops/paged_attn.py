@@ -5,6 +5,7 @@ import torch
 
 from vllm._C import cache_ops, ops
 from vllm.attention.ops.prefix_prefill import context_attention_fwd
+from vllm.attention.ops.prefix_prefill_block import context_attention_block_fwd
 
 # Should be the same as PARTITION_SIZE in `paged_attention_v2_launcher`.
 _PARTITION_SIZE = 512
@@ -146,7 +147,7 @@ class PagedAttention:
                   and (max_num_partitions == 1 or num_seqs * num_heads > 512))
         if use_v1:
             # Run PagedAttention V1.
-            if use_agg_block is False:
+            if not use_agg_block:
                 ops.paged_attention_v1(
                     output,
                     query,
@@ -193,7 +194,7 @@ class PagedAttention:
                 device=output.device,
             )
             max_logits = torch.empty_like(exp_sums)
-            if use_agg_block is False:
+            if not use_agg_block:
                 ops.paged_attention_v2(
                     output,
                     exp_sums,
@@ -236,10 +237,15 @@ class PagedAttention:
 
     @staticmethod
     def forward_prefix(
+        layer_id: int,
+        block_size: int,
+        num_kv_heads: int,
+        head_size: int,
+        x: int,
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        key_cache: torch.Tensor,
+        key_cache: torch.Tensor, # addr when use agg-block
         value_cache: torch.Tensor,
         block_tables: torch.Tensor,
         subquery_start_loc: torch.Tensor,
@@ -249,21 +255,42 @@ class PagedAttention:
         alibi_slopes: Optional[torch.Tensor],
     ) -> torch.Tensor:
         output = torch.empty_like(query)
-        context_attention_fwd(
-            query,
-            key,
-            value,
-            output,
-            key_cache,
-            value_cache,
-            block_tables,
-            # subquery_start_loc is (batch_size + 1,)
-            subquery_start_loc[:-1],
-            prompt_lens_tensor,
-            context_lens,
-            max_subquery_len,
-            alibi_slopes,
-        )
+        if layer_id != -1:
+            context_attention_block_fwd(
+                layer_id,
+                block_size,
+                num_kv_heads,
+                head_size,
+                x,
+                query,
+                key,
+                value,
+                output,
+                key_cache,
+                value_cache,
+                block_tables,
+                subquery_start_loc[:-1],
+                prompt_lens_tensor,
+                context_lens,
+                max_subquery_len,
+                alibi_slopes,
+            )
+        else:
+            context_attention_fwd(
+                query,
+                key,
+                value,
+                output,
+                key_cache,
+                value_cache,
+                block_tables,
+                # subquery_start_loc is (batch_size + 1,)
+                subquery_start_loc[:-1],
+                prompt_lens_tensor,
+                context_lens,
+                max_subquery_len,
+                alibi_slopes,
+            )
         return output
 
     @staticmethod
