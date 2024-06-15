@@ -190,10 +190,10 @@ class Worker:
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
 
-    def init_swap_manager(self, evict_block_table):
+    def init_swap_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, evict_block_table)
+        self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False)
 
 
     def init_trans_manager(self):
