@@ -263,6 +263,7 @@ class Worker:
             blocks_to_copy = data["blocks_to_copy"]
             merge_reqs_info = data["merge_reqs_info"]
             evicted_blocks_to_swap_out = data["evicted_blocks_to_swap_out"]
+            swap_id = data["swap_id"]
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
@@ -271,7 +272,7 @@ class Worker:
             # self.cache_swap_evicted_blocks(evicted_blocks_to_swap_out)
             print("evicted_blocks_to_swap_out in model ", evicted_blocks_to_swap_out)
             self.swap_manager.add_swap_tasks(
-                swap_ops.SwapTask(swap_id,evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
+                swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
         
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
