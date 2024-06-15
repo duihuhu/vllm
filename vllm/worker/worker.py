@@ -269,6 +269,7 @@ class Worker:
         #todo hucc
         if evicted_blocks_to_swap_out:
             # self.cache_swap_evicted_blocks(evicted_blocks_to_swap_out)
+            print("evicted_blocks_to_swap_out in model ", evicted_blocks_to_swap_out)
             self.swap_manager.add_swap_tasks(
                 swap_ops.SwapTask(swap_id,evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
         
