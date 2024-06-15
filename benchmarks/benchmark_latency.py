@@ -169,8 +169,7 @@ if __name__ == '__main__':
                         help='directory to download and load the weights, '
                         'default to the default cache dir of huggingface')
     parser.add_argument('--use-agg-block',
-                        type=bool,
-                        default=False,
+                        action='store_true',
                         help='whether to use agg block or not')
     args = parser.parse_args()
     main(args)
