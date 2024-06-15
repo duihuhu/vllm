@@ -55,12 +55,16 @@ class ModelRunner:
         kv_cache_dtype: Optional[str] = "auto",
         is_driver_worker: bool = False,
         vision_language_config: Optional[VisionLanguageConfig] = None,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1
     ):
         self.model_config = model_config
         self.parallel_config = parallel_config
         self.scheduler_config = scheduler_config
         self.lora_config = lora_config
         self.is_driver_worker = is_driver_worker
+        self.use_agg_block = use_agg_block
+        self.block_size2 = block_size
 
         # model_config can be None in tests/samplers/test_sampler.py.
         # FIXME(woosuk): This is a hack to make the tests work. Refactor this.
@@ -99,6 +103,8 @@ class ModelRunner:
             self.model = get_model(
                 self.model_config,
                 self.device_config,
+                self.use_agg_block,
+                self.block_size2,
                 lora_config=self.lora_config,
                 vision_language_config=self.vision_language_config,
                 parallel_config=self.parallel_config,
@@ -667,6 +673,7 @@ class ModelRunner:
                 "input_ids": input_tokens,
                 "positions": input_positions,
                 "kv_caches": kv_caches,
+                "kv_cache_address": kv_cache_address,
                 "attn_metadata": attn_metadata,
                 "merge_reqs_info": merge_reqs_info,
                 "trans_manager": trans_manager
@@ -676,6 +683,7 @@ class ModelRunner:
                 "input_ids": input_tokens,
                 "positions": input_positions,
                 "kv_caches": kv_caches,
+                "kv_cache_address": kv_cache_address,
                 "attn_metadata": attn_metadata,
             }
         if self.vision_language_config:
@@ -788,7 +796,9 @@ class ModelRunner:
         return self.lora_manager.list_loras()
 
     @torch.inference_mode()
-    def capture_model(self, kv_caches: List[torch.Tensor]) -> None:
+    def capture_model(self, 
+                      kv_caches: List[torch.Tensor],
+                      kv_cache_address: Tuple[torch.Tensor, torch.Tensor]) -> None:
         """Cuda graph capture a model.
 
         Note that CUDA graph's performance gain is negligible if number
@@ -870,12 +880,13 @@ class ModelRunner:
 
                 graph_runner = CUDAGraphRunner(self.model)
                 graph_runner.capture(
-                    input_tokens[:batch_size],
-                    input_positions[:batch_size],
-                    kv_caches,
-                    attn_metadata,
-                    memory_pool=self.graph_memory_pool,
-                )
+                        input_tokens[:batch_size],
+                        input_positions[:batch_size],
+                        kv_caches,
+                        kv_cache_address,
+                        attn_metadata,
+                        memory_pool=self.graph_memory_pool,
+                    )
                 self.graph_memory_pool = graph_runner.graph.pool()
                 self.graph_runners[batch_size] = graph_runner
 
@@ -912,6 +923,7 @@ class CUDAGraphRunner:
         input_ids: torch.Tensor,
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
+        kv_cache_address: Tuple[torch.Tensor, torch.Tensor],
         attn_metadata: AttentionMetadata,
         memory_pool,
         **kwargs,
@@ -925,6 +937,7 @@ class CUDAGraphRunner:
                 input_ids,
                 positions,
                 kv_caches,
+                kv_cache_address,
                 attn_metadata,
                 **kwargs,
             )
@@ -939,6 +952,7 @@ class CUDAGraphRunner:
                     input_ids,
                     positions,
                     kv_caches,
+                    kv_cache_address,
                     attn_metadata,
                     **kwargs,
                 )
@@ -948,6 +962,7 @@ class CUDAGraphRunner:
             "input_ids": input_ids,
             "positions": positions,
             "kv_caches": kv_caches,
+            "kv_cache_address": kv_cache_address,
             "slot_mapping": attn_metadata.slot_mapping,
             "context_lens": attn_metadata.context_lens,
             "block_tables": attn_metadata.block_tables,
@@ -960,11 +975,13 @@ class CUDAGraphRunner:
         input_ids: torch.Tensor,
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
+        kv_cache_address: Tuple[torch.Tensor, torch.Tensor],
         attn_metadata: AttentionMetadata,
         **kwargs,
     ) -> torch.Tensor:
         # KV caches are fixed tensors, so we don't need to copy them.
-        del kv_caches        
+        del kv_caches       
+        del kv_cache_address 
 
         # Copy the input tensors to the input buffers.
         self.input_buffers["input_ids"].copy_(input_ids, non_blocking=True)

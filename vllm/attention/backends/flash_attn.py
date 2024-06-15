@@ -32,9 +32,10 @@ class FlashAttentionBackend(AttentionBackend):
         block_size: int,
         num_kv_heads: int,
         head_size: int,
+        layer_num: Optional[int] = None
     ) -> Tuple[int, ...]:
         return PagedAttention.get_kv_cache_shape(num_blocks, block_size,
-                                                 num_kv_heads, head_size)
+                                                 num_kv_heads, head_size, layer_num)
 
     @staticmethod
     def swap_blocks(
@@ -43,6 +44,21 @@ class FlashAttentionBackend(AttentionBackend):
         src_to_dst: Dict[int, int],
     ) -> None:
         PagedAttention.swap_blocks(src_kv_cache, dst_kv_cache, src_to_dst)
+    
+    @staticmethod
+    def swap_blocks_agg(
+        src_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
+        dst_kv_addresses: Tuple[torch.Tensor, torch.Tensor],
+        src_to_dst: Dict[int, int],
+        block_size_in_bytes: int) -> None:
+        PagedAttention.swap_blocks_agg(src_kv_addresses, dst_kv_addresses, src_to_dst, block_size_in_bytes)
+    
+    @staticmethod
+    def swap_blocks_agg2(
+        src_kv: torch.Tensor,
+        dst_kv: torch.Tensor,
+        block_size_in_bytes: int) -> None:
+        PagedAttention.swap_blocks_agg2(src_kv, dst_kv, block_size_in_bytes)
 
     @staticmethod
     def copy_blocks(
@@ -50,6 +66,16 @@ class FlashAttentionBackend(AttentionBackend):
         src_to_dists: Dict[int, List[int]],
     ) -> None:
         PagedAttention.copy_blocks(kv_caches, src_to_dists)
+    
+    @staticmethod
+    def copy_blocks_agg(
+        kv_cache_addresses: Tuple[torch.Tensor, torch.Tensor],
+        data_type_tensor: torch.Tensor,
+        src_to_dists: Dict[int, List[int]],
+        num_layers: int,
+        numel_per_layer: int
+    ) -> None:
+        PagedAttention.copy_blocks_agg(kv_cache_addresses, data_type_tensor, src_to_dists, num_layers, numel_per_layer)
 
 
 @dataclass
@@ -129,11 +155,15 @@ class FlashAttentionImpl(AttentionImpl):
         num_kv_heads: Optional[int] = None,
         alibi_slopes: Optional[List[float]] = None,
         sliding_window: Optional[int] = None,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1
     ) -> None:
         self.num_heads = num_heads
         self.head_size = head_size
         self.scale = float(scale)
         self.num_kv_heads = num_heads if num_kv_heads is None else num_kv_heads
+        self.use_agg_block = use_agg_block
+        self.block_size = block_size
         self.sliding_window = ((sliding_window, sliding_window)
                                if sliding_window is not None else (-1, -1))
         if alibi_slopes is not None:
@@ -155,7 +185,9 @@ class FlashAttentionImpl(AttentionImpl):
         key: torch.Tensor,
         value: torch.Tensor,
         kv_cache: torch.Tensor,
+        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: FlashAttentionMetadata,
+        layer_id: Optional[int] = -1
     ) -> torch.Tensor:
         """Forward pass with FlashAttention and PagedAttention.
 
@@ -175,16 +207,26 @@ class FlashAttentionImpl(AttentionImpl):
         value = value.view(-1, self.num_kv_heads, self.head_size)
 
         if kv_cache is not None:
-            key_cache, value_cache = PagedAttention.split_kv_cache(
-                kv_cache, self.num_kv_heads, self.head_size)
+            if kv_cache_address is None:
+                key_cache, value_cache = PagedAttention.split_kv_cache(
+                    kv_cache, self.num_kv_heads, self.head_size)
 
-            # Reshape the input keys and values and store them in the cache.
-            # If kv_cache is not provided, the new key and value tensors are
-            # not cached. This happens during the initial memory profiling run.
-            PagedAttention.write_to_paged_cache(key, value, key_cache,
-                                                value_cache,
-                                                attn_metadata.slot_mapping,
-                                                attn_metadata.kv_cache_dtype)
+                # Reshape the input keys and values and store them in the cache.
+                # If kv_cache is not provided, the new key and value tensors are
+                # not cached. This happens during the initial memory profiling run.
+                PagedAttention.write_to_paged_cache(key, value, key_cache,
+                                                    value_cache,
+                                                    attn_metadata.slot_mapping,
+                                                    attn_metadata.kv_cache_dtype)
+            else:
+                PagedAttention.write_to_agg_paged_cache(key, value, kv_cache_address[0],
+                                                        kv_cache_address[1], attn_metadata.slot_mapping,
+                                                        attn_metadata.kv_cache_dtype,
+                                                        self.block_size,
+                                                        16 // key.element_size(),
+                                                        layer_id)
+            #TODO for hhy
+            #write_to_agg_paged_cache -> Done
 
         if attn_metadata.is_prompt:
             # Prompt run.
@@ -206,6 +248,9 @@ class FlashAttentionImpl(AttentionImpl):
                     alibi_slopes=self.alibi_slopes,
                 )
             else:
+                #TODO for hhy
+                #re-write pagedattn_prefix to support agg-block -> Get addresses for all layers in advance
+                
                 # prefix-enabled attention
                 output = PagedAttention.forward_prefix(
                     query,
@@ -222,18 +267,40 @@ class FlashAttentionImpl(AttentionImpl):
                 )
         else:
             # Decoding run.
-            output = PagedAttention.forward_decode(
-                query,
-                key_cache,
-                value_cache,
-                attn_metadata.block_tables,
-                attn_metadata.context_lens,
-                attn_metadata.max_context_len,
-                attn_metadata.kv_cache_dtype,
-                self.num_kv_heads,
-                self.scale,
-                self.alibi_slopes,
-            )
+            if self.use_agg_block is False or kv_cache_address is None:
+                output = PagedAttention.forward_decode(
+                    query,
+                    key_cache,
+                    value_cache,
+                    attn_metadata.block_tables,
+                    attn_metadata.context_lens,
+                    attn_metadata.max_context_len,
+                    attn_metadata.kv_cache_dtype,
+                    self.num_kv_heads,
+                    self.scale,
+                    self.alibi_slopes,
+                    block_size=self.block_size
+                )
+            else:
+                layer_stride = self.num_kv_heads * self.head_size * self.block_size
+                head_stride = self.head_size * self.block_size
+                output = PagedAttention.forward_decode(
+                    query,
+                    kv_cache_address[0],
+                    kv_cache_address[1],
+                    attn_metadata.block_tables,
+                    attn_metadata.context_lens,
+                    attn_metadata.max_context_len,
+                    attn_metadata.kv_cache_dtype,
+                    self.num_kv_heads,
+                    self.scale,
+                    self.alibi_slopes,
+                    self.use_agg_block,
+                    layer_id,
+                    layer_stride,
+                    head_stride,
+                    self.block_size
+                )
 
         # Reshape the output tensor.
         return output.view(num_tokens, hidden_size)

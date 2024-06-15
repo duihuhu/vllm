@@ -624,10 +624,10 @@ if triton.__version__ >= "2.1.0":
                               o,
                               k_cache,
                               v_cache,
-                              b_loc,
-                              b_start_loc,
-                              b_seq_len,
-                              b_ctx_len,
+                              b_loc, # block tables for new tokens
+                              b_start_loc, # new tokens start point
+                              b_seq_len, # sum(new tokens)
+                              b_ctx_len, # sum(prefix)
                               max_input_len,
                               alibi_slopes=None):
 

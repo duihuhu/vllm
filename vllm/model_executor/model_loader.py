@@ -1,6 +1,6 @@
 """Utilities for selecting and loading models."""
 import contextlib
-from typing import Tuple, Type
+from typing import Tuple, Type, Optional
 
 import torch
 import torch.nn as nn
@@ -47,7 +47,10 @@ def get_architecture_class_name(model_config: ModelConfig) -> str:
     return _get_model_architecture(model_config)[1]
 
 
-def get_model(model_config: ModelConfig, device_config: DeviceConfig,
+def get_model(model_config: ModelConfig, 
+              device_config: DeviceConfig, 
+              use_agg_block: Optional[bool] = False,
+              block_size: Optional[int] = -1,
               **kwargs) -> nn.Module:
     lora_config = kwargs.get("lora_config", None)
     vision_language_config = kwargs.get("vision_language_config", None)
@@ -77,7 +80,10 @@ def get_model(model_config: ModelConfig, device_config: DeviceConfig,
         # The weights will be initialized as empty tensors.
         with torch.device(device_config.device):
             if hasattr(model_class, "supported_lora_modules"):
-                model = model_class(model_config.hf_config, linear_method,
+                model = model_class(model_config.hf_config, 
+                                    use_agg_block,
+                                    block_size,
+                                    linear_method,
                                     lora_config)
             elif lora_config:
                 raise ValueError(
@@ -87,7 +93,10 @@ def get_model(model_config: ModelConfig, device_config: DeviceConfig,
                     "please open an issue on github.")
             else:
                 if model_class not in _VISION_MODEL_CLASSES:
-                    model = model_class(model_config.hf_config, linear_method)
+                    model = model_class(model_config.hf_config, 
+                                        use_agg_block,
+                                        block_size,
+                                        linear_method)
                 else:
                     model = model_class(model_config.hf_config,
                                         vision_language_config, linear_method)

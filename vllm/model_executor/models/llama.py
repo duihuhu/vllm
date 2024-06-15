@@ -93,6 +93,8 @@ class LlamaAttention(nn.Module):
         linear_method: Optional[LinearMethodBase] = None,
         bias: bool = False,
         sliding_window: Optional[int] = None,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1
     ) -> None:
         super().__init__()
         self.hidden_size = hidden_size
@@ -101,6 +103,8 @@ class LlamaAttention(nn.Module):
         assert self.total_num_heads % tp_size == 0
         self.num_heads = self.total_num_heads // tp_size
         self.total_num_kv_heads = num_kv_heads
+        self.use_agg_block = use_agg_block
+        self.block_size = block_size
         if self.total_num_kv_heads >= tp_size:
             # Number of KV heads is greater than TP size, so we partition
             # the KV heads across multiple tensor parallel GPUs.
@@ -143,19 +147,26 @@ class LlamaAttention(nn.Module):
                               self.head_dim,
                               self.scaling,
                               num_kv_heads=self.num_kv_heads,
-                              sliding_window=sliding_window)
+                              sliding_window=sliding_window,
+                              use_agg_block=self.use_agg_block,
+                              block_size=self.block_size)
 
     def forward(
         self,
         positions: torch.Tensor,
         hidden_states: torch.Tensor,
         kv_cache: torch.Tensor,
+        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
+        layer_id: Optional[int] = -1
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
-        attn_output = self.attn(q, k, v, kv_cache, attn_metadata)
+        if self.use_agg_block is False:
+            attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)
+        else:
+            attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
         output, _ = self.o_proj(attn_output)
         return output
 
@@ -165,9 +176,15 @@ class LlamaDecoderLayer(nn.Module):
     def __init__(
         self,
         config: LlamaConfig,
-        linear_method: Optional[LinearMethodBase] = None,
+        layer_id: Optional[int] = -1,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1,
+        linear_method: Optional[LinearMethodBase] = None
     ) -> None:
         super().__init__()
+        self.layer_id = layer_id
+        self.use_agg_block = use_agg_block
+        self.block_size = block_size
         self.hidden_size = config.hidden_size
         rope_theta = getattr(config, "rope_theta", 10000)
         rope_scaling = getattr(config, "rope_scaling", None)
@@ -185,6 +202,8 @@ class LlamaDecoderLayer(nn.Module):
             linear_method=linear_method,
             bias=getattr(config, "bias", False),
             sliding_window=sliding_window,
+            use_agg_block=self.use_agg_block,
+            block_size=self.block_size
         )
         self.mlp = LlamaMLP(
             hidden_size=self.hidden_size,
@@ -202,6 +221,7 @@ class LlamaDecoderLayer(nn.Module):
         positions: torch.Tensor,
         hidden_states: torch.Tensor,
         kv_cache: torch.Tensor,
+        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
         residual: Optional[torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -212,12 +232,24 @@ class LlamaDecoderLayer(nn.Module):
         else:
             hidden_states, residual = self.input_layernorm(
                 hidden_states, residual)
-        hidden_states = self.self_attn(
-            positions=positions,
-            hidden_states=hidden_states,
-            kv_cache=kv_cache,
-            attn_metadata=attn_metadata,
-        )
+        if self.use_agg_block is False or kv_cache_address is None:
+            hidden_states = self.self_attn(
+                positions=positions,
+                hidden_states=hidden_states,
+                kv_cache=kv_cache,
+                kv_cache_address=None,
+                attn_metadata=attn_metadata,
+                layer_id=-1
+            )
+        else:
+            hidden_states = self.self_attn(
+                positions=positions,
+                hidden_states=hidden_states,
+                kv_cache=kv_cache,
+                kv_cache_address=kv_cache_address,
+                attn_metadata=attn_metadata,
+                layer_id=self.layer_id
+            )
         # Fully Connected
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
@@ -230,6 +262,8 @@ class LlamaModel(nn.Module):
     def __init__(
         self,
         config: LlamaConfig,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1,
         linear_method: Optional[LinearMethodBase] = None,
         lora_config: Optional[LoRAConfig] = None,
     ) -> None:
@@ -245,10 +279,18 @@ class LlamaModel(nn.Module):
             config.hidden_size,
             org_num_embeddings=config.vocab_size,
         )
-        self.layers = nn.ModuleList([
-            LlamaDecoderLayer(config, linear_method)
-            for _ in range(config.num_hidden_layers)
-        ])
+        self.use_agg_block = use_agg_block
+        self.block_size = block_size
+        if self.use_agg_block is False:
+            self.layers = nn.ModuleList([
+                LlamaDecoderLayer(config, -1, False, -1, linear_method)
+                for _ in range(config.num_hidden_layers)
+            ])
+        else:
+            self.layers = nn.ModuleList([
+                LlamaDecoderLayer(config, i, True, self.block_size, linear_method)
+                for i in range(config.num_hidden_layers)
+            ])
         self.norm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
@@ -259,6 +301,7 @@ class LlamaModel(nn.Module):
         input_ids: Optional[torch.Tensor],
         positions: torch.Tensor,
         kv_caches: List[torch.Tensor],
+        kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None,
@@ -272,13 +315,24 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            hidden_states, residual = layer(
-                positions,
-                hidden_states,
-                kv_caches[i],
-                attn_metadata,
-                residual,
-            )
+            if self.use_agg_block is False or kv_cache_address is None:
+                hidden_states, residual = layer(
+                    positions,
+                    hidden_states,
+                    kv_caches[i],
+                    None,
+                    attn_metadata,
+                    residual,
+                )
+            else:
+                hidden_states, residual = layer(
+                    positions,
+                    hidden_states,
+                    kv_caches[i],
+                    kv_cache_address,
+                    attn_metadata,
+                    residual,
+                )
             if merge_reqs_info:
                 for merge_req_info in merge_reqs_info:
                     trans_manager.add_tasks([trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize()])
@@ -317,13 +371,17 @@ class LlamaForCausalLM(nn.Module):
     def __init__(
         self,
         config: LlamaConfig,
+        use_agg_block: Optional[bool] = False,
+        block_size: Optional[int] = -1,
         linear_method: Optional[LinearMethodBase] = None,
         lora_config: Optional[LoRAConfig] = None,
     ) -> None:
         super().__init__()
         self.config = config
         self.linear_method = linear_method
-        self.model = LlamaModel(config, linear_method, lora_config=lora_config)
+        self.use_agg_block = use_agg_block
+        self.block_size = block_size
+        self.model = LlamaModel(config, self.use_agg_block, self.block_size, linear_method, lora_config=lora_config)
         self.unpadded_vocab_size = config.vocab_size
         if lora_config:
             self.unpadded_vocab_size += lora_config.lora_extra_vocab_size
@@ -351,9 +409,12 @@ class LlamaForCausalLM(nn.Module):
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> torch.Tensor:
-        
-        hidden_states = self.model(input_ids, positions, kv_caches,
-                                   attn_metadata, merge_reqs_info, trans_manager)
+        if self.use_agg_block is False or kv_cache_address is None:
+            hidden_states = self.model(input_ids, positions, kv_caches, None,
+                                    attn_metadata, merge_reqs_info, trans_manager)
+        else:
+            hidden_states = self.model(input_ids, positions, kv_caches, kv_cache_address,
+                                    attn_metadata, merge_reqs_info, trans_manager)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,

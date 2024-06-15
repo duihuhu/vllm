@@ -66,6 +66,8 @@ class Worker:
         self.is_driver_worker = is_driver_worker
         self.deploy_config = deploy_config
         self.device_id = device_id
+        self.use_agg_block = self.deploy_config.use_agg_block
+        self.block_size2 = self.deploy_config.block_size
         if self.is_driver_worker:
             assert self.rank == 0, "The driver worker must have rank 0."
 
@@ -82,7 +84,9 @@ class Worker:
             lora_config=self.lora_config,
             kv_cache_dtype=kv_cache_dtype,
             is_driver_worker=is_driver_worker,
-            vision_language_config=vision_language_config)
+            vision_language_config=vision_language_config,
+            use_agg_block=self.use_agg_block,
+            block_size=self.block_size2)
         # Uninitialized cache engine. Will be initialized by
         # self.init_cache_engine().
         self.cache_config = None
@@ -189,6 +193,17 @@ class Worker:
                                         self.parallel_config, self.deploy_config, self.rank)
         self.gpu_cache = self.cache_engine.gpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
+        if self.use_agg_block:
+            self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
+            self.caches_addresses_tensors_cpu = self.cache_engine.get_tensor_for_caches_address(gpu=False)
+            '''print(f"Check addr tensor in worker")
+            if self.caches_addresses_tensors_gpu[0] is None:
+                print(f"Key addr tensor is None again")
+            if self.caches_addresses_tensors_gpu[1] is None:
+                print(f"Value addr tensor is None again")'''
+        else:
+            self.caches_addresses_tensors_gpu = None
+            self.caches_addresses_tensors_cpu = None
 
     def init_swap_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
@@ -203,7 +218,7 @@ class Worker:
     
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
-            self.model_runner.capture_model(self.gpu_cache)
+            self.model_runner.capture_model(self.gpu_cache, self.caches_addresses_tensors_gpu)
         # Reset the seed to ensure that the random state is not affected by
         # the model initialization and profiling.
         set_random_seed(self.model_config.seed)
@@ -217,11 +232,27 @@ class Worker:
         # Issue cache operations.
         # TODO(woosuk): Profile swapping overhead and optimize if needed.
         if blocks_to_swap_in:
-            self.cache_engine.swap_in(blocks_to_swap_in)
+            if self.use_agg_block:
+                #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu,
+                #                              self.caches_addresses_tensors_gpu,
+                #                              blocks_to_swap_in)
+                self.cache_engine.swap_by_agg2_in(blocks_to_swap_in)
+            else:
+                self.cache_engine.swap_in(blocks_to_swap_in)
         if blocks_to_swap_out:
-            self.cache_engine.swap_out(blocks_to_swap_out)
+            if self.use_agg_block:
+                #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu,
+                #                              self.caches_addresses_tensors_cpu,
+                #                              blocks_to_swap_out)
+                self.cache_engine.swap_by_agg2_out(blocks_to_swap_out)
+            else:
+                self.cache_engine.swap_out(blocks_to_swap_out)
         if blocks_to_copy:
-            self.cache_engine.copy(blocks_to_copy)
+            if self.use_agg_block:
+                self.cache_engine.copy_agg(self.caches_addresses_tensors_gpu,
+                                           blocks_to_copy)
+            else:
+            	self.cache_engine.copy(blocks_to_copy)
             
     def cache_swap_evicted_blocks(self,
         evicted_blocks_to_swap_out: Dict[int, int]) -> None:
@@ -279,9 +310,12 @@ class Worker:
             return {}
         if self.deploy_config.enable_layer:
             output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                    self.gpu_cache, merge_reqs_info, self.trans_manager)
+                                                    self.gpu_cache, 
+                                                    self.caches_addresses_tensors_gpu,
+                                                    merge_reqs_info, 
+                                                    self.trans_manager)
         else:
-            output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache)
+            output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache, self.caches_addresses_tensors_gpu)
             
         swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)

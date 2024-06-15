@@ -28,7 +28,8 @@ def main(args: argparse.Namespace):
               ray_workers_use_nsight=args.ray_workers_use_nsight,
               enable_chunked_prefill=args.enable_chunked_prefill,
               download_dir=args.download_dir,
-              block_size=args.block_size)
+              block_size=args.block_size,
+              use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
         n=args.n,
@@ -90,13 +91,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Benchmark the latency of processing a single batch of '
         'requests till completion.')
-    parser.add_argument('--model', type=str, default='facebook/opt-125m')
+    parser.add_argument('--model', type=str, default='/home/jovyan/models/Llama-2-13b-hf/')
     parser.add_argument('--tokenizer', type=str, default=None)
     parser.add_argument('--quantization',
                         '-q',
                         choices=['awq', 'gptq', 'squeezellm', None],
                         default=None)
-    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
+    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=32)
     parser.add_argument('--output-len', type=int, default=128)
     parser.add_argument('--batch-size', type=int, default=8)
@@ -167,5 +168,9 @@ if __name__ == '__main__':
                         default=None,
                         help='directory to download and load the weights, '
                         'default to the default cache dir of huggingface')
+    parser.add_argument('--use-agg-block',
+                        type=bool,
+                        default=False,
+                        help='whether to use agg block or not')
     args = parser.parse_args()
     main(args)
