@@ -429,7 +429,7 @@ class _AsyncLLMEngine(LLMEngine):
                 if evicted_blocks_to_swap_out:
                     swap_id = random_uuid()
                     self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
-            
+                    self.radix_swap_scheduler.add_swap_task(swap_id)
             self.scheduler._check_swap_finished()
             
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
