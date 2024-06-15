@@ -193,7 +193,7 @@ class Worker:
     def init_swap_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False)
+        self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False, self.model_config.get_num_layers(self.parallel_config))
 
 
     def init_trans_manager(self):

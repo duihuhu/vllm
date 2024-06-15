@@ -773,8 +773,8 @@ class Scheduler:
     
     def get_evicted_blocks(self) ->  Tuple[List[TreeNode], List[PhysicalTokenBlock]]:
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
-        num_nodes = self.block_manager.get_num_nodes()
-        print("can_evicted_num ", can_evicted_num, num_nodes)
+        # num_nodes = self.block_manager.get_num_nodes()
+        # print("can_evicted_num ", can_evicted_num, num_nodes)
     
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)

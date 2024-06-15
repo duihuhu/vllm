@@ -30,7 +30,7 @@ public:
 
 class SwapManager {
 public:
-    SwapManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, std::vector<std::pair<at::Tensor, at::Tensor>>& cpu_cache, bool is_layer);
+    SwapManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, std::vector<std::pair<at::Tensor, at::Tensor>>& cpu_cache, bool is_layer, int layerNum);
     ~SwapManager();
     void add_swap_tasks(const SwapTask& tasks);
     void worker();
@@ -47,7 +47,7 @@ private:
     TransQueue<std::vector<std::string>> swap_result_queue;
     std::unordered_map<std::string, at::cuda::CUDAEvent*> swap_out_events;
     int layerNum;
-    
+
     std::vector<c10::cuda::CUDAStream> swap_out_streams;
 
     std::thread execute;

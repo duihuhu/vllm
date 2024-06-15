@@ -643,6 +643,7 @@ class _AsyncLLMEngine(LLMEngine):
         finished_swap_tasks = await self.model_executor._run_workers_async(
             "get_finished_swap_tasks",
         )
+        print("finished_swap_tasks ", finished_swap_tasks)
         for finished_tasks in finished_swap_tasks:
             for swap_finished_task in finished_tasks:
                 real_swap_finished_swap_ids = self.radix_swap_scheduler.add_finished_tasks(swap_finished_task)

@@ -1,6 +1,6 @@
 #include "swap_config.h"
 
-SwapManager::SwapManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, std::vector<std::pair<at::Tensor, at::Tensor>> &cpu_cache, bool is_layer): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cpu_cache(cpu_cache), is_layer(is_layer), layerNum(layerNum) {
+SwapManager::SwapManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, std::vector<std::pair<at::Tensor, at::Tensor>> &cpu_cache, bool is_layer, int layerNum): cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cpu_cache(cpu_cache), is_layer(is_layer), layerNum(layerNum) {
     swap_out_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
 
     execute = std::thread(&SwapManager::worker, this);
