@@ -67,7 +67,8 @@ class SendKvTransferScheduler:
     def __init__(self,
                  num_workers,
                  enable_layer,
-                 role) -> None:
+                 role,
+                 use_agg_block) -> None:
         self.channel_request_ids: Dict[str, List[PriorityRequest]] = {}
         
         self.finished_worker_count: Dict[str, int]  = {}
@@ -80,6 +81,7 @@ class SendKvTransferScheduler:
         self.channel_transfer_tag: Dict[str, int] = {}
         
         self.enable_layer = enable_layer
+        self.use_agg_block = use_agg_block
 
     def add_layer_kv_request(
         self,
@@ -118,7 +120,10 @@ class SendKvTransferScheduler:
                 if head_req_tag == self.channel_transfer_tag[channel]:
                     request: PriorityRequest = heapq.heappop(priority_request)
                     request_id = request[1]
-                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),self.block_ids[request_id], trans_ops.TaskType.TRANSFER_SEND_BLOCKS).serialize())
+                    if self.use_agg_block:
+                        scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),self.block_ids[request_id], trans_ops.TaskType.TRANSFER_SEND_FULL_BLOCKS).serialize())
+                    else:
+                        scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),self.block_ids[request_id], trans_ops.TaskType.TRANSFER_SEND_BLOCKS).serialize())
                     self.channel_transfer_tag[channel] += 1
                 else:
                     break
@@ -152,7 +157,8 @@ class RecvKvTransScheduler:
     def __init__(self,
                 num_workers,
                 enable_layer,
-                role) -> None:
+                role,
+                use_agg_block,) -> None:
         self.channel_request_ids: Dict[str, List[str]] = {}
         
         self.finished_worker_count: Dict[str, int]  = {}
@@ -167,7 +173,9 @@ class RecvKvTransScheduler:
 
         if enable_layer:
             self.merage_reqs: Dict[str, List[SequenceGroup]] = {}
-            
+        
+        self.use_agg_block = use_agg_block
+        
     def add_layer_kv_request(
         self,
         request_id: str,
@@ -213,7 +221,10 @@ class RecvKvTransScheduler:
                         blocks.extend(block_id)
                     scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), blocks, trans_ops.TaskType.TRANSFER_RECV_LAYER_BLOCKS).serialize())
                 else:
-                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), self.block_ids[request_id], trans_ops.TaskType.TRANSFER_RECV_BLOCKS).serialize())
+                    if self.use_agg_block:
+                        scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), self.block_ids[request_id], trans_ops.TaskType.TRANSFER_RECV_FULL_BLOCKS).serialize())
+                    else:
+                        scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id), self.block_ids[request_id], trans_ops.TaskType.TRANSFER_RECV_BLOCKS).serialize())
         return scheduled_transfer_tasks 
 
     def schedule(self) -> List[trans_ops.TransferTask]:
@@ -258,7 +269,6 @@ class RadixSwapScheduler:
     ) -> List[str]:
         real_finished_swap_ids = []
         for swap_id in swap_finished_tasks:
-            print("finished swap id ", swap_id)
             self.finished_worker_count[swap_id] -=1
             if self.finished_worker_count[swap_id] == 0:
                 del self.finished_worker_count[swap_id]
