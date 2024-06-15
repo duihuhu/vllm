@@ -844,7 +844,7 @@ class DeployConfig:
         enable_theory: bool = False,
         enable_debug: bool = False, 
         enable_breakdown: bool = False,
-        enable_radix_caching: bool = False
+        enable_radix_caching: bool = False,
         use_agg_block: bool = False,
         block_size: int = -1
         ) -> None: 
