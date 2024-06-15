@@ -224,7 +224,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .def_readwrite("evicted_blocks", &SwapTask::evicted_blocks)
       .def_readwrite("type", &SwapTask::type);
 
-  py::enum_<SwapType>(trans_ops, "SwapType")
+  py::enum_<SwapType>(swap_ops, "SwapType")
       .value("SWAP_OUT_BLOCKS", SwapType::SWAP_OUT_BLOCKS)
       .value("SWAP_IN_BLOCKS", SwapType::SWAP_IN_BLOCKS)
       .export_values();
