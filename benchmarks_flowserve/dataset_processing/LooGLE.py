@@ -44,7 +44,7 @@ def sample_requests(
         #     continue
         reqs.append((prompts[i], prompt_token_ids[i], prompt_len, completion_len))
 
-    print(len(reqs))
+    # print(len(reqs))
 
     # Sample the requests.
     sampled_requests = random.sample(reqs, num_requests)
