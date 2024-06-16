@@ -66,12 +66,12 @@ void TransWorker::worker() {
                     }
                     break;
                 case TaskType::TRANSFER_SEND_FULL_BLOCKS:
-                    std::cout<<"send_full_blocks "<< task_meta.request_id<<std::endl;
+                    // std::cout<<"send_full_blocks "<< task_meta.request_id<<std::endl;
                     trans_engine.send_full_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
                     use_comm = (use_comm + 1) % comms.size();
                     break;
                 case TaskType::TRANSFER_RECV_FULL_BLOCKS:
-                    std::cout<<"recv_full_blocks "<< task_meta.request_id<<std::endl;
+                    // std::cout<<"recv_full_blocks "<< task_meta.request_id<<std::endl;
                     trans_engine.recv_full_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
                     use_comm = (use_comm + 1) % comms.size();
                     break;
@@ -85,7 +85,7 @@ void TransWorker::worker() {
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
         if (!send_blocks_finished.empty() || !recv_blocks_finished.empty()){
-            std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
+            // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
             transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
         }      
         // for layer  

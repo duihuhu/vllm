@@ -219,8 +219,8 @@ async def add_request(request: Request) -> Response:
     if args.enable_separate:
         ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
         
-        print("ep instance ", ep_instance.host, ep_instance.service_port)
-        print("ed instance ", ed_instance.host, ed_instance.service_port)
+        # print("ep instance ", ep_instance.host, ep_instance.service_port)
+        # print("ed instance ", ed_instance.host, ed_instance.service_port)
         #add prefill and decode info in request_dict, belong to one request
         request_dict["eprefill_host"] = ep_instance.host
         request_dict["eprefill_port"] = ep_instance.service_port
