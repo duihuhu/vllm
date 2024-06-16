@@ -97,7 +97,7 @@ if triton.__version__ >= "2.1.0":
                     offs_d[None, :] * stride_v_cache_d +
                     (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
             
-            k_addr = K_cache_addr[bn[None,:]]
+            k_addr = K_cache_addr[bn]
             k = tl.load(k_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
                         other=0.0).to(tl.float16)
@@ -125,7 +125,7 @@ if triton.__version__ >= "2.1.0":
             acc_scale = l_i / l_i_new * alpha
             acc = acc * acc_scale[:, None]
             # update acc
-            v_addr = V_cache_addr[bn[:,None]]
+            v_addr = V_cache_addr[bn]
             v = tl.load(v_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
                         other=0.0).to(tl.float16)
@@ -488,7 +488,7 @@ if triton.__version__ >= "2.1.0":
                     cur_kv_head * stride_v_cache_h +
                     offs_d[None, :] * stride_v_cache_d +
                     (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
-            k_addr = K_cache_addr[bn[None, :]]
+            k_addr = K_cache_addr[bn]
             k = tl.load(k_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
                         other=0.0).to(tl.float16)
@@ -524,7 +524,7 @@ if triton.__version__ >= "2.1.0":
             # acc_scale = l_i / l_i_new * alpha
             acc = acc * acc_scale[:, None]
             # update acc
-            v_addr = V_cache_addr[bn[:, None]]
+            v_addr = V_cache_addr[bn]
             v = tl.load(v_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
                         other=0.0).to(tl.float16)
