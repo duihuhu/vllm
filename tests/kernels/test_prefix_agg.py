@@ -122,28 +122,36 @@ def test() -> None:
 
     #if query.shape[-1] == k.shape[-1] and k.shape[-1] == v.shape[-1]:
     #    print(f"Pass for Shape Examination")
+    st1 = time.time()
     context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
                           b_start_loc, b_seq_len, b_ctx_len, max_input_len, None)
-    st1 = time.time()
+    ed1 = time.time()
+    
+    st2 = time.time()
     context_attention_fwd(query, k, v, output1t, k_cache, v_cache, block_table,
                           b_start_loc, b_seq_len, b_ctx_len, max_input_len, None)
-    ed1 = time.time()
+    ed2 = time.time()
 
+    st3 = time.time()
     context_attention_block_fwd(1, block_size, num_kv_heads, HEAD_SIZE, 8, query, k,
                                 v, output2, k_addr, v_addr, block_table, b_start_loc,
                                 b_seq_len, b_ctx_len, max_input_len, None)
-    st2 = time.time()
+    ed3 = time.time()
+    
+    st4 = time.time()
     context_attention_block_fwd(1, block_size, num_kv_heads, HEAD_SIZE, 8, query, k,
                                 v, output2t, k_addr, v_addr, block_table, b_start_loc,
                                 b_seq_len, b_ctx_len, max_input_len, None)
-    ed2 = time.time()
+    ed4 = time.time()
 
     is_close = torch.allclose(output1, output2, atol=1e-3, rtol=1e-5)
     if is_close:
         print(f"Pass")
     else:
         print(f"Error")
-        
+    print(f"Before pre-warming")
     print(f"Origion Costs {ed1 - st1} while Agg-Block Costs {ed2 - st2}")
+    print(f"After pre-warming")
+    print(f"Origion Costs {ed3 - st3} while Agg-Block Costs {ed4 - st4}")
 
 test()
