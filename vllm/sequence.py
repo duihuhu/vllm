@@ -8,6 +8,7 @@ from vllm.block import LogicalTokenBlock
 from vllm.lora.request import LoRARequest
 from vllm.sampling_params import SamplingParams
 from vllm.entrypoints.comm import CacheMeta
+from vllm.block import PhysicalTokenBlock
 
 if TYPE_CHECKING:
     import torch
@@ -128,7 +129,7 @@ class SequenceData:
         #to fit for radix tree manager
         self.cache_token_len = 0
         self.prefix_block_ids = []
-        self.prefix_blocks = []
+        self.prefix_blocks: List[PhysicalTokenBlock] = []
     
     def set_num_computed_tokens(self, num_computed_tokens: int)->None:
         self._num_computed_tokens = num_computed_tokens

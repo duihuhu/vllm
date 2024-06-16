@@ -381,18 +381,32 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         return cpu_blocks 
     
     #use radix manager allocate kv caches
-    def radix_manager_allocate(self, seq_group: SequenceGroup, is_kv_prepared = None) -> None:
+    def radix_manager_allocate(self, seq_group: SequenceGroup, is_kv_prepared = None, blocks_to_swap_in: Dict[int, int] = None) -> None:
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         num_prompt_blocks = len(seq.logical_token_blocks)     
         self.radix_tree_manager.match(seq=seq)
         block_table: BlockTable  = []
-        if seq.data.prefix_blocks:
-            block_table = seq.data.prefix_blocks
         print("radix_manager_allocate block_table ", len(block_table), " " ,is_kv_prepared)
-        for idx in range(num_prompt_blocks - len(seq.data.prefix_blocks)):
-            block = self.gpu_allocator.radix_manager_allocate()
-            block_table.append(block)
-            
+        block_number_mapping = {}
+        if not is_kv_prepared:
+            for idx in range(num_prompt_blocks):
+                if idx <= len(seq.data.prefix_blocks):
+                    if seq.data.prefix_blocks[idx].device == Device.GPU:
+                        block_table.append(seq.data.prefix_blocks[idx])
+                    else:
+                        block = self.gpu_allocator.radix_manager_allocate()
+                        block_table.append(block)
+                        block_number_mapping[seq.data.prefix_blocks[idx].block_number] = block.block_number
+                else:
+                    block = self.gpu_allocator.radix_manager_allocate()
+                    block_table.append(block)
+            blocks_to_swap_in.update(block_number_mapping)
+        else:
+            block_table = seq.data.prefix_blocks
+            for idx in range(num_prompt_blocks - len(seq.data.prefix_blocks)):
+                block = self.gpu_allocator.radix_manager_allocate()
+                block_table.append(block)
+                
         seq.cache_blocks_to_insert = block_table
         if not is_kv_prepared:
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):

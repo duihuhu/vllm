@@ -431,7 +431,7 @@ class Scheduler:
                     curr_loras.add(lora_int_id)
                 self.waiting.popleft()
                 if not seq_group.cache_meta:
-                    self._allocate(seq_group)
+                    self._allocate(seq_group=seq_group, blocks_to_swap_in=blocks_to_swap_in)
                 else:
                     if seq_group.cache_meta and seq_group.cache_meta.is_ready:
                         for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
@@ -645,10 +645,10 @@ class Scheduler:
     def allocate_kv_blocks(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
         return self._allocate(seq_group, is_kv_prepared)
     
-    def _allocate(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
+    def _allocate(self, seq_group: SequenceGroup, is_kv_prepared=False, blocks_to_swap_in=None) -> None:
         if self.block_manager.enable_radix_caching:
             # self.block_manager.allocate_radix_cache(seq_group, is_kv_prepared)
-            self.block_manager.radix_manager_allocate(seq_group=seq_group, is_kv_prepared=is_kv_prepared)
+            self.block_manager.radix_manager_allocate(seq_group=seq_group, is_kv_prepared=is_kv_prepared, blocks_to_swap_in=blocks_to_swap_in)
         else:
             self.block_manager.allocate(seq_group, is_kv_prepared)
             
