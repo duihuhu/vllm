@@ -499,7 +499,10 @@ class _AsyncLLMEngine(LLMEngine):
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
                     self.scheduler.add_send_transfering(seq_group)
-            
+                #if enable_radix_cacheing and in separate model, we should update it when prefilled prompt
+                if self.deploy_config.enable_radix_caching:
+                    self.scheduler.radix_manager_update(prefilled_seq_groups)
+                    
             if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
                 decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
                 for seq_group in decoded_seq_groups:
@@ -508,6 +511,10 @@ class _AsyncLLMEngine(LLMEngine):
             processed_output_with_layer = []
             if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
+                #if enable_radix_cacheing and in separate model, we should update it when prefilled prompt
+                if self.deploy_config.enable_radix_caching:
+                    self.scheduler.radix_manager_update(prefilled_seq_groups)
+                    
                 for seq_group in prefilled_seq_groups:
                     output = self.scheduler.outputs_with_layer[seq_group.request_id]
                     output.is_layer = True

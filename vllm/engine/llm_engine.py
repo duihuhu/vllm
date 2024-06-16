@@ -760,7 +760,6 @@ class LLMEngine:
     #TODO I think when update, insert should return the same key token with different phyical token list
     def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
         self.scheduler.radix_manager_update(finished_seq_groups)
-
             
     #todo need record seq last node when transfering 
     def update_radix_tree(self, finished_seq_groups: List[SequenceGroup]):
@@ -791,13 +790,12 @@ class LLMEngine:
             self._process_sequence_group_outputs(seq_group, outputs)
             if seq_group.is_finished():
                 finished_seq_groups.append(seq_group)
-            
+        
+        #if enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
         if finished_seq_groups:
             if self.scheduler.block_manager.enable_radix_caching \
                 or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
                     and self.deploy_config.role == "decoder"):
-                # start_time = time.time()
-                # self.update_radix_tree(finished_seq_groups)
                 self.radix_manager_update(finished_seq_groups)
                 
         # Free the finished sequence groups.

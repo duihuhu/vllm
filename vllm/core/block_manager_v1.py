@@ -417,7 +417,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 self.kv_block_tables[seq.seq_id] = block_table.copy()
 
         #when allocate seq, we should insert it before next seq coming 
-        self.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.cpu_allocator.free_radix_manager_cache)
+        # self.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.cpu_allocator.free_radix_manager_cache)
             
     def allocate_radix_cache(self, seq_group: SequenceGroup, is_kv_prepared=None) -> None:
          #todo if mcache open, should consider cache in dram
@@ -494,7 +494,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
-                print("allocate block ", seq.seq_id, logical_idx, seq.hash_of_block(logical_idx), block.block_number, block.block_hash, block.computed, block.num_hashed_tokens)
             else:
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.

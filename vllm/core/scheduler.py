@@ -861,6 +861,11 @@ class Scheduler:
                 if self.deploy_config.enable_dcache:
                     #when data pass back, update block table
                     self.block_manager.move_kv_blocks_meta(seq_group)
+                    
+                    #when d->p data pass back, we should update radix tree
+                    if self.deploy_config.enable_radix_caching:
+                        self.radix_manager_update([seq_group])
+
                     for seq in seq_group.get_seqs():
                         self.block_manager.free(seq)    
                 
