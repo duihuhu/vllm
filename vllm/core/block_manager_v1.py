@@ -390,7 +390,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         block_number_mapping = {}
         if not is_kv_prepared:
             for idx in range(num_prompt_blocks):
-                if idx <= len(seq.data.prefix_blocks):
+                if idx < len(seq.data.prefix_blocks):
                     if seq.data.prefix_blocks[idx].device == Device.GPU:
                         block_table.append(seq.data.prefix_blocks[idx])
                     else:
