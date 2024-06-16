@@ -199,7 +199,7 @@ std::vector<std::string> TransEngine::check_send_finished_events() {
             const std::string& request_id = it->first;
             at::cuda::CUDAEvent *event = it->second;
             if (event->query()) {
-                std::cout<<"check_send_finished_events " << request_id<< std::endl;
+                // std::cout<<"check_send_finished_events " << request_id<< std::endl;
                 send_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
                 ++num_finished_events;
             } else {
