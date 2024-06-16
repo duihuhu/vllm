@@ -138,7 +138,7 @@ def test() -> None:
                                 b_seq_len, b_ctx_len, max_input_len, None)
     ed2 = time.time()
 
-    is_close = torch.allclose(output1t, output2t, atol=1e-3, rtol=1e-5)
+    is_close = torch.allclose(output1, output2, atol=1e-3, rtol=1e-5)
     if is_close:
         print(f"Pass")
     else:
