@@ -100,9 +100,10 @@ if triton.__version__ >= "2.1.0":
             k = tl.load(K_cache_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
                         other=0.0)
+            k_fp16 = k.to(tl.float16)
 
             qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
-            qk += tl.dot(q, k)
+            qk += tl.dot(q, k_fp16)
             qk = tl.where((start_n + offs_n[None, :]) < cur_batch_ctx_len, qk,
                           float("-inf"))
             qk *= sm_scale
@@ -127,9 +128,10 @@ if triton.__version__ >= "2.1.0":
             v = tl.load(V_cache_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
                         other=0.0)
+            v_fp16 = v.to(tl.float16)
 
-            p = p.to(v.dtype)
-            acc += tl.dot(p, v)
+            p = p.to(v_fp16.dtype)
+            acc += tl.dot(p, v_fp16)
             # # update m_i and l_i
             l_i = l_i_new
             m_i = m_i_new
@@ -490,9 +492,10 @@ if triton.__version__ >= "2.1.0":
             k = tl.load(K_cache_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
                         other=0.0)
+            k_fp16 = k.to(tl.float16)
 
             qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
-            qk += tl.dot(q, k)
+            qk += tl.dot(q, k_fp16)
             qk = tl.where((start_n + offs_n[None, :]) < cur_batch_ctx_len, qk,
                           float("-inf"))
             qk *= sm_scale
@@ -525,9 +528,10 @@ if triton.__version__ >= "2.1.0":
             v = tl.load(V_cache_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
                         other=0.0)
+            v_fp16 = v.to(tl.float16)
 
-            p = p.to(v.dtype)
-            acc += tl.dot(p, v, allow_tf32=False)
+            p = p.to(v_fp16.dtype)
+            acc += tl.dot(p, v_fp16, allow_tf32=False)
             # update m_i and l_i
             l_i = l_i_new
             m_i = m_i_new
