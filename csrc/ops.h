@@ -7,7 +7,7 @@ torch::Tensor tensor_for_caches_addresses(
   std::vector<torch::Tensor>& caches
 );
 
-std::vector<int64_t> tensor_for_blocks_address(
+std::vector<uint64_t> tensor_for_blocks_address(
     std::vector<torch::Tensor>& caches);
 
 void paged_attention_v1_block(
