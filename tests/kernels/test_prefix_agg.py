@@ -91,56 +91,56 @@ def test() -> None:
             cur_ctx += block_size
             block_id += 1
         
-        k_cache = k_cache.view(-1, block_size, num_kv_heads, HEAD_SIZE // 8,
+    k_cache = k_cache.view(-1, block_size, num_kv_heads, HEAD_SIZE // 8,
                            8).permute(0, 2, 3, 1, 4).contiguous()
-        v_cache = v_cache.view(-1, block_size, num_kv_heads,
+    v_cache = v_cache.view(-1, block_size, num_kv_heads,
                            HEAD_SIZE).permute(0, 2, 3, 1).contiguous()
         
-        k_caches = []
-        v_caches = []
-        for i in range(cache_size):
-            kt = torch.zeros(3,
-                            num_kv_heads,
-                            HEAD_SIZE // 8,
-                            block_size,
-                            8,
-                            dtype=DTYPES)
-            vt = torch.zeros(3,
-                            num_kv_heads,
-                            HEAD_SIZE,
-                            block_size,
-                            dtype=DTYPES)
-            kt[1, :, :, :, :] = k_cache[i, :, :, :, :].clone()
-            vt[1, :, :, :] = v_cache[i, :, :, :].clone()
-            k_caches.append(kt)
-            v_caches.append(vt)
-        k_addr = ops.tensor_for_caches_addresses(k_caches)
-        v_addr = ops.tensor_for_caches_addresses(v_caches)
+    k_caches = []
+    v_caches = []
+    for i in range(cache_size):
+        kt = torch.zeros(3,
+                        num_kv_heads,
+                        HEAD_SIZE // 8,
+                        block_size,
+                        8,
+                        dtype=DTYPES)
+        vt = torch.zeros(3,
+                        num_kv_heads,
+                        HEAD_SIZE,
+                        block_size,
+                        dtype=DTYPES)
+        kt[1, :, :, :, :] = k_cache[i, :, :, :, :].clone()
+        vt[1, :, :, :] = v_cache[i, :, :, :].clone()
+        k_caches.append(kt)
+        v_caches.append(vt)
+    k_addr = ops.tensor_for_caches_addresses(k_caches)
+    v_addr = ops.tensor_for_caches_addresses(v_caches)
 
-        if query.shape[-1] == k.shape[-1] and k.shape[-1] == v.shape[-1]:
-            print(f"Pass for Shape Examination")
-        context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
+    #if query.shape[-1] == k.shape[-1] and k.shape[-1] == v.shape[-1]:
+    #    print(f"Pass for Shape Examination")
+    context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
                           b_start_loc, b_seq_len, b_ctx_len, max_input_len, None)
-        st1 = time.time()
-        context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
+    st1 = time.time()
+    context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
                           b_start_loc, b_seq_len, b_ctx_len, max_input_len, None)
-        ed1 = time.time()
+    ed1 = time.time()
 
-        context_attention_block_fwd(1, block_size, num_kv_heads, HEAD_SIZE, 8, query, k,
-                                    v, output2, k_addr, v_addr, block_table, b_start_loc,
-                                    b_seq_len, b_ctx_len, max_input_len, None)
-        st2 = time.time()
-        context_attention_block_fwd(1, block_size, num_kv_heads, HEAD_SIZE, 8, query, k,
-                                    v, output2, k_addr, v_addr, block_table, b_start_loc,
-                                    b_seq_len, b_ctx_len, max_input_len, None)
-        ed2 = time.time()
+    context_attention_block_fwd(1, block_size, num_kv_heads, HEAD_SIZE, 8, query, k,
+                                v, output2, k_addr, v_addr, block_table, b_start_loc,
+                                b_seq_len, b_ctx_len, max_input_len, None)
+    st2 = time.time()
+    context_attention_block_fwd(1, block_size, num_kv_heads, HEAD_SIZE, 8, query, k,
+                                v, output2, k_addr, v_addr, block_table, b_start_loc,
+                                b_seq_len, b_ctx_len, max_input_len, None)
+    ed2 = time.time()
 
-        is_close = torch.allclose(output1, output2, atol=1e-3, rtol=1e-5)
-        if is_close:
-            print(f"Pass")
-        else:
-            print(f"Error")
+    is_close = torch.allclose(output1, output2, atol=1e-3, rtol=1e-5)
+    if is_close:
+        print(f"Pass")
+    else:
+        print(f"Error")
         
-        print(f"Origion Costs {ed1 - st1} while Agg-Block Costs {ed2 - st2}")
+    print(f"Origion Costs {ed1 - st1} while Agg-Block Costs {ed2 - st2}")
 
 test()
