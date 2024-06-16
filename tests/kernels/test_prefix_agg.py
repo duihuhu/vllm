@@ -9,7 +9,7 @@ NUM_HEADS = 40
 NUM_QUERIES_PER_KV = 4
 HEAD_SIZE = 128
 DTYPES = torch.float16
-CUDA_DIVCE = "cuda:2"
+CUDA_DIVCE = "cuda:7"
 
 @torch.inference_mode()
 def test() -> None:
