@@ -37,10 +37,12 @@ if triton.__version__ >= "2.1.0":
         stride_obs,
         stride_oh,
         stride_od,
+        stride_k_cache_ls,
         stride_k_cache_h, #num_kv_heads
         stride_k_cache_d, #head_size // x
         stride_k_cache_bl, #block_size
         stride_k_cache_x, #x
+        stride_v_cache_ls,
         stride_v_cache_h,
         stride_v_cache_d,
         stride_v_cache_bl,
@@ -86,22 +88,22 @@ if triton.__version__ >= "2.1.0":
                          ((start_n + offs_n) // block_size) * stride_b_loc_s,
                          mask=(start_n + offs_n) < cur_batch_ctx_len,
                          other=0)
-            off_k = (layer_id * stride_k_cache_h * stride_k_cache_d * stride_k_cache_bl * stride_k_cache_x + 
+            off_k = (layer_id * stride_k_cache_ls + 
                      cur_kv_head * stride_k_cache_h +
                      (offs_d[:, None] // x) * stride_k_cache_d +
                      ((start_n + offs_n[None, :]) % block_size) *
                      stride_k_cache_bl +
                      (offs_d[:, None] % x) * stride_k_cache_x)
-            off_v = (layer_id * stride_v_cache_h * stride_v_cache_d * stride_v_cache_bl +
+            off_v = (layer_id * stride_v_cache_ls +
                     cur_kv_head * stride_v_cache_h +
                     offs_d[None, :] * stride_v_cache_d +
                     (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
             
-            #k_addr = tl.load(K_cache_addr + bn[None, :])
-            k_addr = tl.pointer(tl.int64_to_ptr(tl.load(K_cache_addr + bn[None, :])), tl.float16)
+            k_addr = tl.load(K_cache_addr + bn[None, :]).to(tl.float16)
+            #k_addr = tl.pointer(tl.int64_to_ptr(tl.load(K_cache_addr + bn[None, :])), tl.float16)
             k = tl.load(k_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
-                        other=0.0).to(tl.float16)
+                        other=0.0)
 
             qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
             qk += tl.dot(q, k)
@@ -126,11 +128,11 @@ if triton.__version__ >= "2.1.0":
             acc_scale = l_i / l_i_new * alpha
             acc = acc * acc_scale[:, None]
             # update acc
-            #v_addr = tl.load(V_cache_addr + bn[: ,None])
-            v_addr = tl.pointer(tl.int64_to_ptr(tl.load(V_cache_addr + bn[: ,None])), tl.float16)
+            v_addr = tl.load(V_cache_addr + bn[: ,None]).to(tl.float16)
+            #v_addr = tl.pointer(tl.int64_to_ptr(tl.load(V_cache_addr + bn[: ,None])), tl.float16)
             v = tl.load(v_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
-                        other=0.0).to(tl.float16)
+                        other=0.0)
 
             p = p.to(v.dtype)
             acc += tl.dot(p, v)
@@ -423,10 +425,12 @@ if triton.__version__ >= "2.1.0":
         stride_obs,
         stride_oh,
         stride_od,
+        stride_k_cache_ls,
         stride_k_cache_h, #num_kv_heads
         stride_k_cache_d, #head_size // x
         stride_k_cache_bl, #block_size
         stride_k_cache_x, #x
+        stride_v_cache_ls,
         stride_v_cache_h,
         stride_v_cache_d,
         stride_v_cache_bl,
@@ -480,22 +484,22 @@ if triton.__version__ >= "2.1.0":
                          ((start_n + offs_n) // block_size) * stride_b_loc_s,
                          mask=(start_n + offs_n) < cur_batch_ctx_len,
                          other=0)
-            off_k = (layer_id * stride_k_cache_h * stride_k_cache_d * stride_k_cache_bl * stride_k_cache_x + 
+            off_k = (layer_id * stride_k_cache_ls + 
                      cur_kv_head * stride_k_cache_h +
                      (offs_d[:, None] // x) * stride_k_cache_d +
                      ((start_n + offs_n[None, :]) % block_size) *
                      stride_k_cache_bl +
                      (offs_d[:, None] % x) * stride_k_cache_x)
-            off_v = (layer_id * stride_v_cache_h * stride_v_cache_d * stride_v_cache_bl + 
+            off_v = (layer_id * stride_v_cache_ls + 
                     cur_kv_head * stride_v_cache_h +
                     offs_d[None, :] * stride_v_cache_d +
                     (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
             
-            #k_addr = tl.load(K_cache_addr + bn[None, :])
-            k_addr = tl.pointer(tl.int64_to_ptr(tl.load(K_cache_addr + bn[None, :])), tl.float16)
+            k_addr = tl.load(K_cache_addr + bn[None, :]).to(tl.float16)
+            #k_addr = tl.pointer(tl.int64_to_ptr(tl.load(K_cache_addr + bn[None, :])), tl.float16)
             k = tl.load(k_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
-                        other=0.0).to(tl.float16)
+                        other=0.0)
 
             qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
             qk += tl.dot(q, k)
@@ -528,11 +532,11 @@ if triton.__version__ >= "2.1.0":
             # acc_scale = l_i / l_i_new * alpha
             acc = acc * acc_scale[:, None]
             # update acc
-            #v_addr = tl.load(V_cache_addr + bn[: ,None])
-            v_addr = tl.pointer(tl.int64_to_ptr(tl.load(V_cache_addr + bn[: ,None])), tl.float16)
+            v_addr = tl.load(V_cache_addr + bn[: ,None]).to(tl.float16)
+            #v_addr = tl.pointer(tl.int64_to_ptr(tl.load(V_cache_addr + bn[: ,None])), tl.float16)
             v = tl.load(v_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
-                        other=0.0).to(tl.float16)
+                        other=0.0)
 
             p = p.to(v.dtype)
             acc += tl.dot(p, v, allow_tf32=False)
@@ -687,13 +691,15 @@ if triton.__version__ >= "2.1.0":
                 o.stride(0),
                 o.stride(1),
                 o.stride(2),
-                num_kv_heads, #k_cache.stride(1),
-                head_size // x, #k_cache.stride(2),
-                block_size, #k_cache.stride(3),
-                x,  #[num_blocks, num_kv_heads, head_size/x, block_size, x]
-                num_kv_heads, #v_cache.stride(1),
-                head_size, #v_cache.stride(2),
-                block_size,  #[num_blocks, num_kv_heads, head_size, block_size]
+                num_kv_heads * (head_size // x) * block_size * x,
+                (head_size // x) * block_size * x, #k_cache.stride(1),
+                block_size * x, #k_cache.stride(2),
+                x, #k_cache.stride(3),
+                1,  #[num_blocks, num_kv_heads, head_size/x, block_size, x]
+                num_kv_heads * head_size * block_size,
+                head_size * block_size, #v_cache.stride(1),
+                block_size, #v_cache.stride(2),
+                1,  #[num_blocks, num_kv_heads, head_size, block_size]
                 num_queries_per_kv=num_queries_per_kv,
                 BLOCK_M=BLOCK,
                 BLOCK_DMODEL=Lk,
@@ -732,13 +738,15 @@ if triton.__version__ >= "2.1.0":
             o.stride(0),
             o.stride(1),
             o.stride(2),
-            num_kv_heads,
-            head_size // x,
-            block_size,
+            num_kv_heads * (head_size // x) * block_size * x,
+            (head_size // x) * block_size * x,
+            block_size * x,
             x,  #[num_blocks, num_kv_heads, head_size/x, block_size, x]
-            num_kv_heads,
-            head_size // x,
+            1,
+            num_kv_heads * head_size * block_size,
+            head_size * block_size,
             block_size,  #[num_blocks, num_kv_heads, head_size, block_size]
+            1,
             num_queries_per_kv=num_queries_per_kv,
             BLOCK_M=BLOCK,
             BLOCK_DMODEL=Lk,
