@@ -86,24 +86,24 @@ if triton.__version__ >= "2.1.0":
                          ((start_n + offs_n) // block_size) * stride_b_loc_s,
                          mask=(start_n + offs_n) < cur_batch_ctx_len,
                          other=0)
-            off_k = (bn[None, :] + layer_id * stride_k_cache_h * stride_k_cache_d * stride_k_cache_bl * stride_k_cache_x + 
+            off_k = (layer_id * stride_k_cache_h * stride_k_cache_d * stride_k_cache_bl * stride_k_cache_x + 
                      cur_kv_head * stride_k_cache_h +
                      (offs_d[:, None] // x) * stride_k_cache_d +
                      ((start_n + offs_n[None, :]) % block_size) *
                      stride_k_cache_bl +
                      (offs_d[:, None] % x) * stride_k_cache_x)
-            off_v = (
-                bn[:, None] + layer_id * stride_v_cache_h * stride_v_cache_d * stride_v_cache_bl +
-                cur_kv_head * stride_v_cache_h +
-                offs_d[None, :] * stride_v_cache_d +
-                (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
-            k = tl.load(K_cache_addr + off_k,
+            off_v = (layer_id * stride_v_cache_h * stride_v_cache_d * stride_v_cache_bl +
+                    cur_kv_head * stride_v_cache_h +
+                    offs_d[None, :] * stride_v_cache_d +
+                    (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
+            
+            k_addr = K_cache_addr[bn[None,:]]
+            k = tl.load(k_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
-                        other=0.0)
-            k_fp16 = k.to(tl.float16)
+                        other=0.0).to(tl.float16)
 
             qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
-            qk += tl.dot(q, k_fp16)
+            qk += tl.dot(q, k)
             qk = tl.where((start_n + offs_n[None, :]) < cur_batch_ctx_len, qk,
                           float("-inf"))
             qk *= sm_scale
@@ -125,13 +125,13 @@ if triton.__version__ >= "2.1.0":
             acc_scale = l_i / l_i_new * alpha
             acc = acc * acc_scale[:, None]
             # update acc
-            v = tl.load(V_cache_addr + off_v,
+            v_addr = V_cache_addr[bn[:,None]]
+            v = tl.load(v_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
-                        other=0.0)
-            v_fp16 = v.to(tl.float16)
+                        other=0.0).to(tl.float16)
 
-            p = p.to(v_fp16.dtype)
-            acc += tl.dot(p, v_fp16)
+            p = p.to(v.dtype)
+            acc += tl.dot(p, v)
             # # update m_i and l_i
             l_i = l_i_new
             m_i = m_i_new
@@ -478,24 +478,23 @@ if triton.__version__ >= "2.1.0":
                          ((start_n + offs_n) // block_size) * stride_b_loc_s,
                          mask=(start_n + offs_n) < cur_batch_ctx_len,
                          other=0)
-            off_k = (bn[None, :] + layer_id * stride_k_cache_h * stride_k_cache_d * stride_k_cache_bl * stride_k_cache_x + 
+            off_k = (layer_id * stride_k_cache_h * stride_k_cache_d * stride_k_cache_bl * stride_k_cache_x + 
                      cur_kv_head * stride_k_cache_h +
                      (offs_d[:, None] // x) * stride_k_cache_d +
                      ((start_n + offs_n[None, :]) % block_size) *
                      stride_k_cache_bl +
                      (offs_d[:, None] % x) * stride_k_cache_x)
-            off_v = (
-                bn[:, None] + layer_id * stride_v_cache_h * stride_v_cache_d * stride_k_cache_bl + 
-                cur_kv_head * stride_v_cache_h +
-                offs_d[None, :] * stride_v_cache_d +
-                (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
-            k = tl.load(K_cache_addr + off_k,
+            off_v = (layer_id * stride_v_cache_h * stride_v_cache_d * stride_v_cache_bl + 
+                    cur_kv_head * stride_v_cache_h +
+                    offs_d[None, :] * stride_v_cache_d +
+                    (start_n + offs_n[:, None]) % block_size * stride_v_cache_bl)
+            k_addr = K_cache_addr[bn[None, :]]
+            k = tl.load(k_addr + off_k,
                         mask=(start_n + offs_n[None, :]) < cur_batch_ctx_len,
-                        other=0.0)
-            k_fp16 = k.to(tl.float16)
+                        other=0.0).to(tl.float16)
 
             qk = tl.zeros([BLOCK_M, BLOCK_N], dtype=tl.float32)
-            qk += tl.dot(q, k_fp16)
+            qk += tl.dot(q, k)
             qk = tl.where((start_n + offs_n[None, :]) < cur_batch_ctx_len, qk,
                           float("-inf"))
             qk *= sm_scale
@@ -525,13 +524,13 @@ if triton.__version__ >= "2.1.0":
             # acc_scale = l_i / l_i_new * alpha
             acc = acc * acc_scale[:, None]
             # update acc
-            v = tl.load(V_cache_addr + off_v,
+            v_addr = V_cache_addr[bn[:, None]]
+            v = tl.load(v_addr + off_v,
                         mask=(start_n + offs_n[:, None]) < cur_batch_ctx_len,
-                        other=0.0)
-            v_fp16 = v.to(tl.float16)
+                        other=0.0).to(tl.float16)
 
-            p = p.to(v_fp16.dtype)
-            acc += tl.dot(p, v_fp16, allow_tf32=False)
+            p = p.to(v.dtype)
+            acc += tl.dot(p, v, allow_tf32=False)
             # update m_i and l_i
             l_i = l_i_new
             m_i = m_i_new
