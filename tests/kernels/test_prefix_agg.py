@@ -99,24 +99,26 @@ def test() -> None:
         k_caches = []
         v_caches = []
         for i in range(cache_size):
-            k = torch.zeros(3,
+            kt = torch.zeros(3,
                             num_kv_heads,
                             HEAD_SIZE // 8,
                             block_size,
                             8,
                             dtype=DTYPES)
-            v = torch.zeros(3,
+            vt = torch.zeros(3,
                             num_kv_heads,
                             HEAD_SIZE,
                             block_size,
                             dtype=DTYPES)
-            k[1, :, :, :, :] = k_cache[i, :, :, :, :].clone()
-            v[1, :, :, :] = v_cache[i, :, :, :].clone()
-            k_caches.append(k)
-            v_caches.append(v)
+            kt[1, :, :, :, :] = k_cache[i, :, :, :, :].clone()
+            vt[1, :, :, :] = v_cache[i, :, :, :].clone()
+            k_caches.append(kt)
+            v_caches.append(vt)
         k_addr = ops.tensor_for_caches_addresses(k_caches)
         v_addr = ops.tensor_for_caches_addresses(v_caches)
 
+        if query.shape[-1] == k.shape[-1] and k.shape[-1] == v.shape[-1]:
+            print(f"Pass for Shape Examination")
         context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
                           b_start_loc, b_seq_len, b_ctx_len, max_input_len, None)
         st1 = time.time()
