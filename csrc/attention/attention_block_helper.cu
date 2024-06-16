@@ -45,6 +45,7 @@ std::vector<int64_t> tensor_for_blocks_address(
     std::vector<int64_t> caches_ptrs(num_blocks);
     for (int i = 0; i < num_blocks; ++i) {
         caches_ptrs[i] = reinterpret_cast<int64_t>(caches[i].data_ptr());
+        std::cout<< " cache addrs " <<caches_ptrs[i] <<std::endl;
     }
     return caches_ptrs;
 }
