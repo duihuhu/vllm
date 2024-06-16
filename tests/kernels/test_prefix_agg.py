@@ -153,6 +153,6 @@ def test() -> None:
         print(f"Pass")
     else:
         print(f"Error")
-    print(f"Origion Costs {(ed1 - st1) / 10:.3f} while Agg-Block Costs {(ed2 - st2) / 10:.3f}")
+    print(f"Origion Costs {(ed1 - st1) / 10} while Agg-Block Costs {(ed2 - st2) / 10}")
 
 test()
