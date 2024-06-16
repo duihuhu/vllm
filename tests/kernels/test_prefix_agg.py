@@ -35,7 +35,10 @@ def test() -> None:
     query = torch.empty(num_tokens, NUM_HEADS, HEAD_SIZE, dtype=DTYPES)
     query.uniform_(-1e-3, 1e-3)
     output1 = torch.empty(num_tokens, NUM_HEADS, HEAD_SIZE, dtype=DTYPES)
+    output1t = torch.empty(num_tokens, NUM_HEADS, HEAD_SIZE, dtype=DTYPES)
+    
     output2 = torch.empty(num_tokens, NUM_HEADS, HEAD_SIZE, dtype=DTYPES)
+    output2t = torch.empty(num_tokens, NUM_HEADS, HEAD_SIZE, dtype=DTYPES)
 
     kv = torch.empty(sum(seq_lens), 2, num_kv_heads, HEAD_SIZE, dtype=DTYPES)
     kv.uniform_(-1e-3, 1e-3)
@@ -122,7 +125,7 @@ def test() -> None:
     context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
                           b_start_loc, b_seq_len, b_ctx_len, max_input_len, None)
     st1 = time.time()
-    context_attention_fwd(query, k, v, output1, k_cache, v_cache, block_table,
+    context_attention_fwd(query, k, v, output1t, k_cache, v_cache, block_table,
                           b_start_loc, b_seq_len, b_ctx_len, max_input_len, None)
     ed1 = time.time()
 
@@ -131,11 +134,11 @@ def test() -> None:
                                 b_seq_len, b_ctx_len, max_input_len, None)
     st2 = time.time()
     context_attention_block_fwd(1, block_size, num_kv_heads, HEAD_SIZE, 8, query, k,
-                                v, output2, k_addr, v_addr, block_table, b_start_loc,
+                                v, output2t, k_addr, v_addr, block_table, b_start_loc,
                                 b_seq_len, b_ctx_len, max_input_len, None)
     ed2 = time.time()
 
-    is_close = torch.allclose(output1, output2, atol=1e-3, rtol=1e-5)
+    is_close = torch.allclose(output1t, output2t, atol=1e-3, rtol=1e-5)
     if is_close:
         print(f"Pass")
     else:
