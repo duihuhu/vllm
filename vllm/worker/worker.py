@@ -92,6 +92,7 @@ class Worker:
         self.cache_config = None
         self.cache_engine = None
         self.gpu_cache = None
+        self.cpu_cache = None
 
         self.trans_blocks_time = 0
     def init_device(self) -> None:
@@ -192,6 +193,7 @@ class Worker:
         self.cache_engine = CacheEngine(self.cache_config, self.model_config,
                                         self.parallel_config, self.deploy_config, self.rank)
         self.gpu_cache = self.cache_engine.gpu_cache
+        self.cpu_cache = self.cache_engine.cpu_cache
         self.model_runner.set_block_size(self.cache_engine.block_size)
         if self.use_agg_block:
             self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
@@ -203,7 +205,7 @@ class Worker:
 
     def init_swap_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-        cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
+        cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
         self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False, self.model_config.get_num_layers(self.parallel_config))
 
 
