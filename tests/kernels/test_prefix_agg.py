@@ -100,15 +100,15 @@ def test() -> None:
         v_caches = []
         for i in range(cache_size):
             k = torch.zeros(3,
-                            block_size,
                             num_kv_heads,
                             HEAD_SIZE // 8,
+                            block_size,
                             8,
                             dtype=DTYPES)
             v = torch.zeros(3,
-                            block_size,
                             num_kv_heads,
                             HEAD_SIZE,
+                            block_size,
                             dtype=DTYPES)
             k[1, :, :, :, :] = k_cache[i, :, :, :, :].clone()
             v[1, :, :, :] = v_cache[i, :, :, :].clone()
