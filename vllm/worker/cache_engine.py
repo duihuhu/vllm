@@ -57,7 +57,6 @@ class CacheEngine:
         #hucc
         self.cache_size_per_block = self.block_size *self.num_heads * self.head_size * _get_dtype_size(self.dtype)
         self.cache_block_size =  self.num_layers * self.num_heads * self.head_size * self.block_size * _get_dtype_size(self.dtype)
-        print("cache_block_size ", self.cache_size_per_block, self.cache_block_size)
         #Initizlize the events for stream synchronization
         self.swap_in_events: Dict[str, torch.cuda.Event] = {}
         self.swap_out_events: Dict[str, torch.cuda.Event] = {}
