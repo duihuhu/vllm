@@ -118,8 +118,9 @@ public:
         json task = json::parse(serialized_data);
         TransferTaskMeta meta = TransferTaskMeta::from_json(task.at("meta"));
         std::vector<uint32_t> blocks = task.at("blocks").get<std::vector<uint32_t>>();
+        std::vector<uint32_t> dst_blocks;
         if (task.contains("dst_blocks")) {
-            std::vector<uint32_t> dst_blocks = task.at("dst_blocks").get<std::vector<uint32_t>>();
+            dst_blocks = task.at("dst_blocks").get<std::vector<uint32_t>>();
         }
         TaskType type = static_cast<TaskType>(task.at("type").get<int>());
         int layer = task.at("layer").get<int>();
@@ -259,7 +260,7 @@ private:
     std::unordered_map<std::string, TransWorker*> recv_trans_workers;
 
     std::unordered_map<std::string, TransWorker*> swap_workers;
-    
+
     std::thread execute;
 
     int cache_size_per_block;
