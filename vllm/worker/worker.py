@@ -391,7 +391,7 @@ class Worker:
 
         # 计算总共需要的字节数
         total_bytes = sum(self.tensor_sizes)
-        share_name = "worker" + "_" + channel + "_" + self.nccl_local_rank
+        share_name = "worker" + "_" + channel + "_" + str(self.nccl_local_rank)
         # 创建共享内存
         self.shm = shared_memory.SharedMemory(name=share_name,create=True, size=total_bytes)
         self.shm_name = self.shm.name
