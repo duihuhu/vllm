@@ -432,7 +432,7 @@ class Worker:
         self.calculate_tensor_sizes()
         dst_tensors = []
         index = 0
-        shm = shared_memory.SharedMemory(name=dst_channel + str(self.dst_rank))
+        shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank))
         print("self.cache_engine.dtype ", self.cache_engine.dtype)
         shm_np_array = np.ndarray((shm.size,), dtype=self.cache_engine.dtype, buffer=shm.buf)
         if self.deploy_config.use_agg_block:
