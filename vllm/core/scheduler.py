@@ -175,6 +175,7 @@ class Scheduler:
         # Sequence groups in the SWAPPED state.
         self.swapped: Deque[SequenceGroup] = deque()
 
+        self.running_with_dram: Deque[SequenceGroup] = deque()
         # Time at previous scheduling step
         self.prev_time = 0.0
         # Did we schedule a prompt at previous step?
@@ -187,6 +188,8 @@ class Scheduler:
         self.swap_remote_finished_req_ids: List[str] = []
         self.recv_finished_req_ids: List[str] = []
         
+        self.swap_remote_req_id_outputs: Dict[str, RequestOutput] = {}
+
         # if not deploy_config.enable_layer:
         self.send_transfering: Dict[str, SequenceGroup] = {}
         # else:
@@ -228,7 +231,7 @@ class Scheduler:
         self.decode_waiting.append(seq_group)
 
     def add_swap_remote_finished(self, request_ids: List[str]):
-        self.sen.extend(request_ids)
+        self.swap_remote_finished_req_ids.extend(request_ids)
         
     def add_send_finished(self, request_ids: List[str]):
         self.send_finished_req_ids.extend(request_ids)
@@ -502,6 +505,18 @@ class Scheduler:
                 running.append(seq_group)
         self.running = running
 
+        #if running_with_dram has seq_group, we should add it to 
+        running_with_dram: Deque[SequenceGroup] = deque()
+        while self.running_with_dram:
+            seq_group = self.running_with_dram.popleft()
+            if self.block_manager.can_allocate_hbm(seq_group):
+                self.block_manager.allocate_hbm(seq_group, blocks_to_swap_in)
+                self._append_slot(seq_group, blocks_to_copy)
+                self.running.append(seq_group)
+            else:
+                running_with_dram.append(seq_group)
+        self.running_with_dram = running_with_dram
+            
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
         if not preempted:
@@ -674,6 +689,9 @@ class Scheduler:
             return block_table, cpu_blocks
         else:
             cpu_blocks = self.block_manager.allocate_kv_cpu_cache(seq_group)
+            
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            seq.status = SequenceStatus.RUNNING
             return [], cpu_blocks
         
     def allocate_kv_blocks(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:

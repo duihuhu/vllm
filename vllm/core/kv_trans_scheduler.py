@@ -152,7 +152,6 @@ class SendKvTransferScheduler:
         for channel, request_ids in self.swap_channel_request_ids.items():
             while request_ids:
                 request_id = request_ids.pop(0)
-                print("self.swap_block_ids[request_id] ", self.swap_block_ids[request_id])
                 src_blocks = self.swap_block_ids[request_id][0]
                 dst_blocks = self.swap_block_ids[request_id][1]
                 if self.use_agg_block:

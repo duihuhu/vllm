@@ -336,7 +336,42 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         # Mapping: request_id -> BlockTable, use for pull data
         self.req_pull_block_tables: Dict[str, BlockTable] = {}
+    
+    def allocate_hbm(self, seq_group: SequenceGroup, blocks_to_swap_in: Dict[int, int]) -> None:
+        seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
+        ori_blocks = self.block_tables[seq.seq_id]
+        new_blocks_table : BlockTable = []
+        swap_blocks = []
+        block_number_mapping = {}
+        for block in ori_blocks:
+            if block.device == Device.CPU:
+                if self.enable_radix_caching:
+                    hbm_block = self.gpu_allocator.radix_manager_allocate()
+                else:
+                    hbm_block = self.gpu_allocator.allocate()
+                swap_blocks.append(hbm_block)
+                block_number_mapping[block.block_number] = hbm_block.block_number
+                new_blocks_table.append(hbm_block)
+            else:
+                new_blocks_table.append(block)
+                
+        blocks_to_swap_in.update(block_number_mapping)
+        self.block_tables[seq.seq_id] = new_blocks_table
         
+            
+    def can_allocate_hbm(self, seq_group: SequenceGroup) -> AllocStatus:
+        seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
+        blocks = self.block_tables[seq.seq_id]
+        need_hbm_blocks = 0 
+        for block in blocks:
+            if block.device == Device.CPU:
+                need_hbm_blocks = need_hbm_blocks + 1
+        num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()  
+        if num_free_gpu_blocks - need_hbm_blocks - 1 >= self.watermark_blocks:
+            return AllocStatus.OK
+        else:
+            return AllocStatus.LATER
+            
     def can_allocate(self, seq_group: SequenceGroup) -> AllocStatus:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.

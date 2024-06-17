@@ -24,7 +24,7 @@ class InferResults:
         eprefill_host: Optional[str] = None,
         eprefill_port: Optional[str] = None,
         edecode_host: Optional[str] = None,
-        edecode_port: Optional[str] = None
+        edecode_port: Optional[str] = None,
     ) -> None:
         self.request_id = request_id
         self.opp_ranks = opp_ranks

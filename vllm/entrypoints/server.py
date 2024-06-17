@@ -24,6 +24,14 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+@app.post("notify_swap_finished_id")
+async def notify_swap_finished_id(request: Request) -> Response:
+    payload = await request.json()
+    request_id = payload.pop("request_id")
+    await server.engine.notify_finished_id(request_id)
+    return {"ret": "success"}
+
+    
 @app.post("/create_comm")
 async def create_comm(request: Request) -> Response:
     payload = await request.json()
@@ -197,7 +205,7 @@ async def generate_decode(request: Request) -> Response:
             eprefill_host=eprefill_host,
             eprefill_port=eprefill_port,
             edecode_host=edecode_host,
-            edecode_port=edecode_port
+            edecode_port=edecode_port,
         )
         request_output.global_ranks = opp_ranks
         results_generator = server.engine.generate(None, sampling_params=sampling_params, request_id=request_id,
@@ -357,7 +365,7 @@ async def generate_prefill(request: Request) -> Response:
                 eprefill_host = request_output.eprefill_host,
                 eprefill_port = request_output.eprefill_port,
                 edecode_host = request_output.edecode_host,
-                edecode_port = request_output.edecode_port
+                edecode_port = request_output.edecode_port,
             )
             if not args.enable_separate:
                 yield (json.dumps(infer_results.__json__()) + "\0").encode("utf-8")

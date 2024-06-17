@@ -85,7 +85,8 @@ class RequestOutput:
         eprefill_port: Optional[str] = None,
         edecode_host: Optional[str] = None,
         edecode_port: Optional[str] = None,
-        is_layer: Optional[bool] = False
+        is_layer: Optional[bool] = False,
+        has_dram: Optional[bool] = False
     ) -> None:
         self.request_id = request_id
         self.prompt = prompt
@@ -101,6 +102,7 @@ class RequestOutput:
         self.edecode_port = edecode_port
         self.global_ranks: List[int] = None
         self.is_layer = False
+        self.has_dram = has_dram
 
     @classmethod
     def from_seq_group(cls, seq_group: SequenceGroup) -> "RequestOutput":
@@ -150,7 +152,8 @@ class RequestOutput:
                    eprefill_host=seq_group.edecode_host,
                    eprefill_port=seq_group.eprefill_port,
                    edecode_host=seq_group.edecode_host,
-                   edecode_port=seq_group.edecode_port)
+                   edecode_port=seq_group.edecode_port,
+                   has_dram=seq_group.has_dram)
 
     def __repr__(self) -> str:
         return (f"RequestOutput(request_id={self.request_id}, "

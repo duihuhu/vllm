@@ -329,7 +329,23 @@ class _AsyncLLMEngine(LLMEngine):
             request_tracker.new_requests_event.set()
 
             print("pull_response ", pull_response)
-            
+
+    async def _notify(self, request_id, seq_group: SequenceGroup):
+        decode_entry_point = (seq_group.edecode_host, seq_group.edecode_host)
+        data = CommData(
+            headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
+            payload={"request_id": request_id}
+        )
+        return await CommEngine.async_send_to(decode_entry_point, "notify_swap_finished_id", data)
+    
+    async def notify_swap_finished_remote_instance(self, swap_finished_ids: List[str]):
+        coroutines = []
+        for request_id in swap_finished_ids:
+            seq_group = self.scheduler.send_transfering[request_id]
+            coroutines.append(asyncio.create_task(self._notify(request_id, seq_group)))
+        resp = await asyncio.gather(*coroutines)
+
+    
     def check_deocde_recv_meta(self):
         meta_recv_finished_id = []
         for request_id, seq_group in self.scheduler.meta_recv_finished.items():
@@ -484,13 +500,18 @@ class _AsyncLLMEngine(LLMEngine):
                 
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
         
-        processed_output_without_layer = []
-        for processed_output in processed_outputs:
-            if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
-                processed_output_without_layer.append(processed_output)
-            else:
-                self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
-         
+        if self.deploy_config.enable_layer:
+            processed_output_without_layer = []
+            for processed_output in processed_outputs:
+                if processed_output.request_id not in self.scheduler.seq_groups_with_layer:
+                    processed_output_without_layer.append(processed_output)
+                else:
+                    self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output     
+        
+        if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
+            if self.scheduler.swap_finished_ids:
+                asyncio.create_task(self.notify_swap_finished_remote_instance(self.scheduler.swap_finished_ids))
+                    
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if not self.deploy_config.enable_layer:
@@ -501,7 +522,7 @@ class _AsyncLLMEngine(LLMEngine):
                 #if enable_radix_cacheing and in separate model, we should update it when prefilled prompt
                 if self.deploy_config.enable_radix_caching:
                     self.scheduler.radix_manager_update(prefilled_seq_groups)
-                    
+                
             if self.deploy_config.enable_separate and self.deploy_config.role == 'decoder' and self.deploy_config.enable_dcache:
                 decoded_seq_groups = self.scheduler.fetch_decoded_seq_groups()
                 for seq_group in decoded_seq_groups:
@@ -528,7 +549,8 @@ class _AsyncLLMEngine(LLMEngine):
                     
         if self.deploy_config.enable_layer:
             return processed_output_without_layer, processed_output_with_layer
-        return processed_output_without_layer, []
+
+        return processed_outputs, []
 
     async def encode_request_async(
         self,
@@ -1327,3 +1349,9 @@ class AsyncLLMEngine:
         else:
             res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_type="sender")
     
+    async def notify_finished_id(self, request_id) -> None:
+        if request_id in self.engine.scheduler.recv_transfering:
+            seq_group = self.engine.scheduler.recv_transfering[request_id]
+            self.engine.scheduler.running_with_dram.append(seq_group)
+            self.engine.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+

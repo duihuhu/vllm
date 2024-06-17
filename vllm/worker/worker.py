@@ -355,7 +355,6 @@ class Worker:
         if recv_tasks:
             self.trans_manager.add_tasks(recv_tasks)   
         if swap_to_remote_tasks:
-            print("add swap_to_remote_tasks")
             self.trans_manager.add_tasks(swap_to_remote_tasks)
             
         if self.deploy_config.enable_debug:
