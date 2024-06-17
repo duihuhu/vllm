@@ -23,6 +23,8 @@ from vllm.sequence import SamplerOutput, SequenceGroupMetadata
 from vllm.worker.cache_engine import CacheEngine
 from vllm.worker.model_runner import ModelRunner
 from vllm.outputs import MergeReqInfo
+import numpy as np
+from multiprocessing import shared_memory
 
 from vllm._C import gpu_ops, trans_ops, swap_ops
 from vllm.logger import init_logger
@@ -194,6 +196,7 @@ class Worker:
                                         self.parallel_config, self.deploy_config, self.rank)
         self.gpu_cache = self.cache_engine.gpu_cache
         self.cpu_cache = self.cache_engine.cpu_cache
+        self.shared_cpu_cache()
         self.model_runner.set_block_size(self.cache_engine.block_size)
         if self.use_agg_block:
             self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
@@ -378,6 +381,26 @@ class Worker:
     
     def get_finished_swap_tasks(self) -> List[List[str]]:
         return self.swap_manager.get_finished_swap_tasks()
+    
+    
+    def shared_cpu_cache(self):
+        # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
+        np_arrays = [tensor.cpu().numpy() for tensor in self.cpu_cache]
+        self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
+
+        # 计算总共需要的字节数
+        total_bytes = sum(self.tensor_sizes)
+        print("get_global_ranks ", self.deploy_config.get_global_ranks(), total_bytes)
+        # # 创建共享内存
+        # self.shm = shared_memory.SharedMemory(name="channel",create=True, size=total_bytes)
+        # self.shm_name = self.shm.name
+
+        # # 将所有 Tensor 数据拷贝到共享内存中
+        # offset = 0
+        # for np_array in np_arrays:
+        #     np_array_flat = np_array.flatten()
+        #     np.copyto(np.ndarray(np_array_flat.shape, dtype=np_array_flat.dtype, buffer=self.shm.buf, offset=offset), np_array_flat)
+        #     offset += np_array.nbytes
     
 def init_distributed_environment(
     parallel_config: ParallelConfig,

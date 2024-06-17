@@ -9,7 +9,6 @@ from vllm.config import CacheConfig, ModelConfig, ParallelConfig, DeployConfig
 from vllm.logger import init_logger
 from vllm.utils import STR_DTYPE_TO_TORCH_DTYPE, is_pin_memory_available
 
-
 from vllm._C import gpu_ops, ops
 
 from vllm.core.kv_trans_scheduler import TransferTaskMeta
@@ -215,7 +214,6 @@ class CacheEngine:
             dtype = STR_DTYPE_TO_TORCH_DTYPE[cache_dtype]
         dtype_size = _get_dtype_size(dtype)
         return dtype_size * total
-
 
 def _get_dtype_size(dtype: torch.dtype) -> int:
     return torch.tensor([], dtype=dtype).element_size()
