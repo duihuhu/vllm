@@ -99,6 +99,7 @@ void TransWorker::worker() {
                     break;
 
                 case TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS:
+                    std::cout<<"swap_hbm_to_remote_dram_blocks " << std::endl;
                     trans_engine.swap_hbm_to_remote_dram_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.dst_blocks, swap_remote_streams[use_swap_stream]);
                     use_swap_stream = (use_swap_stream + 1) % swap_remote_streams.size();
                     break;

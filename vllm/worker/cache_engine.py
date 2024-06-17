@@ -174,26 +174,6 @@ class CacheEngine:
         numel_per_layer = self.gpu_cache[0][0].stride(0)
         self.attn_backend.copy_blocks_agg(kv_cache_addresses, src_to_dsts, num_layers, numel_per_layer)
 
-    def check_finished_events(self) -> Tuple[List[str], List[str]]:
-        #swap in events
-        swap_in_finished_req_ids: List[str] = []
-        for key, event in self.swap_in_events.items():
-            if event.query():
-                swap_in_finished_req_ids.append(key)
-            else:
-                break
-        for key in swap_in_finished_req_ids:
-            self.swap_in_events.pop(key)
-        swap_out_finished_req_ids: List[str] = []
-        for key, event in self.swap_out_events.items():
-            if event.query():
-                swap_out_finished_req_ids.append(key)
-            else:
-                break
-        for key in swap_out_finished_req_ids:
-            self.swap_out_events.pop(key)
-        return (swap_in_finished_req_ids, swap_out_finished_req_ids)
-
     @staticmethod
     def get_cache_block_size(
         block_size: int,

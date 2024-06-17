@@ -17,6 +17,9 @@ class AllocStatus(enum.Enum):
     OK = enum.auto()
     LATER = enum.auto()
     NEVER = enum.auto()
+    
+    Other = enum.auto()
+
 
 
 class BlockSpaceManager(ABC):
