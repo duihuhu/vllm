@@ -233,7 +233,7 @@ class UncachedBlockAllocator(BlockAllocatorBase):
                                        block_hash=-1,
                                        num_hashed_tokens=0)
             self.free_blocks.append(block)
-
+    
     def allocate(self,
                  block_hash: Optional[int] = None,
                  num_hashed_tokens: int = 0) -> PhysicalTokenBlock:
@@ -488,8 +488,19 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.kv_block_tables[seq.seq_id] = block_table.copy()
             
+    
+    def allocate_cpu_cache(self, seq_group: SequenceGroup) -> None:
+        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
+        # Allocate new physical token blocks that will store the prompt tokens.
+        num_prompt_blocks = len(seq.logical_token_blocks)
+        block_table: BlockTable = []
+        for idx in range(num_prompt_blocks):
+            block = self.cpu_allocator.allocate()
+            block_table.append(block)
+            
+        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+            self.kv_block_tables[seq.seq_id] = block_table.copy()
 
-        
     def allocate(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.

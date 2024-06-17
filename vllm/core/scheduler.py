@@ -672,7 +672,7 @@ class Scheduler:
                 self.block_manager.kv_block_tables[seq.seq_id] = block_table.copy()
             return block_table, cpu_blocks
         else:
-            cpu_blocks = self.block_manager.radix_manager_allocate_cpu_cache(seq_group)
+            cpu_blocks = self.block_manager.allocate_cpu_cache(seq_group)
             return [], cpu_blocks
         
     def allocate_kv_blocks(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
