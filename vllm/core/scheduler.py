@@ -15,7 +15,6 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
 from vllm.outputs import RequestOutput
 from vllm.block import PhysicalTokenBlock
 from vllm.radix_tree_ys.radix_cache import TreeNode, kvCacheProgressStatus
-from vllm.core.block.block_table import BlockTable
 
 
 
