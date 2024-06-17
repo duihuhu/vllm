@@ -62,3 +62,9 @@ async def post_request_and_get_response(args, req, waiting_time):
                 end_time = resp['end_time']
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     return (end_time-start_time, ttft, tbt[1:], tbt, tbt[0], req[-2] , req[-1])
+
+
+async def dummy_post_request_and_get_response(args, req, waiting_time):
+    await asyncio.sleep(waiting_time)
+
+    return (0.1, 1.1, [1.1, 2.2], [3.3, 4.4], 1.1, req[-2], req[-1])
