@@ -31,6 +31,10 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
         dst_rank = comm_rank + tp;
     }
     use_comm = 0;
+
+    use_swap_stream = 0
+    swap_remote_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+
     execute = std::thread(&TransWorker::worker, this);
 }
 
@@ -95,6 +99,8 @@ void TransWorker::worker() {
                     break;
 
                 case TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS:
+                    trans_engine.swap_hbm_to_remote_dram_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.dst_blocks, swap_remote_streams[use_swap_stream]);
+                    use_swap_stream = (use_swap_stream + 1) % swap_remote_streams.size();
                     break;
                 default:
                     throw std::runtime_error("invalid task_type.");
@@ -105,17 +111,21 @@ void TransWorker::worker() {
         //for req
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
+        auto swap_blocks_finished = trans_engine.check_swap_remote_finished_events();
+
         if (!send_blocks_finished.empty() || !recv_blocks_finished.empty()){
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
-            transfer_result_queue.push_back(std::make_pair(send_blocks_finished, recv_blocks_finished));
+            transfer_result_queue.push_back(std::make_pair(std::make_pair(send_blocks_finished, recv_blocks_finished), swap_blocks_finished));
         }      
         // for layer  
         auto send_blocks_comms_finished = trans_engine.check_send_finished_comms_events();
         auto recv_blocks_comms_finished = trans_engine.check_recv_finished_comms_events();
         if (!send_blocks_comms_finished.empty() || !recv_blocks_comms_finished.empty()){
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
-            transfer_result_queue.push_back(std::make_pair(send_blocks_comms_finished, recv_blocks_comms_finished));
+            transfer_result_queue.push_back(std::make_pair(std::make_pair(send_blocks_comms_finished, recv_blocks_comms_finished, swap_blocks_finished)));
         }
+
+
         while (!comm_queue.empty())
         {
             auto nccl_id = comm_queue.pop_front();
@@ -146,8 +156,8 @@ void TransWorker::add_comm_task(std::vector<char>& nccl_id) {
 //     }
 // }
 
-std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> TransWorker::get_finished_transfer_tasks() {
-    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> finished_tasks;
+std::vector<std::pair<std::pair<std::vector<std::string>, std::vector<std::string>>,std::vector<std::string> >>TransWorker::get_finished_transfer_tasks() {
+    std::vector<std::pair<std::pair<std::vector<std::string>, std::vector<std::string>>, std::vector<std::string>>> finished_tasks;
     while (!transfer_result_queue.empty())
     {
         // std::cout<<"transfer_result_queue is not empty ";

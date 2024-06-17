@@ -82,6 +82,10 @@ class SendKvTransferScheduler:
         
         self.enable_layer = enable_layer
         self.use_agg_block = use_agg_block
+        
+        #to record send hbm and remote dram blocks ids 
+        self.swap_block_ids: Dict[str, Tuple[List[int], List[int]]] = {}
+        self.swap_channel_request_ids: Dict[str, List[str]] = {}
 
     def add_layer_kv_request(
         self,
@@ -92,10 +96,23 @@ class SendKvTransferScheduler:
         channel = "_".join([str(rank) for rank in global_ranks])
         self.block_ids[request_id] = blocks
         self.finished_worker_count[request_id] = self.num_workers
+        #this may be not need
         if channel not in self.channel_request_ids:
             self.channel_request_ids[channel] = []
             self.channel_transfer_tag[channel] = 0
 
+    def add_dram_kv_request(self,
+        request_id: str,
+        global_ranks: List[int],
+        blocks: List[int],
+        dst_blocks: List[int]) -> None:
+        channel = "_".join([str(rank) for rank in global_ranks])
+        self.swap_block_ids[request_id] = (blocks, dst_blocks)
+        self.finished_worker_count[request_id] = self.num_workers
+        if channel not in self.swap_channel_request_ids:
+            self.swap_channel_request_ids[channel] = []
+        self.swap_channel_request_ids[channel].append(request_id)
+ 
     def add_kv_request(
         self,
         request_id: str,
@@ -130,8 +147,22 @@ class SendKvTransferScheduler:
         
         return scheduled_transfer_tasks
     
+    def _get_task_for_swap_blocks(self) -> List[trans_ops.TransferTask]:
+        scheduled_transfer_tasks: List[trans_ops.TransferTask] = []
+        for channel, request_id in self.swap_channel_request_ids.items():
+            src_blocks = self.swap_block_ids[request_id][0]
+            dst_blocks = self.swap_block_ids[request_id][1]
+            if self.use_agg_block:
+                scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks,dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_FULL_BLOCKS).serialize())
+            else:
+                scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks, dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_BLOCKS).serialize())        
+        return scheduled_transfer_tasks
+    
     def schedule(self) -> List[trans_ops.TransferTask]:
         return self._get_task_for_send_blocks()
+    
+    def schedule_swap_to_remote(self) -> List[trans_ops.TransferTask]:
+        return self._get_task_for_swap_blocks() 
     
     def _process_send_blocks_finished(
         self,
@@ -146,6 +177,24 @@ class SendKvTransferScheduler:
                 real_finished_req_ids.append(task_meta.request_id)
                 
         return real_finished_req_ids
+    
+    def _process_swap_blocks_finished(
+        self,
+        swap_finished_taks: List[trans_ops.TransferTaskMeta]
+    ) -> List[str]:
+        real_finished_swap_req_ids = []
+        for task_meta in swap_finished_taks:
+            self.finished_worker_count[task_meta.request_id] -=1
+            if self.finished_worker_count[task_meta.request_id] == 0:
+                del self.swap_block_ids[task_meta.request_id]
+                del self.finished_worker_count[task_meta.request_id]
+                real_finished_swap_req_ids.append(task_meta.request_id)
+                
+        return real_finished_swap_req_ids
+    
+    def add_finished_swap_tasks(self,
+        swap_finished_taks: List[trans_ops.TransferTaskMeta]):
+        return self._process_swap_blocks_finished(swap_finished_taks)
     
     def add_finished_tasks(
         self,

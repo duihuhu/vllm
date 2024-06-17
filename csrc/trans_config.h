@@ -48,7 +48,7 @@ enum class TaskType {
 
     //trans hbm to dram
     TRANSFER_HBM_TO_DRAM_BLOCKS,
-
+    TRANSFER_HBM_TO_DRAM_FULL_BLOCKS,
 };
 
 // TransferTaskMeta结构体，用于存储传输任务的元信息
@@ -160,11 +160,15 @@ public:
 
     int create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice);
 
+    void swap_hbm_to_remote_dram_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream);
+
+
     std::vector<std::string> check_send_finished_events();
     std::vector<std::string> check_recv_finished_events();
 
     std::vector<std::string> check_send_finished_comms_events();
     std::vector<std::string> check_recv_finished_comms_events();
+    std::vector<std::string> check_swap_remote_finished_events();
 
     void SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
@@ -180,6 +184,9 @@ public:
         const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
     void SendFullBlocks(std::vector<uint64_t>& srcCaches, \
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
+
+    void SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
+        std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize)
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
     std::vector<uint64_t> blocks_gpu_cache; // key/value address in tensor 
@@ -190,7 +197,6 @@ private:
     int cache_block_size;
     // std::unordered_map<std::string, c10::cuda::CUDAStream*> send_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> send_events;
-
     // std::unordered_map<std::string, c10::cuda::CUDAStream*> recv_streams;
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> recv_events;
 
@@ -200,6 +206,10 @@ private:
 
     std::unordered_map<std::string, std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>> send_comms_events;
     std::unordered_map<std::string, std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>> recv_comms_events;
+
+    //swao to remote instance dram
+    std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> swap_remote_events
+
 };
 
 class TransWorker {
@@ -214,7 +224,9 @@ public:
 
     void add_tasks(TransferTask& task);
     // void add_tasks(const std::vector<std::string>& tasks);
-    std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
+    // std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
+    std::vector<std::pair<std::pair<std::vector<std::string>, std::vector<std::string>>, std::vector<std::string> >>TransWorker::get_finished_transfer_tasks();
+
     void add_comm_task(std::vector<char>& uniqueId);
 private:
     void init_device();
@@ -223,7 +235,7 @@ private:
     TransEngine trans_engine;
     TransQueue<TransferTask> task_queue;
     TransQueue<std::vector<char>> comm_queue;
-    TransQueue<std::pair<std::vector<std::string>, std::vector<std::string>>> transfer_result_queue;
+    TransQueue<std::pair<std::pair<std::vector<std::string>, std::vector<std::string>>,std::vector<std::string>>> transfer_result_queue;
 
     std::thread execute;
     int rank;
@@ -238,6 +250,9 @@ private:
     std::vector<ncclComm_t> comms;
     std::vector<c10::cuda::CUDAStream> streams;
     int use_comm;
+
+    std::vector<c10::cuda::CUDAStream> swap_remote_streams;
+    int use_swap_stream;
 };
 
 class TransManager {

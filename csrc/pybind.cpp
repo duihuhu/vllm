@@ -211,6 +211,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .value("TRANSFER_SEND_FULL_BLOCKS", TaskType::TRANSFER_SEND_FULL_BLOCKS)
       .value("TRANSFER_RECV_FULL_BLOCKS", TaskType::TRANSFER_RECV_FULL_BLOCKS) 
       .value("TRANSFER_HBM_TO_DRAM_BLOCKS", TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS) 
+      .value("TRANSFER_HBM_TO_DRAM_FULL_BLOCKS", TaskType::TRANSFER_HBM_TO_DRAM_FULL_BLOCKS) 
+
       .export_values();
 
   py::class_<TransferTaskMeta>(trans_ops, "TransferTaskMeta")

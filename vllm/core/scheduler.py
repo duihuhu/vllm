@@ -15,6 +15,7 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
 from vllm.outputs import RequestOutput
 from vllm.block import PhysicalTokenBlock
 from vllm.radix_tree_ys.radix_cache import TreeNode, kvCacheProgressStatus
+from vllm.core.block.block_table import BlockTable
 
 
 
@@ -211,6 +212,10 @@ class Scheduler:
         
         self.radix_swapping: Dict[str, Tuple[List[TreeNode], List[PhysicalTokenBlock]]] = {}
         self.swap_finished_ids: List[str] = []
+        
+        #send data from A hbm to B dram, recv_swap_transfering record the seqgroup info in dram recv role
+        self.recv_swap_transfering: Dict[str, SequenceGroup] = {}
+        
     @property
     def lora_enabled(self) -> bool:
         return bool(self.lora_config)
@@ -243,7 +248,7 @@ class Scheduler:
             self.free_seq(seq)
             del self.send_transfering[request_id]
     
-    def get_send_transfering(self, request_id: str) -> None:
+    def get_send_transfering(self, request_id: str) -> SequenceGroup:
         if request_id not in self.send_transfering:
             return None
         return self.send_transfering[request_id]
@@ -258,6 +263,10 @@ class Scheduler:
     def add_recv_transfering(self, seq_group: SequenceGroup) -> None:
         #Add sequence groups to the recv transfering map
         self.recv_transfering[seq_group.request_id] = seq_group
+
+    def add_recv_swap_transfering(self, seq_group: SequenceGroup) -> None:
+        #Add sequence groups to the recv transfering map
+        self.recv_swap_transfering[seq_group.request_id] = seq_group
 
     def add_swaping_out(self, swap_id: str, evicted_blocks: Tuple[List[TreeNode], List[PhysicalTokenBlock]]) -> None:
         self.radix_swapping[swap_id] = evicted_blocks
@@ -641,6 +650,29 @@ class Scheduler:
         
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
+        
+    def match_and_allocate_kv_blocks(self, seq_group: SequenceGroup):
+        if self.block_manager.enable_radix_caching:
+            seq = seq_group.get_seqs()[0]
+            self.block_manager.radix_tree_manager.match(seq)
+            num_prompt_blocks = len(seq.logical_token_blocks)       
+            block_table = []
+            cpu_blocks = [] 
+            for idx in range(num_prompt_blocks):
+                if idx < len(seq.data.prefix_blocks):
+                    block_table.append(seq.data.prefix_blocks[idx])
+                else:
+                    block = self.block_manager.cpu_allocator.radix_manager_allocate()
+                    block_table.append(block)
+                    cpu_blocks.append(block.block_number)
+                    
+            seq.cache_blocks_to_insert = block_table
+            for seq in seq_group.get_seqs():
+                self.block_manager.kv_block_tables[seq.seq_id] = block_table.copy()
+            return block_table, cpu_blocks
+        else:
+            cpu_blocks = self.block_manager.radix_manager_allocate_cpu_cache(seq_group)
+            return [], cpu_blocks
         
     def allocate_kv_blocks(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
         return self._allocate(seq_group, is_kv_prepared)

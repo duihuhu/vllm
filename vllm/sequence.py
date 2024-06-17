@@ -411,6 +411,7 @@ class SequenceGroup:
         eprefill_port: Optional[str] = None,
         edecode_host: Optional[str] = None,
         edecode_port: Optional[str] = None,
+        has_dram: Optional[bool] = False,
     ) -> None:
         self.request_id = request_id
         self.seqs_dict = {seq.seq_id: seq for seq in seqs}
@@ -429,6 +430,8 @@ class SequenceGroup:
         self.eprefill_port = eprefill_port
         self.edecode_host = edecode_host
         self.edecode_port = edecode_port
+        
+        self.has_dram = has_dram
     @property
     def prompt(self) -> str:
         # All sequences in the group should have the same prompt.

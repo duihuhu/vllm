@@ -315,18 +315,25 @@ class LLMEngine:
             self.scheduler.del_send_transfering(request_id)
             logger.info("remote recv engine prepare kv fail.")
             return
-        blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
-        # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
-        if len(blocks) > response.computed_blocks:
-            if self.deploy_config.enable_breakdown:
-                with open("prefill_add_kv_request.txt", "a+") as fd:
-                    content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
-                    fd.write(content + "\n")
-                    
-            # print("send kv request_id ", request_id, response.global_ranks, blocks,  response.transfer_tag)
-            self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
+        if not response.has_dram:
+            blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
+            # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
+            if len(blocks) > response.computed_blocks:
+                if self.deploy_config.enable_breakdown:
+                    with open("prefill_add_kv_request.txt", "a+") as fd:
+                        content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
+                        fd.write(content + "\n")
+                        
+                # print("send kv request_id ", request_id, response.global_ranks, blocks,  response.transfer_tag)
+                self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
+            else:
+                self.scheduler.del_send_transfering(request_id)
         else:
-            self.scheduler.del_send_transfering(request_id)
+            seq_group = self.scheduler.get_send_transfering(request_id)
+            seq_group.has_dram = True
+            blocks = self.scheduler.fetch_kv_blocks(seq_group)
+            self.send_kv_trans_scheduler.add_dram_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.dst_cpu_blocks)
+
 
     def add_request(
         self,
@@ -476,13 +483,6 @@ class LLMEngine:
                                 
                 blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
                 computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-                # print("decoder computed blocks, total phy_blocks, blocks ", len(computed_blocks), len(phy_blocks), len(blocks))
-                # print("decoder phy_blocks ", phy_blocks)
-                # if not phy_blocks:
-                #     kv_response = KvPreparedResponse(seq_group.request_id, -1, "opp device has not enough memory", 0)
-                # else:
-                
-                # kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
                 
                 if self.deploy_config.enable_theory:
                     kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
@@ -499,9 +499,16 @@ class LLMEngine:
                     else:
                         self.scheduler.running.append(seq_group)
                         self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
-
             else:
-                break
+                seq_group.eprefill_host = prefill_request_output.eprefill_host
+                seq_group.eprefill_port = prefill_request_output.eprefill_port
+                seq_group.edecode_host = prefill_request_output.edecode_host
+                seq_group.edecode_port = prefill_request_output.edecode_port
+                
+                self.scheduler.decode_waiting.popleft()
+                computed_blocks, cpu_blocks = self.scheduler.match_and_allocate_kv_blocks(seq_group)
+                self.scheduler.add_recv_transfering(seq_group)
+                kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), -1,  cpu_blocks, True))
         return kv_responses
             
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:

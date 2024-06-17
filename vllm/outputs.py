@@ -169,7 +169,9 @@ class KvPreparedResponse:
         error: int,
         error_msg: str,
         computed_blocks: int,
-        transfer_tag: str
+        transfer_tag: str,
+        dst_cpu_blocks: Optional[List[int]] = None,
+        has_dram: Optional[bool] = False
     ) -> None:
         self.request_id = request_id
         self.error = error
@@ -177,7 +179,8 @@ class KvPreparedResponse:
         self.computed_blocks = computed_blocks
         self.global_ranks = None
         self.transfer_tag = transfer_tag
-        
+        self.dst_cpu_blocks = dst_cpu_blocks
+        self.has_dram = has_dram
     def __json__(self) -> Dict:
         return {
             "request_id": self.request_id,
@@ -186,6 +189,8 @@ class KvPreparedResponse:
             "error_msg": self.error_msg,
             "computed_blocks": self.computed_blocks,
             "transfer_tag": self.transfer_tag,
+            "cpu_blocks": self.cpu_blocks,
+            "has_dram": self.has_dram,
         }
 
 class VLLMLoadInfo:

@@ -612,10 +612,12 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_debug:
             t2 = time.time()   
         for finished_tasks in finished_work_tasks:
+            print("finished_tasks ", finished_tasks)
             for worker_finished_tasks in finished_tasks:
+                print("worker_finished_tasks ", worker_finished_tasks)
                 if worker_finished_tasks:
                     for worker_finished_task in worker_finished_tasks:
-                        # print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
+                        print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
                         send_finished_tasks = [] 
                         recv_finished_tasks = []
                         for finished_task in worker_finished_task[0]:
@@ -632,13 +634,17 @@ class _AsyncLLMEngine(LLMEngine):
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
+        
+        swap_to_remote_tasks = self.send_kv_trans_scheduler.schedule_swap_to_remote()
+        
         if self.deploy_config.enable_debug:
             t3 = time.time()   
         if send_tasks or recv_tasks:
             await self.model_executor._run_workers_async(
                 "trans_blocks",
-                send_tasks=send_tasks,
-                recv_tasks=recv_tasks
+                send_tasks = send_tasks,
+                recv_tasks = recv_tasks,
+                swap_to_remote_tasks = swap_to_remote_tasks
             )
         if self.deploy_config.enable_debug:
             t4 = time.time()

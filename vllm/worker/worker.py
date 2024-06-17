@@ -344,7 +344,8 @@ class Worker:
     def trans_blocks(
         self,
         send_tasks: List[trans_ops.TransferTask],
-        recv_tasks: List[trans_ops.TransferTask]
+        recv_tasks: List[trans_ops.TransferTask],
+        swap_to_remote_tasks: List[trans_ops.TransferTask],
     ) -> None:
         if self.deploy_config.enable_debug:
             t1 = time.time()
@@ -352,6 +353,9 @@ class Worker:
             self.trans_manager.add_tasks(send_tasks)
         if recv_tasks:
             self.trans_manager.add_tasks(recv_tasks)   
+        if swap_to_remote_tasks:
+            self.trans_manager.add_tasks(swap_to_remote_tasks)
+            
         if self.deploy_config.enable_debug:
             t2 = time.time()
             self.trans_blocks_time = self.trans_blocks_time + t2 - t1

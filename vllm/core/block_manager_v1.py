@@ -418,6 +418,21 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         #when allocate seq, we should insert it before next seq coming 
         # self.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.cpu_allocator.free_radix_manager_cache)
+
+    def radix_manager_allocate_cpu_cache(self, seq_group: SequenceGroup) -> None:
+        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
+        # Allocate new physical token blocks that will store the prompt tokens.
+        num_prompt_blocks = len(seq.logical_token_blocks) 
+        cpu_blocks = []
+        block_table: BlockTable = []
+        for logical_idx in range(num_prompt_blocks):
+            block = self.cpu_allocator.radix_manager_allocate()
+            block_table.append(block)
+            cpu_blocks.append(block.block_number)
+            
+        for seq in seq_group.get_seqs():
+            self.kv_block_tables[seq.seq_id] = block_table.copy()
+        return cpu_blocks
             
     def allocate_radix_cache(self, seq_group: SequenceGroup, is_kv_prepared=None) -> None:
          #todo if mcache open, should consider cache in dram
@@ -465,7 +480,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 seq.last_node = prefix_info[1]
                 seq.last_node_matched_len = last_node_matched_len
                 # Assign the block table for each sequence.
-        
         if not is_kv_prepared:
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.block_tables[seq.seq_id] = block_table.copy()     
@@ -475,6 +489,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 self.kv_block_tables[seq.seq_id] = block_table.copy()
             
 
+        
     def allocate(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
         # NOTE: Here we assume that all sequences in the group have the same
         # prompt.
