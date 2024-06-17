@@ -186,7 +186,7 @@ public:
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
 
     void SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
-        std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize)
+        std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize);
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
     std::vector<uint64_t> blocks_gpu_cache; // key/value address in tensor 
@@ -208,7 +208,7 @@ private:
     std::unordered_map<std::string, std::vector<std::pair<std::string, std::unordered_map<int, std::vector<at::cuda::CUDAEvent*>>>>> recv_comms_events;
 
     //swao to remote instance dram
-    std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> swap_remote_events
+    std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> swap_remote_events;
 
 };
 
