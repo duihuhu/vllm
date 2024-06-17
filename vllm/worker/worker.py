@@ -418,7 +418,6 @@ class Worker:
         offset = 0
         for np_array in np_arrays:
             np_array_flat = np_array.flatten()
-            print("np_array_flat ", np_array_flat.dtype)
             np.copyto(np.ndarray(np_array_flat.shape, dtype=np_array_flat.dtype, buffer=self.shm.buf, offset=offset), np_array_flat)
             offset += np_array.nbytes
     
