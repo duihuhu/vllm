@@ -103,7 +103,7 @@ void TransManager::init_dst_cpu_cache(const std::string& dst_channel, const std:
     return;
 }
 
-std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> TransManager::get_finished_transfer_tasks() {
+std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,std::vector<std::string>>> TransManager::get_finished_transfer_tasks() {
     std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> finished_work_tasks;
     for (const auto& pair : send_trans_workers) {
         // const std::string& key = pair.first;

@@ -115,14 +115,14 @@ void TransWorker::worker() {
 
         if (!send_blocks_finished.empty() || !recv_blocks_finished.empty()){
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
-            transfer_result_queue.push_back(std::make_pair(std::make_pair(send_blocks_finished, recv_blocks_finished), swap_blocks_finished));
+            transfer_result_queue.push_back(std::make_tuple(send_blocks_finished, recv_blocks_finished, swap_blocks_finished));
         }      
         // for layer  
         auto send_blocks_comms_finished = trans_engine.check_send_finished_comms_events();
         auto recv_blocks_comms_finished = trans_engine.check_recv_finished_comms_events();
         if (!send_blocks_comms_finished.empty() || !recv_blocks_comms_finished.empty()){
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
-            transfer_result_queue.push_back(std::make_pair(std::make_pair(send_blocks_comms_finished, recv_blocks_comms_finished),swap_blocks_finished));
+            transfer_result_queue.push_back(std::make_tuple(send_blocks_comms_finished, recv_blocks_comms_finished,swap_blocks_finished));
         }
 
 
@@ -156,8 +156,8 @@ void TransWorker::add_comm_task(std::vector<char>& nccl_id) {
 //     }
 // }
 
-std::vector<std::pair<std::pair<std::vector<std::string>, std::vector<std::string>>,std::vector<std::string> >>TransWorker::get_finished_transfer_tasks() {
-    std::vector<std::pair<std::pair<std::vector<std::string>, std::vector<std::string>>, std::vector<std::string>>> finished_tasks;
+std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,std::vector<std::string>>>TransWorker::get_finished_transfer_tasks() {
+    std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,std::vector<std::string>>> finished_tasks;
     while (!transfer_result_queue.empty())
     {
         // std::cout<<"transfer_result_queue is not empty ";
