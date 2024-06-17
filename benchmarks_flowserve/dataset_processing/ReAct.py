@@ -2,7 +2,7 @@ import json
 from typing import Iterable, List, Optional, Tuple
 import random
 from transformers import PreTrainedTokenizerBase
-from utils import find_range_of_multi_turn_conversations
+from .common import find_range_of_multi_turn_conversations
 
 PROMPT_FORWORD = """Solve a question answering task with interleaving Thought, Action, Observation steps. Thought can reason about the current situation, and Action can be three types: 
 (1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.

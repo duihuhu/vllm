@@ -1,4 +1,4 @@
-from utils import run, get_args, set_seed
+from utils import get_args, set_seed
 import asyncio
 from transformers import AutoTokenizer
     
@@ -31,14 +31,22 @@ if __name__ == "__main__":
             tokenizer, 
             args.num_requests
         )
+    
 
-    print(reqs[0][0])
-    print('*' * 100)
-    print(reqs[3][0])
-    print('*' * 100)
-    print(reqs[4][0])
+    # print(reqs[0][0])
+    # print('*' * 100)
+    # print(reqs[3][0])
+    # print('*' * 100)
+    # print(reqs[4][0])
 
-    print(multi_conversations_range)
-    # asyncio.run(run(args, reqs))
+    # print(multi_conversations_range)
+
+    if args.test_type == "open":
+        from test_type.open_loop import run
+        asyncio.run(run(args, reqs))
+    elif args.test_type == "closed":
+        from test_type.closed_loop import run
+        asyncio.run(run(args, reqs, multi_conversations_range))
+
 
     

@@ -2,7 +2,7 @@ import json
 from typing import Iterable, List, Optional, Tuple
 import random
 from transformers import PreTrainedTokenizerBase
-from utils import find_range_of_multi_turn_conversations
+from .common import find_range_of_multi_turn_conversations
 
 def sample_requests(
     dataset_path: str,
