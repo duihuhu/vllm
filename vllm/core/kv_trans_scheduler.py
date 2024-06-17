@@ -149,14 +149,16 @@ class SendKvTransferScheduler:
     
     def _get_task_for_swap_blocks(self) -> List[trans_ops.TransferTask]:
         scheduled_transfer_tasks: List[trans_ops.TransferTask] = []
-        for channel, request_id in self.swap_channel_request_ids.items():
-            print("self.swap_block_ids[request_id] ", self.swap_block_ids[request_id])
-            src_blocks = self.swap_block_ids[request_id][0]
-            dst_blocks = self.swap_block_ids[request_id][1]
-            if self.use_agg_block:
-                scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks,dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_FULL_BLOCKS).serialize())
-            else:
-                scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks, dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_BLOCKS).serialize())        
+        for channel, request_ids in self.swap_channel_request_ids.items():
+            while request_ids:
+                request_id = request_ids.pop(0)
+                print("self.swap_block_ids[request_id] ", self.swap_block_ids[request_id])
+                src_blocks = self.swap_block_ids[request_id][0]
+                dst_blocks = self.swap_block_ids[request_id][1]
+                if self.use_agg_block:
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks,dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_FULL_BLOCKS).serialize())
+                else:
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks, dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_BLOCKS).serialize())        
         return scheduled_transfer_tasks
     
     def schedule(self) -> List[trans_ops.TransferTask]:
