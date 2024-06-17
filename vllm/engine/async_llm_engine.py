@@ -432,8 +432,8 @@ class _AsyncLLMEngine(LLMEngine):
                     self.radix_swap_scheduler.add_swap_task(swap_id)
             self.scheduler._check_swap_finished()
             
-        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
-            print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
+        # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
+        #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
         # if scheduler_outputs.is_empty():
@@ -476,10 +476,7 @@ class _AsyncLLMEngine(LLMEngine):
             evicted_blocks_to_swap_out = None
         else:
             output = []
-
-        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
-            print("after _process_model_outputs req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
-
+            
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor and evicted_blocks_to_swap_out:
             all_outputs = await self.model_executor._run_workers_async(
                 "evict_blocks",
