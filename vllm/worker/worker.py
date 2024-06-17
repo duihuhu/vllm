@@ -95,6 +95,7 @@ class Worker:
         self.cache_engine = None
         self.gpu_cache = None
         self.cpu_cache = None
+        self.dst_cpu_cache = {}
 
         self.trans_blocks_time = 0
     def init_device(self) -> None:
@@ -369,9 +370,11 @@ class Worker:
     ) -> None:
         res = self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
         # print("res ", res)
-        self.get_dst_rank(dst_channel)
-        dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
-        print("len dst tensor ", len(dst_tensor))
+        if dst_channel not in self.dst_cpu_cache:
+            self.get_dst_rank(dst_channel)
+            dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
+            print("len dst tensor ", len(dst_tensor))
+            self.dst_cpu_cache[dst_channel] = dst_tensor
         
     def get_dst_rank(self, dst_channel):
         # 将字符串分割成整数列表
