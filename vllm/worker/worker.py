@@ -369,7 +369,7 @@ class Worker:
     ) -> None:
         res = self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
         # print("res ", res)
-        
+        self.get_dst_rank(dst_channel)
         dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
         print("len dst tensor ", len(dst_tensor))
         
