@@ -2,6 +2,8 @@ import json
 from typing import Iterable, List, Optional, Tuple
 import random
 from transformers import PreTrainedTokenizerBase
+import os 
+import pickle
 from .common import find_range_of_multi_turn_conversations
 
 PROMPT_FORWORD = """Solve a question answering task with interleaving Thought, Action, Observation steps. Thought can reason about the current situation, and Action can be three types: 
@@ -77,58 +79,52 @@ def sample_requests(
     num_requests: int 
 ) -> List[Tuple[str, List[int], int, int]]:
     
-    QAs = []
-    with open(dataset_path, 'r') as f:
-        for line in f:
-           QAs.append(json.loads(line)) 
-        
-    prompts = []
-    completions = []
-    s = ''
-    for question_id, qa in enumerate(QAs):
-        for question, triplets in qa.items():
-            s = PROMPT_FORWORD + question
-            for i in range(1, len(triplets) + 1):
-                s += "\nThought " + str(i) + ":"
-                prompts.append(s)
-                completions.append(
-                    triplets[i - 1]["thought"]
-                    + "\nAction "
-                    + str(i)
-                    + ":"
-                    + triplets[i - 1]["action"]
-                    + "\nObservation "
-                    + str(i)
-                    + ":"
-                    + triplets[i - 1]["observation"]
-                    + "\n"
-                )
-                s += completions[-1]
+    cached_file_name = dataset_path.split('.')[0] + '_cached.pkl'
+    if os.path.exists(cached_file_name):
+        with open(cached_file_name, 'rb') as f:
+            reqs = pickle.load(f)
+    else:
 
-    prompt_token_ids = tokenizer(prompts).input_ids
-    completion_token_ids = tokenizer(completions).input_ids
+        QAs = []
+        with open(dataset_path, 'r') as f:
+            for line in f:
+                QAs.append(json.loads(line)) 
+            
+        prompts = []
+        completions = []
+        s = ''
+        for question_id, qa in enumerate(QAs):
+            for question, triplets in qa.items():
+                s = PROMPT_FORWORD + question
+                for i in range(1, len(triplets) + 1):
+                    s += "\nThought " + str(i) + ":"
+                    prompts.append(s)
+                    completions.append(
+                        triplets[i - 1]["thought"]
+                        + "\nAction "
+                        + str(i)
+                        + ":"
+                        + triplets[i - 1]["action"]
+                        + "\nObservation "
+                        + str(i)
+                        + ":"
+                        + triplets[i - 1]["observation"]
+                        + "\n"
+                    )
+                    s += completions[-1]
 
+        prompt_token_ids = tokenizer(prompts).input_ids
+        completion_token_ids = tokenizer(completions).input_ids
 
-    reqs = []
-    for i in range(len(prompts)):
-        prompt_len = len(prompt_token_ids[i])
-        completion_len = len(completion_token_ids[i])
-        # if prompt_len < 4 or output_len < 4:
-        #     # Prune too short sequences.
-        #     continue
-        # if prompt_len < 2048 or prompt_len + output_len > 4096:
-        #     # Prune too long sequences.
-        #     continue
-        # if prompt_len < 2048 or completion_len < 128 or completion_len > 128 or prompt_len + completion_len > 4096:
-        #     # Prune too long sequences.
-        #     continue
-        reqs.append((prompts[i], prompt_token_ids[i], prompt_len, completion_len))
+        reqs = []
+        for i in range(len(prompts)):
+            prompt_len = len(prompt_token_ids[i])
+            completion_len = len(completion_token_ids[i])
+            reqs.append((prompts[i], prompt_token_ids[i], prompt_len, completion_len))
+        # Caution: we only cache the first 512 requests
+        pickle.dump(reqs[:512], open(cached_file_name, 'wb')) 
 
-    # print(len(reqs))
-
-    # Sample the requests.
     sampled_requests = reqs[:num_requests]
-
     multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
     
     return sampled_requests, multi_conversations_range
