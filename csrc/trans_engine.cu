@@ -544,10 +544,10 @@ void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at
         for (int j = 0; j < dstBlocks.size(); j++) {
             int src_blockIdx = srcBlocks[j];
             int dst_blockIdx = dstBlocks[j];
-            void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
-            void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
-            void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
-            void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
+            void *srcKeyCachePtr = srcKeyCache.index({src_blockIdx}).data_ptr();
+            void *srcValueCachePtr = srcValueCache.index({src_blockIdx}).data_ptr();
+            void *dstKeyCachePtr = dstKeyCache.index({dst_blockIdx}).data_ptr();
+            void *dstValueCachePtr = dstValueCache.index({dst_blockIdx}).data_ptr();
             cudaMemcpyAsync(
             dstKeyCachePtr,
             srcKeyCachePtr,
