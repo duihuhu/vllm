@@ -505,7 +505,7 @@ class Scheduler:
                 running.append(seq_group)
         self.running = running
 
-        #if running_with_dram has seq_group, we should add it to 
+        #if running_with_dram has seq_group, we should add it to running queue when it can run
         running_with_dram: Deque[SequenceGroup] = deque()
         while self.running_with_dram:
             seq_group = self.running_with_dram.popleft()

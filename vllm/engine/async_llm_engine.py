@@ -945,7 +945,8 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.radix_swapping and
                 not self.engine.scheduler.recv_transfering and
                 not self.engine.scheduler.send_transfering and
-                not self.engine.scheduler.req_pull_send_transfering
+                not self.engine.scheduler.req_pull_send_transfering and 
+                not self.engine.scheduler.running_with_dram
                 # and
                 # not self.engine.scheduler.decode_recv_finished and
                 # not self.engine.scheduler.meta_recv_finished and
@@ -1354,4 +1355,5 @@ class AsyncLLMEngine:
             seq_group = self.engine.scheduler.recv_transfering[request_id]
             self.engine.scheduler.running_with_dram.append(seq_group)
             self.engine.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+            del self.engine.scheduler.recv_transfering[request_id]
 
