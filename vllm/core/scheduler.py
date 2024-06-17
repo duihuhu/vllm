@@ -182,10 +182,9 @@ class Scheduler:
         # Latency of the last prompt step
         self.last_prompt_latency = 0.0
         
-        self.swap_finished_req_ids: List[Tuple[List[str], List[str]]] = []
-
         
         self.send_finished_req_ids: List[str] = []
+        self.swap_remote_finished_req_ids: List[str] = []
         self.recv_finished_req_ids: List[str] = []
         
         # if not deploy_config.enable_layer:
@@ -227,6 +226,9 @@ class Scheduler:
         # Add sequence groups to the waiting queue.
         self.decode_waiting.append(seq_group)
 
+    def add_swap_remote_finished(self, request_ids: List[str]):
+        self.sen.extend(request_ids)
+        
     def add_send_finished(self, request_ids: List[str]):
         self.send_finished_req_ids.extend(request_ids)
     

@@ -470,7 +470,6 @@ class _AsyncLLMEngine(LLMEngine):
                 evicted_blocks_to_swap_out = evicted_blocks_to_swap_out,
                 swap_id=swap_id)
 
-            self.scheduler.swap_finished_req_ids = [out[1] for out in all_outputs]
             # Only the driver worker returns the sampling results.
             output = all_outputs[0][0]
             evicted_blocks_to_swap_out = None
@@ -617,19 +616,25 @@ class _AsyncLLMEngine(LLMEngine):
                 if worker_finished_tasks:
                     for worker_finished_task in worker_finished_tasks:
                         print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
-                        send_finished_tasks = [] 
+                        send_finished_tasks = []
+                        swap_remote_finished_tasks = [] 
                         recv_finished_tasks = []
                         for finished_task in worker_finished_task[0]:
                             send_finished_tasks.append(trans_ops.TransferTaskMeta.deserialize(finished_task))
                         for finished_task in worker_finished_task[1]:
                             recv_finished_tasks.append(trans_ops.TransferTaskMeta.deserialize(finished_task))
+                        for finished_task in worker_finished_task[2]:
+                            swap_remote_finished_tasks.append(trans_ops.TransferTaskMeta.deserialize(finished_task))
                         # print("send_finished_tasks, recv_finished_tasks ", send_finished_tasks, recv_finished_tasks)
                         real_send_finished_req_ids = self.send_kv_trans_scheduler.add_finished_tasks(send_finished_tasks)
                         real_recv_finished_req_ids = self.recv_kv_trans_scheduler.add_finished_tasks(recv_finished_tasks)
+                        real_swap_remote_finished_req_ids = self.send_kv_trans_scheduler.add_finished_swap_remote_tasks(swap_remote_finished_tasks)
                         if real_send_finished_req_ids:
                             self.scheduler.add_send_finished(real_send_finished_req_ids)
                         if real_recv_finished_req_ids:
                             self.scheduler.add_recv_finished(real_recv_finished_req_ids)
+                        if real_swap_remote_finished_req_ids:
+                            self.scheduler.add_swap_remote_finished(real_swap_remote_finished_req_ids)
 
         send_tasks = self.send_kv_trans_scheduler.schedule()
         recv_tasks = self.recv_kv_trans_scheduler.schedule()

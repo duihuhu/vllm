@@ -192,7 +192,7 @@ class SendKvTransferScheduler:
                 
         return real_finished_swap_req_ids
     
-    def add_finished_swap_tasks(self,
+    def add_finished_swap_remote_tasks(self,
         swap_finished_taks: List[trans_ops.TransferTaskMeta]):
         return self._process_swap_blocks_finished(swap_finished_taks)
     

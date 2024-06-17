@@ -308,8 +308,9 @@ class Worker:
                                                     self.trans_manager)
         else:
             output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache, self.caches_addresses_tensors_gpu)
-        swap_finished_req_ids = self.cache_engine.check_finished_events()
-        return (output, swap_finished_req_ids)
+        #TODO change return res
+        # swap_finished_req_ids = self.cache_engine.check_finished_events()
+        return (output, [])
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
         return self.model_runner.add_lora(lora_request)
@@ -373,12 +374,12 @@ class Worker:
         worker_type
     ) -> None:
         self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
-        if dst_channel not in self.dst_cpu_cache:
-            self.get_dst_rank(dst_channel)
-            dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
-            dst_cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in dst_tensor]
-            self.dst_cpu_cache[dst_channel] = dst_cpu_cache
-            self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache)
+        # if dst_channel not in self.dst_cpu_cache:
+        #     self.get_dst_rank(dst_channel)
+        #     dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
+        #     dst_cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in dst_tensor]
+        #     self.dst_cpu_cache[dst_channel] = dst_cpu_cache
+        #     self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache)
         
     def get_dst_rank(self, dst_channel):
         # 将字符串分割成整数列表
