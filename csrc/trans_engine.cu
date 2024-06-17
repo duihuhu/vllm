@@ -350,7 +350,7 @@ std::vector<std::string> TransEngine::check_recv_finished_comms_events() {
 
 std::vector<std::string> TransEngine::check_swap_remote_finished_events() {
     std::vector<std::string> swap_blocks_finished;
-    for (auto& kv : send_events) {
+    for (auto& kv : swap_remote_events) {
         const std::string& channel = kv.first;
         auto& request_ids_and_events = kv.second;
         size_t num_finished_events = 0;
