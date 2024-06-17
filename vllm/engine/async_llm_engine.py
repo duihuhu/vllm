@@ -211,7 +211,6 @@ class RequestTracker:
             "request_id": request_id,
             **engine_add_request_kwargs
         }))
-        print("add_request new_requests_event set ", request_id)
         self.new_requests_event.set()
         return stream
 
