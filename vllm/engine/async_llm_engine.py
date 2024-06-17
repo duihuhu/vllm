@@ -642,7 +642,7 @@ class _AsyncLLMEngine(LLMEngine):
         
         if self.deploy_config.enable_debug:
             t3 = time.time()   
-        if send_tasks or recv_tasks:
+        if send_tasks or recv_tasks or swap_to_remote_tasks:
             await self.model_executor._run_workers_async(
                 "trans_blocks",
                 send_tasks = send_tasks,
@@ -923,7 +923,7 @@ class AsyncLLMEngine:
                 not self.engine.scheduler.radix_swapping and
                 not self.engine.scheduler.recv_transfering and
                 not self.engine.scheduler.send_transfering and
-                not self.engine.scheduler.req_pull_send_transfering 
+                not self.engine.scheduler.req_pull_send_transfering and 
                 # and
                 # not self.engine.scheduler.decode_recv_finished and
                 # not self.engine.scheduler.meta_recv_finished and

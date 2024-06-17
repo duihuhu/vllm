@@ -208,6 +208,7 @@ class Scheduler:
         self.decode_recv_finished: Dict[str, SequenceGroup] = {}
         self.meta_recv_finished: Dict[str, SequenceGroup] = {}
         
+        #local 
         self.radix_swapping: Dict[str, Tuple[List[TreeNode], List[PhysicalTokenBlock]]] = {}
         self.swap_finished_ids: List[str] = []
         
