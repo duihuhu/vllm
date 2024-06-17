@@ -489,7 +489,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 self.kv_block_tables[seq.seq_id] = block_table.copy()
             
     
-    def allocate_cpu_cache(self, seq_group: SequenceGroup) -> None:
+    def allocate_kv_cpu_cache(self, seq_group: SequenceGroup) -> None:
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         # Allocate new physical token blocks that will store the prompt tokens.
         num_prompt_blocks = len(seq.logical_token_blocks)
