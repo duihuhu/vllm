@@ -406,10 +406,11 @@ class Worker:
         # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
         np_arrays = [tensor.cpu().numpy() for tensor in self.cpu_cache]
         self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
-        print("share_cpu_cache self.tensor_sizes ", self.tensor_sizes)
 
         # 计算总共需要的字节数
         total_bytes = sum(self.tensor_sizes)
+        print("share_cpu_cache self.total_bytes ", total_bytes)
+
         share_name = channel + "_" + str(self.nccl_local_rank)
         # 创建共享内存
         self.shm = shared_memory.SharedMemory(name=share_name,create=True, size=total_bytes)
@@ -427,14 +428,14 @@ class Worker:
         tensors = self.cache_engine._allocate_kv_cache(self.cache_engine.num_cpu_blocks, "cpu", self.use_agg_block)
         # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
         np_arrays = [tensor.numpy() for tensor in tensors]
-        self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
-        print("calculate_tensor_sizes self.tensor_sizes ", self.tensor_sizes)
-    
+        tensor_sizes = [np_array.nbytes for np_array in np_arrays]
+        total_bytes = sum(tensor_sizes)
+        return total_bytes
     def restore_other_shared_cpu_cache(self, dst_channel):
-        self.calculate_tensor_sizes()
+        total_bytes = self.calculate_tensor_sizes()
         dst_tensors = []
         index = 0
-        shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank))
+        shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank), size=total_bytes)
         print("restore_other_shared_cpu_cache shm.size ", shm.size)
         shm_np_array = np.ndarray((shm.size,), dtype=np.float16, buffer=shm.buf)
         
