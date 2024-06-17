@@ -612,10 +612,9 @@ class _AsyncLLMEngine(LLMEngine):
             t2 = time.time()   
         for finished_tasks in finished_work_tasks:
             for worker_finished_tasks in finished_tasks:
-                print("worker_finished_tasks ", finished_work_tasks)
+                print("worker_finished_tasks ", worker_finished_tasks)
                 if worker_finished_tasks:
                     for worker_finished_task in worker_finished_tasks:
-                        print("worker_finished_tasks ", finished_tasks, worker_finished_tasks)
                         send_finished_tasks = []
                         swap_remote_finished_tasks = [] 
                         recv_finished_tasks = []
