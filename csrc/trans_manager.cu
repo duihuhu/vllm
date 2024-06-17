@@ -41,6 +41,7 @@ void TransManager::dist_worker() {
                     task_worker->add_tasks(worker_task);
                     break;
                 case TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS:
+                    std::cout<<"TRANSFER_HBM_TO_DRAM_BLOCKS " << std::endl;
                     task_worker = swap_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
