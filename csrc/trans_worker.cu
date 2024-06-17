@@ -32,7 +32,7 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
     }
     use_comm = 0;
 
-    use_swap_stream = 0
+    use_swap_stream = 0;
     swap_remote_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
 
     execute = std::thread(&TransWorker::worker, this);
