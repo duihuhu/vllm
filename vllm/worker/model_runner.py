@@ -655,7 +655,6 @@ class ModelRunner:
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None
     ) -> Optional[SamplerOutput]:
-        print("execute_model 1")
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
          ) = self.prepare_input_tensors(seq_group_metadata_list)
@@ -690,11 +689,8 @@ class ModelRunner:
             }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        print("execute_model 2")
         
         hidden_states = model_executable(**execute_model_kwargs)
-        torch.cuda.synchronize()
-        print("execute_model 3")
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
         # Only perform sampling in the driver worker.
@@ -705,7 +701,6 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-        print("execute_model 4")
         return output
 
     @torch.inference_mode()
