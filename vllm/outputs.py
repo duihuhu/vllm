@@ -189,7 +189,7 @@ class KvPreparedResponse:
             "error_msg": self.error_msg,
             "computed_blocks": self.computed_blocks,
             "transfer_tag": self.transfer_tag,
-            "cpu_blocks": self.cpu_blocks,
+            "dst_cpu_blocks": self.dst_cpu_blocks,
             "has_dram": self.has_dram,
         }
 
