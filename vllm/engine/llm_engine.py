@@ -449,6 +449,7 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
+            print("add_decode_seq_group  " , seq_group.request_id)
             self.scheduler.add_decode_seq_group((seq_group, prefill_request_output))
         return kv_response
     
