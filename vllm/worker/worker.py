@@ -141,8 +141,6 @@ class Worker:
     def load_model(self):
         self.model_runner.load_model()
         
-        self.share_cpu_cache()
-        
     @torch.inference_mode()
     def profile_num_available_blocks(
         self,

@@ -270,6 +270,9 @@ class RayGPUExecutor(ExecutorBase):
         # if enforce_eager is False.
         self._run_workers("warm_up_model")
 
+        if self.deploy_config.enable_separate:
+            self._run_workers("share_cpu_cache", cache_config=self.cache_config)      
+
     def _init_swap_manager(self) -> None:
         self._run_workers("init_swap_manager")
 
