@@ -31,7 +31,7 @@ resp = create_comm(8082,[0,1],8083,[2,3], "sender")
 
 ## Launch Client
 ```bash
-python3 ./benchmarks_flowserve/main.py --dataset LooGLE --request-rate 12.8 --num-requests 64
+python3 ./benchmarks_flowserve/main.py --test-type open --dataset ReAct --request-rate 12.8 --num-requests 64
 ```
 
 ## Options for FlowServe services

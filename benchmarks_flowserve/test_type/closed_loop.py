@@ -40,6 +40,7 @@ async def run(args, reqs, multi_conversations_range):
     await asyncio.gather(*coroutines)
 
     global response 
+    assert len(response) == len(reqs), 'Fail to handle all requests'
     for res in response:
         jct.append(res[0])
         ttft.append(res[1])

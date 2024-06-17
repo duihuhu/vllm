@@ -1,7 +1,7 @@
 from typing import Iterable, List, Optional, Tuple
 import asyncio
 import numpy as np 
-from .common import post_request_and_get_response
+from .common import post_request_and_get_response, dummy_post_request_and_get_response
 async def run(args, reqs):
     jct = []
     ttft = []
