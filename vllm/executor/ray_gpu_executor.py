@@ -71,6 +71,7 @@ class RayGPUExecutor(ExecutorBase):
 
         if self.deploy_config.enable_separate:
             self._init_trans_manager()
+            self._init_share_cpu_cache()
         
         if self.deploy_config.enable_radix_caching:
             self._init_swap_manager()
@@ -268,10 +269,7 @@ class RayGPUExecutor(ExecutorBase):
         self._run_workers("init_cache_engine", cache_config=self.cache_config)
         # Warm up the model. This includes capturing the model into CUDA graph
         # if enforce_eager is False.
-        self._run_workers("warm_up_model")
-
-        if self.deploy_config.enable_separate:
-            self._run_workers("share_cpu_cache")      
+        self._run_workers("warm_up_model")   
 
     def _init_swap_manager(self) -> None:
         self._run_workers("init_swap_manager")
@@ -279,6 +277,9 @@ class RayGPUExecutor(ExecutorBase):
     def _init_trans_manager(self) -> None:
         self._run_workers("init_trans_manager")
 
+    def _init_share_cpu_cache(self) -> None:
+        self._run_workers("share_cpu_cache")      
+        
     def execute_model(self,
                       seq_group_metadata_list: List[SequenceGroupMetadata],
                       blocks_to_swap_in: Dict[int, int],
