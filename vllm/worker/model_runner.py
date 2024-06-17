@@ -691,13 +691,15 @@ class ModelRunner:
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         print("execute_model 2")
+        
         hidden_states = model_executable(**execute_model_kwargs)
+        torch.cuda.synchronize()
+        print("execute_model 3")
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
         # Only perform sampling in the driver worker.
         if not sampling_metadata.perform_sampling:
             return None
-        print("execute_model 3")
         # Sample the next token.
         output = self.model.sample(
             logits=logits,
