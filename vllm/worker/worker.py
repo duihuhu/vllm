@@ -384,7 +384,7 @@ class Worker:
     
     
     def shared_cpu_cache(self):
-        channel = "_".join([str(rank) for rank in self.deploy_config.global_ranks])
+        channel = "_".join([str(rank) for rank in self.deploy_config.get_global_ranks()])
         # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
         np_arrays = [tensor.cpu().numpy() for tensor in self.cpu_cache]
         self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
