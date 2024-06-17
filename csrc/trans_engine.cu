@@ -6,6 +6,11 @@ TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<a
     // Initialize parameters from config dictionaries
 }
 
+TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache)
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache), dst_cpu_cache(dst_cpu_cache){
+    // Initialize parameters from config dictionaries
+}
+
 void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
 
     c10::cuda::CUDAStreamGuard guard(stream);

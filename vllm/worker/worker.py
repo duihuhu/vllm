@@ -368,13 +368,12 @@ class Worker:
         dst_channel,
         worker_type
     ) -> None:
-        res = self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
-        # print("res ", res)
+        self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
         if dst_channel not in self.dst_cpu_cache:
             self.get_dst_rank(dst_channel)
             dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
-            print("len dst tensor ", len(dst_tensor))
             self.dst_cpu_cache[dst_channel] = dst_tensor
+            self.trans_manager.init_dst_cpu_cache(dst_channel, dst_tensor)
         
     def get_dst_rank(self, dst_channel):
         # 将字符串分割成整数列表
@@ -409,11 +408,10 @@ class Worker:
 
         # 计算总共需要的字节数
         total_bytes = sum(self.tensor_sizes)
-        print("share_cpu_cache self.total_bytes ", total_bytes)
-
-        share_name = channel + "_" + str(self.nccl_local_rank)
+        
+        share_cpu_cache_name = channel + "_" + str(self.nccl_local_rank)
         # 创建共享内存
-        self.shm = shared_memory.SharedMemory(name=share_name,create=True, size=total_bytes)
+        self.shm = shared_memory.SharedMemory(name=share_cpu_cache_name, create=True, size=total_bytes)
         self.shm_name = self.shm.name
 
         # 将所有 Tensor 数据拷贝到共享内存中
@@ -428,12 +426,11 @@ class Worker:
         tensors = self.cache_engine._allocate_kv_cache(self.cache_engine.num_cpu_blocks, "cpu", self.use_agg_block)
         # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
         np_arrays = [tensor.numpy() for tensor in tensors]
-        self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
-        total_bytes = sum(self.tensor_sizes)
-        return total_bytes
+        tensor_sizes = [np_array.nbytes for np_array in np_arrays]
+        return tensor_sizes
     
     def restore_other_shared_cpu_cache(self, dst_channel):
-        total_bytes = self.calculate_tensor_sizes()
+        tensor_sizes = self.calculate_tensor_sizes()
         dst_tensors = []
         index = 0
         shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank))
@@ -446,7 +443,7 @@ class Worker:
                 self.cache_engine.num_cpu_blocks, self.cache_engine.block_size, self.cache_engine.num_heads, self.cache_engine.head_size, None)
         
         shm_np_array = np.ndarray((self.shm.size,), dtype=np.uint8, buffer=self.shm.buf)
-        for tensor_size in self.tensor_sizes:
+        for tensor_size in tensor_sizes:
             # 从共享内存中读取数据并恢复成 Torch Tensor
             tensor_flat_np_array = shm_np_array[index:index + tensor_size].view(np.uint8)
             tensor_np_array = np.ndarray(kv_cache_shape, dtype=np.float16, buffer=tensor_flat_np_array)

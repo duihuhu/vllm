@@ -45,6 +45,10 @@ enum class TaskType {
     //use in full blocks 
     TRANSFER_SEND_FULL_BLOCKS,
     TRANSFER_RECV_FULL_BLOCKS,
+
+    //trans hbm to dram
+    TRANSFER_HBM_TO_DRAM_BLOCKS,
+
 };
 
 // TransferTaskMeta结构体，用于存储传输任务的元信息
@@ -84,8 +88,13 @@ class TransferTask {
 public:
     TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, TaskType type, int layer = 1, bool is_last_layer=false)
         : meta(meta), blocks(blocks), type(type), layer(layer), is_last_layer(is_last_layer) {}
+
+    TransferTask(const TransferTaskMeta& meta, const std::vector<uint32_t>& blocks, const std::vector<uint32_t>& dst_blocks, TaskType type, int layer = 1, bool is_last_layer=false)
+        : meta(meta), blocks(blocks), dst_blocks(dst_blocks), type(type), layer(layer), is_last_layer(is_last_layer) {}
+    
     TransferTaskMeta meta;
     std::vector<uint32_t> blocks;
+     std::vector<uint32_t> dst_blocks;
     TaskType type;
     int layer;
     bool is_last_layer;
@@ -95,6 +104,9 @@ public:
         json task;
         task["meta"] = meta.to_json();
         task["blocks"] = blocks;
+        if (!dst_blocks.empty()) {
+            task["dst_blocks"] = dst_blocks;
+        }
         task["type"] = static_cast<int>(type);  // Store TaskType as an integer
         task["layer"] = layer;  // Store TaskType as an integer
         task["is_last_layer"] = is_last_layer;  // Store TaskType as an integer
@@ -106,11 +118,18 @@ public:
         json task = json::parse(serialized_data);
         TransferTaskMeta meta = TransferTaskMeta::from_json(task.at("meta"));
         std::vector<uint32_t> blocks = task.at("blocks").get<std::vector<uint32_t>>();
+        if (task.contains("dst_blocks")) {
+            dst_blocks = task.at("dst_blocks").get<std::vector<uint32_t>>();
+        }
         TaskType type = static_cast<TaskType>(task.at("type").get<int>());
         int layer = task.at("layer").get<int>();
         bool is_last_layer = task.at("is_last_layer").get<bool>();
 
-        return TransferTask(meta, blocks, type, layer, is_last_layer);
+        if (dst_blocks.empty()) {
+            return TransferTask(meta, blocks, type, layer, is_last_layer);
+        } else {
+            return TransferTask(meta, blocks, dst_blocks, type, layer, is_last_layer);
+        }
     }
 };
 
@@ -119,6 +138,8 @@ public:
 class TransEngine {
 public:
     TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
+
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
 
     void recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
     
@@ -162,6 +183,9 @@ private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
     std::vector<uint64_t> blocks_gpu_cache; // key/value address in tensor 
 
+    std::vector<std::pair<at::Tensor, at::Tensor>> dst_cpu_cache;
+
+
     int cache_size_per_block;
     int cache_block_size;
     // std::unordered_map<std::string, c10::cuda::CUDAStream*> send_streams;
@@ -182,6 +206,9 @@ class TransWorker {
 public:
 
     TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
+
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
+
 
     ~TransWorker();
 
@@ -224,6 +251,9 @@ public:
     void add_tasks(const std::vector<std::string>& tasks);
     void dist_worker();
     std::vector<std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>> get_finished_transfer_tasks();
+
+    void init_dst_cpu_cache(const std::string& dst_channel, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
+
 private:
     std::unordered_map<std::string, TransWorker*> send_trans_workers;
 

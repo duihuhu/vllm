@@ -17,6 +17,24 @@ TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<a
     execute = std::thread(&TransWorker::worker, this);
 }
 
+TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache): trans_engine(cache_size_per_block, gpu_cache, cache_block_size, blocks_gpu_cache, dst_cpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
+    std::stringstream ss(dst_channel);
+    std::string token;
+    while (std::getline(ss, token, '_')) {
+        dst_ranks.push_back(std::stoi(token));
+    }
+    if (nccl_local_rank >= dst_ranks[0]){
+        comm_rank = nccl_local_rank % tp + tp;
+        dst_rank = comm_rank - tp;
+    } else{
+        comm_rank = nccl_local_rank % tp;
+        dst_rank = comm_rank + tp;
+    }
+    use_comm = 0;
+    execute = std::thread(&TransWorker::worker, this);
+}
+
+
 TransWorker::~TransWorker() {
     if (execute.joinable()) {
         execute.join();
@@ -74,6 +92,9 @@ void TransWorker::worker() {
                     // std::cout<<"recv_full_blocks "<< task_meta.request_id << "use_comm " << use_comm <<std::endl;
                     trans_engine.recv_full_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
                     use_comm = (use_comm + 1) % comms.size();
+                    break;
+
+                case TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS:
                     break;
                 default:
                     throw std::runtime_error("invalid task_type.");
