@@ -449,7 +449,6 @@ class LLMEngine:
         if not self.deploy_config.enable_separate or self.deploy_config.role == 'prompt':
             self.scheduler.add_seq_group(seq_group)
         else:
-            print("add_decode_seq_group  " , seq_group.request_id)
             self.scheduler.add_decode_seq_group((seq_group, prefill_request_output))
         return kv_response
     
@@ -486,7 +485,6 @@ class LLMEngine:
                 # kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks))
                 
                 if self.deploy_config.enable_theory:
-                    print("schedule_decode_waiting add_recv_transfering ", seq_group.request_id, time.time())
                     kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
                     self.scheduler.running.append(seq_group)
                     self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
@@ -494,7 +492,6 @@ class LLMEngine:
                 else:
                     if blocks:
                         # if seq_group.request_id in self.scheduler.recv_transfering:
-                        print("schedule_decode_waiting allocate blocks ", seq_group.request_id, len(computed_blocks))
                         self.scheduler.add_recv_transfering(seq_group)
                         transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id,
                                                                     prefill_request_output.global_ranks, blocks)

@@ -66,12 +66,12 @@ void TransWorker::worker() {
                     }
                     break;
                 case TaskType::TRANSFER_SEND_FULL_BLOCKS:
-                    std::cout<<"send_full_blocks "<< task_meta.request_id << "use_comm " << use_comm <<std::endl;
+                    // std::cout<<"send_full_blocks "<< task_meta.request_id << "use_comm " << use_comm <<std::endl;
                     trans_engine.send_full_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
                     use_comm = (use_comm + 1) % comms.size();
                     break;
                 case TaskType::TRANSFER_RECV_FULL_BLOCKS:
-                    std::cout<<"recv_full_blocks "<< task_meta.request_id << "use_comm " << use_comm <<std::endl;
+                    // std::cout<<"recv_full_blocks "<< task_meta.request_id << "use_comm " << use_comm <<std::endl;
                     trans_engine.recv_full_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, comms[use_comm], streams[use_comm]);
                     use_comm = (use_comm + 1) % comms.size();
                     break;
