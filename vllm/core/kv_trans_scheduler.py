@@ -182,10 +182,10 @@ class SendKvTransferScheduler:
     
     def _process_swap_blocks_finished(
         self,
-        swap_finished_taks: List[trans_ops.TransferTaskMeta]
+        swap_remote_finished_taks: List[trans_ops.TransferTaskMeta]
     ) -> List[str]:
         real_finished_swap_req_ids = []
-        for task_meta in swap_finished_taks:
+        for task_meta in swap_remote_finished_taks:
             self.finished_worker_count[task_meta.request_id] -=1
             if self.finished_worker_count[task_meta.request_id] == 0:
                 del self.swap_block_ids[task_meta.request_id]
@@ -195,8 +195,8 @@ class SendKvTransferScheduler:
         return real_finished_swap_req_ids
     
     def add_finished_swap_remote_tasks(self,
-        swap_finished_taks: List[trans_ops.TransferTaskMeta]):
-        return self._process_swap_blocks_finished(swap_finished_taks)
+        swap_remote_finished_taks: List[trans_ops.TransferTaskMeta]):
+        return self._process_swap_blocks_finished(swap_remote_finished_taks)
     
     def add_finished_tasks(
         self,
