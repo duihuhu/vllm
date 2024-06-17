@@ -428,24 +428,24 @@ class Worker:
         tensors = self.cache_engine._allocate_kv_cache(self.cache_engine.num_cpu_blocks, "cpu", self.use_agg_block)
         # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
         np_arrays = [tensor.numpy() for tensor in tensors]
-        tensor_sizes = [np_array.nbytes for np_array in np_arrays]
-        total_bytes = sum(tensor_sizes)
+        self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
+        total_bytes = sum(self.tensor_sizes)
         return total_bytes
+    
     def restore_other_shared_cpu_cache(self, dst_channel):
         total_bytes = self.calculate_tensor_sizes()
         dst_tensors = []
         index = 0
-        shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank), size=total_bytes)
-        print("restore_other_shared_cpu_cache shm.size ", shm.size)
-        shm_np_array = np.ndarray((shm.size,), dtype=np.float16, buffer=shm.buf)
-        
+        shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank))
+        print("restore_other_shared_cpu_cache shm.size ", shm.size)        
         if self.deploy_config.use_agg_block:
             kv_cache_shape = self.cache_engine.attn_backend.get_kv_cache_shape(
                 self.cache_engine.num_cpu_blocks, self.cache_engine.block_size, self.cache_engine.num_heads, self.cache_engine.head_size, self.cache_engine.num_layers)
         else:
             kv_cache_shape = self.cache_engine.attn_backend.get_kv_cache_shape(
                 self.cache_engine.num_cpu_blocks, self.cache_engine.block_size, self.cache_engine.num_heads, self.cache_engine.head_size, None)
-            
+        
+        shm_np_array = np.ndarray((self.shm.size,), dtype=np.uint8, buffer=self.shm.buf)
         for tensor_size in self.tensor_sizes:
             # 从共享内存中读取数据并恢复成 Torch Tensor
             tensor_flat_np_array = shm_np_array[index:index + tensor_size].view(self.cache_engine.dtype)
