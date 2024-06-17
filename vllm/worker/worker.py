@@ -383,24 +383,25 @@ class Worker:
     
     
     def share_cpu_cache(self):
-        channel = "_".join([str(rank) for rank in self.deploy_config.get_global_ranks()])
-        # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
-        np_arrays = [tensor.cpu().numpy() for tensor in self.cpu_cache]
-        self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
+        print("self.deploy_config.global_ranks() ")
+        # channel = "_".join([str(rank) for rank in self.deploy_config.global_ranks()])
+        # # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
+        # np_arrays = [tensor.cpu().numpy() for tensor in self.cpu_cache]
+        # self.tensor_sizes = [np_array.nbytes for np_array in np_arrays]
 
-        # 计算总共需要的字节数
-        total_bytes = sum(self.tensor_sizes)
-        share_name = "worker" + "_" + channel + "_" + str(self.nccl_local_rank)
-        # 创建共享内存
-        self.shm = shared_memory.SharedMemory(name=share_name,create=True, size=total_bytes)
-        self.shm_name = self.shm.name
+        # # 计算总共需要的字节数
+        # total_bytes = sum(self.tensor_sizes)
+        # share_name = "worker" + "_" + channel + "_" + str(self.nccl_local_rank)
+        # # 创建共享内存
+        # self.shm = shared_memory.SharedMemory(name=share_name,create=True, size=total_bytes)
+        # self.shm_name = self.shm.name
 
-        # 将所有 Tensor 数据拷贝到共享内存中
-        offset = 0
-        for np_array in np_arrays:
-            np_array_flat = np_array.flatten()
-            np.copyto(np.ndarray(np_array_flat.shape, dtype=np_array_flat.dtype, buffer=self.shm.buf, offset=offset), np_array_flat)
-            offset += np_array.nbytes
+        # # 将所有 Tensor 数据拷贝到共享内存中
+        # offset = 0
+        # for np_array in np_arrays:
+        #     np_array_flat = np_array.flatten()
+        #     np.copyto(np.ndarray(np_array_flat.shape, dtype=np_array_flat.dtype, buffer=self.shm.buf, offset=offset), np_array_flat)
+        #     offset += np_array.nbytes
     
 def init_distributed_environment(
     parallel_config: ParallelConfig,

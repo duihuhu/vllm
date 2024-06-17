@@ -207,7 +207,6 @@ class RayGPUExecutor(ExecutorBase):
 
         global_ranks = self._run_workers("init_device")
         self.deploy_config.set_global_ranks(global_ranks)
-        print("global ranks ", global_ranks, self.deploy_config.global_ranks)
         self._run_workers(
             "load_model",
             max_concurrent_workers=self.parallel_config.
