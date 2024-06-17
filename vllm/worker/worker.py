@@ -434,7 +434,7 @@ class Worker:
         index = 0
         shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank))
         print("self.cache_engine.dtype ", self.cache_engine.dtype)
-        shm_np_array = np.ndarray((shm.size,), dtype=self.cache_engine.dtype, buffer=shm.buf)
+        shm_np_array = np.ndarray((shm.size,), dtype=np.float16, buffer=shm.buf)
         if self.deploy_config.use_agg_block:
             kv_cache_shape = self.cache_engine.attn_backend.get_kv_cache_shape(
                 self.cache_engine.num_cpu_blocks, self.cache_engine.block_size, self.cache_engine.num_heads, self.cache_engine.head_size, self.cache_engine.num_layers)
@@ -445,7 +445,7 @@ class Worker:
         for tensor_size in self.tensor_sizes:
             # 从共享内存中读取数据并恢复成 Torch Tensor
             tensor_flat_np_array = shm_np_array[index:index + tensor_size].view(self.cache_engine.dtype)
-            tensor_np_array = np.ndarray(kv_cache_shape, dtype=self.cache_engine.dtype, buffer=tensor_flat_np_array)
+            tensor_np_array = np.ndarray(kv_cache_shape, dtype=np.float16, buffer=tensor_flat_np_array)
             tensor = torch.from_numpy(tensor_np_array).to(self.device)
             dst_tensors.append(tensor)
             index += tensor_size
