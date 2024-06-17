@@ -2,12 +2,13 @@ import json
 from typing import Iterable, List, Optional, Tuple
 import random
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
+from utils import find_range_of_multi_turn_conversations
 
 def sample_requests(
     dataset_path: str,
     tokenizer: PreTrainedTokenizerBase,
     num_requests: int 
-) -> List[Tuple[str, List[int], int, int]]:
+) -> Tuple[List[Tuple[str, List[int], int, int]], List[int]]:
     
     with open(dataset_path) as f:
         dataset = json.load(f)
@@ -47,5 +48,8 @@ def sample_requests(
     # print(len(reqs))
 
     # Sample the requests.
-    sampled_requests = random.sample(reqs, num_requests)
-    return sampled_requests
+    sampled_requests = reqs[:num_requests]
+    
+    multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
+    
+    return sampled_requests, multi_conversations_range

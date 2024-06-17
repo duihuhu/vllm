@@ -2,6 +2,7 @@ import json
 from typing import Iterable, List, Optional, Tuple
 import random
 from transformers import PreTrainedTokenizerBase
+from utils import find_range_of_multi_turn_conversations
 
 PROMPT_FORWORD = """Solve a question answering task with interleaving Thought, Action, Observation steps. Thought can reason about the current situation, and Action can be three types: 
 (1) Search[entity], which searches the exact entity on Wikipedia and returns the first paragraph if it exists. If not, it will return some similar entities to search.
@@ -88,7 +89,7 @@ def sample_requests(
         for question, triplets in qa.items():
             s = PROMPT_FORWORD + question
             for i in range(1, len(triplets) + 1):
-                s += "Thought " + str(i) + ":"
+                s += "\nThought " + str(i) + ":"
                 prompts.append(s)
                 completions.append(
                     triplets[i - 1]["thought"]
@@ -102,6 +103,7 @@ def sample_requests(
                     + triplets[i - 1]["observation"]
                     + "\n"
                 )
+                s += completions[-1]
 
     prompt_token_ids = tokenizer(prompts).input_ids
     completion_token_ids = tokenizer(completions).input_ids
@@ -125,5 +127,8 @@ def sample_requests(
     # print(len(reqs))
 
     # Sample the requests.
-    sampled_requests = random.sample(reqs, num_requests)
-    return sampled_requests
+    sampled_requests = reqs[:num_requests]
+
+    multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
+    
+    return sampled_requests, multi_conversations_range
