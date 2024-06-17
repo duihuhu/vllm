@@ -492,7 +492,9 @@ class _AsyncLLMEngine(LLMEngine):
                 processed_output_without_layer.append(processed_output)
             else:
                 self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
-                
+         
+        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
+            print("after _process_model_outputs req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if not self.deploy_config.enable_layer:
