@@ -460,7 +460,6 @@ class LLMEngine:
             prefill_request_output = self.scheduler.decode_waiting[0][1]
 
             can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
-            print("schedule_decode_waiting can_allocate ", can_allocate, seq_group.request_id)
             if can_allocate == AllocStatus.OK:
                 seq_group.eprefill_host = prefill_request_output.eprefill_host
                 seq_group.eprefill_port = prefill_request_output.eprefill_port
@@ -495,7 +494,7 @@ class LLMEngine:
                 else:
                     if blocks:
                         # if seq_group.request_id in self.scheduler.recv_transfering:
-                        # print("schedule_decode_waiting allocate blocks ", seq_group.request_id, len(computed_blocks))
+                        print("schedule_decode_waiting allocate blocks ", seq_group.request_id, len(computed_blocks))
                         self.scheduler.add_recv_transfering(seq_group)
                         transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id,
                                                                     prefill_request_output.global_ranks, blocks)

@@ -156,14 +156,12 @@ def cprobs_key_s2i(cumulative_logprob):
     
 @app.post("/generate_decode")
 async def generate_decode(request: Request) -> Response:
-    print("generate_decode in in in ")
     payload = await request.json()
     start_time = time.time()
     is_layer = payload.pop("is_layer")
     print("generate_decode is_layer ", is_layer)
     if not is_layer:
         request_id = payload.pop("request_id")
-        print("generate_decode ", request_id)
         opp_ranks = payload.pop("opp_ranks")
         prompt_token_ids = payload.pop("prompt_token_ids")
         prompt_logprobs = payload.pop("prompt_logprobs")
