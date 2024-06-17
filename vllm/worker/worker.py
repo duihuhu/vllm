@@ -369,6 +369,20 @@ class Worker:
     ) -> None:
         res = self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
         # print("res ", res)
+        print(self.nccl_local_rank, self.get_dst_rank(dst_channel=dst_channel))
+        
+    def get_dst_rank(self, dst_channel):
+        # 将字符串分割成整数列表
+        dst_ranks = [int(token) for token in dst_channel.split('_')]
+
+        if self.nccl_local_rank >= dst_ranks[0]:
+            comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size + self.parallel_config.tensor_parallel_size
+            self.dst_rank = comm_rank - self.parallel_config.tensor_parallel_size
+        else:
+            comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size
+            self.dst_rank = comm_rank + self.parallel_config.tensor_parallel_size
+
+        return self.dst_rank
     
     def get_trans_blocks_time(
         self,
@@ -391,7 +405,7 @@ class Worker:
 
         # 计算总共需要的字节数
         total_bytes = sum(self.tensor_sizes)
-        share_name = "worker" + "_" + channel + "_" + str(self.nccl_local_rank)
+        share_name = channel + "_" + str(self.nccl_local_rank)
         # 创建共享内存
         self.shm = shared_memory.SharedMemory(name=share_name,create=True, size=total_bytes)
         self.shm_name = self.shm.name
