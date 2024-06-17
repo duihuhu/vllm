@@ -185,7 +185,6 @@ private:
 
     std::vector<std::pair<at::Tensor, at::Tensor>> dst_cpu_cache;
 
-
     int cache_size_per_block;
     int cache_block_size;
     // std::unordered_map<std::string, c10::cuda::CUDAStream*> send_streams;
@@ -259,6 +258,8 @@ private:
 
     std::unordered_map<std::string, TransWorker*> recv_trans_workers;
 
+    std::unordered_map<std::string, TransWorker*> swap_workers;
+    
     std::thread execute;
 
     int cache_size_per_block;
