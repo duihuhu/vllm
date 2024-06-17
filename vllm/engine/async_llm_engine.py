@@ -343,6 +343,7 @@ class _AsyncLLMEngine(LLMEngine):
         for request_id in swap_finished_ids:
             seq_group = self.scheduler.send_transfering[request_id]
             coroutines.append(asyncio.create_task(self._notify(request_id, seq_group)))
+            del self.scheduler.send_transfering[request_id]
         resp = await asyncio.gather(*coroutines)
 
     
