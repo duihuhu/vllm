@@ -332,7 +332,7 @@ class LLMEngine:
             seq_group = self.scheduler.get_send_transfering(request_id)
             seq_group.has_dram = True
             blocks = self.scheduler.fetch_kv_blocks(seq_group)
-            print("blocks[response.computed_blocks:] ", blocks[response.computed_blocks:], response.dst_cpu_blocks)
+            # print("blocks[response.computed_blocks:] ", blocks[response.computed_blocks:], response.dst_cpu_blocks)
             self.send_kv_trans_scheduler.add_dram_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.dst_cpu_blocks)
 
 

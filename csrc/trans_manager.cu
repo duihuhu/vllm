@@ -41,7 +41,6 @@ void TransManager::dist_worker() {
                     task_worker->add_tasks(worker_task);
                     break;
                 case TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS:
-                    std::cout<<"TRANSFER_HBM_TO_DRAM_BLOCKS " << std::endl;
                     task_worker = swap_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
@@ -122,5 +121,15 @@ std::vector<std::vector<std::tuple<std::vector<std::string>, std::vector<std::st
             finished_work_tasks.emplace_back(finished_work_task);
         }
     }
+
+    for (const auto& pair : swap_workers) {
+        // const std::string& key = pair.first;
+        TransWorker* worker = pair.second;
+        auto finished_work_task = worker->get_finished_transfer_tasks();
+        if(!finished_work_task.empty()) {
+            finished_work_tasks.emplace_back(finished_work_task);
+        }
+    }
+
     return finished_work_tasks;
 }
