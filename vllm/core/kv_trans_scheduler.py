@@ -156,7 +156,7 @@ class SendKvTransferScheduler:
                 src_blocks = self.swap_block_ids[request_id][0]
                 dst_blocks = self.swap_block_ids[request_id][1]
                 if self.use_agg_block:
-                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks,dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_FULL_BLOCKS).serialize())
+                    scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks, dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_FULL_BLOCKS).serialize())
                 else:
                     scheduled_transfer_tasks.append(trans_ops.TransferTask(trans_ops.TransferTaskMeta(channel, request_id),src_blocks, dst_blocks, trans_ops.TaskType.TRANSFER_HBM_TO_DRAM_BLOCKS).serialize())        
         return scheduled_transfer_tasks
