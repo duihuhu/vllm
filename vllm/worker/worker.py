@@ -140,7 +140,9 @@ class Worker:
 
     def load_model(self):
         self.model_runner.load_model()
-
+        
+        self.share_cpu_cache()
+        
     @torch.inference_mode()
     def profile_num_available_blocks(
         self,
@@ -196,7 +198,6 @@ class Worker:
                                         self.parallel_config, self.deploy_config, self.rank)
         self.gpu_cache = self.cache_engine.gpu_cache
         self.cpu_cache = self.cache_engine.cpu_cache
-        self.shared_cpu_cache()
         self.model_runner.set_block_size(self.cache_engine.block_size)
         if self.use_agg_block:
             self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
@@ -383,7 +384,7 @@ class Worker:
         return self.swap_manager.get_finished_swap_tasks()
     
     
-    def shared_cpu_cache(self):
+    def share_cpu_cache(self):
         channel = "_".join([str(rank) for rank in self.deploy_config.get_global_ranks()])
         # 将 Tensor 列表转换为 numpy 数组并计算每个 Tensor 的大小
         np_arrays = [tensor.cpu().numpy() for tensor in self.cpu_cache]
