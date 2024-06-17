@@ -478,6 +478,9 @@ class _AsyncLLMEngine(LLMEngine):
         else:
             output = []
 
+        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
+            print("after _process_model_outputs req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
+
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor and evicted_blocks_to_swap_out:
             all_outputs = await self.model_executor._run_workers_async(
                 "evict_blocks",
@@ -493,8 +496,6 @@ class _AsyncLLMEngine(LLMEngine):
             else:
                 self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output
          
-        if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
-            print("after _process_model_outputs req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
         if not self.deploy_config.enable_layer:
