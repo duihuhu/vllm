@@ -29,22 +29,27 @@ for is_agg in agg:
                         a_tbt.append(tm)
             ttft.append(sum(a_ttft) / len(a_ttft))
             tbt.append(sum(a_tbt) / len(a_tbt))
-    if is_agg == 0:
-        non_agg_ttft.append(ttft)
-        non_agg_tbt.append(tbt)
-    else:
-        agg_ttft.append(ttft)
-        agg_tbt.append(tbt)
+        if is_agg == 0:
+            non_agg_ttft.append(ttft)
+            non_agg_tbt.append(tbt)
+        else:
+            agg_ttft.append(ttft)
+            agg_tbt.append(tbt)
 
 for t in agg_ttft:
-    print(t)
-print("---------------------------------------------------")
+    for n in t:
+        print(n)
+    print("---------------------------------------------------")
 for t in agg_tbt:
-    print(t)
-print("---------------------------------------------------")
+    for n in t:
+        print(n)
+    print("---------------------------------------------------")
 for t in non_agg_ttft:
-    print(t)
-print("---------------------------------------------------")
+    for n in t:
+        print(n)
+    print("---------------------------------------------------")
 for t in non_agg_tbt:
-    print(t)
+    for n in t:
+        print(n)
+    print("---------------------------------------------------")
                             
