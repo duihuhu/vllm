@@ -690,6 +690,7 @@ class Scheduler:
             seq.cache_blocks_to_insert = block_table
             for seq in seq_group.get_seqs():
                 self.block_manager.kv_block_tables[seq.seq_id] = block_table.copy()
+                
             return block_table, cpu_blocks
         else:
             cpu_blocks = self.block_manager.allocate_kv_cpu_cache(seq_group)
