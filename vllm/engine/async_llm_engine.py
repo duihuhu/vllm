@@ -346,7 +346,6 @@ class _AsyncLLMEngine(LLMEngine):
             del self.scheduler.send_transfering[request_id]
             swap_remote_finished_req_ids.remove(request_id)
         resp = await asyncio.gather(*coroutines)
-        print("resp ", resp)
 
     
     def check_deocde_recv_meta(self):
@@ -637,7 +636,6 @@ class _AsyncLLMEngine(LLMEngine):
             t2 = time.time()   
         for finished_tasks in finished_work_tasks:
             for worker_finished_tasks in finished_tasks:
-                print("worker_finished_tasks ", worker_finished_tasks)
                 if worker_finished_tasks:
                     for worker_finished_task in worker_finished_tasks:
                         send_finished_tasks = []

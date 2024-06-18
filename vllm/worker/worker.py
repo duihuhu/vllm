@@ -391,7 +391,7 @@ class Worker:
         # else:
         #     comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size
         #     self.dst_rank = comm_rank + self.parallel_config.tensor_parallel_size
-        print("dst ranks ", dst_ranks, self.local_rank, self.rank, self.nccl_local_rank)
+        # print("dst ranks ", dst_ranks, self.local_rank, self.rank, self.nccl_local_rank)
         self.dst_rank = dst_ranks[self.local_rank]
         return self.dst_rank
     
