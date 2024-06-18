@@ -379,6 +379,7 @@ std::vector<std::string> TransEngine::check_swap_remote_finished_events() {
             const std::string& request_id = it->first;
             at::cuda::CUDAEvent *event = it->second;
             if (event->query()) {
+                std::cout<<" check_swap_remote_finished_events " << request_id <<std::endl;
                 swap_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
                 ++num_finished_events;
             } else {
