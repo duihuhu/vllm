@@ -668,7 +668,6 @@ class _AsyncLLMEngine(LLMEngine):
         if self.deploy_config.enable_debug:
             t3 = time.time()   
         if send_tasks or recv_tasks or swap_to_remote_tasks:
-            print("swap_to_remote_tasks ", swap_to_remote_tasks)
             await self.model_executor._run_workers_async(
                 "trans_blocks",
                 send_tasks = send_tasks,

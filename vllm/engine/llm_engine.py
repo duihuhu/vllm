@@ -291,8 +291,6 @@ class LLMEngine:
                                   arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
         can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
-        print("can_allocate ", can_allocate)
-        can_allocate = AllocStatus.LATER
         if can_allocate == AllocStatus.OK:
             phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             
@@ -332,7 +330,6 @@ class LLMEngine:
             self.scheduler.del_send_transfering(request_id)
             logger.info("remote recv engine prepare kv fail.")
             return
-        print("add_kv_response response.has_dram ", response.has_dram)
         if not response.has_dram:
             blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
             # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
@@ -342,7 +339,6 @@ class LLMEngine:
                         content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
                         fd.write(content + "\n")
                         
-                print("send kv request_id ", request_id, response.global_ranks, blocks,  response.transfer_tag)
                 self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
             else:
                 self.scheduler.del_send_transfering(request_id)
@@ -351,7 +347,6 @@ class LLMEngine:
             if response.dst_cpu_blocks:
                 seq_group.has_dram = True
                 blocks = self.scheduler.fetch_kv_blocks(seq_group)
-                print("response.dst_cpu_blocks ", response.dst_cpu_blocks, blocks)
                 self.send_kv_trans_scheduler.add_dram_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.dst_cpu_blocks)
             else:
                 del self.scheduler.send_transfering[request_id]
@@ -488,7 +483,6 @@ class LLMEngine:
             prefill_request_output = self.scheduler.decode_waiting[0][1]
 
             can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
-            can_allocate = AllocStatus.LATER
             if can_allocate == AllocStatus.OK:
                 seq_group.eprefill_host = prefill_request_output.eprefill_host
                 seq_group.eprefill_port = prefill_request_output.eprefill_port
