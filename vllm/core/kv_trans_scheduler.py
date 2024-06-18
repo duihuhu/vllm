@@ -188,7 +188,6 @@ class SendKvTransferScheduler:
         for task_meta in swap_remote_finished_taks:
             self.finished_worker_count[task_meta.request_id] -=1
             if self.finished_worker_count[task_meta.request_id] == 0:
-                print("_process_swap_remote_blocks_finished ", task_meta.request_id)
                 del self.swap_block_ids[task_meta.request_id]
                 del self.finished_worker_count[task_meta.request_id]
                 real_finished_swap_req_ids.append(task_meta.request_id)

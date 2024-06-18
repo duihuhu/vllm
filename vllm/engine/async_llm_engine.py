@@ -1354,7 +1354,6 @@ class AsyncLLMEngine:
     async def notify_finished_id(self, request_id) -> None:
         if request_id in self.engine.scheduler.recv_transfering:
             seq_group = self.engine.scheduler.recv_transfering[request_id]
-            print("notify_finished_id ", request_id)
             self.engine.scheduler.running_with_dram.append(seq_group)
             self.engine.scheduler.block_manager.move_kv_blocks_meta(seq_group)
             del self.engine.scheduler.recv_transfering[request_id]

@@ -458,6 +458,7 @@ class LLMEngine:
             self.scheduler.add_seq_group(seq_group)
         else:
             self.scheduler.add_decode_seq_group((seq_group, prefill_request_output))
+            print("add_decode_seq_group ", seq_group.request_id)
         return kv_response
     
     def schedule_decode_waiting(self):
@@ -511,7 +512,6 @@ class LLMEngine:
                     self.scheduler.match_allocate_kv_blocks(seq_group)
                 can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
                 if can_allocate == AllocStatus.OK:
-                    print("can allocate ", can_allocate, self.scheduler.block_manager.cpu_allocator.get_num_free_blocks())
                     self.scheduler.decode_waiting.popleft()
                     computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
                     seq_group.has_dram = True
