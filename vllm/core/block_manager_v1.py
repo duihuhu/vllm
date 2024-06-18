@@ -342,7 +342,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
         ori_blocks = self.block_tables[seq.seq_id]
         new_blocks_table : BlockTable = []
-        need_release_cpu_blocks = []
         block_number_mapping = {}
         for block in ori_blocks:
             if block.device == Device.CPU:
@@ -353,7 +352,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     hbm_block = self.gpu_allocator.allocate()
                     self.cpu_allocator.free(block)
                     
-                need_release_cpu_blocks.append(block)
                 block_number_mapping[block.block_number] = hbm_block.block_number
                 new_blocks_table.append(hbm_block)
             else:
@@ -361,7 +359,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 
         blocks_to_swap_in.update(block_number_mapping)
         self.block_tables[seq.seq_id] = new_blocks_table
-        return need_release_cpu_blocks
     
     def can_allocate_for_swap(self, seq_group: SequenceGroup) -> AllocStatus:
         seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
