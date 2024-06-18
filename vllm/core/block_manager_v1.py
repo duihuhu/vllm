@@ -247,9 +247,9 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
-        print("cpu free ", block.ref_count)
         if block.ref_count == 0:
             self.free_blocks.append(block)
+            print("self.free_blocks ", len(self.free_blocks))
 
     def free_radix_manager_cache(self, block: PhysicalTokenBlock) -> None:
         pass
