@@ -221,7 +221,7 @@ class LLM:
         outputs: List[RequestOutput] = []
         ite = 0
         while self.llm_engine.has_unfinished_requests():
-            if file:
+            if file_name:
                 st = time.time()
                 step_outputs = self.llm_engine.step()
                 ed = time.time()
