@@ -290,20 +290,36 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
-        phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
-        
-        blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
-        computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-        # for phy_block in phy_blocks:
-        #     print("phy_block computed ", phy_block.computed)
+        can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+        if can_allocate == AllocStatus.OK:
+            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             
-        if not blocks:
-            kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
+            blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
+            computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+            
+            if self.deploy_config.enable_theory:
+                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
+                self.scheduler.running.append(seq_group)
+                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+            else:
+                if blocks:
+                    self.scheduler.add_recv_transfering(seq_group)
+
+                    transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
+                    kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
+                else:
+                    kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
         else:
-            self.scheduler.add_recv_transfering(seq_group)
-            # print("recv kv request_id ", request_id, request_output.global_ranks, blocks, len(blocks))
-            transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
-            kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
+            if self.deploy_config.enable_radix_caching:
+                self.scheduler.match_allocate_kv_blocks(seq_group)
+            can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
+            if can_allocate == AllocStatus.OK:
+                self.scheduler.decode_waiting.popleft()
+                computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
+                seq_group.has_dram = True
+                self.scheduler.add_recv_transfering(seq_group)
+                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), -1,  cpu_blocks, True)
+            
         return kv_response
     
     def add_kv_response(
