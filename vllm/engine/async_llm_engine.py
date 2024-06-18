@@ -479,7 +479,6 @@ class _AsyncLLMEngine(LLMEngine):
 
         if not scheduler_outputs.is_empty():
             # Execute the model.
-            print("aaaa")
             all_outputs = await self.model_executor.execute_model_async(
                 seq_group_metadata_list = seq_group_metadata_list, 
                 blocks_to_swap_in = scheduler_outputs.blocks_to_swap_in,
@@ -488,7 +487,6 @@ class _AsyncLLMEngine(LLMEngine):
                 merge_reqs_info = merge_reqs_info,
                 evicted_blocks_to_swap_out = evicted_blocks_to_swap_out,
                 swap_id=swap_id)
-            print("bbbb")
 
             # Only the driver worker returns the sampling results.
             output = all_outputs[0][0]
@@ -514,7 +512,7 @@ class _AsyncLLMEngine(LLMEngine):
         
         if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
             if self.scheduler.swap_remote_finished_req_ids:
-                await self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
+                self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
                     
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
