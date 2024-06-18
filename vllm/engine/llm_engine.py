@@ -315,7 +315,6 @@ class LLMEngine:
                 self.scheduler.match_allocate_kv_blocks(seq_group)
             can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
             if can_allocate == AllocStatus.OK:
-                self.scheduler.decode_waiting.popleft()
                 computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
                 seq_group.has_dram = True
                 self.scheduler.add_recv_transfering(seq_group)
