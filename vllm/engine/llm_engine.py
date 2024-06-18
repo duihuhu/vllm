@@ -484,6 +484,7 @@ class LLMEngine:
             prefill_request_output = self.scheduler.decode_waiting[0][1]
 
             can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+            can_allocate = AllocStatus.LATER
             if can_allocate == AllocStatus.OK:
                 seq_group.eprefill_host = prefill_request_output.eprefill_host
                 seq_group.eprefill_port = prefill_request_output.eprefill_port
