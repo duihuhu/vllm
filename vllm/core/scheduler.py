@@ -832,11 +832,20 @@ class Scheduler:
     def check_hbm_usage(self):
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_used_blocks()
-        print("check_hbm_usage ", num_used_blocks, num_free_blocks)
-        used_ratio = num_used_blocks/(num_used_blocks+num_free_blocks)
+        used_ratio = num_used_blocks/(num_used_blocks + num_free_blocks)
         if used_ratio > 0.8:
             return True
         return False
+    
+    def evict_dram_num(self):
+        num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
+        num_used_blocks = self.block_manager.get_radix_num_cpu_used_blocks()
+        evict_dram_nums = int((num_used_blocks + num_free_blocks) * 0.8 - num_free_blocks)
+        return evict_dram_nums
+    
+    def evict_radix_tree(self, evict_nums, device):
+        self.block_manager.evict_radix_tree(evict_nums=evict_nums, device=device)
+
     
     def get_evicted_blocks(self) ->  Tuple[List[TreeNode], List[PhysicalTokenBlock]]:
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
