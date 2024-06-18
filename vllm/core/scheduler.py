@@ -683,9 +683,9 @@ class Scheduler:
             for idx in range(num_prompt_blocks):
                 if idx < len(seq.data.prefix_blocks):
                     block_table.append(seq.data.prefix_blocks[idx])
+                    matched_blocks.append(seq.data.prefix_blocks[idx])
                 else:
                     block = self.block_manager.cpu_allocator.radix_manager_allocate()
-                    matched_blocks.append(block)
                     block_table.append(block)
                     cpu_blocks.append(block.block_number)
                     
