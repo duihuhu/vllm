@@ -676,7 +676,8 @@ class Scheduler:
     def allocate_dram_kv_blocks(self, seq_group: SequenceGroup):
         if self.block_manager.enable_radix_caching:
             seq = seq_group.get_seqs()[0]
-            num_prompt_blocks = len(seq.logical_token_blocks)       
+            num_prompt_blocks = len(seq.logical_token_blocks)  
+            matched_blocks = []     
             block_table = []
             cpu_blocks = [] 
             for idx in range(num_prompt_blocks):
@@ -684,6 +685,7 @@ class Scheduler:
                     block_table.append(seq.data.prefix_blocks[idx])
                 else:
                     block = self.block_manager.cpu_allocator.radix_manager_allocate()
+                    matched_blocks.append(block)
                     block_table.append(block)
                     cpu_blocks.append(block.block_number)
                     
@@ -691,7 +693,7 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 self.block_manager.kv_block_tables[seq.seq_id] = block_table.copy()
                 
-            return block_table, cpu_blocks
+            return matched_blocks, cpu_blocks
         else:
             cpu_blocks = self.block_manager.allocate_kv_cpu_cache(seq_group)
             
