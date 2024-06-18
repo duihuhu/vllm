@@ -2,7 +2,9 @@
 
 ## Launch Global Scheduler
 ```bash
-python3 ./vllm/global_scheduler/async_global_scheduler_notree_nocontrol.py --model /data/zhaoyiyang/Llama-2-7B-fp16/
+python3 ./vllm/global_scheduler/gs/async_global_scheduler.py --model /home/jovyan/models/Llama-2-13b-hf/ --ep-policy random --ed-policy random
+
+# --ep-policy / --ed-policy: random, rr, prefix, least
 ```
 
 ## Launch Prefill instances
@@ -31,7 +33,7 @@ resp = create_comm(8082,[0,1],8083,[2,3], "sender")
 
 ## Launch Client
 ```bash
-python3 ./benchmarks_flowserve/main.py --test-type open --dataset ReAct --request-rate 12.8 --num-requests 64
+python3 ./benchmarks_flowserve/main.py --test-type open --dataset ReAct --request-rate 12.8 --num-requests 256
 ```
 
 ## Options for FlowServe services

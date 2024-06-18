@@ -26,23 +26,28 @@ from typing import List, Union
 
 # Configurable parameters
 basename = 'end2end_exp_results'
-dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
+dataset = 'ReAct' # ['ShareGPT', 'LooGLE', 'ReAct']
 
 # Derived parameters
 dirname = f'{basename}/{dataset}'
 
 def plot_figure(x_axis: str, y_axis: Union[str, List[str]]):
+    plt.figure(figsize=(12, 10))
     for file in os.listdir(dirname):
         if os.path.isfile(os.path.join(dirname, file)) and '.csv' in file:
             df = pd.read_csv(f'{dirname}/{file}')
-            type = file.split('_')[0] + '_'
+            type = file.split('.')[0] + '_'
             plt.plot(df[x_axis], df[y_axis], label = type + df[y_axis].columns)
     
-    plt.xlabel('req/s')
-    plt.ylabel('time (s)')
+    plt.xlim(0, 110)
+    plt.ylim(0)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.xlabel('req/s', fontsize=14)
+    plt.ylabel('time (s)', fontsize=14)
     plt.legend()
     plt.grid(True)
-    plt.title(' '.join(y_axis[0].split('_')[1:]))   
+    plt.title(' '.join(y_axis[0].split('_')[1:]), fontsize=20)   
     figure_title = '_'.join(y_axis[0].split('_')[1:])
     plt.savefig(f'{dirname}/{figure_title}.png')
     plt.clf()
