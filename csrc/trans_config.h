@@ -166,6 +166,7 @@ public:
 
     void swap_hbm_to_remote_dram_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream);
 
+    void swap_hbm_to_remote_dram_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream);
 
     std::vector<std::string> check_send_finished_events();
     std::vector<std::string> check_recv_finished_events();
