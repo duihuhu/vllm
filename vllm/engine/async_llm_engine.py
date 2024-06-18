@@ -331,7 +331,7 @@ class _AsyncLLMEngine(LLMEngine):
             print("pull_response ", pull_response)
 
     async def _notify(self, request_id, seq_group: SequenceGroup):
-        decode_entry_point = (seq_group.edecode_host, seq_group.edecode_host)
+        decode_entry_point = (seq_group.edecode_host, seq_group.eprefill_port)
         data = CommData(
             headers=CommonHeader(self.deploy_config.deploy_host, self.deploy_config.deploy_port).__json__(),
             payload={"request_id": request_id}
