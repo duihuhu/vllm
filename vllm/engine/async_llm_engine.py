@@ -510,9 +510,9 @@ class _AsyncLLMEngine(LLMEngine):
                 else:
                     self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output     
         
-        # if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
-        #     if self.scheduler.swap_remote_finished_req_ids:
-        #         self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
+        if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
+            if self.scheduler.swap_remote_finished_req_ids:
+                self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
                     
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
