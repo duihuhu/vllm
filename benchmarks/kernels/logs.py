@@ -36,11 +36,15 @@ for is_agg in agg:
         agg_ttft.append(ttft)
         agg_tbt.append(tbt)
 
-print(agg_ttft)
+for t in agg_ttft:
+    print(t)
 print("---------------------------------------------------")
-print(agg_tbt)
+for t in agg_tbt:
+    print(t)
 print("---------------------------------------------------")
-print(non_agg_ttft)
+for t in non_agg_ttft:
+    print(t)
 print("---------------------------------------------------")
-print(non_agg_tbt)
+for t in non_agg_tbt:
+    print(t)
                             
