@@ -247,6 +247,7 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
+        print("cpu free ", block.ref_count)
         if block.ref_count == 0:
             self.free_blocks.append(block)
 
@@ -377,8 +378,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         num_required_blocks = len(seq.logical_token_blocks)
         cache_len = len(seq.data.prefix_blocks)
-        num_free_gpu_blocks = self.cpu_allocator.get_num_free_blocks()
-        if num_free_gpu_blocks >= (num_required_blocks - cache_len):
+        num_free_cpu_blocks = self.cpu_allocator.get_num_free_blocks()
+        if num_free_cpu_blocks >= (num_required_blocks - cache_len):
             return AllocStatus.OK
         else:
             return AllocStatus.LATER
