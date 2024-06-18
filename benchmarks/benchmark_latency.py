@@ -45,7 +45,8 @@ def main(args: argparse.Namespace):
                                                      args.input_len))
     dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
 
-    def run_to_completion(profile_dir: Optional[str] = None):
+    def run_to_completion(profile_dir: Optional[str] = None,
+                          file: Optional[str] = None):
         if profile_dir:
             with torch.profiler.profile(
                     activities=[
@@ -56,19 +57,21 @@ def main(args: argparse.Namespace):
                         str(profile_dir))) as p:
                 llm.generate(prompt_token_ids=dummy_prompt_token_ids,
                              sampling_params=sampling_params,
-                             use_tqdm=False)
+                             use_tqdm=False,
+                             file=None)
             print(p.key_averages())
         else:
             start_time = time.perf_counter()
             llm.generate(prompt_token_ids=dummy_prompt_token_ids,
                          sampling_params=sampling_params,
-                         use_tqdm=False)
+                         use_tqdm=False,
+                         file=file)
             end_time = time.perf_counter()
             latency = end_time - start_time
             return latency
 
     print("Warming up...")
-    run_to_completion(profile_dir=None)
+    run_to_completion(profile_dir=None, file=None)
 
     if args.profile:
         profile_dir = args.profile_result_dir
@@ -77,13 +80,13 @@ def main(args: argparse.Namespace):
                 "."
             ) / "vllm_benchmark_result" / f"latency_result_{time.time()}"
         print(f"Profiling (results will be saved to '{profile_dir}')...")
-        run_to_completion(profile_dir=profile_dir)
+        run_to_completion(profile_dir=profile_dir, file=None)
         return
 
     # Benchmark.
     latencies = []
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
-        latencies.append(run_to_completion(profile_dir=None))
+        latencies.append(run_to_completion(profile_dir=None, file=args.file))
     print(f'Avg latency: {np.mean(latencies)} seconds')
 
 
@@ -172,5 +175,9 @@ if __name__ == '__main__':
                         type=bool,
                         default=False,
                         help='whether to use agg block or not')
+    parser.add_argument('--file',
+                        type=str,
+                        default='/home/jovyan/hhy/vllm-hhy/benchmarks',
+                        help='where to store the logs')
     args = parser.parse_args()
     main(args)
