@@ -6,7 +6,7 @@ output_lengths = [64, 128, 256, 512, 1024]
 use_agg_block_options = [True, False]
 
 # 基础命令模板
-base_command = "python3 benchmark_latency.py --input-len {x} --output-len {y} --use-agg-block {z} --file /home/jovyan/hhy/vllm-hhy/benchmarks/log_{n}_{x}_{y}.txt"
+base_command = "python3 benchmark_latency.py --input-len {x} --output-len {y} --use-agg-block {z} --file-name /home/jovyan/hhy/vllm-hhy/benchmarks/log_{n}_{x}_{y}.txt"
 
 # 遍历所有参数组合并生成命令
 for x in input_lengths:
