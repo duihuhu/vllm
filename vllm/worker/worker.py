@@ -371,6 +371,7 @@ class Worker:
     ) -> None:
         self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
         if self.deploy_config.enable_dcache:
+            torch.cuda.empty_cache()
             if dst_channel not in self.dst_cpu_cache:
                 self.get_dst_shm_rank(dst_channel)
                 dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
