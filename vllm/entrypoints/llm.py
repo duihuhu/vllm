@@ -133,7 +133,7 @@ class LLM:
         use_tqdm: bool = True,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        file: Optional[str] = None
+        file_name: Optional[str] = None
     ) -> List[RequestOutput]:
         """Generates the completions for the input prompts.
 
@@ -190,7 +190,7 @@ class LLM:
                     data=multi_modal_data.data[i].unsqueeze(0))
                 if multi_modal_data else None,
             )
-        return self._run_engine(use_tqdm, file)
+        return self._run_engine(use_tqdm, file_name)
 
     def _add_request(
         self,
@@ -210,7 +210,7 @@ class LLM:
 
     def _run_engine(self, 
                     use_tqdm: bool,
-                    file: Optional[str] = None) -> List[RequestOutput]:
+                    file_name: Optional[str] = None) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -230,7 +230,7 @@ class LLM:
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
-                with open(file, 'a') as file:
+                with open(file_name, 'a') as file:
                     file.write(f"ite {ite} costs {ed - st}\n")
                 ite = ite + 1
             else:
