@@ -291,6 +291,7 @@ class LLMEngine:
                                   arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
         can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+        can_allocate = AllocStatus.LATER
         if can_allocate == AllocStatus.OK:
             phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             
