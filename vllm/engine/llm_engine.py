@@ -292,6 +292,7 @@ class LLMEngine:
         
         can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
         print("can_allocate ", can_allocate)
+        can_allocate = AllocStatus.LATER
         if can_allocate == AllocStatus.OK:
             phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             
@@ -342,7 +343,7 @@ class LLMEngine:
                         content = "prefill recv kv cache space " + request_id + " " +  str(time.time())
                         fd.write(content + "\n")
                         
-                # print("send kv request_id ", request_id, response.global_ranks, blocks,  response.transfer_tag)
+                print("send kv request_id ", request_id, response.global_ranks, blocks,  response.transfer_tag)
                 self.send_kv_trans_scheduler.add_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.transfer_tag)
             else:
                 self.scheduler.del_send_transfering(request_id)
