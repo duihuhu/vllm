@@ -458,7 +458,6 @@ class LLMEngine:
             self.scheduler.add_seq_group(seq_group)
         else:
             self.scheduler.add_decode_seq_group((seq_group, prefill_request_output))
-            print("add_decode_seq_group ", seq_group.request_id)
         return kv_response
     
     def schedule_decode_waiting(self):
