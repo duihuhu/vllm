@@ -102,8 +102,9 @@ void TransManager::init_dst_cpu_cache(const std::string& dst_channel, const std:
     if(swap_workers.find(dst_channel) == swap_workers.end()){
         std::cout << "dst_channel " << dst_channel << " " << nccl_local_rank << std::endl;
         // TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache);
-        
-        // TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache, dst_blocks_cpu_cache);
+
+        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache, dst_blocks_cpu_cache);
+
         // swap_workers[dst_channel] = task_worker;
     }
     return;
