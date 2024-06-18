@@ -520,6 +520,7 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
+                    print("fetch_prefilled_seq_groups ", seq_group.request_id)
                     self.scheduler.add_send_transfering(seq_group)
                 #if enable_radix_cacheing and in separate model, we should update it when prefilled prompt
                 if self.deploy_config.enable_radix_caching:
