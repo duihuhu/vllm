@@ -507,11 +507,16 @@ class LLMEngine:
                 seq_group.edecode_host = prefill_request_output.edecode_host
                 seq_group.edecode_port = prefill_request_output.edecode_port
                 
-                self.scheduler.decode_waiting.popleft()
-                computed_blocks, cpu_blocks = self.scheduler.match_and_allocate_kv_blocks(seq_group)
-                seq_group.has_dram = True
-                self.scheduler.add_recv_transfering(seq_group)
-                kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), -1,  cpu_blocks, True))
+                if self.deploy_config.enable_radix_caching:
+                    self.scheduler.match_allocate_kv_blocks(seq_group)
+                can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
+                if can_allocate == AllocStatus.OK:
+                    self.scheduler.decode_waiting.popleft()
+                    computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
+                    seq_group.has_dram = True
+                    self.scheduler.add_recv_transfering(seq_group)
+                    kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), -1,  cpu_blocks, True))
+                    
         return kv_responses
             
     def abort_request(self, request_id: Union[str, Iterable[str]]) -> None:

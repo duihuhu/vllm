@@ -509,8 +509,8 @@ class Scheduler:
         running_with_dram: Deque[SequenceGroup] = deque()
         while self.running_with_dram:
             seq_group = self.running_with_dram.popleft()
-            if self.block_manager.can_allocate_hbm(seq_group):
-                self.block_manager.allocate_hbm(seq_group, blocks_to_swap_in)
+            if self.block_manager.can_allocate_for_swap(seq_group):
+                self.block_manager.allocate_for_swap(seq_group, blocks_to_swap_in)
                 self._append_slot(seq_group, blocks_to_copy)
                 self.running.append(seq_group)
             else:
@@ -668,10 +668,13 @@ class Scheduler:
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
         
-    def match_and_allocate_kv_blocks(self, seq_group: SequenceGroup):
+    def match_allocate_kv_blocks(self, seq_group: SequenceGroup):
+        seq = seq_group.get_seqs()[0]
+        self.block_manager.radix_tree_manager.match(seq)
+        
+    def allocate_dram_kv_blocks(self, seq_group: SequenceGroup):
         if self.block_manager.enable_radix_caching:
             seq = seq_group.get_seqs()[0]
-            self.block_manager.radix_tree_manager.match(seq)
             num_prompt_blocks = len(seq.logical_token_blocks)       
             block_table = []
             cpu_blocks = [] 

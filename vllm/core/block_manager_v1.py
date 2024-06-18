@@ -309,6 +309,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self.enable_radix_caching = enable_radix_caching
 
         self.watermark_blocks = int(watermark * num_gpu_blocks)
+    
 
         if self.enable_caching or self.enable_radix_caching:
             self.gpu_allocator = CachedBlockAllocator(Device.GPU, block_size,
@@ -337,19 +338,22 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Mapping: request_id -> BlockTable, use for pull data
         self.req_pull_block_tables: Dict[str, BlockTable] = {}
     
-    def allocate_hbm(self, seq_group: SequenceGroup, blocks_to_swap_in: Dict[int, int]) -> None:
+    def allocate_for_swap(self, seq_group: SequenceGroup, blocks_to_swap_in: Dict[int, int]) -> None:
         seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
         ori_blocks = self.block_tables[seq.seq_id]
         new_blocks_table : BlockTable = []
-        swap_blocks = []
+        need_release_cpu_blocks = []
         block_number_mapping = {}
         for block in ori_blocks:
             if block.device == Device.CPU:
                 if self.enable_radix_caching:
                     hbm_block = self.gpu_allocator.radix_manager_allocate()
+                    self.cpu_allocator.free_radix_manager_cache(block)
                 else:
                     hbm_block = self.gpu_allocator.allocate()
-                swap_blocks.append(hbm_block)
+                    self.cpu_allocator.free(block)
+                    
+                need_release_cpu_blocks.append(block)
                 block_number_mapping[block.block_number] = hbm_block.block_number
                 new_blocks_table.append(hbm_block)
             else:
@@ -357,9 +361,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 
         blocks_to_swap_in.update(block_number_mapping)
         self.block_tables[seq.seq_id] = new_blocks_table
-        
-            
-    def can_allocate_hbm(self, seq_group: SequenceGroup) -> AllocStatus:
+        return need_release_cpu_blocks
+    
+    def can_allocate_for_swap(self, seq_group: SequenceGroup) -> AllocStatus:
         seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
         blocks = self.block_tables[seq.seq_id]
         need_hbm_blocks = 0 
@@ -371,7 +375,17 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return AllocStatus.OK
         else:
             return AllocStatus.LATER
-            
+    
+    def can_allocate_dram(self, seq_group: SequenceGroup) -> AllocStatus:
+        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
+        num_required_blocks = len(seq.logical_token_blocks)
+        cache_len = len(seq.data.prefix_blocks)
+        num_free_gpu_blocks = self.cpu_allocator.get_num_free_blocks()
+        if num_free_gpu_blocks >= (num_required_blocks - cache_len):
+            return AllocStatus.OK
+        else:
+            return AllocStatus.LATER
+
     def can_allocate(self, seq_group: SequenceGroup) -> AllocStatus:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
