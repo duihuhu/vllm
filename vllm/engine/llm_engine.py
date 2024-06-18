@@ -332,7 +332,7 @@ class LLMEngine:
             self.scheduler.del_send_transfering(request_id)
             logger.info("remote recv engine prepare kv fail.")
             return
-        print("response.has_dram ", response.has_dram)
+        print("add_kv_response response.has_dram ", response.has_dram)
         if not response.has_dram:
             blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
             # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
@@ -351,6 +351,7 @@ class LLMEngine:
             if response.dst_cpu_blocks:
                 seq_group.has_dram = True
                 blocks = self.scheduler.fetch_kv_blocks(seq_group)
+                print("response.dst_cpu_blocks ", response.dst_cpu_blocks, blocks)
                 self.send_kv_trans_scheduler.add_dram_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.dst_cpu_blocks)
             else:
                 del self.scheduler.send_transfering[request_id]
