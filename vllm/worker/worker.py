@@ -375,8 +375,9 @@ class Worker:
             dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
             dst_cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in dst_tensor]
             self.dst_cpu_cache[dst_channel] = dst_cpu_cache
-            if self.use_agg_block:
-                self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache)
+            dst_blocks_cpu_cache = []
+            if not self.use_agg_block:
+                self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache, dst_blocks_cpu_cache)
             else:
                 null_dst_cpu_cache = [(torch.empty(1), torch.empty(1))]
                 key_caches = []
