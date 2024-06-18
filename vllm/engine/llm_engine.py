@@ -291,6 +291,7 @@ class LLMEngine:
                                   arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
         can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+        print("can_allocate ", can_allocate)
         if can_allocate == AllocStatus.OK:
             phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
             
@@ -304,7 +305,6 @@ class LLMEngine:
             else:
                 if blocks:
                     self.scheduler.add_recv_transfering(seq_group)
-
                     transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
                     kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
                 else:
@@ -332,6 +332,7 @@ class LLMEngine:
             self.scheduler.del_send_transfering(request_id)
             logger.info("remote recv engine prepare kv fail.")
             return
+        print("response.has_dram ", response.has_dram)
         if not response.has_dram:
             blocks = self.scheduler.fetch_kv_blocks(self.scheduler.get_send_transfering(request_id))
             # print("fetch_kv_blocks blocks ", response.computed_blocks, len(blocks[response.computed_blocks:]))
