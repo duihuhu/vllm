@@ -11,6 +11,12 @@ TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<a
     // Initialize parameters from config dictionaries
 }
 
+
+TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache)
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache), dst_cpu_cache(dst_cpu_cache), dst_blocks_cpu_cache(dst_blocks_cpu_cache){
+    // Initialize parameters from config dictionaries
+}
+
 void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
 
     c10::cuda::CUDAStreamGuard guard(stream);
@@ -195,7 +201,7 @@ void TransEngine::send_full_blocks(const std::string& channel, const std::string
 
 void TransEngine::swap_hbm_to_remote_dram_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream) {
     c10::cuda::CUDAStreamGuard guard(stream);
-    SwapHbmToRemoteDramBlocks(gpu_cache, dst_cpu_cache, blocks, dst_blocks, cache_block_size);
+    SwapHbmToRemoteDramBlocks(gpu_cache, dst_cpu_cache, blocks, dst_blocks, cache_size_per_block);
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
     event->record();
     if (swap_remote_events.find(channel) == swap_remote_events.end()) {
@@ -204,6 +210,20 @@ void TransEngine::swap_hbm_to_remote_dram_blocks(const std::string& channel, con
     } else
         swap_remote_events[channel].push_back(std::make_pair(request_id, event));
 }
+
+
+void TransEngine::swap_hbm_to_remote_dram_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream) {
+    c10::cuda::CUDAStreamGuard guard(stream);
+    SwapHbmToRemoteDramFullBlocks(blocks_gpu_cache, dst_blocks_cpu_cache, blocks, dst_blocks, cache_block_size);
+    at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
+    event->record();
+    if (swap_remote_events.find(channel) == swap_remote_events.end()) {
+        swap_remote_events[channel] = std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>();
+        swap_remote_events[channel].push_back(std::make_pair(request_id, event));
+    } else
+        swap_remote_events[channel].push_back(std::make_pair(request_id, event));
+}
+
 
 std::vector<std::string> TransEngine::check_send_finished_events() {
     std::vector<std::string> send_blocks_finished;
@@ -561,5 +581,30 @@ void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at
             memcpy_type,
             cudaStream);
         }
+    }
+}
+
+void TransEngine::SwapHbmToRemoteDramFullBlocks(std::vector<uint64_t>& srcCaches, std::vector<uint64_t>& dstCaches, \
+    const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize)
+{
+    auto gpuStream = c10::cuda::getCurrentCUDAStream();
+    auto cudaStream = gpuStream.stream();
+    cudaMemcpyKind memcpy_type = cudaMemcpyDeviceToHost;
+
+    for (int j = 0; j < srcBlocks.size(); j++) {
+        int src_blockIdx = srcBlocks[j];
+        int dst_blockIdx = dstBlocks[j];
+        void *srcBlockPtr = (void*)srcCaches[src_blockIdx];
+        void *dstBlockPtr = (void*)dstCaches[dst_blockIdx];
+        if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclFloat, srcRank,\
+            comm, cudaStream)) {
+            std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
+        }
+        cudaMemcpyAsync(
+        dstBlockPtr,
+        srcBlockPtr,
+        cacheSize,
+        memcpy_type,
+        cudaStream);
     }
 }

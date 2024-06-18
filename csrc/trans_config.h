@@ -143,6 +143,9 @@ public:
 
     TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
 
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache);
+
+
     void recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
     
     void send_blocks(const std::string& channel, const std::string& request_id,const std::vector<uint32_t>& dst_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
@@ -188,11 +191,15 @@ public:
 
     void SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
         std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize);
+
+    void SwapHbmToRemoteDramFullBlocks(std::vector<uint64_t>& srcCaches, std::vector<uint64_t>& dstCaches, \
+        const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize)
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
     std::vector<uint64_t> blocks_gpu_cache; // key/value address in tensor 
 
     std::vector<std::pair<at::Tensor, at::Tensor>> dst_cpu_cache;
+    std::vector<uint64_t> dst_blocks_cpu_cache; // key/value address in tensor 
 
     int cache_size_per_block;
     int cache_block_size;
@@ -220,6 +227,7 @@ public:
 
     TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
 
+    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, std::vector<uint64_t>& dst_blocks_cpu_cache);
 
     ~TransWorker();
 
@@ -268,7 +276,7 @@ public:
     void dist_worker();
     std::vector<std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,std::vector<std::string>>>> get_finished_transfer_tasks();
 
-    void init_dst_cpu_cache(const std::string& dst_channel, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
+    void init_dst_cpu_cache(const std::string& dst_channel, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache);
 
 private:
     std::unordered_map<std::string, TransWorker*> send_trans_workers;
@@ -282,6 +290,8 @@ private:
     int cache_size_per_block;
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
     std::vector<uint64_t> blocks_gpu_cache;
+    std::vector<uint64_t> dst_blocks_cpu_cache;
+
 
     TransQueue<TransferTask> worker_task_queue;
     int rank;

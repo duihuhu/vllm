@@ -44,6 +44,10 @@ void TransManager::dist_worker() {
                     task_worker = swap_workers[worker_task.meta.channel];
                     task_worker->add_tasks(worker_task);
                     break;
+                case TaskType::TRANSFER_HBM_TO_DRAM_FULL_BLOCKS:
+                    task_worker = swap_workers[worker_task.meta.channel];
+                    task_worker->add_tasks(worker_task);
+                    break;
                 default:
                     throw std::runtime_error("invalid task_type.");
             }
@@ -94,10 +98,11 @@ void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& ds
     return;
 }
 
-void TransManager::init_dst_cpu_cache(const std::string& dst_channel, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache) {
+void TransManager::init_dst_cpu_cache(const std::string& dst_channel, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache) {
     if(swap_workers.find(dst_channel) == swap_workers.end()){
         std::cout << "dst_channel " << dst_channel << " " << nccl_local_rank << std::endl;
-        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache);
+        // TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache);
+        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache, dst_blocks_cpu_cache);
         swap_workers[dst_channel] = task_worker;
     }
     return;

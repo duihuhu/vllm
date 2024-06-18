@@ -26,7 +26,7 @@ from vllm.outputs import MergeReqInfo
 import numpy as np
 from multiprocessing import shared_memory
 
-from vllm._C import gpu_ops, trans_ops, swap_ops
+from vllm._C import trans_ops, swap_ops, ops
 from vllm.logger import init_logger
 import ray
 #no TransferRequestIdTask, TransferBlocksTask
@@ -133,10 +133,6 @@ class Worker:
         # Set random seed.
         set_random_seed(self.model_config.seed)
         
-        # if self.deploy_config.enable_separate:
-        #     if gpu_ops.CreateGlobalNcclComm(self.get_local_rank, 4, 0) !=0:
-        #         # print("self.local_rank ", self.get_local_rank)
-        #         raise ValueError("CreateNcclFromRankTable error")
         return self.nccl_local_rank
 
     def load_model(self):
@@ -375,25 +371,26 @@ class Worker:
     ) -> None:
         self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
         if dst_channel not in self.dst_cpu_cache:
-            self.get_dst_rank(dst_channel)
+            self.get_dst_shm_rank(dst_channel)
             dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
             dst_cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in dst_tensor]
             self.dst_cpu_cache[dst_channel] = dst_cpu_cache
-            self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache)
+            if self.use_agg_block:
+                self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache)
+            else:
+                null_dst_cpu_cache = [(torch.empty(1), torch.empty(1))]
+                self.caches_addresses_tensors_cpu()
+                key_caches = []
+                for cache_block in dst_tensor:
+                    key_caches.append(cache_block[0])
+                blocks_address = ops.tensor_for_blocks_address(key_caches)
+                self.trans_manager.init_dst_cpu_cache(dst_channel, null_dst_cpu_cache, blocks_address)
         
-    def get_dst_rank(self, dst_channel):
+    def get_dst_shm_rank(self, dst_channel):
         # 将字符串分割成整数列表
         dst_ranks = [int(token) for token in dst_channel.split('_')]
-
-        # if self.nccl_local_rank >= dst_ranks[0]:
-        #     comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size + self.parallel_config.tensor_parallel_size
-        #     self.dst_rank = comm_rank - self.parallel_config.tensor_parallel_size
-        # else:
-        #     comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size
-        #     self.dst_rank = comm_rank + self.parallel_config.tensor_parallel_size
-        # print("dst ranks ", dst_ranks, self.local_rank, self.rank, self.nccl_local_rank)
-        self.dst_rank = dst_ranks[self.local_rank]
-        return self.dst_rank
+        self.dst_shm_rank = dst_ranks[self.local_rank]
+        return self.dst_shm_rank
     
     def get_trans_blocks_time(
         self,
@@ -441,7 +438,7 @@ class Worker:
         tensor_sizes = self.calculate_tensor_sizes()
         dst_tensors = []
         index = 0
-        shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_rank))
+        shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_shm_rank))
         print("restore_other_shared_cpu_cache shm.size ", shm.size)        
         if self.deploy_config.use_agg_block:
             kv_cache_shape = self.cache_engine.attn_backend.get_kv_cache_shape(
