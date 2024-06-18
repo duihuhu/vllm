@@ -221,17 +221,25 @@ class LLM:
         outputs: List[RequestOutput] = []
         ite = 0
         while self.llm_engine.has_unfinished_requests():
-            st = time.time()
-            step_outputs = self.llm_engine.step()
-            ed = time.time()
-            for output in step_outputs:
-                if output.finished:
-                    outputs.append(output)
-                    if use_tqdm:
-                        pbar.update(1)
-            with open(file, 'a') as file:
-                file.write(f"ite {ite} costs {ed - st}\n")
-            ite = ite + 1
+            if file:
+                st = time.time()
+                step_outputs = self.llm_engine.step()
+                ed = time.time()
+                for output in step_outputs:
+                    if output.finished:
+                        outputs.append(output)
+                        if use_tqdm:
+                            pbar.update(1)
+                with open(file, 'a') as file:
+                    file.write(f"ite {ite} costs {ed - st}\n")
+                ite = ite + 1
+            else:
+                step_outputs = self.llm_engine.step()
+                for output in step_outputs:
+                    if output.finished:
+                        outputs.append(output)
+                        if use_tqdm:
+                            pbar.update(1)
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
