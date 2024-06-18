@@ -479,6 +479,7 @@ class _AsyncLLMEngine(LLMEngine):
 
         if not scheduler_outputs.is_empty():
             # Execute the model.
+            print("aaaa")
             all_outputs = await self.model_executor.execute_model_async(
                 seq_group_metadata_list = seq_group_metadata_list, 
                 blocks_to_swap_in = scheduler_outputs.blocks_to_swap_in,
@@ -487,6 +488,7 @@ class _AsyncLLMEngine(LLMEngine):
                 merge_reqs_info = merge_reqs_info,
                 evicted_blocks_to_swap_out = evicted_blocks_to_swap_out,
                 swap_id=swap_id)
+            print("bbbb")
 
             # Only the driver worker returns the sampling results.
             output = all_outputs[0][0]
@@ -520,7 +522,6 @@ class _AsyncLLMEngine(LLMEngine):
             if self.deploy_config.enable_separate and self.deploy_config.role == 'prompt':
                 prefilled_seq_groups = self.scheduler.fetch_prefilled_seq_groups()
                 for seq_group in prefilled_seq_groups:
-                    print("fetch_prefilled_seq_groups ", seq_group.request_id)
                     self.scheduler.add_send_transfering(seq_group)
                 #if enable_radix_cacheing and in separate model, we should update it when prefilled prompt
                 if self.deploy_config.enable_radix_caching:
