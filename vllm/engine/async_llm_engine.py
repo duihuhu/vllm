@@ -662,7 +662,7 @@ class _AsyncLLMEngine(LLMEngine):
         recv_tasks = self.recv_kv_trans_scheduler.schedule()
         
         swap_to_remote_tasks = self.send_kv_trans_scheduler.schedule_swap_to_remote()
-        
+        print("swap_to_remote_tasks ", swap_to_remote_tasks)
         if self.deploy_config.enable_debug:
             t3 = time.time()   
         if send_tasks or recv_tasks or swap_to_remote_tasks:

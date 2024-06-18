@@ -105,7 +105,7 @@ void TransWorker::worker() {
                         // trans_engine.recv_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, layer, layer==(40-1), comms[use_comm], streams[use_comm], use_comm);
                         trans_engine.recv_comms_layer_blocks(task_meta.channel, task_meta.request_id, task.blocks, dst_rank, layer, layer==(num_layer-1) , comms[use_comm], streams[use_comm], use_comm);
                         use_comm = (use_comm + 1) % comms.size();
-                        // std::cout << "recv_comms_layer_blocks " << use_comm << " " << task_meta.channel << " " << task_meta.request_id<<std::endl;
+
                     }
                     break;
                 case TaskType::TRANSFER_SEND_FULL_BLOCKS:
@@ -120,6 +120,7 @@ void TransWorker::worker() {
                     break;
 
                 case TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS:
+                    std::cout<<"TRANSFER_HBM_TO_DRAM_BLOCKS "<< task_meta.request_id << std::endl;
                     trans_engine.swap_hbm_to_remote_dram_blocks(task_meta.channel, task_meta.request_id, task.blocks, task.dst_blocks, swap_remote_streams[use_swap_stream]);
                     use_swap_stream = (use_swap_stream + 1) % swap_remote_streams.size();
                     break;
