@@ -125,7 +125,6 @@ std::vector<std::vector<std::tuple<std::vector<std::string>, std::vector<std::st
     for (const auto& pair : swap_workers) {
         TransWorker* worker = pair.second;
         auto finished_work_task = worker->get_finished_transfer_tasks();
-        print("aaaaa")
         if(!finished_work_task.empty()) {
             finished_work_tasks.emplace_back(finished_work_task);
         }
