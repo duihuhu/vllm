@@ -37,7 +37,10 @@ for is_agg in agg:
         agg_tbt.append(tbt)
 
 print(agg_ttft)
+print("---------------------------------------------------")
 print(agg_tbt)
+print("---------------------------------------------------")
 print(non_agg_ttft)
+print("---------------------------------------------------")
 print(non_agg_tbt)
                             
