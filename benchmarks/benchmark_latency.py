@@ -177,7 +177,7 @@ if __name__ == '__main__':
                         help='whether to use agg block or not')
     parser.add_argument('--file',
                         type=str,
-                        default='/home/jovyan/hhy/vllm-hhy/benchmarks',
+                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log.txt',
                         help='where to store the logs')
     args = parser.parse_args()
     main(args)
