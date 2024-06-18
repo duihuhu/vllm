@@ -596,10 +596,6 @@ void TransEngine::SwapHbmToRemoteDramFullBlocks(std::vector<uint64_t>& srcCaches
         int dst_blockIdx = dstBlocks[j];
         void *srcBlockPtr = (void*)srcCaches[src_blockIdx];
         void *dstBlockPtr = (void*)dstCaches[dst_blockIdx];
-        if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclFloat, srcRank,\
-            comm, cudaStream)) {
-            std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
-        }
         cudaMemcpyAsync(
         dstBlockPtr,
         srcBlockPtr,
