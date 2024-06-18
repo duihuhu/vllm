@@ -338,13 +338,15 @@ class _AsyncLLMEngine(LLMEngine):
         )
         return await CommEngine.async_send_to(decode_entry_point, "notify_swap_finished_id", data)
     
-    async def notify_swap_finished_remote_instance(self, swap_finished_ids: List[str]):
+    async def notify_swap_finished_remote_instance(self, swap_remote_finished_req_ids: List[str]):
         coroutines = []
-        for request_id in swap_finished_ids:
+        for request_id in swap_remote_finished_req_ids:
             seq_group = self.scheduler.send_transfering[request_id]
             coroutines.append(asyncio.create_task(self._notify(request_id, seq_group)))
             del self.scheduler.send_transfering[request_id]
+            swap_remote_finished_req_ids.remove(request_id)
         resp = await asyncio.gather(*coroutines)
+        print("resp ", resp)
 
     
     def check_deocde_recv_meta(self):
@@ -511,8 +513,7 @@ class _AsyncLLMEngine(LLMEngine):
         
         if self.deploy_config.enable_separate and self.deploy_config.role == "prompt":
             if self.scheduler.swap_remote_finished_req_ids:
-                print("self.scheduler.swap_remote_finished_req_ids ", self.scheduler.swap_remote_finished_req_ids)
-                self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
+                await self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
                     
         #prompt eng pull metadata in separate mode
         #assume after do prefill, the reqeust will not finish
