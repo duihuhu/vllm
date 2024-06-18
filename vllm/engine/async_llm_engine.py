@@ -438,16 +438,16 @@ class _AsyncLLMEngine(LLMEngine):
         evicted_blocks_to_swap_out = None
         swap_id = None
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
-            # is_evict = self.scheduler.check_hbm_usage()
-            # if is_evict:
-            can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
-            if can_evicted_nodes:
-                evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
-                for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
-                if evicted_blocks_to_swap_out:
-                    swap_id = random_uuid()
-                    self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
-                    self.radix_swap_scheduler.add_swap_task(swap_id)
+            is_evict = self.scheduler.check_hbm_usage()
+            if is_evict:
+                can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
+                if can_evicted_nodes:
+                    evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
+                    for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+                    if evicted_blocks_to_swap_out:
+                        swap_id = random_uuid()
+                        self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
+                        self.radix_swap_scheduler.add_swap_task(swap_id)
             self.scheduler._check_swap_finished()
             
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
@@ -1352,9 +1352,20 @@ class AsyncLLMEngine:
             res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_type="sender")
     
     async def notify_finished_id(self, request_id) -> None:
-        if request_id in self.engine.scheduler.recv_transfering:
+        if request_id in self.engine.scheduler.recv_transfering and self.engine.scheduler.deploy_config.role=="decoder":
             seq_group = self.engine.scheduler.recv_transfering[request_id]
             self.engine.scheduler.running_with_dram.append(seq_group)
             self.engine.scheduler.block_manager.move_kv_blocks_meta(seq_group)
             del self.engine.scheduler.recv_transfering[request_id]
+        elif request_id in self.engine.scheduler.recv_transfering and self.engine.scheduler.deploy_config.role=="prompt":
+            seq_group = self.engine.scheduler.recv_transfering[request_id]
+            self.engine.scheduler.block_manager.move_kv_blocks_meta(seq_group)
 
+            #when d->p data pass back, we should update radix tree
+            if self.engine.deploy_config.enable_radix_caching:
+                self.engine.scheduler.radix_manager_update([seq_group])
+                self.engine.scheduler.block_manager.radix_manager_free(seq_group) 
+            else:
+                for seq in seq_group.get_seqs():
+                    self.engine.scheduler.block_manager.free(seq) 
+            del self.engine.scheduler.recv_transfering[request_id]

@@ -424,7 +424,16 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             cpu_block = self.cpu_allocator.radix_manager_allocate_block()
             cpu_blocks.append(cpu_block)
         return cpu_blocks 
-    
+
+    #use radix manager free kv caches when data back 
+    def radix_manager_free(self, seq_group: SequenceGroup) -> None:
+        seq = seq_group.get_seqs()[0]
+        if seq.seq_id not in self.block_tables:
+            return 
+        blocks = self.block_tables[seq.seq_id] 
+        for block in blocks:
+            self.gpu_allocator.free_radix_manager_cache(block)
+            
     #use radix manager allocate kv caches
     def radix_manager_allocate(self, seq_group: SequenceGroup, is_kv_prepared = None, blocks_to_swap_in: Dict[int, int] = None) -> None:
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
