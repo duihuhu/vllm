@@ -112,8 +112,8 @@ void TransWorker::worker() {
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
         auto swap_blocks_finished = trans_engine.check_swap_remote_finished_events();
-
-        if (!send_blocks_finished.empty() || !recv_blocks_finished.empty()){
+        
+        if (!send_blocks_finished.empty() || !recv_blocks_finished.empty() || !swap_blocks_finished.empty()){
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
             transfer_result_queue.push_back(std::make_tuple(send_blocks_finished, recv_blocks_finished, swap_blocks_finished));
         }      
