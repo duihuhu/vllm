@@ -513,6 +513,7 @@ class Scheduler:
                 self.block_manager.allocate_for_swap(seq_group, blocks_to_swap_in)
                 self._append_slot(seq_group, blocks_to_copy)
                 self.running.append(seq_group)
+                print("get_num_free_blocks ", seq_group.request_id, self.block_manager.cpu_allocator.get_num_free_blocks())
             else:
                 running_with_dram.append(seq_group)
         self.running_with_dram = running_with_dram
