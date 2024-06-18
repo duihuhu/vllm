@@ -385,12 +385,14 @@ class Worker:
         # 将字符串分割成整数列表
         dst_ranks = [int(token) for token in dst_channel.split('_')]
 
-        if self.nccl_local_rank >= dst_ranks[0]:
-            comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size + self.parallel_config.tensor_parallel_size
-            self.dst_rank = comm_rank - self.parallel_config.tensor_parallel_size
-        else:
-            comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size
-            self.dst_rank = comm_rank + self.parallel_config.tensor_parallel_size
+        # if self.nccl_local_rank >= dst_ranks[0]:
+        #     comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size + self.parallel_config.tensor_parallel_size
+        #     self.dst_rank = comm_rank - self.parallel_config.tensor_parallel_size
+        # else:
+        #     comm_rank = self.nccl_local_rank % self.parallel_config.tensor_parallel_size
+        #     self.dst_rank = comm_rank + self.parallel_config.tensor_parallel_size
+        print("dst ranks ", dst_ranks, self.local_rank, self.rank, self.nccl_local_rank)
+        self.dst_rank = dst_ranks[self.local_rank]
         return self.dst_rank
     
     def get_trans_blocks_time(
