@@ -79,7 +79,7 @@ class CacheEngine:
         if use_agg_block:
             kv_cache_shape = self.attn_backend.get_kv_cache_shape(
             num_blocks, self.block_size, self.num_heads, self.head_size, self.num_layers)
-            for _ in range(self.num_gpu_blocks):
+            for _ in range(num_blocks):
                 kv_cache.append(
                     torch.empty(
                         kv_cache_shape,
