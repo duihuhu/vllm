@@ -3,6 +3,7 @@ from typing import List, Optional, Union
 import torch
 from tqdm import tqdm
 from transformers import PreTrainedTokenizer, PreTrainedTokenizerFast
+import time
 
 from vllm.engine.arg_utils import EngineArgs
 from vllm.engine.llm_engine import LLMEngine
@@ -215,13 +216,19 @@ class LLM:
                         dynamic_ncols=True)
         # Run the engine.
         outputs: List[RequestOutput] = []
+        ite = 0
         while self.llm_engine.has_unfinished_requests():
+            st = time.time()
             step_outputs = self.llm_engine.step()
+            ed = time.time()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
+            with open("/home/jovyan/hhy/vllm-hhy/benchmarks/log.txt", 'a') as file:
+                file.write(f"ite {ite} costs {ed - st}\n")
+            ite = ite + 1
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
