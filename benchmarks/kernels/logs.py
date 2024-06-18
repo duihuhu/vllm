@@ -14,7 +14,7 @@ for is_agg in agg:
         ttft = []
         tbt = []
         for ol in output_len:
-            file_path = "/home/jovyan/hhy/vllm-hhy/benchmarks/logs" + "log_" + str(is_agg) + "_" + str(il) + "_" + str(ol) + ".txt"
+            file_path = "/home/jovyan/hhy/vllm-hhy/benchmarks/logs/" + "log_" + str(is_agg) + "_" + str(il) + "_" + str(ol) + ".txt"
             a_ttft = []
             a_tbt = []
             with open(file_path, 'r') as file:
