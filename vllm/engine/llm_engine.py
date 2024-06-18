@@ -517,6 +517,8 @@ class LLMEngine:
                     seq_group.has_dram = True
                     self.scheduler.add_recv_transfering(seq_group)
                     kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), -1,  cpu_blocks, True))
+                else:
+                    break
                     
         return kv_responses
             
