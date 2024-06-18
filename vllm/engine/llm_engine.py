@@ -510,8 +510,8 @@ class LLMEngine:
                 if self.deploy_config.enable_radix_caching:
                     self.scheduler.match_allocate_kv_blocks(seq_group)
                 can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
-                print("can allocate ", can_allocate, self.scheduler.block_manager.cpu_allocator.get_num_free_blocks())
                 if can_allocate == AllocStatus.OK:
+                    print("can allocate ", can_allocate, self.scheduler.block_manager.cpu_allocator.get_num_free_blocks())
                     self.scheduler.decode_waiting.popleft()
                     computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
                     seq_group.has_dram = True
