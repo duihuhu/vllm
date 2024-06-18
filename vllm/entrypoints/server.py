@@ -24,7 +24,7 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
-@app.post("notify_swap_finished_id")
+@app.post("/notify_swap_finished_id")
 async def notify_swap_finished_id(request: Request) -> Response:
     payload = await request.json()
     request_id = payload.pop("request_id")
