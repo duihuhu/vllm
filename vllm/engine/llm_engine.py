@@ -347,12 +347,12 @@ class LLMEngine:
                 self.scheduler.del_send_transfering(request_id)
         else:
             seq_group = self.scheduler.get_send_transfering(request_id)
-            if not response.dst_cpu_blocks:
-                seq_group.has_dram = True
-                blocks = self.scheduler.fetch_kv_blocks(seq_group)
-                self.send_kv_trans_scheduler.add_dram_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.dst_cpu_blocks)
-            else:
-                del self.scheduler.send_transfering[request_id]
+            # if not response.dst_cpu_blocks:
+            seq_group.has_dram = True
+            blocks = self.scheduler.fetch_kv_blocks(seq_group)
+            self.send_kv_trans_scheduler.add_dram_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.dst_cpu_blocks)
+            # else:
+            #     del self.scheduler.send_transfering[request_id]
 
 
     def add_request(
