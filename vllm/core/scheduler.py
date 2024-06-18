@@ -693,12 +693,14 @@ class Scheduler:
             for seq in seq_group.get_seqs():
                 self.block_manager.kv_block_tables[seq.seq_id] = block_table.copy()
                 
+            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                seq.status = SequenceStatus.RUNNING
             return matched_blocks, cpu_blocks
         else:
             cpu_blocks = self.block_manager.allocate_kv_cpu_cache(seq_group)
             
-        for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-            seq.status = SequenceStatus.RUNNING
+            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
+                seq.status = SequenceStatus.RUNNING
             return [], cpu_blocks
         
     def allocate_kv_blocks(self, seq_group: SequenceGroup, is_kv_prepared=False) -> None:
