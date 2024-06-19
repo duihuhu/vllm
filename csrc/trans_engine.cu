@@ -527,7 +527,7 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
         cudaStreamSynchronize(cudaStream);
-        std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx <<std::endl;
+        std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl << ;
     }
     NCCLCHECK(ncclGroupEnd());
 }
@@ -550,7 +550,7 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
         }
         cudaStreamSynchronize(cudaStream);
-        std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx <<std::endl;
+        std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
     NCCLCHECK(ncclGroupEnd());
 }
