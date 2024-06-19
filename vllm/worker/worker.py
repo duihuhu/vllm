@@ -350,7 +350,7 @@ class Worker:
             for task in send_tasks:
                 blocks = task.blocks
                 for block in blocks:
-                    print("self.gpu_cache ", self.gpu_cache[block])
+                    print("self.gpu_cache block ", block)
             self.trans_manager.add_tasks(send_tasks)
         if recv_tasks:
             self.trans_manager.add_tasks(recv_tasks)   
