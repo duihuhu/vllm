@@ -515,7 +515,7 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    NCCLCHECK(ncclGroupStart());
+    // NCCLCHECK(ncclGroupStart());
 
     for (int j = 0; j < dstBlocks.size(); j++) {
         int blockIdx = dstBlocks[j];
@@ -529,7 +529,7 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
         cudaStreamSynchronize(cudaStream);
         std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
-    NCCLCHECK(ncclGroupEnd());
+    // NCCLCHECK(ncclGroupEnd());
 }
 
 void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
@@ -537,7 +537,7 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    NCCLCHECK(ncclGroupStart());
+    // NCCLCHECK(ncclGroupStart());
 
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
@@ -552,7 +552,7 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
         cudaStreamSynchronize(cudaStream);
         std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
-    NCCLCHECK(ncclGroupEnd());
+    // NCCLCHECK(ncclGroupEnd());
 }
 
 
