@@ -440,7 +440,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         self.radix_tree_manager.match(seq=seq)
         block_table: BlockTable  = []
-        print("radix_manager_allocate block_table ", len(seq.data.prefix_blocks), " " ,is_kv_prepared)
+        # print("radix_manager_allocate block_table ", len(seq.data.prefix_blocks), " " ,is_kv_prepared)
         block_number_mapping = {}
         if not is_kv_prepared:
             for idx in range(num_prompt_blocks):
