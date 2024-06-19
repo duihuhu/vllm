@@ -370,7 +370,7 @@ class Worker:
         worker_type
     ) -> None:
         self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
-        if self.deploy_config.enable_dcache:
+        if self.deploy_config.enable_trans_to_dram:
             torch.cuda.empty_cache()
             if dst_channel not in self.dst_cpu_cache:
                 self.get_dst_shm_rank(dst_channel)

@@ -27,7 +27,8 @@ python3 ./vllm/global_scheduler/client/api_client_async_req_rate_len.py --input-
 --enable-layer：layer级别传输（默认是req粒度）
 --enable-dcache：开启d-> p回传
 --enable-radix-caching: 开启radix缓存（目前只有hbm之间的）
-
+--enable-radix-caching: 开启radix缓存（目前只有hbm之间的）
+--enable-trans-to-dram: 缓存回传和传输，是否会进入dram
 -------------------------------------------------------------------------------------------------------------
 
 二、gs自动选择preill/decode实例：
