@@ -370,21 +370,23 @@ class Worker:
         worker_type
     ) -> None:
         self.trans_manager.create_comm(nccl_id, dst_channel, worker_type)
-        if dst_channel not in self.dst_cpu_cache:
-            self.get_dst_shm_rank(dst_channel)
-            dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
-            dst_cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in dst_tensor]
-            self.dst_cpu_cache[dst_channel] = dst_cpu_cache
-            dst_blocks_cpu_cache = []
-            if not self.use_agg_block:
-                self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache, dst_blocks_cpu_cache)
-            else:
-                null_dst_cpu_cache = [(torch.empty(1), torch.empty(1))]
-                key_caches = []
-                for cache_block in dst_tensor:
-                    key_caches.append(cache_block[0])
-                blocks_address = ops.tensor_for_blocks_address(key_caches)
-                self.trans_manager.init_dst_cpu_cache(dst_channel, null_dst_cpu_cache, blocks_address)
+        if self.deploy_config.enable_dcache:
+            torch.cuda.empty_cache()
+            if dst_channel not in self.dst_cpu_cache:
+                self.get_dst_shm_rank(dst_channel)
+                dst_tensor = self.restore_other_shared_cpu_cache(dst_channel)
+                dst_cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in dst_tensor]
+                self.dst_cpu_cache[dst_channel] = dst_cpu_cache
+                dst_blocks_cpu_cache = []
+                if not self.use_agg_block:
+                    self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache, dst_blocks_cpu_cache)
+                else:
+                    null_dst_cpu_cache = [(torch.empty(1), torch.empty(1))]
+                    key_caches = []
+                    for cache_block in dst_tensor:
+                        key_caches.append(cache_block[0])
+                    blocks_address = ops.tensor_for_blocks_address(key_caches)
+                    self.trans_manager.init_dst_cpu_cache(dst_channel, null_dst_cpu_cache, blocks_address)
         
     def get_dst_shm_rank(self, dst_channel):
         # 将字符串分割成整数列表

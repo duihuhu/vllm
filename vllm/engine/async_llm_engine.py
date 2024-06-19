@@ -23,6 +23,8 @@ from vllm.entrypoints.server_meta import QueryLayerKvBlocks, PrefilledMeta
 from vllm._C import trans_ops
 from vllm.core.interfaces import AllocStatus
 from vllm.utils import random_uuid
+from vllm.utils import Device
+
 logger = init_logger(__name__)
 ENGINE_ITERATION_TIMEOUT_S = int(
     os.environ.get("VLLM_ENGINE_ITERATION_TIMEOUT_S", "60"))
@@ -441,8 +443,8 @@ class _AsyncLLMEngine(LLMEngine):
         evicted_blocks_to_swap_out = None
         swap_id = None
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
-            is_evict = self.scheduler.check_hbm_usage()
-            if is_evict:
+            is_hbm_evict = self.scheduler.check_hbm_usage()
+            if is_hbm_evict:
                 can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
                 if can_evicted_nodes:
                     evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
@@ -452,6 +454,9 @@ class _AsyncLLMEngine(LLMEngine):
                         self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
                         self.radix_swap_scheduler.add_swap_task(swap_id)
             self.scheduler._check_swap_finished()
+            evict_dram_nums = self.scheduler.evict_dram_num()
+            if evict_dram_nums:
+                self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
             
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
@@ -513,6 +518,7 @@ class _AsyncLLMEngine(LLMEngine):
                 else:
                     self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output     
         
+        #I think we should move it to c thread
         if self.deploy_config.enable_separate:
             if self.scheduler.swap_remote_finished_req_ids:
                 await self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
@@ -918,6 +924,7 @@ class AsyncLLMEngine:
                 t4 = time.time()
                 self.engine_time = self.engine_time + t4 - t2
 
+            #TODO merge with trans_kv_step_aysnc
             if self.engine.scheduler.cache_config.enable_radix_caching and self.engine.scheduler.cache_config.enable_radix_evictor:  
                 await self.engine.swap_step_aysnc()
         # Put the outputs into the corresponding streams.

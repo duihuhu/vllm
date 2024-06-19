@@ -846,7 +846,8 @@ class DeployConfig:
         enable_breakdown: bool = False,
         enable_radix_caching: bool = False,
         use_agg_block: bool = False,
-        block_size: int = -1
+        block_size: int = -1, 
+        enable_trans_to_dram: bool = False,
         ) -> None: 
             self.enable_separate = enable_separate
             self.role = role
@@ -863,6 +864,7 @@ class DeployConfig:
             self.enable_radix_caching = enable_radix_caching
             self.use_agg_block = use_agg_block
             self.block_size = block_size
+            self.enable_trans_to_dram = enable_trans_to_dram
             self._verify_args()
     
     def _verify_args(self) -> None:

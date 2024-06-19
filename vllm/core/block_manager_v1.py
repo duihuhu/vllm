@@ -440,7 +440,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         self.radix_tree_manager.match(seq=seq)
         block_table: BlockTable  = []
-        print("radix_manager_allocate block_table ", len(seq.data.prefix_blocks), " " ,is_kv_prepared)
+        # print("radix_manager_allocate block_table ", len(seq.data.prefix_blocks), " " ,is_kv_prepared)
         block_number_mapping = {}
         if not is_kv_prepared:
             for idx in range(num_prompt_blocks):
@@ -902,6 +902,18 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def get_radix_num_used_blocks(self) -> int:
         return self.gpu_allocator.get_radix_num_used_blocks()
+
+    def get_radix_num_cpu_free_blocks(self) -> int:
+        return self.cpu_allocator.get_radix_num_free_blocks()
+
+    def get_radix_num_cpu_used_blocks(self) -> int:
+        return self.cpu_allocator.get_radix_num_used_blocks()
+
+    def evict_radix_tree(self, evict_nums, device: Device):
+        if device == Device.CPU:
+            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.cpu_allocator.free_radix_manager_cache)
+        else:
+            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.gpu_allocator.free_radix_manager_cache)
 
     def get_num_free_gpu_blocks(self) -> int:
         return self.gpu_allocator.get_num_free_blocks()

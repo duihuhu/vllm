@@ -55,7 +55,7 @@ class CacheEngine:
 
         #hucc
         self.cache_size_per_block = self.block_size *self.num_heads * self.head_size * _get_dtype_size(self.dtype)
-        self.cache_block_size =  self.num_layers * self.num_heads * self.head_size * self.block_size * _get_dtype_size(self.dtype)
+        self.cache_block_size =  self.num_layers * self.num_heads * self.head_size * self.block_size * _get_dtype_size(self.dtype) * 2
         #Initizlize the events for stream synchronization
         self.swap_in_events: Dict[str, torch.cuda.Event] = {}
         self.swap_out_events: Dict[str, torch.cuda.Event] = {}
@@ -79,6 +79,7 @@ class CacheEngine:
         if use_agg_block:
             kv_cache_shape = self.attn_backend.get_kv_cache_shape(
             num_blocks, self.block_size, self.num_heads, self.head_size, self.num_layers)
+            print("use_agg_block kv_cache_shape ", kv_cache_shape)
             for _ in range(num_blocks):
                 kv_cache.append(
                     torch.empty(
@@ -121,16 +122,20 @@ class CacheEngine:
 
     def get_blocks_address(self, gpu: bool) -> List[int]:
         if self.use_agg_block:
-            key_caches = []
+            # key_caches = []
+            blocks_address = [] 
             if gpu is True:
                 for cache_block in self.gpu_cache:
-                    key_caches.append(cache_block[0])
-                blocks_address = ops.tensor_for_blocks_address(key_caches)
+                    # key_caches.append(cache_block[0])
+                # blocks_address = ops.tensor_for_blocks_address(key_caches)
+                    blocks_address.append(cache_block.data_ptr())
                 return blocks_address
             else:
                 for cache_block in self.cpu_cache:
-                    key_caches.append(cache_block[0])
-                blocks_address = ops.tensor_for_blocks_address(key_caches)
+                #     key_caches.append(cache_block[0])
+                # blocks_address = ops.tensor_for_blocks_address(key_caches)
+                    blocks_address.append(cache_block.data_ptr())
+
                 return blocks_address
         else:
             return None
