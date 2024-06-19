@@ -100,10 +100,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     &swap_agg_block,
     "Just swap blocks in tensor");
   cache_ops.def(
-    "swap_blocks_agg",
-    &swap_blocks_agg,
-    "Swap blocks in agg");
-  cache_ops.def(
     "copy_blocks_agg",
     &copy_blocks_agg,
     "Copy blocks in agg");
