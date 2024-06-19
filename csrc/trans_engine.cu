@@ -418,11 +418,11 @@ void TransEngine::RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dst
             int blockIdx = dstBlocks[j];
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
-            if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
+            if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt8, srcRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
-            if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
+            if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt8, srcRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
@@ -447,11 +447,11 @@ void TransEngine::SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& src
             int blockIdx = srcBlocks[j];
             void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
-            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclFloat, destRank,\
+            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt8, destRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             }
-            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclFloat, destRank,\
+            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt8, destRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
@@ -473,11 +473,11 @@ void TransEngine::SendLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
         int blockIdx = srcBlocks[j];
         void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
         void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
-        if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt, destRank,\
+        if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt8, destRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
         }
-        if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt, destRank,\
+        if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt8, destRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
         }
@@ -498,11 +498,11 @@ void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
         int blockIdx = dstBlocks[j];
         void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
         void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
-        if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
+        if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
-        if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
+        if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
         }
@@ -524,21 +524,20 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    // NCCLCHECK(ncclGroupStart());
+    NCCLCHECK(ncclGroupStart());
 
     for (int j = 0; j < dstBlocks.size(); j++) {
         int blockIdx = dstBlocks[j];
         void *dstBlockPtr = (void*)dstCaches[blockIdx];
-        std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
-        " " << blockIdx << " srcRank " << srcRank << " " << cacheSize <<std::endl;
+        // std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
+        // " " << blockIdx << " srcRank " << srcRank << " " << cacheSize <<std::endl;
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
-        cudaStreamSynchronize(cudaStream);
-        std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
+        // std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
-    // NCCLCHECK(ncclGroupEnd());
+    NCCLCHECK(ncclGroupEnd());
 }
 
 
@@ -547,25 +546,19 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    // NCCLCHECK(ncclGroupStart());
+    NCCLCHECK(ncclGroupStart());
 
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
         void *srcBlockPtr = (void*)srcCaches[blockIdx];
-        std::cout<< "SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << 
-        " " << blockIdx << " destRank " << destRank << std::endl;
 
-        // ncclResult_t result = ncclSend(srcBlockPtr, cacheSize, ncclFloat, destRank, comm, cudaStream);
-        // CHECK_NCCL(result);
         if (ncclSuccess != ncclSend(srcBlockPtr, cacheSize, ncclInt8, destRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
-        }
-        
-        cudaStreamSynchronize(cudaStream);
-        std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
+        }        
+        // std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
-    // NCCLCHECK(ncclGroupEnd());
+    NCCLCHECK(ncclGroupEnd());
 }
 
 
