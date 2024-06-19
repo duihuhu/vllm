@@ -25,7 +25,7 @@ torch::Tensor tensor_for_caches_addresses(
     std::vector<int64_t> caches_ptrs(num_blocks);
     for (int i = 0; i < num_blocks; ++i) {
         caches_ptrs[i] = reinterpret_cast<int64_t>(caches[i].data_ptr());
-        std::cout<<"tensor_for_caches_addresses " << caches_ptrs[i]<<std::endl;
+        // std::cout<<"tensor_for_caches_addresses " << caches_ptrs[i]<<std::endl;
     }
 
     torch::Tensor caches_ptrs_tensor = torch::from_blob(
@@ -45,7 +45,7 @@ std::vector<uint64_t> tensor_for_blocks_address(
     std::vector<uint64_t> caches_ptrs(num_blocks);
     for (int i = 0; i < num_blocks; ++i) {
         caches_ptrs[i] = reinterpret_cast<uint64_t>(caches[i].data_ptr());
-        std::cout << " tensor_for_caches_addresses " << caches_ptrs[i] <<std::endl;
+        // std::cout << " tensor_for_caches_addresses " << caches_ptrs[i] <<std::endl;
     }
     return caches_ptrs;
 }

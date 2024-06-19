@@ -16,6 +16,7 @@
 #include <cuda_runtime.h>
 #include "swap_config.h"
 #include <tuple>
+#define CHECK_NCCL(call) checkNcclError((call), __FILE__, __LINE__)
 
 using json = nlohmann::json;
 #define CUDACHECK(cmd) do {                         \
@@ -189,6 +190,8 @@ public:
         const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
     void SendFullBlocks(std::vector<uint64_t>& srcCaches, \
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
+
+    void checkNcclError(ncclResult_t result, const char* file, int line);
 
     void SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
         std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize);
