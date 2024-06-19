@@ -82,7 +82,7 @@ class CacheEngine:
             print("use_agg_block kv_cache_shape ", kv_cache_shape)
             for _ in range(num_blocks):
                 kv_cache.append(
-                    torch.zeors(
+                    torch.zeros(
                         kv_cache_shape,
                         dtype=self.dtype,
                         pin_memory=pin_memory,
@@ -92,7 +92,7 @@ class CacheEngine:
                 num_blocks, self.block_size, self.num_heads, self.head_size, None)
             for _ in range(self.num_layers):
                 kv_cache.append(
-                    torch.zeors(kv_cache_shape,
+                    torch.zeros(kv_cache_shape,
                                 dtype=self.dtype,
                                 pin_memory=pin_memory,
                                 device=device))
