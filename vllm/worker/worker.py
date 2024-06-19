@@ -352,7 +352,7 @@ class Worker:
                 blocks = tsk.blocks
                 for block in blocks:
                     print("self.gpu_cache block ", block, \
-                        self.gpu_cache[block][-1, -1, -1], self.gpu_cache[block].data_ptr(), self.gpu_cache[block].is_contiguous())
+                        self.gpu_cache[block][-1, -1, -1], self.gpu_cache[block].data_ptr(), self.gpu_cache[block].is_contiguous(),self.gpu_cache[block].element_size() * self.gpu_cache[block].numel())
             self.trans_manager.add_tasks(send_tasks)
         if recv_tasks:
             self.trans_manager.add_tasks(recv_tasks)   
