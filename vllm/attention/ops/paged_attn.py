@@ -335,7 +335,7 @@ class PagedAttention:
         src_kv: torch.Tensor,
         dst_kv: torch.Tensor,
         block_size_in_bytes: int) -> None:
-        cache_ops.swap_blocks_agg(src_kv, dst_kv, block_size_in_bytes)
+        cache_ops.swap_agg_block(src_kv, dst_kv, block_size_in_bytes)
 
     @staticmethod
     def copy_blocks_agg (

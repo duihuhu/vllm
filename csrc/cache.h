@@ -10,11 +10,11 @@ void swap_agg_block(
   torch::Tensor& dst,
   const int64_t block_size_in_bytes);
 
-void swap_blocks_agg(
+/*void swap_blocks_agg(
   torch::Tensor& src_addresses,
   torch::Tensor& dst_addresses,
-  const std::map<int64_t, int64_t>& block_mapping,
-  const int64_t block_size_in_bytes);
+  //const std::map<int64_t, int64_t>& block_mapping,
+  const int64_t block_size_in_bytes);*/
 
 void copy_blocks_agg(
   torch::Tensor& key_caches_addresses, 
