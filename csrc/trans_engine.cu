@@ -324,11 +324,11 @@ void TransEngine::RecvBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dst
             int blockIdx = dstBlocks[j];
             void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
             void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
-            if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
+            if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt8, srcRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
             }
-            if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
+            if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt8, srcRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
             }
@@ -353,11 +353,11 @@ void TransEngine::SendBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& src
             int blockIdx = srcBlocks[j];
             void *srcKeyCachePtr = srcKeyCache.index({blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({blockIdx}).data_ptr();
-            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclFloat, destRank,\
+            if (ncclSuccess != ncclSend(srcKeyCachePtr, cacheSize, ncclInt8, destRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
             }
-            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclFloat, destRank,\
+            if (ncclSuccess != ncclSend(srcValueCachePtr, cacheSize, ncclInt8, destRank,\
                 comm, cudaStream)) {
                 std::cout << "[ERROR]  ncclSend value cache error!!" << std::endl;
             }
@@ -404,11 +404,11 @@ void TransEngine::RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>
         int blockIdx = dstBlocks[j];
         void *dstKeyCachePtr = dstKeyCache.index({blockIdx}).data_ptr();
         void *dstValueCachePtr = dstValueCache.index({blockIdx}).data_ptr();
-        if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclFloat, srcRank,\
+        if (ncclSuccess != ncclRecv(dstKeyCachePtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
         }
-        if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclFloat, srcRank,\
+        if (ncclSuccess != ncclRecv(dstValueCachePtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv vaule cache error!!" << std::endl;
         }
