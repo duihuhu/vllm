@@ -553,7 +553,7 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
         std::cout<< "SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << 
         " " << blockIdx << " destRank " << destRank << std::endl;
 
-        ncclResult_t result = ncclSend(srcBlockPtr, cacheSize, ncclFloat, destRank, comm, stream);
+        ncclResult_t result = ncclSend(srcBlockPtr, cacheSize, ncclFloat, destRank, comm, cudaStream);
         CHECK_NCCL(result);
         // if (ncclSuccess != ncclSend(srcBlockPtr, cacheSize, ncclFloat, destRank,\
         //     comm, cudaStream)) {
