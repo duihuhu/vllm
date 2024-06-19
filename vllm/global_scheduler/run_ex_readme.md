@@ -24,10 +24,12 @@ python3 ./vllm/global_scheduler/client/api_client_async_req_rate_len.py --input-
 --role=prompt（分离必选项）
 
 分离的阶段测试中的非必选项：
---enable-layer：layer级别传输（默认是req粒度）
+--enable-layer：layer级别传输（默认是req粒度, layer的话可以忽略了应该）
 --enable-dcache：开启d-> p回传
 --enable-radix-caching: 开启radix缓存（目前只有hbm之间的）
-
+--enable-trans-to-dram: 缓存回传和传输，是否会进入dram
+--use-agg-block:是否使用优化后的mm布局
+--enable-radix-evictor:是否开启缓存驱逐，开启的话，达到阈值时候，对满足条件的gpu缓存进入换出驱逐，对cpu缓存进行直接free
 -------------------------------------------------------------------------------------------------------------
 
 二、gs自动选择preill/decode实例：

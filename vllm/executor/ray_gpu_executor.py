@@ -71,7 +71,7 @@ class RayGPUExecutor(ExecutorBase):
 
         if self.deploy_config.enable_separate:
             self._init_trans_manager()
-        if self.deploy_config.enable_separate and self.deploy_config.enable_dcache:
+        if self.deploy_config.enable_separate and self.deploy_config.enable_trans_to_dram:
             self._init_share_cpu_cache()
         
         if self.deploy_config.enable_radix_caching:
