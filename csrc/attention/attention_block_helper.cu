@@ -30,7 +30,6 @@ torch::Tensor tensor_for_caches_addresses(
     torch::Tensor caches_ptrs_tensor = torch::from_blob(
         // caches_ptrs.data(), {num_blocks}, torch::kInt64).to(caches_device).clone();
         caches_ptrs.data(), {num_blocks}, torch::kInt64).to(caches_device);
-    std::cout<<"caches_ptrs_tensor " << caches_ptrs_tensor;
     return caches_ptrs_tensor;
 }
 
