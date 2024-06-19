@@ -518,6 +518,7 @@ class _AsyncLLMEngine(LLMEngine):
                 else:
                     self.scheduler.outputs_with_layer[processed_output.request_id] = processed_output     
         
+        #I think we should move it to c thread
         if self.deploy_config.enable_separate:
             if self.scheduler.swap_remote_finished_req_ids:
                 await self.notify_swap_finished_remote_instance(self.scheduler.swap_remote_finished_req_ids)
@@ -923,6 +924,7 @@ class AsyncLLMEngine:
                 t4 = time.time()
                 self.engine_time = self.engine_time + t4 - t2
 
+            #TODO merge with trans_kv_step_aysnc
             if self.engine.scheduler.cache_config.enable_radix_caching and self.engine.scheduler.cache_config.enable_radix_evictor:  
                 await self.engine.swap_step_aysnc()
         # Put the outputs into the corresponding streams.
