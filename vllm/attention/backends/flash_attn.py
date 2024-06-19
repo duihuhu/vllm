@@ -248,23 +248,42 @@ class FlashAttentionImpl(AttentionImpl):
                     alibi_slopes=self.alibi_slopes,
                 )
             else:
-                #TODO for hhy
-                #re-write pagedattn_prefix to support agg-block -> Get addresses for all layers in advance
-                
                 # prefix-enabled attention
-                output = PagedAttention.forward_prefix(
-                    query,
-                    key,
-                    value,
-                    key_cache,
-                    value_cache,
-                    attn_metadata.block_tables,
-                    attn_metadata.subquery_start_loc,
-                    attn_metadata.prompt_lens_tensor,
-                    attn_metadata.context_lens,
-                    attn_metadata.max_subquery_len,
-                    self.alibi_slopes,
-                )
+
+                #TODO for hhy
+                if layer_id == -1:
+                    output = PagedAttention.forward_prefix(
+                        -1,-1,-1,-1,-1,
+                        query,
+                        key,
+                        value,
+                        key_cache,
+                        value_cache,
+                        attn_metadata.block_tables,
+                        attn_metadata.subquery_start_loc,
+                        attn_metadata.prompt_lens_tensor,
+                        attn_metadata.context_lens,
+                        attn_metadata.max_subquery_len,
+                        self.alibi_slopes,
+                    )
+                else:
+                    output = PagedAttention.forward_prefix(
+                        layer_id,
+                        self.block_size,
+                        self.num_kv_heads,
+                        self.head_size,
+                        16 // key.element_size(),
+                        query,
+                        key,
+                        value,
+                        kv_cache_address[0],
+                        kv_cache_address[1],
+                        attn_metadata.block_tables,
+                        attn_metadata.subquery_start_loc,
+                        attn_metadata.prompt_lens_tensor,
+                        attn_metadata.context_lens,
+                        attn_metadata.max_subquery_len,
+                        self.alibi_slopes,)
         else:
             # Decoding run.
             if self.use_agg_block is False or kv_cache_address is None:
