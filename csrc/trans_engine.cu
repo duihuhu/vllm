@@ -521,7 +521,7 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
         int blockIdx = dstBlocks[j];
         void *dstBlockPtr = (void*)dstCaches[blockIdx];
         std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
-        " " << blockIdx << " destRank " << destRank<<std::endl;
+        " " << blockIdx << " srcRank " << srcRank<<std::endl;
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclFloat, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
