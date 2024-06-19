@@ -291,23 +291,24 @@ class LLMEngine:
                                   arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
         can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
-        if can_allocate == AllocStatus.OK:
-            phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
-            
-            blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
-            computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-            
-            if self.deploy_config.enable_theory:
-                kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
-                self.scheduler.running.append(seq_group)
-                self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
-            else:
-                if blocks:
-                    self.scheduler.add_recv_transfering(seq_group)
-                    transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
-                    kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
+        if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
+            if can_allocate == AllocStatus.OK:
+                phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
+                
+                blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
+                computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+                
+                if self.deploy_config.enable_theory:
+                    kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
+                    self.scheduler.running.append(seq_group)
+                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 else:
-                    kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
+                    if blocks:
+                        self.scheduler.add_recv_transfering(seq_group)
+                        transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
+                        kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
+                    else:
+                        kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
         else:
             if self.deploy_config.enable_radix_caching:
                 self.scheduler.match_allocate_kv_blocks(seq_group)
@@ -483,39 +484,43 @@ class LLMEngine:
             prefill_request_output = self.scheduler.decode_waiting[0][1]
 
             can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
-            if can_allocate == AllocStatus.OK:
-                seq_group.eprefill_host = prefill_request_output.eprefill_host
-                seq_group.eprefill_port = prefill_request_output.eprefill_port
-                seq_group.edecode_host = prefill_request_output.edecode_host
-                seq_group.edecode_port = prefill_request_output.edecode_port
-                
-                self.scheduler.decode_waiting.popleft()
-                phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
-                #reconstruct sequence
-                if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
-                    prefilled_token_ids = prefill_request_output.outputs[0].token_ids
-                    output_logprobs =  prefill_request_output.outputs[0].logprobs
-                    for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
-                        seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
-                                
-                blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
-                computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
-                
-                if self.deploy_config.enable_theory:
-                    kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
-                    self.scheduler.running.append(seq_group)
-                    self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
-                    kv_responses.append(kv_response)
-                else:
-                    if blocks:
-                        # if seq_group.request_id in self.scheduler.recv_transfering:
-                        self.scheduler.add_recv_transfering(seq_group)
-                        transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id,
-                                                                    prefill_request_output.global_ranks, blocks)
-                        kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), transfer_tag))
-                    else:
+            #TODO there may has some issue
+            if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
+                if can_allocate == AllocStatus.OK:
+                    seq_group.eprefill_host = prefill_request_output.eprefill_host
+                    seq_group.eprefill_port = prefill_request_output.eprefill_port
+                    seq_group.edecode_host = prefill_request_output.edecode_host
+                    seq_group.edecode_port = prefill_request_output.edecode_port
+                    
+                    self.scheduler.decode_waiting.popleft()
+                    phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
+                    #reconstruct sequence
+                    if self.deploy_config.enable_separate and self.deploy_config.role == "decoder":
+                        prefilled_token_ids = prefill_request_output.outputs[0].token_ids
+                        output_logprobs =  prefill_request_output.outputs[0].logprobs
+                        for token_id, output_logprob in zip(prefilled_token_ids, output_logprobs):
+                            seq_group.get_seqs()[0].append_token_id(token_id, output_logprob)
+                                    
+                    blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
+                    computed_blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == True]
+                    
+                    if self.deploy_config.enable_theory:
+                        kv_response = KvPreparedResponse(seq_group.request_id, 0, None, len(phy_blocks), 0)
                         self.scheduler.running.append(seq_group)
                         self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                        kv_responses.append(kv_response)
+                    else:
+                        if blocks:
+                            # if seq_group.request_id in self.scheduler.recv_transfering:
+                            self.scheduler.add_recv_transfering(seq_group)
+                            transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(seq_group.request_id,
+                                                                        prefill_request_output.global_ranks, blocks)
+                            kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), transfer_tag))
+                        else:
+                            self.scheduler.running.append(seq_group)
+                            self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
+                else:
+                    break
             else:
                 seq_group.eprefill_host = prefill_request_output.eprefill_host
                 seq_group.eprefill_port = prefill_request_output.eprefill_port

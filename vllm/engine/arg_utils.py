@@ -77,7 +77,7 @@ class EngineArgs:
     enable_breakdown: bool = False
     enable_radix_evictor: bool = False
     use_agg_block: bool = False
-
+    enable_trans_to_dram: bool = False
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -435,8 +435,12 @@ class EngineArgs:
         parser.add_argument(
             '--use-agg-block',
             action="store_true",
-            help=('enable debug'))
-         
+            help=('enable agg block'))
+
+        parser.add_argument(
+            '--enable-trans-to-dram',
+            action="store_true",
+            help=('enable enable-trans-kv from hbm to-dram'))
         return parser
         
     @classmethod
@@ -511,7 +515,7 @@ class EngineArgs:
 
         print("self.block_size ", self.block_size)
         deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
-            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.enable_radix_caching, self.use_agg_block, self.block_size)
+            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.enable_radix_caching, self.use_agg_block, self.block_size, self.enable_trans_to_dram)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 
