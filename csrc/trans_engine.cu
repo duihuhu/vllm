@@ -521,7 +521,7 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
         int blockIdx = dstBlocks[j];
         void *dstBlockPtr = (void*)dstCaches[blockIdx];
         std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
-        " " << blockIdx <<std::endl;
+        " " << blockIdx << " destRank " << destRank<<std::endl;
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclFloat, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
@@ -543,12 +543,14 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
         int blockIdx = srcBlocks[j];
         void *srcBlockPtr = (void*)srcCaches[blockIdx];
         std::cout<< "SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << 
-        " " << blockIdx <<std::endl;
+        " " << blockIdx << " destRank " << destRank << std::endl;
 
-        if (ncclSuccess != ncclSend(srcBlockPtr, cacheSize, ncclFloat, destRank,\
-            comm, cudaStream)) {
-            std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
-        }
+        NCCLCHECK(ncclSend(srcBlockPtr, cacheSize, ncclFloat, destRank,\
+            comm, cudaStream));
+        // if (ncclSuccess != ncclSend(srcBlockPtr, cacheSize, ncclFloat, destRank,\
+        //     comm, cudaStream)) {
+        //     std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
+        // }
         cudaStreamSynchronize(cudaStream);
         std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
