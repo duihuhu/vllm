@@ -841,6 +841,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
             new_block_table: BlockTable = []
             block_table = self.block_tables[seq.seq_id]
+            print("swap in seq id block_table ", seq_group.request_id, self.cpu_allocator.get_num_free_blocks())
 
             for cpu_block in block_table:
                 if cpu_block in mapping:
@@ -859,6 +860,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     self.cpu_allocator.free_radix_manager_cache(cpu_block)
                 else:
                     self.cpu_allocator.free(cpu_block)
+            print("swap in seq id block_table ", seq_group.request_id, self.cpu_allocator.get_num_free_blocks())
             self.block_tables[seq.seq_id] = new_block_table
 
         block_number_mapping = {
@@ -875,7 +877,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def swap_out(self, seq_group: SequenceGroup) -> Dict[int, int]:
         # GPU block -> CPU block.
-        print("swap out seq id block_table ", seq_group.request_id, self.cpu_allocator.get_num_free_blocks())
         mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
         for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
             new_block_table: BlockTable = []
@@ -899,7 +900,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     self.gpu_allocator.free(gpu_block)
             self.block_tables[seq.seq_id] = new_block_table
             
-        print("after swap_out num_free_gpu_blocks", self.gpu_allocator.get_radix_num_free_blocks())
         block_number_mapping = {
             gpu_block.block_number: cpu_block.block_number
             for gpu_block, cpu_block in mapping.items()
