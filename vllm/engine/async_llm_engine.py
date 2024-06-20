@@ -452,7 +452,7 @@ class _AsyncLLMEngine(LLMEngine):
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
             self.scheduler._check_swap_finished()
             is_hbm_evict = self.scheduler.check_hbm_usage()
-            if is_hbm_evict and self.deploy_config.role=="decoder":
+            if is_hbm_evict:
                 can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
                 if can_evicted_nodes:
                     evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number

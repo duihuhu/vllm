@@ -99,6 +99,7 @@ class RadixCache:
                 num_node_evicted += evict_node(child, device)
                 
             if node.value.physicalTokenBlock.device == device:
+                #why it may be other device
                 evict_callback(node)
                 num_node_evicted += 1
             return num_node_evicted
