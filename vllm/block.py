@@ -1,5 +1,5 @@
 """Token blocks."""
-from typing import List
+from typing import List, Optional
 
 from vllm.utils import Device
 
@@ -59,6 +59,7 @@ class PhysicalTokenBlock:
         block_size: int,
         block_hash: int,
         num_hashed_tokens: int,
+        computed: Optional[bool] = False,
     ) -> None:
         self.device = device
         self.block_number = block_number
@@ -69,7 +70,7 @@ class PhysicalTokenBlock:
         self.ref_count = 0
         self.last_accessed = DEFAULT_LAST_ACCESSED_TIME
 
-        self.computed = False
+        self.computed = computed
 
     def __repr__(self) -> str:
         return (f'PhysicalTokenBlock(device={self.device}, '
