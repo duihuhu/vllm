@@ -444,6 +444,7 @@ class _AsyncLLMEngine(LLMEngine):
         swap_id = None
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
             is_hbm_evict = self.scheduler.check_hbm_usage()
+            print("is_hbm_evict ", is_hbm_evict)
             if is_hbm_evict:
                 can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
                 if can_evicted_nodes:

@@ -520,7 +520,6 @@ class LLMEngine:
                             self.scheduler.running.append(seq_group)
                             self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 else:
-                    print("break ", seq_group.request_id)
                     break
             else:
                 seq_group.eprefill_host = prefill_request_output.eprefill_host

@@ -832,6 +832,7 @@ class Scheduler:
     def check_hbm_usage(self):
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_used_blocks()
+        print("check_hbm_usage ", num_free_blocks, num_used_blocks)
         used_ratio = num_used_blocks/(num_used_blocks + num_free_blocks)
         if used_ratio > 0.8:
             return True
