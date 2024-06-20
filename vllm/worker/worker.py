@@ -466,7 +466,8 @@ class Worker:
             # 从共享内存中读取数据并恢复成 Torch Tensor
             tensor_flat_np_array = shm_np_array[index:index + tensor_size].view(np.uint8)
             tensor_np_array = np.ndarray(kv_cache_shape, dtype=np.float16, buffer=tensor_flat_np_array)
-            tensor = torch.from_numpy(tensor_np_array).to(self.device)
+            # tensor = torch.from_numpy(tensor_np_array).to(self.device)
+            tensor = torch.from_numpy(tensor_np_array)
             dst_tensors.append(tensor)
             index += tensor_size
 
