@@ -617,7 +617,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             num_free_gpu_blocks = self.gpu_allocator.get_radix_num_free_blocks()
         else:
             num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
-        print("num_free_gpu_blocks ", num_free_gpu_blocks)
+        print("can_append_slot num_free_gpu_blocks ", num_free_gpu_blocks)
         num_seqs = seq_group.num_seqs(status=SequenceStatus.RUNNING)
         return num_seqs <= num_free_gpu_blocks
 
