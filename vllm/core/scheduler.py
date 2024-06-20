@@ -840,6 +840,15 @@ class Scheduler:
             return True
         return False
     
+    def check_kv_hbm_usage(self):
+        num_free_blocks = self.block_manager.get_radix_num_free_blocks()
+        num_used_blocks = self.block_manager.get_radix_num_used_blocks()
+        used_ratio = num_used_blocks/(num_used_blocks + num_free_blocks)
+        print("check_hbm_usage ", num_free_blocks, num_used_blocks)
+        if used_ratio > 0.9:
+            return True
+        return False
+    
     def evict_dram_num(self):
         num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_cpu_used_blocks()
