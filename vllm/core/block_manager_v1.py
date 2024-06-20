@@ -853,7 +853,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     mapping[cpu_block] = gpu_block
                 new_block_table.append(gpu_block)
                 # Free the CPU block swapped in to GPU.
-                self.cpu_allocator.free(cpu_block)
+                if self.enable_radix_caching:
+                    self.cpu_allocator.free_radix_manager_cache(cpu_block)
+                else:
+                    self.cpu_allocator.free(cpu_block)
             self.block_tables[seq.seq_id] = new_block_table
 
         block_number_mapping = {
