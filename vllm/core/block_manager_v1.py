@@ -202,7 +202,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
                 self.radix_evictor.num_blocks)
         
     def get_radix_num_used_blocks(self) -> int:
-        return self.current_num_blocks - self.radix_evictor.num_blocks        
+        return self.num_blocks - self.current_num_blocks       
 
     def get_num_used_blocks(self) -> int:
         return self.current_num_blocks - self.evictor.num_blocks
