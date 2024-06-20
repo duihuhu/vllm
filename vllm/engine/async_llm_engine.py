@@ -456,9 +456,9 @@ class _AsyncLLMEngine(LLMEngine):
                         self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
                         self.radix_swap_scheduler.add_swap_task(swap_id)
             self.scheduler._check_swap_finished()
-            evict_dram_nums = self.scheduler.evict_dram_num()
-            if evict_dram_nums:
-                self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
+            # evict_dram_nums = self.scheduler.evict_dram_num()
+            # if evict_dram_nums:
+            #     self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
             
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
