@@ -488,7 +488,7 @@ class Scheduler:
         while self.running:
             seq_group = self.running.popleft()
             while not self.block_manager.can_append_slot(seq_group):
-                print("aaaa")
+                print("aaaa" )
                 if self.running:
                     # Preempt the lowest-priority sequence groups.                        
                     victim_seq_group = self.running.pop()
@@ -505,7 +505,6 @@ class Scheduler:
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
         self.running = running
-        print("len running ", len(self.running))
 
         #if running_with_dram has seq_group, we should add it to running queue when it can run
         running_with_dram: Deque[SequenceGroup] = deque()

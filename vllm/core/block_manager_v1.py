@@ -607,7 +607,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     def can_append_slot(self, seq_group: SequenceGroup) -> bool:
         # Simple heuristic: If there is at least one free block
         # for each sequence, we can append.
-        num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
+        if self.enable_radix_caching:
+            num_free_gpu_blocks = self.gpu_allocator.get_radix_num_free_blocks()
+        else:
+            num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
         num_seqs = seq_group.num_seqs(status=SequenceStatus.RUNNING)
         return num_seqs <= num_free_gpu_blocks
 
