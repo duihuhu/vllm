@@ -833,6 +833,7 @@ class Scheduler:
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_used_blocks()
         used_ratio = num_used_blocks/(num_used_blocks + num_free_blocks)
+        print("check_hbm_usage ", num_free_blocks, num_used_blocks)
         if used_ratio > 0.8:
             return True
         return False
@@ -857,7 +858,7 @@ class Scheduler:
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
             cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
-            print("get_evicted_blocks ", len(can_evicted_nodes), len(cpu_blocks))
+            print("get_evicted_blocks ", can_evicted_num, len(can_evicted_nodes), len(cpu_blocks))
             return can_evicted_nodes, cpu_blocks
         else:
             return None, None
