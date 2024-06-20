@@ -309,8 +309,9 @@ class LLMEngine:
                         kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
                     else:
                         kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
+            else:
+                kv_response = KvPreparedResponse(request_id, 0, None, 0, -1 , None)
         else:
-
             can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
             if can_allocate == AllocStatus.OK:
                 if self.deploy_config.enable_radix_caching:
