@@ -230,6 +230,7 @@ class RadixCache:
             block = block_table.pop(0)
             #TODO check why add ref_count in there
             block.ref_count += 1
+            block.computed = True
             print("block.ref_count ", block.ref_count)
             new_node.value = TreeNodeValue(block)
             node.children[key.pop(0)] = new_node
@@ -333,7 +334,6 @@ class RadixCache:
     def get_num_nodes_can_swap_out(self) -> int:
         def dfs_(cur_node: TreeNode):
             num_nodes = 0
-            print("cur_node.value.physicalTokenBlock.ref_count ",  cur_node.value.physicalTokenBlock.block_number, cur_node.value.physicalTokenBlock.ref_count)
             if cur_node.value.physicalTokenBlock.device == Device.CPU:
                 return 0
             if cur_node.value.physicalTokenBlock.ref_count == 1:
