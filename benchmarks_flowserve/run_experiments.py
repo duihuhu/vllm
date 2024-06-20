@@ -37,20 +37,7 @@ dirname = f'{basename}/{dataset}'
 if not os.path.exists(dirname):
     os.makedirs(dirname)
 
-# Run experiments and record results
-output_file = f'{dirname}/{configs["type"]}_{configs["num_requests"]}.csv'
-temp_file = f'{dirname}/temp.csv'
-
 for i, request_rate in enumerate(request_rates):
     command = f'python3 ./main.py --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}'
-    print(f'Running command: {command} > {temp_file}')
-    os.system(f'{command} > {temp_file}')
-    if i == 0:
-        output_csv = pd.read_csv(temp_file)
-        output_csv['request_rate'] = request_rate
-    else:
-        temp_csv = pd.read_csv(temp_file)
-        temp_csv['request_rate'] = request_rate
-        output_csv = pd.concat([output_csv, temp_csv])
-    
-output_csv.to_csv(output_file, index=False)
+    print(f'Running command: {command}')
+    os.system(f'{command}')

@@ -5,6 +5,7 @@ from transformers import PreTrainedTokenizerBase
 import pickle 
 import os
 from .common import find_range_of_multi_turn_conversations
+from .ReAct import PROMPT_FORWORD
 
 def sample_requests(
     dataset_path: str,
@@ -26,13 +27,14 @@ def sample_requests(
         prompts = []
         completions = []
         for i in range(len(doc_QAs)):
-            doc = 'Title: ' + doc_QAs[i]['title'] + '\n' + doc_QAs[i]['input']
+            # Cut the long document
+            s = 'Title: ' + doc_QAs[i]['title'] + '\n' + doc_QAs[i]['input'][:PROMPT_FORWORD] + '\n'
             QAs = eval(doc_QAs[i]['qa_pairs'])
             for j in range(len(QAs)):
-                question = QAs[j]['Q']
-                answer = QAs[j]['A']
-                prompts.append(doc + '\nQuestion: ' + question)
-                completions.append(answer)
+                s += 'Question: ' + QAs[j]['Q'] + '\n'
+                prompts.append(s)
+                completions.append('Answer: ' + QAs[j]['A'] + '\n')
+                s += completions[-1]
 
         prompt_token_ids = tokenizer(prompts).input_ids
         completion_token_ids = tokenizer(completions).input_ids
