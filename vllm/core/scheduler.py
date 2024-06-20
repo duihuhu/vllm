@@ -489,7 +489,7 @@ class Scheduler:
             seq_group = self.running.popleft()
             while not self.block_manager.can_append_slot(seq_group):
                 if self.running:
-                    # Preempt the lowest-priority sequence groups.
+                    # Preempt the lowest-priority sequence groups.                        
                     victim_seq_group = self.running.pop()
                     self._preempt(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
@@ -754,10 +754,12 @@ class Scheduler:
         # TODO(woosuk): Support recomputation for sequence groups with multiple
         # sequences. This may require a more sophisticated CUDA kernel.
         if preemption_mode is None:
-            if seq_group.get_max_num_running_seqs() == 1:
-                preemption_mode = PreemptionMode.RECOMPUTE
-            else:
-                preemption_mode = PreemptionMode.SWAP
+            # if seq_group.get_max_num_running_seqs() == 1:
+            #     preemption_mode = PreemptionMode.RECOMPUTE
+            # else:
+            #     preemption_mode = PreemptionMode.SWAP
+            preemption_mode = PreemptionMode.SWAP
+
         if preemption_mode == PreemptionMode.RECOMPUTE:
             self._preempt_by_recompute(seq_group)
         elif preemption_mode == PreemptionMode.SWAP:
