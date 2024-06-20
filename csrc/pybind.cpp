@@ -256,6 +256,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   py::class_<SwapManager>(swap_ops, "SwapManager")
       .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, std::vector<std::pair<at::Tensor, at::Tensor>>&, bool, int>())
+      .def(py::init<int, vecotr<uint64_t>&,vecotr<uint64_t>& >())
       .def("add_swap_tasks", &SwapManager::add_swap_tasks, "add_swap_tasks")
       .def("get_finished_swap_tasks", &SwapManager::get_finished_swap_tasks, "get_finished_swap_tasks");
 

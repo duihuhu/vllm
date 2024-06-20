@@ -18,6 +18,8 @@
 enum class SwapType {
     SWAP_OUT_BLOCKS,
     SWAP_IN_BLOCKS,
+    SWAP_OUT_FULL_BLOCKS,
+    SWAP_IN_FULL_BLOCKS,
 };
 
 class SwapTask {
@@ -31,10 +33,13 @@ public:
 class SwapManager {
 public:
     SwapManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, std::vector<std::pair<at::Tensor, at::Tensor>>& cpu_cache, bool is_layer, int layerNum);
+    SwapManager(int cache_block_size, std::vector<uint64_t>& gpu_blocks_address, std::vector<uint64_t>& cpu_blocks_address);
+    
     ~SwapManager();
     void add_swap_tasks(const SwapTask& tasks);
     void worker();
     void swap_out(const std::string& swap_id, const std::map<int, int>& evicted_blocks);
+    void swap_out_full_blocks(const std::string& swap_id, const std::map<int, int>& evicted_blocks);
     std::vector<std::string> check_finished_swap_out_events();
     std::vector<std::vector<std::string>> get_finished_swap_tasks();
 
@@ -47,6 +52,10 @@ private:
     TransQueue<std::vector<std::string>> swap_result_queue;
     std::unordered_map<std::string, at::cuda::CUDAEvent*> swap_out_events;
     int layerNum;
+
+    int cache_block_size;
+    std::vector<uint64_t> gpu_blocks_address;
+    std::vector<uint64_t> cpu_blocks_address;
 
     std::vector<c10::cuda::CUDAStream> swap_out_streams;
 

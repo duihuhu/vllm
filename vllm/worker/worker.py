@@ -198,6 +198,8 @@ class Worker:
             self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
             self.caches_addresses_tensors_cpu = self.cache_engine.get_tensor_for_caches_address(gpu=False)
             self.gpu_blocks_address = self.cache_engine.get_blocks_address(gpu=True)
+            self.cpu_blocks_address = self.cache_engine.get_blocks_address(gpu=False)
+
         else:
             self.caches_addresses_tensors_gpu = None
             self.caches_addresses_tensors_cpu = None
@@ -205,8 +207,11 @@ class Worker:
     def init_swap_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
-        self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False, self.model_config.get_num_layers(self.parallel_config))
+        if not self.use_agg_block:
+            self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False, self.model_config.get_num_layers(self.parallel_config))
+        else:
 
+            self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_block_size, self.gpu_blocks_address, self.cpu_blocks_address)
 
     def init_trans_manager(self):
         if not self.use_agg_block:
