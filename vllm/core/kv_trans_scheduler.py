@@ -312,7 +312,6 @@ class RadixSwapScheduler:
         self,
         swap_id: str,
     ) -> None:
-        print("add swap id ", swap_id)
         self.finished_worker_count[swap_id] = self.num_workers
     
     def _process_swap_blocks_finished(
