@@ -961,10 +961,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def evict_radix_tree(self, evict_nums, device: Device):
         if device == Device.CPU:
-            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.cpu_allocator.free_radix_manager_node_cache)
+            evicted_nums = self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.cpu_allocator.free_radix_manager_node_cache)
         else:
-            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.gpu_allocator.free_radix_manager_node_cache)
-
+            evicted_nums = self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.gpu_allocator.free_radix_manager_node_cache)
+        return evicted_nums
     def get_num_free_gpu_blocks(self) -> int:
         return self.gpu_allocator.get_num_free_blocks()
 

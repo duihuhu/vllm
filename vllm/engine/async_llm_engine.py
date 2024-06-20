@@ -479,8 +479,9 @@ class _AsyncLLMEngine(LLMEngine):
             print("cpu blocks remain " , self.scheduler.block_manager.cpu_allocator.get_radix_num_free_blocks(),
                   self.scheduler.block_manager.cpu_allocator.get_num_used_blocks(), evict_dram_nums)
             if evict_dram_nums:
-                self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
-                
+                evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
+                print("after evict_radix_tree " , self.scheduler.block_manager.cpu_allocator.get_radix_num_free_blocks(),
+                  self.scheduler.block_manager.cpu_allocator.get_num_used_blocks(), evicted_nums)     
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
         #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:

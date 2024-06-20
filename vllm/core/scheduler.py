@@ -853,7 +853,7 @@ class Scheduler:
         return evict_dram_nums
     
     def evict_radix_tree(self, evict_nums, device):
-        self.block_manager.evict_radix_tree(evict_nums=evict_nums, device=device)
+        return self.block_manager.evict_radix_tree(evict_nums=evict_nums, device=device)
 
     
     def get_evicted_blocks(self) ->  Tuple[List[TreeNode], List[PhysicalTokenBlock]]:
