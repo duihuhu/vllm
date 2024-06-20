@@ -89,6 +89,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
     def radix_manager_allocate_block(self) -> PhysicalTokenBlock:
         if self.current_num_blocks == self.num_blocks:
             block = self.radix_evictor.evict()
+            print("radix_manager_allocate_block ", self.current_num_blocks, self.num_blocks, block.block_number)
             return block
         block = PhysicalTokenBlock(device=self.device,
                                    block_number=self.current_num_blocks,
@@ -170,7 +171,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
         if block.ref_count == 0:
-            print("free_radix_manager_cache ", block.block_number)
             self.radix_evictor.add(block)
 
     def free_radix_manager_blocks_cache(self, blocks: List[PhysicalTokenBlock]) -> None:
@@ -179,7 +179,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
                 raise ValueError(f"Double free! {block} is already freed.")
             block.ref_count -= 1
             if block.ref_count == 0:
-                print("free_radix_manager_blocks_cache ", block.block_number)
                 self.radix_evictor.add(block)
 
     def free_radix_manager_node_cache(self, node: TreeNode) -> None:
@@ -187,7 +186,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {node.value.physicalTokenBlock.block_number} is already freed.")
         node.value.physicalTokenBlock.ref_count -= 1
         if node.value.physicalTokenBlock.ref_count == 0:
-            print("free_radix_manager_node_cache ", node.value.physicalTokenBlock.block_number)
             self.radix_evictor.add(node.value.physicalTokenBlock)
 
     #todo if only manage block.ref_count there, use background thread to release
