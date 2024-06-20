@@ -891,7 +891,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 else:
                     self.gpu_allocator.free(gpu_block)
             self.block_tables[seq.seq_id] = new_block_table
-
+            
+        print("after swap_out num_free_gpu_blocks", self.gpu_allocator.get_radix_num_free_blocks())
         block_number_mapping = {
             gpu_block.block_number: cpu_block.block_number
             for gpu_block, cpu_block in mapping.items()
