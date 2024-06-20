@@ -561,7 +561,6 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
     NCCLCHECK(ncclGroupEnd());
 }
 
-
 void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
     std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize)
 {
@@ -590,8 +589,8 @@ void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at
             memcpy_type,
             cudaStream);
             cudaMemcpyAsync(
-            dstKeyCachePtr,
-            srcKeyCachePtr,
+            dstValueCachePtr,
+            srcValueCachePtr,
             cacheSize,
             memcpy_type,
             cudaStream);
