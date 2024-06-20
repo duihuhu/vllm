@@ -97,8 +97,9 @@ class RadixCache:
             num_node_evicted = 0
             for child in node.children.values():
                 num_node_evicted += evict_node(child, device)
-            evict_callback(node)
+                
             if node.value.physicalTokenBlock.device == device:
+                evict_callback(node)
                 num_node_evicted += 1
             return num_node_evicted
         
