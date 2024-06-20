@@ -921,7 +921,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 else:
                     self.gpu_allocator.free(block)
             else:
-                self.cpu_allocator.free(block)
+                if self.enable_radix_caching:
+                    self.cpu_allocator.free_radix_manager_cache(block)
+                else:
+                    self.cpu_allocator.free(block)
 
     def free(self, seq: Sequence) -> None:
         if seq.seq_id not in self.block_tables:

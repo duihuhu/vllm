@@ -445,8 +445,6 @@ class _AsyncLLMEngine(LLMEngine):
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
             self.scheduler._check_swap_finished()
             is_hbm_evict = self.scheduler.check_hbm_usage()
-            # if self.deploy_config.role=="decoder":
-            #     is_hbm_evict = True
             if is_hbm_evict and self.deploy_config.role=="decoder":
                 can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
                 if can_evicted_nodes:
@@ -456,9 +454,10 @@ class _AsyncLLMEngine(LLMEngine):
                         swap_id = random_uuid()
                         self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
                         self.radix_swap_scheduler.add_swap_task(swap_id)
-            # evict_dram_nums = self.scheduler.evict_dram_num()
-            # if evict_dram_nums:
-            #     self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
+            #TODO evict dram block
+            evict_dram_nums = self.scheduler.evict_dram_num()
+            if evict_dram_nums:
+                self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
             
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
