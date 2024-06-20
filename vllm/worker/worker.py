@@ -295,9 +295,13 @@ class Worker:
 
         #todo hucc
         if evicted_blocks_to_swap_out:
-            self.swap_manager.add_swap_tasks(
-                swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
-        
+            if self.use_agg_block:
+                self.swap_manager.add_swap_tasks(
+                swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_FULL_BLOCKS))
+            else:
+                self.swap_manager.add_swap_tasks(
+                    swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
+            
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
@@ -341,7 +345,10 @@ class Worker:
     def evict_blocks(self,
                      swap_id: str,
                      evicted_blocks_to_swap_out: Dict[int,int]) -> None:
-        self.swap_manager.add_swap_tasks(swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
+        if self.use_agg_block:
+            self.swap_manager.add_swap_tasks(swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_FULL_BLOCKS))
+        else:
+            self.swap_manager.add_swap_tasks(swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
 
     def trans_blocks(
         self,

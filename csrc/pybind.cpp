@@ -269,6 +269,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   py::enum_<SwapType>(swap_ops, "SwapType")
       .value("SWAP_OUT_BLOCKS", SwapType::SWAP_OUT_BLOCKS)
       .value("SWAP_IN_BLOCKS", SwapType::SWAP_IN_BLOCKS)
+      .value("SWAP_OUT_FULL_BLOCKS", SwapType::SWAP_OUT_FULL_BLOCKS)
       .export_values();
 
 #ifndef USE_ROCM
