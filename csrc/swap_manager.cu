@@ -33,7 +33,8 @@ void SwapManager::worker() {
                 case SwapType::SWAP_IN_BLOCKS:
                     break;
                 case SwapType::SWAP_OUT_FULL_BLOCKS:
-                    swap_out_full_blocks(swap_id, evicted_blocks)
+                    swap_out_full_blocks(swap_id, evicted_blocks);
+                    break;
                 default:
                     throw std::runtime_error("invalid swap_type.");
             }
