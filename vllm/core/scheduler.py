@@ -868,7 +868,7 @@ class Scheduler:
             seq = seq_group.get_seqs()[0]
             block_table = self.block_manager.block_tables[seq.seq_id]
             seq.cache_blocks_to_insert = block_table
-            self.block_manager.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.block_manager.cpu_allocator.free_radix_manager_node_cache)
+            self.block_manager.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.block_manager.cpu_allocator.free_radix_manager_cache)
 
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:
