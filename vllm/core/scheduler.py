@@ -841,7 +841,12 @@ class Scheduler:
     def evict_dram_num(self):
         num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_cpu_used_blocks()
-        evict_dram_nums = int((num_used_blocks + num_free_blocks) * 0.8 - num_free_blocks)
+        print("evict_dram_num ", num_free_blocks, num_used_blocks)
+        if (num_used_blocks + num_free_blocks) * 0.8 > num_free_blocks:
+            evict_dram_nums = 0
+        else:
+            evict_dram_nums = int((num_used_blocks + num_free_blocks) * 0.8 - num_free_blocks)
+        print("evict_dram_num ", num_free_blocks, num_used_blocks, evict_dram_nums)
         return evict_dram_nums
     
     def evict_radix_tree(self, evict_nums, device):
@@ -851,11 +856,11 @@ class Scheduler:
     def get_evicted_blocks(self) ->  Tuple[List[TreeNode], List[PhysicalTokenBlock]]:
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
         # num_nodes = self.block_manager.get_num_nodes()
-        print("can_evicted_num ", can_evicted_num)
         
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
             cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
+            print("can_evicted_nodes, c")
             return can_evicted_nodes, cpu_blocks
         else:
             return None, None
