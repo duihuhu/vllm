@@ -441,24 +441,11 @@ class _AsyncLLMEngine(LLMEngine):
             
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
-        run_blocks_to_swap_out = {}
-        if self.deploy_config.enable_radix_caching and self.scheduler.block_manager.get_num_free_gpu_blocks()< len(self.scheduler.running):
-            can_evicted_num = self.scheduler.block_manager.get_num_nodes_can_swap_out()
-            real_evicted_num = 0
-            if len(self.scheduler.running) >= can_evicted_num:
-                real_evicted_num = can_evicted_num
-            else:
-                real_evicted_num = len(self.scheduler.running)
-            can_evicted_nodes = self.scheduler.block_manager.get_evicted_nodes(real_evicted_num)
-            cpu_blocks = self.scheduler.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
-            run_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
-            
+
         
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
-        if run_blocks_to_swap_out:
-            scheduler_outputs.blocks_to_swap_out.update(run_blocks_to_swap_out)
-            
+
         #TODO evict block from gpu to dram in radix tree
         evicted_blocks_to_swap_out = None
         swap_id = None

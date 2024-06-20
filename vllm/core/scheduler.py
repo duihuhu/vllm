@@ -485,7 +485,20 @@ class Scheduler:
         # Reserve new token slots for the running sequence groups.
         running: Deque[SequenceGroup] = deque()
         preempted: List[SequenceGroup] = []
-            
+        
+        if self.deploy_config.enable_radix_caching and self.block_manager.get_num_free_gpu_blocks()< len(self.running):
+            can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
+            real_evicted_num = 0
+            if len(self.running) >= can_evicted_num:
+                real_evicted_num = can_evicted_num
+            else:
+                real_evicted_num = len(self.running)
+            can_evicted_nodes = self.block_manager.get_evicted_nodes(real_evicted_num)
+            cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
+            run_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+        if run_blocks_to_swap_out:
+            blocks_to_swap_out.update(run_blocks_to_swap_out)
+        
         while self.running:
             seq_group = self.running.popleft()
             while not self.block_manager.can_append_slot(seq_group):
@@ -508,7 +521,7 @@ class Scheduler:
             
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
-        if not preempted:
+        if not preempted or not blocks_to_swap_out:
         
             #if running_with_dram has seq_group, we should add it to running queue when it can run
             running_with_dram: Deque[SequenceGroup] = deque()
