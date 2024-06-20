@@ -310,10 +310,11 @@ class LLMEngine:
                     else:
                         kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
         else:
-            if self.deploy_config.enable_radix_caching:
-                self.scheduler.match_allocate_kv_blocks(seq_group)
+
             can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
             if can_allocate == AllocStatus.OK:
+                if self.deploy_config.enable_radix_caching:
+                    self.scheduler.match_allocate_kv_blocks(seq_group)
                 computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
                 seq_group.has_dram = True
                 self.scheduler.add_recv_transfering(seq_group)
@@ -528,7 +529,6 @@ class LLMEngine:
                 seq_group.edecode_host = prefill_request_output.edecode_host
                 seq_group.edecode_port = prefill_request_output.edecode_port
                 
-
                 can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
                 if can_allocate == AllocStatus.OK:
                     if self.deploy_config.enable_radix_caching:
