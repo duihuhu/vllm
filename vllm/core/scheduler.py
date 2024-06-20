@@ -510,7 +510,8 @@ class Scheduler:
         running_with_dram: Deque[SequenceGroup] = deque()
         while self.running_with_dram:
             seq_group = self.running_with_dram.popleft()
-            if self.block_manager.can_allocate_for_swap(seq_group):
+            can_allocate_swap = self.block_manager.can_allocate_for_swap(seq_group)
+            if can_allocate_swap == AllocStatus.OK:
                 self.block_manager.allocate_for_swap(seq_group, blocks_to_swap_in)
                 self._append_slot(seq_group, blocks_to_copy)
                 self.running.append(seq_group)
