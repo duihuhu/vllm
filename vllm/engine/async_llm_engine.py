@@ -488,6 +488,7 @@ class _AsyncLLMEngine(LLMEngine):
             scheduler_outputs.scheduled_seq_groups.sort(key=lambda x: order_request_ids_index[x.seq_group.request_id])
 
         if not scheduler_outputs.is_empty():
+            print("execute_model_async ")
             # Execute the model.
             all_outputs = await self.model_executor.execute_model_async(
                 seq_group_metadata_list = seq_group_metadata_list, 

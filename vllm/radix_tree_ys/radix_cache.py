@@ -333,7 +333,6 @@ class RadixCache:
             num_nodes = 0
             if cur_node.value.physicalTokenBlock.device == Device.CPU:
                 return 0
-            print("cur_node.value.physicalTokenBlock.ref_count ", cur_node.value.physicalTokenBlock.ref_count)
             if cur_node.value.physicalTokenBlock.ref_count == 1:
                 num_nodes += 1
             
