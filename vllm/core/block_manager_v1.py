@@ -888,6 +888,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Free the GPU block swapped out to CPU.
                 if self.enable_radix_caching:
                     self.gpu_allocator.free_radix_manager_cache(gpu_block)
+                    print("swap out seq id block_table ",  seq_group.request_id, gpu_block.ref_count)
                 else:
                     self.gpu_allocator.free(gpu_block)
             self.block_tables[seq.seq_id] = new_block_table
