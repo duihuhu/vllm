@@ -860,11 +860,12 @@ class Scheduler:
     def evict_dram_num(self):
         num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_cpu_used_blocks()
-        if num_free_blocks > (num_used_blocks + num_free_blocks) * 0.2 :
-            evict_dram_nums = 0
-        else:
-            evict_dram_nums =  (num_used_blocks + num_free_blocks) * 0.2 - num_free_blocks
-        return evict_dram_nums
+        # if num_free_blocks > (num_used_blocks + num_free_blocks) * 0.2 :
+        #     evict_dram_nums = 0
+        # else:
+        #     evict_dram_nums =  (num_used_blocks + num_free_blocks) * 0.2 - num_free_blocks
+        # return evict_dram_nums
+        return num_used_blocks
     
     def evict_radix_tree(self, evict_nums, device):
         return self.block_manager.evict_radix_tree(evict_nums=evict_nums, device=device)
