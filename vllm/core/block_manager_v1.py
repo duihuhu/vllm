@@ -872,7 +872,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
             new_block_table: BlockTable = []
             block_table = self.block_tables[seq.seq_id]
-
+            print("swap out seq id block_table ", seq_group.request_id, len(block_table))
             for gpu_block in block_table:
                 if gpu_block in mapping:
                     cpu_block = mapping[gpu_block]
