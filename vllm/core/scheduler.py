@@ -583,7 +583,6 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
             ignored_seq_groups=[],
         )
-        print("scheduler_outputs ", scheduler_outputs, len(self.running))
         return scheduler_outputs, cached_seq_groups
 
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:

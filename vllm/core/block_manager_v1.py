@@ -619,7 +619,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             num_free_gpu_blocks = self.gpu_allocator.get_radix_num_free_blocks()
         else:
             num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
-        print("can_append_slot num_free_gpu_blocks ", num_free_gpu_blocks)
         num_seqs = seq_group.num_seqs(status=SequenceStatus.RUNNING)
         return num_seqs <= num_free_gpu_blocks
 
@@ -1078,6 +1077,5 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for block in kv_block_table:
                 block_table.append(block)
             self.block_tables[seq.seq_id] = block_table.copy()
-            print("move_kv_blocks_meta ", seq_group.request_id, len(self.block_tables[seq.seq_id]))
             #if self.enable_radix_caching, we process the same key's cache in after seq finished.
             del self.kv_block_tables[seq.seq_id]
