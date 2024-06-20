@@ -1072,5 +1072,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             for block in kv_block_table:
                 block_table.append(block)
             self.block_tables[seq.seq_id] = block_table.copy()
+            print("move_kv_blocks_meta ", seq_group.request_id, len(self.block_tables[seq.seq_id]))
             #if self.enable_radix_caching, we process the same key's cache in after seq finished.
             del self.kv_block_tables[seq.seq_id]
