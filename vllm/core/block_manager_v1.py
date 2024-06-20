@@ -381,7 +381,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for block in blocks:
             if block.device == Device.CPU:
                 need_hbm_blocks = need_hbm_blocks + 1
-        num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()  
+        num_free_gpu_blocks = self.gpu_allocator.get_radix_num_free_blocks()  
         if num_free_gpu_blocks - need_hbm_blocks - 1 >= self.watermark_blocks:
             return AllocStatus.OK
         else:
@@ -821,7 +821,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     def can_swap_in(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
         num_swapped_seqs = seq_group.num_seqs(status=SequenceStatus.SWAPPED)
-        num_free_blocks = self.gpu_allocator.get_num_free_blocks()
+        if self.enable_radix_caching:
+            num_free_blocks = self.gpu_allocator.get_radix_num_free_blocks()
+        else:
+            num_free_blocks = self.gpu_allocator.get_num_free_blocks()
         # NOTE: Conservatively, we assume that every sequence will allocate
         # at least one free block right after the swap-in.
         # NOTE: This should match the logic in can_append_slot().
@@ -856,6 +859,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
         blocks = self._get_physical_blocks(seq_group)
+        if self.enable_radix_caching:
+            return len(blocks) <= self.cpu_allocator.get_radix_num_free_blocks()
         return len(blocks) <= self.cpu_allocator.get_num_free_blocks()
 
     def swap_out(self, seq_group: SequenceGroup) -> Dict[int, int]:
