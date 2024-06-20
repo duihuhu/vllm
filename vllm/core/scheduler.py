@@ -855,7 +855,6 @@ class Scheduler:
         if used_ratio > 0.8:
             return True
         return False
-
     
     def evict_dram_num(self):
         num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
