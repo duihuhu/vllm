@@ -303,7 +303,7 @@ class CacheEngine:
                  src_to_dsts: Dict[int, List[int]]) -> None:
         num_layers = self.gpu_cache[0][0].shape[0]
         numel_per_layer = self.gpu_cache[0][0].stride(0)
-        self.attn_backend.copy_blocks_agg(kv_cache_addresses, src_to_dsts, num_layers, numel_per_layer)
+        self.attn_backend.copy_blocks_agg(kv_cache_addresses, self.gpu_cache[0][0,0,0,0,0], src_to_dsts, num_layers, numel_per_layer)
 
     def wait_for_swap_out_events(self, wait_for_swap_out: List[str]) -> None:
         for key in wait_for_swap_out:
