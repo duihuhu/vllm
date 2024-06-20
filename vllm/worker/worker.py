@@ -394,10 +394,9 @@ class Worker:
                     self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache, dst_blocks_cpu_cache)
                 else:
                     null_dst_cpu_cache = [(torch.empty(1), torch.empty(1))]
-                    key_caches = []
+                    blocks_address = [] 
                     for cache_block in dst_tensor:
-                        key_caches.append(cache_block[0])
-                    blocks_address = ops.tensor_for_blocks_address(key_caches)
+                        blocks_address.append(cache_block.data_ptr())
                     self.trans_manager.init_dst_cpu_cache(dst_channel, null_dst_cpu_cache, blocks_address)
         
     def get_dst_shm_rank(self, dst_channel):
