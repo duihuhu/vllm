@@ -521,7 +521,7 @@ class Scheduler:
             
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
-        if not preempted or not blocks_to_swap_out:
+        if not preempted and not blocks_to_swap_out:
         
             #if running_with_dram has seq_group, we should add it to running queue when it can run
             running_with_dram: Deque[SequenceGroup] = deque()
