@@ -704,6 +704,7 @@ class Scheduler:
                     block = self.block_manager.cpu_allocator.radix_manager_allocate()
                     block_table.append(block)
                     cpu_blocks.append(block.block_number)
+            print(" allocate_dram_kv_blocks ", cpu_blocks)
                     
             seq.cache_blocks_to_insert = block_table
             for seq in seq_group.get_seqs():
