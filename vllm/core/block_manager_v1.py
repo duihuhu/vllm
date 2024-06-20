@@ -89,7 +89,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
     def radix_manager_allocate_block(self) -> PhysicalTokenBlock:
         if self.current_num_blocks == self.num_blocks:
             block = self.radix_evictor.evict()
-            print("radix_manager_allocate_block ", self.current_num_blocks, self.num_blocks, block.block_number)
             return block
         block = PhysicalTokenBlock(device=self.device,
                                    block_number=self.current_num_blocks,
@@ -365,6 +364,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             if block.device == Device.CPU:
                 if self.enable_radix_caching:
                     hbm_block = self.gpu_allocator.radix_manager_allocate()
+                    print("block allocate_for_swap ", block.block_number)
                     self.cpu_allocator.free_radix_manager_cache(block)
                 else:
                     hbm_block = self.gpu_allocator.allocate()
@@ -857,6 +857,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 new_block_table.append(gpu_block)
                 # Free the CPU block swapped in to GPU.
                 if self.enable_radix_caching:
+                    print("swap_in allocate_for_swap ", cpu_block.block_number)
                     self.cpu_allocator.free_radix_manager_cache(cpu_block)
                 else:
                     self.cpu_allocator.free(cpu_block)
@@ -924,6 +925,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     self.gpu_allocator.free(block)
             else:
                 if self.enable_radix_caching:
+                    print("_free_block_table _free_block_table ", block.block_number)
                     self.cpu_allocator.free_radix_manager_cache(block)
                 else:
                     self.cpu_allocator.free(block)
