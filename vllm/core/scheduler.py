@@ -505,24 +505,25 @@ class Scheduler:
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
         self.running = running
-
-        #if running_with_dram has seq_group, we should add it to running queue when it can run
-        running_with_dram: Deque[SequenceGroup] = deque()
-        while self.running_with_dram:
-            seq_group = self.running_with_dram.popleft()
-            can_allocate_swap = self.block_manager.can_allocate_for_swap(seq_group)
-            if can_allocate_swap == AllocStatus.OK:
-                self.block_manager.allocate_for_swap(seq_group, blocks_to_swap_in)
-                self._append_slot(seq_group, blocks_to_copy)
-                self.running.append(seq_group)
-
-            else:
-                running_with_dram.append(seq_group)
-        self.running_with_dram = running_with_dram
             
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
         if not preempted:
+        
+            #if running_with_dram has seq_group, we should add it to running queue when it can run
+            running_with_dram: Deque[SequenceGroup] = deque()
+            while self.running_with_dram:
+                seq_group = self.running_with_dram.popleft()
+                can_allocate_swap = self.block_manager.can_allocate_for_swap(seq_group)
+                if can_allocate_swap == AllocStatus.OK:
+                    self.block_manager.allocate_for_swap(seq_group, blocks_to_swap_in)
+                    self._append_slot(seq_group, blocks_to_copy)
+                    self.running.append(seq_group)
+
+                else:
+                    running_with_dram.append(seq_group)
+            self.running_with_dram = running_with_dram
+            
             num_curr_seqs = sum(seq_group.get_max_num_running_seqs()
                                 for seq_group in self.running)
             curr_loras = set(
