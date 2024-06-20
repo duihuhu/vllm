@@ -391,7 +391,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
         num_required_blocks = len(seq.logical_token_blocks)
         cache_len = len(seq.data.prefix_blocks)
-        num_free_cpu_blocks = self.cpu_allocator.get_num_free_blocks()
+        if self.enable_radix_caching:
+            num_free_cpu_blocks = self.cpu_allocator.get_radix_num_free_blocks()
+        else:
+            num_free_cpu_blocks = self.cpu_allocator.get_num_free_blocks()
         if num_free_cpu_blocks >= (num_required_blocks - cache_len):
             return AllocStatus.OK
         else:

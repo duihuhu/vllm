@@ -862,7 +862,7 @@ class Scheduler:
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
             cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
-            # print("get_evicted_blocks ", can_evicted_num, len(can_evicted_nodes), len(cpu_blocks))
+            print("get_evicted_blocks ", can_evicted_num, len(can_evicted_nodes), len(cpu_blocks))
             return can_evicted_nodes, cpu_blocks
         else:
             return None, None
