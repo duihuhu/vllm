@@ -485,8 +485,8 @@ class LLMEngine:
             can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
             #TODO there may has some issue
             if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
-                is_hbm = self.scheduler.check_kv_hbm_usage()
-                if can_allocate == AllocStatus.OK and not is_hbm:
+                # is_hbm = self.scheduler.check_kv_hbm_usage()
+                if can_allocate == AllocStatus.OK:
                     seq_group.eprefill_host = prefill_request_output.eprefill_host
                     seq_group.eprefill_port = prefill_request_output.eprefill_port
                     seq_group.edecode_host = prefill_request_output.edecode_host

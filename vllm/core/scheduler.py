@@ -488,6 +488,7 @@ class Scheduler:
         while self.running:
             seq_group = self.running.popleft()
             while not self.block_manager.can_append_slot(seq_group):
+                print("aaaa")
                 if self.running:
                     # Preempt the lowest-priority sequence groups.                        
                     victim_seq_group = self.running.pop()
@@ -504,6 +505,7 @@ class Scheduler:
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
         self.running = running
+        print("len running ", len(self.running))
 
         #if running_with_dram has seq_group, we should add it to running queue when it can run
         running_with_dram: Deque[SequenceGroup] = deque()
@@ -583,6 +585,7 @@ class Scheduler:
             blocks_to_copy=blocks_to_copy,
             ignored_seq_groups=[],
         )
+        print("scheduler_outputs ", scheduler_outputs, len(self.running))
         return scheduler_outputs, cached_seq_groups
 
     def schedule(self) -> Tuple[List[SequenceGroupMetadata], SchedulerOutputs]:
@@ -835,7 +838,7 @@ class Scheduler:
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_used_blocks()
         used_ratio = num_used_blocks/(num_used_blocks + num_free_blocks)
-        print("check_hbm_usage ", num_free_blocks, num_used_blocks)
+        # print("check_hbm_usage ", num_free_blocks, num_used_blocks)
         if used_ratio > 0.8:
             return True
         return False
@@ -844,7 +847,7 @@ class Scheduler:
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_used_blocks()
         used_ratio = num_used_blocks/(num_used_blocks + num_free_blocks)
-        print("check_kv_hbm_usage ", num_free_blocks, num_used_blocks)
+        # print("check_kv_hbm_usage ", num_free_blocks, num_used_blocks)
         if used_ratio > 0.9:
             return True
         return False
@@ -865,11 +868,10 @@ class Scheduler:
     def get_evicted_blocks(self) ->  Tuple[List[TreeNode], List[PhysicalTokenBlock]]:
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
         # num_nodes = self.block_manager.get_num_nodes()
-        print("can_evicted_num ", can_evicted_num)
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
             cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
-            print("get_evicted_blocks ", can_evicted_num, len(can_evicted_nodes), len(cpu_blocks))
+            # print("get_evicted_blocks ", can_evicted_num, len(can_evicted_nodes), len(cpu_blocks))
             return can_evicted_nodes, cpu_blocks
         else:
             return None, None
