@@ -1071,6 +1071,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             kv_block_table = self.kv_block_tables[seq.seq_id]
             for block in kv_block_table:
                 block_table.append(block)
-            self.block_tables[seq.seq_id] = block_table
+            self.block_tables[seq.seq_id] = block_table.copy()
             #if self.enable_radix_caching, we process the same key's cache in after seq finished.
             del self.kv_block_tables[seq.seq_id]
