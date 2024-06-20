@@ -443,6 +443,7 @@ class _AsyncLLMEngine(LLMEngine):
         evicted_blocks_to_swap_out = None
         swap_id = None
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
+            self.scheduler._check_swap_finished()
             is_hbm_evict = self.scheduler.check_hbm_usage()
             # if self.deploy_config.role=="decoder":
             #     is_hbm_evict = True
@@ -455,7 +456,6 @@ class _AsyncLLMEngine(LLMEngine):
                         swap_id = random_uuid()
                         self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
                         self.radix_swap_scheduler.add_swap_task(swap_id)
-            self.scheduler._check_swap_finished()
             # evict_dram_nums = self.scheduler.evict_dram_num()
             # if evict_dram_nums:
             #     self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
