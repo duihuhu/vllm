@@ -166,6 +166,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
     def free_radix_manager_cache(self, block: PhysicalTokenBlock) -> None:
         if block.ref_count == 0:
             raise ValueError(f"Double free! {block} is already freed.")
+        print("free_radix_manager_cache ", block.ref_count)
         block.ref_count -= 1
         if block.ref_count == 0:
             self.radix_evictor.add(block)

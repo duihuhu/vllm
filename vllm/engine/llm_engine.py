@@ -831,7 +831,6 @@ class LLMEngine:
             if self.scheduler.block_manager.enable_radix_caching \
                 or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
                     and self.deploy_config.role == "decoder"):
-                print("radix_manager_update ")
                 self.radix_manager_update(finished_seq_groups)
                 
         # Free the finished sequence groups.
