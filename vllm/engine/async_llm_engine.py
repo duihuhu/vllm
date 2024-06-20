@@ -477,7 +477,7 @@ class _AsyncLLMEngine(LLMEngine):
             #TODO evict dram block
             evict_dram_nums = self.scheduler.evict_dram_num()
             print("cpu blocks remain " , self.scheduler.block_manager.cpu_allocator.get_radix_num_free_blocks(),
-                  self.scheduler.block_manager.cpu_allocator.get_num_used_blocks())
+                  self.scheduler.block_manager.cpu_allocator.get_num_used_blocks(), evict_dram_nums)
             if evict_dram_nums:
                 self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
                 

@@ -359,6 +359,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         ori_blocks = self.block_tables[seq.seq_id]
         new_blocks_table : BlockTable = []
         block_number_mapping = {}
+        print("allocate_for_swap ", len(ori_blocks), self.cpu_allocator.get_radix_num_free_blocks())
         for block in ori_blocks:
             if block.device == Device.CPU:
                 if self.enable_radix_caching:
@@ -372,6 +373,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 new_blocks_table.append(hbm_block)
             else:
                 new_blocks_table.append(block)
+        
+        print("after allocate_for_swap ", len(ori_blocks), self.cpu_allocator.get_radix_num_free_blocks())
                 
         blocks_to_swap_in.update(block_number_mapping)
         self.block_tables[seq.seq_id] = new_blocks_table
@@ -892,7 +895,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # Free the GPU block swapped out to CPU.
                 if self.enable_radix_caching:
                     self.gpu_allocator.free_radix_manager_cache(gpu_block)
-                    print("swap out seq id block_table ",  seq_group.request_id, gpu_block.ref_count)
                 else:
                     self.gpu_allocator.free(gpu_block)
             self.block_tables[seq.seq_id] = new_block_table
