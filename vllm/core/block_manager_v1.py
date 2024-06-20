@@ -860,12 +860,18 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     cpu_block = mapping[gpu_block]
                     cpu_block.ref_count += 1
                 else:
-                    cpu_block = self.cpu_allocator.allocate(
-                        gpu_block.block_hash, gpu_block.num_hashed_tokens)
+                    if self.enable_radix_caching:
+                        cpu_block = self.cpu_allocator.radix_manager_allocate()
+                    else:
+                        cpu_block = self.cpu_allocator.allocate(
+                            gpu_block.block_hash, gpu_block.num_hashed_tokens)
                     mapping[gpu_block] = cpu_block
                 new_block_table.append(cpu_block)
                 # Free the GPU block swapped out to CPU.
-                self.gpu_allocator.free(gpu_block)
+                if self.enable_radix_caching:
+                    self.gpu_allocator.free_radix_manager_cache(gpu_block)
+                else:
+                    self.gpu_allocator.free(gpu_block)
             self.block_tables[seq.seq_id] = new_block_table
 
         block_number_mapping = {
