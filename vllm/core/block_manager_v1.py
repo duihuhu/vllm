@@ -84,7 +84,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
         self.default_hash_ctr = count()
 
         self.radix_cache: RadixCache = RadixCache()
-    
+        self.radix_block_hash = 0
+        
     def radix_manager_allocate_block(self) -> PhysicalTokenBlock:
         if self.current_num_blocks == self.num_blocks:
             block = self.radix_evictor.evict()
@@ -92,9 +93,10 @@ class CachedBlockAllocator(BlockAllocatorBase):
         block = PhysicalTokenBlock(device=self.device,
                                    block_number=self.current_num_blocks,
                                    block_size=self.block_size,
-                                   block_hash=-1,
+                                   block_hash=self.radix_block_hash,
                                    num_hashed_tokens=-1)
         self.current_num_blocks += 1
+        self.radix_block_hash +=1
         return block
     
     def allocate_block(self, block_hash: int,
