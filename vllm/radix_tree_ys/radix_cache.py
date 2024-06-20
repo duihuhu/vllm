@@ -228,10 +228,8 @@ class RadixCache:
             new_node = TreeNode()
             new_node.parent = node
             block = block_table.pop(0)
-            #TODO check why add ref_count in there
             block.ref_count += 1
             new_node.value = TreeNodeValue(block)
-            print("new_node.value ", new_node.value.physicalTokenBlock.computed)
             node.children[key.pop(0)] = new_node
 
             # 往下insert
