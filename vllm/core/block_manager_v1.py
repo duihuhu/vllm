@@ -170,6 +170,13 @@ class CachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             self.radix_evictor.add(block)
 
+    def free_radix_manager_node_cache(self, node: TreeNode) -> None:
+        if node.value.physicalTokenBlock.ref_count == 0:
+            raise ValueError(f"Double free! {node.value.physicalTokenBlock.block_number} is already freed.")
+        node.value.physicalTokenBlock.ref_count -= 1
+        if node.value.physicalTokenBlock.ref_count == 0:
+            self.radix_evictor.add(node.value.physicalTokenBlock)
+
     #todo if only manage block.ref_count there, use background thread to release
     #not need self.evictor.add(block)
     def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
@@ -911,9 +918,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
     def evict_radix_tree(self, evict_nums, device: Device):
         if device == Device.CPU:
-            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.cpu_allocator.free_radix_manager_cache)
+            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.cpu_allocator.free_radix_manager_node_cache)
         else:
-            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.gpu_allocator.free_radix_manager_cache)
+            self.radix_tree_manager.evict(num_nodes=evict_nums, device=device, evict_callback=self.gpu_allocator.free_radix_manager_node_cache)
 
     def get_num_free_gpu_blocks(self) -> int:
         return self.gpu_allocator.get_num_free_blocks()
