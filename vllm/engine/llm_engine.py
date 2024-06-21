@@ -271,7 +271,7 @@ class LLMEngine:
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
         request_output: Optional[RequestOutput] = None):
-
+        print("add_kv_results_request ", request_id)
         # Create the sequences.
         block_size = self.cache_config.block_size
         seq_id = next(self.seq_counter)
