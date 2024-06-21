@@ -21,6 +21,7 @@ and our method. Each .csv file represents one line in the figure.
 '''
 import os
 import pandas as pd
+import time
 
 # Configurable parameters
 basename = 'end2end_exp_results'
@@ -44,3 +45,4 @@ for i, request_rate in enumerate(request_rates):
     command = f'python3 ./main.py --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}'
     print(f'Running command: {command}')
     os.system(f'{command}')
+    time.sleep(5)
