@@ -521,6 +521,16 @@ void TransEngine::checkNcclError(ncclResult_t result, const char* file, int line
     }
 }
 
+void TransEngine::throwError(int request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize) {
+    std::string errMsg = "RecvFullBlocks dstCaches " 
+                        + std::to_string(request_id) + " " 
+                        + std::to_string(blockIdx) + " " 
+                        + std::to_string(reinterpret_cast<uintptr_t>(dstBlockPtr)) + " " 
+                        + std::to_string(srcRank) + " " 
+                        + std::to_string(cacheSize);
+    
+    throw std::runtime_error(oss.str());
+}
 
 void TransEngine::RecvFullBlocks(const std::string& request_id, std::vector<uint64_t>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
@@ -537,7 +547,7 @@ void TransEngine::RecvFullBlocks(const std::string& request_id, std::vector<uint
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
-            throw std::runtime_error("RecvFullBlocks dstCaches ", request_id, dstCaches[blockIdx], dstBlockPtr, blockIdx, srcRank, cacheSize)
+            throwError(request_id, dstCaches[blockIdx], dstBlockPtr, blockIdx, srcRank, cacheSize);
         }
         cudaStreamSynchronize(cudaStream);
         // std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
