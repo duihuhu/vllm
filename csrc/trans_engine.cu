@@ -523,7 +523,7 @@ void TransEngine::checkNcclError(ncclResult_t result, const char* file, int line
 
 void TransEngine::throwError(const std::string& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize) {
     std::string errMsg = "RecvFullBlocks dstCaches " 
-                        + std::to_string(request_id) + " " 
+                        + request_id + " " 
                         + std::to_string(blockIdx) + " " 
                         + std::to_string(reinterpret_cast<uintptr_t>(dstBlockPtr)) + " " 
                         + std::to_string(srcRank) + " " 
@@ -547,7 +547,7 @@ void TransEngine::RecvFullBlocks(const std::string& request_id, std::vector<uint
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
-            throwError(request_id, dstCaches[blockIdx], dstBlockPtr, blockIdx, srcRank, cacheSize);
+            throwError(request_id, blockIdx, dstBlockPtr, srcRank, cacheSize);
         }
         cudaStreamSynchronize(cudaStream);
         // std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
