@@ -121,19 +121,19 @@ class CacheEngine:
 
     def get_blocks_address(self, gpu: bool) -> List[int]:
         if self.use_agg_block:
-            # key_caches = []
+            key_caches = []
             blocks_address = [] 
             if gpu is True:
                 for cache_block in self.gpu_cache:
-                    # key_caches.append(cache_block[0])
-                # blocks_address = ops.tensor_for_blocks_address(key_caches)
-                    blocks_address.append(cache_block.data_ptr())
+                    key_caches.append(cache_block[0])
+                blocks_address = ops.tensor_for_blocks_address(key_caches)
+                    # blocks_address.append(cache_block.data_ptr())
                 return blocks_address
             else:
                 for cache_block in self.cpu_cache:
-                #     key_caches.append(cache_block[0])
-                # blocks_address = ops.tensor_for_blocks_address(key_caches)
-                    blocks_address.append(cache_block.data_ptr())
+                    key_caches.append(cache_block[0])
+                blocks_address = ops.tensor_for_blocks_address(key_caches)
+                    # blocks_address.append(cache_block.data_ptr())
 
                 return blocks_address
         else:
