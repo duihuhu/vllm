@@ -22,7 +22,7 @@ async def handle_main_request(reqs, args):
     for req in reqs:
         waiting_time = waiting_time + np.random.exponential(1.0 / args.request_rate)
         time_elapsed = time.perf_counter() - time_start
-        assert waiting_time >= time_elapsed, 'Fail to keep up with the rate of Poisson Distribution' 
+        assert waiting_time >= time_elapsed, 'Fail to keep up with the rate of Poisson Distribution. Try increasing num_requests.' 
         response.append(await post_request_and_get_response(args, req, waiting_time - time_elapsed))
 
 async def run(args, reqs, multi_conversations_range):
