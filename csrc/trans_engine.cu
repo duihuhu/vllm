@@ -189,9 +189,7 @@ void TransEngine::recv_full_blocks(const std::string& channel, const std::string
 void TransEngine::send_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& dst_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
 
     c10::cuda::CUDAStreamGuard guard(stream);
-    std::cout<<"send_full_blocks request_id " << request_id << std::endl;
     SendFullBlocks(blocks_gpu_cache, dst_blocks, cache_block_size, opposite_rank, comm);
-    std::cout<<"after send_full_blocks request_id " << request_id << std::endl;
 
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
     event->record();

@@ -271,7 +271,6 @@ class LLMEngine:
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
         request_output: Optional[RequestOutput] = None):
-        print("add_kv_results_request ", request_id)
         # Create the sequences.
         block_size = self.cache_config.block_size
         seq_id = next(self.seq_counter)
@@ -305,6 +304,7 @@ class LLMEngine:
                 else:
                     if blocks:
                         self.scheduler.add_recv_transfering(seq_group)
+                        # print("add_kv_results_request request_output.prompt request id ", request_id, seq.prompt, blocks)
                         transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
                         kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
                     else:
