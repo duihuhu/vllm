@@ -13,6 +13,7 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#include <cassert>
 
 const int numGPUs = 2; // Assume two GPUs
 #define MAX_NUM_COMM 128
@@ -38,46 +39,48 @@ bool readyA = false;
     } \
 } while (0)
 
-void nccl_send(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, ncclComm_t comm, int device_id);
+bool is_sender(int device_id) {
+    return device_id % 2 == 0;
+}
 
-void nccl_initA(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int numGPUs, ncclComm_t comm, ncclUniqueId commId, int device_id){
+void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, ncclComm_t comm, int device_id);
+
+void nccl_init(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int numGPUs, ncclComm_t comm, ncclUniqueId commId, int device_id){
     // Set device for the current thread
     CUDA_CHECK(cudaSetDevice(device_id));
 
     // Initialize NCCL communication
     NCCL_CHECK(ncclCommInitRank(&comm, numGPUs, commId, device_id));
     running[thread_id] = 1;
-    // std::cout<<"ncclCommInitRank "  << thread_id <<std::endl;
 
-    // std::unique_lock<std::mutex> lock(mtx);
     while(!readyA){
-        // cv.wait(lock);
     }
-    // std::cout<<"nccl_send  "<<std::endl;
-    nccl_send(thread_id, BUF_SIZE, NUM_BUFFERS, comm, device_id);
+
+    nccl_send_recv(thread_id, BUF_SIZE, NUM_BUFFERS, comm, device_id);
 }
 
-void nccl_send(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, ncclComm_t comm, int device_id) {
-    // Set device for the current thread
-    // std::cout<<"nccl_send  "<<std::endl;
+void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, ncclComm_t comm, int device_id) {
+    
     CUDA_CHECK(cudaSetDevice(device_id));
     
-    // Create streams
     cudaStream_t streams;
     cudaStreamCreate(&streams);
 
-    // Allocate and initialize buffers
-    float *send_buf[NUM_BUFFERS];
+    float *buf[NUM_BUFFERS];
     for (int i = 0; i < NUM_BUFFERS; ++i) {
-        cudaMalloc(&send_buf[i], BUF_SIZE * sizeof(float));
-        cudaMemset(send_buf[i], 0, BUF_SIZE * sizeof(float));
+        cudaMalloc(&buf[i], BUF_SIZE * sizeof(float));
+        cudaMemset(buf[i], 0, BUF_SIZE * sizeof(float));
     }
 
     // Warm up: send buffers
     long long buffer_size = BUF_SIZE;
     ncclGroupStart();
     for (int i = 0; i < NUM_BUFFERS; ++i) {
-        NCCL_CHECK(ncclSend(send_buf[i], buffer_size, ncclFloat, 1, comm, streams));
+        if(is_sender(device_id)) {
+            NCCL_CHECK(ncclSend(buf[i], buffer_size, ncclFloat, device_id + 1, comm, streams));
+        } else {
+            NCCL_CHECK(ncclRecv(buf[i], buffer_size, ncclFloat, device_id - 1, comm, streams));
+        }
     }
     ncclGroupEnd();
     cudaStreamSynchronize(streams);
@@ -86,19 +89,30 @@ void nccl_send(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, ncclComm_t co
     auto begin = std::chrono::steady_clock::now();
     ncclGroupStart();
     for (int i = 0; i < NUM_BUFFERS; ++i) {
-        NCCL_CHECK(ncclSend(send_buf[i], buffer_size, ncclFloat, 1, comm, streams));
+        if(is_sender(device_id)) {
+            NCCL_CHECK(ncclSend(buf[i], buffer_size, ncclFloat, device_id + 1, comm, streams));
+        } else {
+            NCCL_CHECK(ncclRecv(buf[i], buffer_size, ncclFloat, device_id - 1, comm, streams));
+        }
     }
     ncclGroupEnd();
 
     cudaStreamSynchronize(streams);
+
+    std::string message;
+    if(is_sender(device_id)) {
+        message = " Send Copying time for buffer: ";
+    } else {
+        message = " Receive Copying time for buffer: ";
+    }
     auto end = std::chrono::steady_clock::now();
-    std::cout << "Thread " << thread_id << " Send Copying time for buffer: "
+    std::cout << "Thread " << thread_id << message
               << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count()
               << " us" << std::endl;
 
     // Clean up
     for (int i = 0; i < NUM_BUFFERS; ++i) {
-        cudaFree(send_buf[i]);
+        cudaFree(buf[i]);
     }
     cudaStreamDestroy(streams);
     NCCL_CHECK(ncclCommDestroy(comm));
@@ -109,8 +123,9 @@ int main(int argc, char* argv[]) {
     int NUM_BUFFERS = std::atoi(argv[2]);
     int NUM_COMM = std::atoi(argv[3]);
     int NUM_THREADS = std::atoi(argv[4]);
+    int device_id = std::atoi(argv[5]); // Even number means sender, odd number means receiver.
 
-    assert(NUM_BUFFERS % NUM_THREADS % NUM_COMM == 0, "NUM_BUFFERS must be divisible by NUM_THREADS and NUM_COMM");
+    assert(NUM_BUFFERS % NUM_THREADS % NUM_COMM == 0);
     NUM_BUFFERS = NUM_BUFFERS / NUM_THREADS / NUM_COMM;
 
     // Initialize array elements to false
@@ -131,29 +146,31 @@ int main(int argc, char* argv[]) {
             std::cerr << "Failed to open file: " << filename << std::endl;
             return 1;
         }
-        write(fd, &commId[i], sizeof(ncclUniqueId));
+        if (is_sender(device_id)) {
+            write(fd, &commId[i], sizeof(ncclUniqueId));
+        } else {
+            read(fd, &commId[i], sizeof(ncclUniqueId));
+        }
         close(fd);
-        threads.emplace_back(nccl_initA, i, BUF_SIZE, NUM_BUFFERS, numGPUs, comm[i], commId[i], 0); // device_id set to 0
+        threads.emplace_back(nccl_init, i, BUF_SIZE, NUM_BUFFERS, numGPUs, comm[i], commId[i], device_id); // device_id set to 0
         while(1){
             if(running[i] == 1){
-                std::cout<< " thread i " <<  running[i] << " " << i << std::endl;
+                std::cout<< " thread " << i << " is running" << std::endl;
                 ready_num = ready_num + 1;
                 break;
             }
         }
-        std::cout<< "for out not " << i << " " << ready_num<< std::endl;
     }
+
     while(1){
         if(ready_num == NUM_COMM){
             // 主线程准备通知所有线程执行任务
-            std::cout << "ready_num " << ready_num << std::endl;
-            // std::lock_guard<std::mutex> lock(mtx);
+            std::cout << "ready_num: " << ready_num << std::endl;
             readyA = true;
-            // cv.notify_all();
             break;
         }
     }
-    // Join threads
+
     for (auto& t : threads) {
         t.join();
     }
