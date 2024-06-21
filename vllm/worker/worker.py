@@ -365,7 +365,7 @@ class Worker:
                     tsk = trans_ops.TransferTask.deserialize(task)
                     blocks = tsk.blocks
                     for block in blocks:
-                        print("block " , self.gpu_cache[block].data_ptr(), self.gpu_cache[block][-1])
+                        print("block " , tsk.meta.request_id, self.gpu_cache[block].data_ptr(), self.gpu_cache[block][-1][-1][-1])
             self.trans_manager.add_tasks(recv_tasks)   
         if swap_to_remote_tasks:
             self.trans_manager.add_tasks(swap_to_remote_tasks)
