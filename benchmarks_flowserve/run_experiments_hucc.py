@@ -26,7 +26,7 @@ import pandas as pd
 basename = 'end2end_exp_results'
 dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 configs = {
-    'type': 'disagg',
+    'type': 'colocate',
     'num_requests': 256
 }
 if "disagg" in configs['type']:
@@ -35,7 +35,7 @@ else:
     request_rates= [2.5, 5, 7.5, 10, 12.5, 15] # x-axis 
 
 # Derived parameters
-dirname = f'{basename}/{dataset}'
+dirname = f'{basename}/{dataset}/{configs["type"]}'
 
 if not os.path.exists(dirname):
     os.makedirs(dirname)
