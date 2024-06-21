@@ -42,7 +42,7 @@ if not os.path.exists(dirname):
     os.makedirs(dirname)
 
 for i, request_rate in enumerate(request_rates):
-    command = f'python3 ./main.py --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}'
+    command = f'python3 main.py --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}'
     print(f'Running command: {command}')
     os.system(f'{command}')
     time.sleep(5)
