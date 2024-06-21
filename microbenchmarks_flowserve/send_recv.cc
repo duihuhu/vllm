@@ -42,7 +42,7 @@ bool is_sender(int device_id) {
     return device_id % 2 == 0;
 }
 
-void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int NUM_STREAMS, ncclComm_t comm, int device_id);
+void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, ncclComm_t comm, int device_id);
 
 void nccl_init(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int NUM_STREAMS, int numGPUs, ncclComm_t comm, ncclUniqueId commId, int device_id){
     // Set device for the current thread
@@ -55,10 +55,10 @@ void nccl_init(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int NUM_STREA
     while(!readyA){
     }
 
-    nccl_send_recv(thread_id, BUF_SIZE, NUM_BUFFERS, NUM_STREAMS, comm, device_id);
+    nccl_send_recv(thread_id, BUF_SIZE, NUM_BUFFERS, comm, device_id);
 }
 
-void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int NUM_STREAMS, ncclComm_t comm, int device_id) {
+void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, ncclComm_t comm, int device_id) {
     
     CUDA_CHECK(cudaSetDevice(device_id));
 
@@ -68,46 +68,36 @@ void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int NUM_
         cudaMemset(buf[i], 0, BUF_SIZE * sizeof(float));
     }
 
-    cudaStream_t streams[MAX_NUM_STREAMS];
-    for (int i = 0; i < NUM_STREAMS; ++i) {
-        cudaStreamCreate(&streams[i]);
-    }
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
 
     long long buffer_size = BUF_SIZE;
 
     // Warm up: send buffers
-    for (int k = 0; k < NUM_STREAMS; k++) {
-        ncclGroupStart();
-        for (int i = 0; i < NUM_BUFFERS; i += NUM_STREAMS) {
-            if(is_sender(device_id)) {
-                NCCL_CHECK(ncclSend(buf[i + k], buffer_size, ncclFloat, device_id + 1, comm, streams[k]));
-            } else {
-                NCCL_CHECK(ncclRecv(buf[i + k], buffer_size, ncclFloat, device_id - 1, comm, streams[k]));
-            }
+    ncclGroupStart();
+    for (int i = 0; i < NUM_BUFFERS; i ++) {
+        if(is_sender(device_id)) {
+            NCCL_CHECK(ncclSend(buf[i], buffer_size, ncclFloat, device_id + 1, comm, stream));
+        } else {
+            NCCL_CHECK(ncclRecv(buf[i], buffer_size, ncclFloat, device_id - 1, comm, stream));
         }
-        ncclGroupEnd();
     }
-    for (int k = 0; k < NUM_STREAMS; k++) {
-        cudaStreamSynchronize(streams[k]);
-    }
+    ncclGroupEnd();
+    cudaStreamSynchronize(stream);
 
 
     // Benchmark: send buffers and measure time
     auto begin = std::chrono::steady_clock::now();
-    for (int k = 0; k < NUM_STREAMS; k++) {
-        ncclGroupStart();
-        for (int i = 0; i < NUM_BUFFERS; i += NUM_STREAMS) {
-            if(is_sender(device_id)) {
-                NCCL_CHECK(ncclSend(buf[i + k], buffer_size, ncclFloat, device_id + 1, comm, streams[k]));
-            } else {
-                NCCL_CHECK(ncclRecv(buf[i + k], buffer_size, ncclFloat, device_id - 1, comm, streams[k]));
-            }
+    ncclGroupStart();
+    for (int i = 0; i < NUM_BUFFERS; i ++) {
+        if(is_sender(device_id)) {
+            NCCL_CHECK(ncclSend(buf[i], buffer_size, ncclFloat, device_id + 1, comm, stream));
+        } else {
+            NCCL_CHECK(ncclRecv(buf[i], buffer_size, ncclFloat, device_id - 1, comm, stream));
         }
-        ncclGroupEnd();
     }
-    for (int k = 0; k < NUM_STREAMS; k++) {
-        cudaStreamSynchronize(streams[k]);
-    }
+    ncclGroupEnd();
+    cudaStreamSynchronize(stream);
 
     std::string message;
     if(is_sender(device_id)) {
@@ -124,9 +114,7 @@ void nccl_send_recv(int thread_id, long long BUF_SIZE, int NUM_BUFFERS, int NUM_
     for (int i = 0; i < NUM_BUFFERS; ++i) {
         cudaFree(buf[i]);
     }
-    for (int i = 0; i < NUM_STREAMS; ++i) {
-        cudaStreamDestroy(streams[i]);
-    }
+    cudaStreamDestroy(stream);
     NCCL_CHECK(ncclCommDestroy(comm));
 }
 
