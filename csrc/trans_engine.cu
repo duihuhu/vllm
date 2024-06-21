@@ -171,10 +171,8 @@ void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std:
 void TransEngine::recv_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
 
     c10::cuda::CUDAStreamGuard guard(stream);
-    std::cout<<"recv_full_blocks request_id " << request_id << std::endl;
 
-    RecvFullBlocks(blocks_gpu_cache, src_blocks, cache_block_size, opposite_rank, comm);
-    std::cout<<"after recv_full_blocks request_id " << request_id << std::endl;
+    RecvFullBlocks(request_id, blocks_gpu_cache, src_blocks, cache_block_size, opposite_rank, comm);
 
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
 
@@ -524,7 +522,7 @@ void TransEngine::checkNcclError(ncclResult_t result, const char* file, int line
 }
 
 
-void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
+void TransEngine::RecvFullBlocks(const std::string& request_id, std::vector<uint64_t>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
@@ -534,11 +532,12 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
     for (int j = 0; j < dstBlocks.size(); j++) {
         int blockIdx = dstBlocks[j];
         void *dstBlockPtr = (void*)dstCaches[blockIdx];
-        std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
-        " " << blockIdx << " srcRank " << srcRank << " " << cacheSize <<std::endl;
+        // std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
+        // " " << blockIdx << " srcRank " << srcRank << " " << cacheSize <<std::endl;
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
+            throw std::runtime_error("RecvFullBlocks dstCaches ", request_id, dstCaches[blockIdx], dstBlockPtr, blockIdx, srcRank, cacheSize)
         }
         cudaStreamSynchronize(cudaStream);
         // std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;

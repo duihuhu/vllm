@@ -186,7 +186,7 @@ public:
     void RecvLayerBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, uint32_t layer, ncclComm_t& comm);
 
-    void RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
+    void RecvFullBlocks(const std::string& request_id, std::vector<uint64_t>& dstCaches, \
         const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm);
     void SendFullBlocks(std::vector<uint64_t>& srcCaches, \
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
