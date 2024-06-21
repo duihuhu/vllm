@@ -350,7 +350,6 @@ class LLMEngine:
             if response.dst_cpu_blocks:
                 seq_group.has_dram = True
                 blocks = self.scheduler.fetch_kv_blocks(seq_group)
-                print("blocks[response.computed_blocks: add_dram_kv_request ] ", blocks[response.computed_blocks:] , response.dst_cpu_blocks)
                 self.send_kv_trans_scheduler.add_dram_kv_request(request_id, response.global_ranks, blocks[response.computed_blocks:], response.dst_cpu_blocks)
             else:
                 del self.scheduler.send_transfering[request_id]
@@ -522,7 +521,7 @@ class LLMEngine:
                             self.scheduler.running.append(seq_group)
                             self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 else:
-                    print("schedule_decode_waiting break ", seq_group.request_id, len(self.scheduler.decode_waiting), self.scheduler.block_manager.get_radix_num_free_blocks())
+                    # print("schedule_decode_waiting break ", seq_group.request_id, len(self.scheduler.decode_waiting), self.scheduler.block_manager.get_radix_num_free_blocks())
                     break
             else:
                 seq_group.eprefill_host = prefill_request_output.eprefill_host
@@ -536,7 +535,6 @@ class LLMEngine:
                         self.scheduler.match_allocate_kv_blocks(seq_group)
                     self.scheduler.decode_waiting.popleft()
                     computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
-                    print("schedule_decode_waiting ", cpu_blocks)
                     seq_group.has_dram = True
                     self.scheduler.add_recv_transfering(seq_group)
                     kv_responses.append(KvPreparedResponse(seq_group.request_id, 0, None, len(computed_blocks), -1,  cpu_blocks, True))
@@ -835,7 +833,6 @@ class LLMEngine:
             if self.scheduler.block_manager.enable_radix_caching \
                 or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
                     and self.deploy_config.role == "decoder"):
-                print("finished_seq_groups ")
                 self.radix_manager_update(finished_seq_groups)
                 
         # Free the finished sequence groups.

@@ -77,7 +77,6 @@ async def response_kv_result(response: Request) -> None:
     payload = await response.json()
     global_ranks = payload.pop("global_ranks")
     kv_response = KvPreparedResponse(**payload)
-    print("response_kv_result ", kv_response.computed_blocks)
     kv_response.global_ranks = global_ranks
     await server.engine.add_kv_response(kv_response)
 

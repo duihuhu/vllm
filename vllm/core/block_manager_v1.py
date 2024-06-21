@@ -170,7 +170,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {block} is already freed.")
         block.ref_count -= 1
         if block.ref_count == 0:
-            print("free_radix_manager_cache ", block.block_number)
             self.radix_evictor.add(block)
 
     def free_radix_manager_blocks_cache(self, blocks: List[PhysicalTokenBlock]) -> None:
@@ -179,7 +178,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
                 raise ValueError(f"Double free! {block} is already freed.")
             block.ref_count -= 1
             if block.ref_count == 0:
-                print("free_radix_manager_blocks_cache ", block.block_number)
                 self.radix_evictor.add(block)
 
     def free_radix_manager_node_cache(self, node: TreeNode) -> None:
@@ -187,7 +185,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
             raise ValueError(f"Double free! {node.value.physicalTokenBlock.block_number} is already freed.")
         node.value.physicalTokenBlock.ref_count -= 1
         if node.value.physicalTokenBlock.ref_count == 0:
-            print("free_radix_manager_node_cache ", node.value.physicalTokenBlock.block_number)
             self.radix_evictor.add(node.value.physicalTokenBlock)
 
     #todo if only manage block.ref_count there, use background thread to release
@@ -362,12 +359,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         ori_blocks = self.block_tables[seq.seq_id]
         new_blocks_table : BlockTable = []
         block_number_mapping = {}
-        print("allocate_for_swap ", len(ori_blocks), self.cpu_allocator.get_radix_num_free_blocks())
         for block in ori_blocks:
             if block.device == Device.CPU:
                 if self.enable_radix_caching:
                     hbm_block = self.gpu_allocator.radix_manager_allocate()
-                    print("block allocate_for_swap ", block.block_number)
                     self.cpu_allocator.free_radix_manager_cache(block)
                 else:
                     hbm_block = self.gpu_allocator.allocate()
@@ -377,9 +372,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 new_blocks_table.append(hbm_block)
             else:
                 new_blocks_table.append(block)
-        
-        print("after allocate_for_swap ", len(ori_blocks), self.cpu_allocator.get_radix_num_free_blocks())
-                
+                        
         blocks_to_swap_in.update(block_number_mapping)
         self.block_tables[seq.seq_id] = new_blocks_table
     
@@ -434,7 +427,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     def query_kv_blocks(self, query_cache_meta):
         blocks = []
         blocks, last_node, last_node_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(tuple(query_cache_meta.prompt_token_ids))
-        print("decode mathch cache, ", len(blocks), query_cache_meta.request_id)
         self.req_pull_block_tables[query_cache_meta.request_id] = blocks
         return len(blocks)
     
@@ -469,7 +461,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         num_prompt_blocks = len(seq.logical_token_blocks)     
         self.radix_tree_manager.match(seq=seq)
         block_table: BlockTable  = []
-        # print("radix_manager_allocate block_table ", len(seq.data.prefix_blocks), " " ,is_kv_prepared)
         block_number_mapping = {}
         if not is_kv_prepared:
             for idx in range(num_prompt_blocks):
@@ -797,7 +788,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 new_block = self._allocate_last_physical_block(seq)
 
             block_table[-1] = new_block
-            print("append slot ", last_block.ref_count, last_block.block_number, new_block.block_number)
             self.gpu_allocator.free(last_block)
             return last_block.block_number, new_block.block_number
 
@@ -844,7 +834,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
             new_block_table: BlockTable = []
             block_table = self.block_tables[seq.seq_id]
-            print("swap in seq id block_table ", seq_group.request_id, self.cpu_allocator.get_num_free_blocks())
 
             for cpu_block in block_table:
                 if cpu_block in mapping:
@@ -860,11 +849,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 new_block_table.append(gpu_block)
                 # Free the CPU block swapped in to GPU.
                 if self.enable_radix_caching:
-                    print("swap_in allocate_for_swap ", cpu_block.block_number)
                     self.cpu_allocator.free_radix_manager_cache(cpu_block)
                 else:
                     self.cpu_allocator.free(cpu_block)
-            print("swap in seq id block_table ", seq_group.request_id, self.cpu_allocator.get_num_free_blocks())
             self.block_tables[seq.seq_id] = new_block_table
 
         block_number_mapping = {
@@ -928,7 +915,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                     self.gpu_allocator.free(block)
             else:
                 if self.enable_radix_caching:
-                    print("_free_block_table _free_block_table ", block.block_number)
                     self.cpu_allocator.free_radix_manager_cache(block)
                 else:
                     self.cpu_allocator.free(block)
