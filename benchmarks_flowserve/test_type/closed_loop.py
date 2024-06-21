@@ -48,5 +48,5 @@ async def run(args, reqs, multi_conversations_range):
         tbt_with_second_token.extend(res[3])
         second_token.append(res[4])
         # print("Res ", res)
-    print("average_jct, p99_jct, average_ttft, p99_ttft, average_tbt_no_second_token, p99_tbt_no_second_token, average_tbt_with_second_token, p99_tbt_with_second_token")
-    print("{:.4f}, {:.4f}, {:.4f}, {:.4f}, {:.4f}, {:.4f}, {:.4f}, {:.4f}".format(np.average(jct), np.percentile(jct, 99), np.average(ttft), np.percentile(ttft, 99), np.average(tbt_no_second_token), np.percentile(tbt_no_second_token, 99), np.average(tbt_with_second_token), np.percentile(tbt_with_second_token, 99)))
+    print("average_jct,p99_jct,average_ttft,p99_ttft,average_tbt_no_second_token,p99_tbt_no_second_token,average_tbt_with_second_token,p99_tbt_with_second_token")
+    print("{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f}".format(np.average(jct), np.percentile(jct, 99), np.average(ttft), np.percentile(ttft, 99), np.average(tbt_no_second_token), np.percentile(tbt_no_second_token, 99), np.average(tbt_with_second_token), np.percentile(tbt_with_second_token, 99)))

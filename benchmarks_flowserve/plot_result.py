@@ -26,7 +26,7 @@ from typing import List, Union
 
 # Configurable parameters
 basename = 'end2end_exp_results'
-dataset = 'ReAct' # ['ShareGPT', 'LooGLE', 'ReAct']
+dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 
 # Derived parameters
 dirname = f'{basename}/{dataset}'
@@ -39,7 +39,7 @@ def plot_figure(x_axis: str, y_axis: Union[str, List[str]]):
             type = file.split('.')[0] + '_'
             plt.plot(df[x_axis], df[y_axis], label = type + df[y_axis].columns)
     
-    plt.xlim(0, 110)
+    plt.xlim(0)
     plt.ylim(0)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)

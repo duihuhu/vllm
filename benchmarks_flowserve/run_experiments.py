@@ -21,15 +21,17 @@ and our method. Each .csv file represents one line in the figure.
 '''
 import os
 import pandas as pd
+import subprocess
+from io import StringIO
 
 # Configurable parameters
 basename = 'end2end_exp_results'
 dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 configs = {
     'type': 'disagg_layer',
-    'num_requests': 256
+    'num_requests': 4
 }
-request_rates= [3.2, 6.4, 12.8, 25.6, 51.2, 102.4] # x-axis 
+request_rates= [1,2,3] # x-axis 
 
 
 # Derived parameters
@@ -41,4 +43,19 @@ if not os.path.exists(dirname):
 for i, request_rate in enumerate(request_rates):
     command = f'python3 ./main.py --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}'
     print(f'Running command: {command}')
-    os.system(f'{command}')
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    csv_data = StringIO(out)
+    if i == 0:
+        df = pd.read_csv(csv_data)
+    else:
+        df = pd.concat([df, pd.read_csv(csv_data)])
+
+
+df.insert(0, 'request_rate', request_rates)
+df.to_csv(f'{dirname}/{configs["type"]}.csv', index=False)
+
+
+# Plotting
+os.system('python plot_result.py')
