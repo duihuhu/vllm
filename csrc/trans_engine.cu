@@ -578,7 +578,6 @@ void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at
         for (int j = 0; j < dstBlocks.size(); j++) {
             int src_blockIdx = srcBlocks[j];
             int dst_blockIdx = dstBlocks[j];
-            std::cout<<" SwapHbmToRemoteDramBlocks " << " src_blockIdx " << src_blockIdx << " dst_blockIdx " << dst_blockIdx << std::endl;
             void *srcKeyCachePtr = srcKeyCache.index({src_blockIdx}).data_ptr();
             void *srcValueCachePtr = srcValueCache.index({src_blockIdx}).data_ptr();
             void *dstKeyCachePtr = dstKeyCache.index({dst_blockIdx}).data_ptr();

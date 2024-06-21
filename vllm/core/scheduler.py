@@ -704,7 +704,6 @@ class Scheduler:
                     block = self.block_manager.cpu_allocator.radix_manager_allocate()
                     block_table.append(block)
                     cpu_blocks.append(block.block_number)
-                    print(" allocate_dram_kv_blocks block ", block.block_number)
                     
             seq.cache_blocks_to_insert = block_table
             for seq in seq_group.get_seqs():
@@ -877,7 +876,6 @@ class Scheduler:
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
             cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
-            print("get_evicted_blocks ", can_evicted_num, len(can_evicted_nodes), len(cpu_blocks))
             return can_evicted_nodes, cpu_blocks
         else:
             return None, None
