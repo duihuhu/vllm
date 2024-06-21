@@ -24,12 +24,13 @@ import pandas as pd
 
 # Configurable parameters
 basename = 'end2end_exp_results'
-dataset = 'ReAct' # ['ShareGPT', 'LooGLE', 'ReAct']
+dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 configs = {
     'type': 'disagg_layer',
     'num_requests': 256
 }
-request_rates= [3.2, 6.4, 12.8, 25.6, 51.2, 102.4] # x-axis
+request_rates= [3.2, 6.4, 12.8, 25.6, 51.2, 102.4] # x-axis 
+
 
 # Derived parameters
 dirname = f'{basename}/{dataset}'

@@ -41,6 +41,8 @@ def sample_requests(
         for i in range(len(prompts)):
             prompt_len = len(prompt_token_ids[i])
             completion_len = len(completion_token_ids[i])
+            if prompt_len + completion_len > 4090:
+                continue
             reqs.append((prompts[i], prompt_token_ids[i], prompt_len, completion_len))
         # Caution: we only cache the first 512 requests
         pickle.dump(reqs[:512], open(cached_file_name, 'wb'))
