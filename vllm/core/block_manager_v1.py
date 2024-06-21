@@ -457,7 +457,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             
     #use radix manager allocate kv caches
     def radix_manager_allocate(self, seq_group: SequenceGroup, is_kv_prepared = None, blocks_to_swap_in: Dict[int, int] = None) -> None:
-        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
+        seq = seq_group.get_seqs()[0]
         num_prompt_blocks = len(seq.logical_token_blocks)     
         self.radix_tree_manager.match(seq=seq)
         block_table: BlockTable  = []
