@@ -486,7 +486,7 @@ class Scheduler:
         running: Deque[SequenceGroup] = deque()
         preempted: List[SequenceGroup] = []
         run_blocks_to_swap_out = None
-        if self.deploy_config.enable_radix_caching and self.block_manager.get_num_free_gpu_blocks()< len(self.running):
+        if self.deploy_config.enable_radix_caching and self.block_manager.get_num_free_gpu_blocks()< len(self.running) and self.cache_config.enable_radix_evictor:
             can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
             real_evicted_num = 0
             if len(self.running) >= can_evicted_num:
