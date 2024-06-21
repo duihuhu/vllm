@@ -192,7 +192,7 @@ public:
         const std::vector<uint32_t>& srcBlocks, uint32_t cacheSize, uint32_t destRank, ncclComm_t& comm);
 
     void checkNcclError(ncclResult_t result, const char* file, int line);
-    void throwError(const sring& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize);
+    void throwError(const std::string& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize);
 
     void SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
         std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize);

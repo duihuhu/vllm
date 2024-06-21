@@ -521,7 +521,7 @@ void TransEngine::checkNcclError(ncclResult_t result, const char* file, int line
     }
 }
 
-void TransEngine::throwError(const string& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize) {
+void TransEngine::throwError(const std::string& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize) {
     std::string errMsg = "RecvFullBlocks dstCaches " 
                         + std::to_string(request_id) + " " 
                         + std::to_string(blockIdx) + " " 
