@@ -39,7 +39,7 @@ if __name__ == "__main__":
     if args.test_type == "open":
         from test_type.open_loop import run
         print(reqs[0][0], reqs[0][1], reqs[0][2], reqs[0][3])
-        asyncio.run(run(args, reqs))
+        asyncio.run(run(args, reqs[:1]))
     elif args.test_type == "closed":
         from test_type.closed_loop import run
         asyncio.run(run(args, reqs, multi_conversations_range))
