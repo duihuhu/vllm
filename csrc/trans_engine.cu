@@ -172,7 +172,7 @@ void TransEngine::recv_full_blocks(const std::string& channel, const std::string
 
     c10::cuda::CUDAStreamGuard guard(stream);
 
-    RecvFullBlocks(request_id, blocks_gpu_cache, src_blocks, cache_block_size, opposite_rank, comm);
+    RecvFullBlocks(blocks_gpu_cache, src_blocks, cache_block_size, opposite_rank, comm);
 
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
 
@@ -519,38 +519,38 @@ void TransEngine::checkNcclError(ncclResult_t result, const char* file, int line
     }
 }
 
-void TransEngine::throwError(const std::string& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize) {
-    std::string errMsg = "RecvFullBlocks dstCaches " 
-                        + request_id + " " 
-                        + std::to_string(blockIdx) + " " 
-                        + std::to_string(reinterpret_cast<uintptr_t>(dstBlockPtr)) + " " 
-                        + std::to_string(srcRank) + " " 
-                        + std::to_string(cacheSize);
+// void TransEngine::throwError(const std::string& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize) {
+//     std::string errMsg = "RecvFullBlocks dstCaches " 
+//                         + request_id + " " 
+//                         + std::to_string(blockIdx) + " " 
+//                         + std::to_string(reinterpret_cast<uintptr_t>(dstBlockPtr)) + " " 
+//                         + std::to_string(srcRank) + " " 
+//                         + std::to_string(cacheSize);
     
-    throw std::runtime_error(errMsg);
-}
+//     throw std::runtime_error(errMsg);
+// }
 
-void TransEngine::RecvFullBlocks(const std::string& request_id, std::vector<uint64_t>& dstCaches, \
+void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    // NCCLCHECK(ncclGroupStart());
+    NCCLCHECK(ncclGroupStart());
 
     for (int j = 0; j < dstBlocks.size(); j++) {
         int blockIdx = dstBlocks[j];
         void *dstBlockPtr = (void*)dstCaches[blockIdx];
-        std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
-        " " << blockIdx << " srcRank " << srcRank << " " << cacheSize <<std::endl;
+        // std::cout<< "RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << 
+        // " " << blockIdx << " srcRank " << srcRank << " " << cacheSize <<std::endl;
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
-            throwError(request_id, blockIdx, dstBlockPtr, srcRank, cacheSize);
+            // throwError(request_id, blockIdx, dstBlockPtr, srcRank, cacheSize);
         }
-        cudaStreamSynchronize(cudaStream);
+        // cudaStreamSynchronize(cudaStream);
         // std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
-    // NCCLCHECK(ncclGroupEnd());
+    NCCLCHECK(ncclGroupEnd());
 }
 
 
@@ -559,7 +559,7 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
 {
     auto gpuStream = c10::cuda::getCurrentCUDAStream();
     auto cudaStream = gpuStream.stream();
-    // NCCLCHECK(ncclGroupStart());
+    NCCLCHECK(ncclGroupStart());
 
     for (int j = 0; j < srcBlocks.size(); j++) {
         int blockIdx = srcBlocks[j];
@@ -569,10 +569,10 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
         }        
-        cudaStreamSynchronize(cudaStream);
+        // cudaStreamSynchronize(cudaStream);
         // std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
-    // NCCLCHECK(ncclGroupEnd());
+    NCCLCHECK(ncclGroupEnd());
 }
 
 void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
