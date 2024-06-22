@@ -403,7 +403,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return AllocStatus.LATER
 
-    def can_allocate(self, seq_group: SequenceGroup, is_kv: False) -> AllocStatus:
+    def can_allocate(self, seq_group: SequenceGroup, is_kv: Optional[bool] = False) -> AllocStatus:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
