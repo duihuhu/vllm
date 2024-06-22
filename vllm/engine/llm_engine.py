@@ -825,7 +825,7 @@ class LLMEngine:
             seq_group = scheduled_seq_group.seq_group
             token_chunk_size = scheduled_seq_group.token_chunk_size
             seq_group.update_num_computed_tokens(token_chunk_size)
-            print("seq_group is_finished ",  seq_group.is_finished())
+            print("seq_group is_finished ",  seq_group.get_seqs()[0].is_finished())
             if seq_group.is_finished():
                 #if enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
                 if self.scheduler.block_manager.enable_radix_caching \
