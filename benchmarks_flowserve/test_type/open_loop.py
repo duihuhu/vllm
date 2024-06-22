@@ -30,15 +30,15 @@ async def handle_main_request(main_request_id, reqs, args):
         if waiting_time < time_elapsed:
             print(f"\033[93m Warning: main_request_id {main_request_id} sub_request_id {i}: Poisson violation\033[0m")
             print(f"\033[93m Should have been sent at {time_elapsed - waiting_time:.3} seconds ago\033[0m")
-        # res = await post_request_and_get_response(args, reqs[i], waiting_time - time_elapsed)
-        res = await dummy_post_request_and_get_response(
-            args, 
-            reqs[i], 
-            waiting_time - time_elapsed,
-            main_request_id=main_request_id,
-            sub_request_id=i
-        )
-        response.append(res)
+        res = await post_request_and_get_response(args, reqs[i], waiting_time - time_elapsed)
+        # res = await dummy_post_request_and_get_response(
+        #     args, 
+        #     reqs[i], 
+        #     waiting_time - time_elapsed,
+        #     main_request_id=main_request_id,
+        #     sub_request_id=i
+        # )
+        # response.append(res)
 
 async def run(args, reqs, multi_conversations_range):
     jct = []
