@@ -32,6 +32,7 @@ def main(args: argparse.Namespace):
               block_size=args.block_size,
               max_num_batched_tokens=4096,
               max_num_seqs=2,
+              enable_prefix_caching=args.enable_prefix_caching,
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -200,6 +201,9 @@ if __name__ == '__main__':
                         default=None,
                         help='directory to download and load the weights, '
                         'default to the default cache dir of huggingface')
+    parser.add_argument('--enable-prefix-caching',
+                        action='store_true',
+                        help='enable prefix caching')
     parser.add_argument('--use-agg-block',
                         action='store_true',
                         help='whether to use agg block or not')
