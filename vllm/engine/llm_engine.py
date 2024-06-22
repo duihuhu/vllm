@@ -632,13 +632,7 @@ class LLMEngine:
         samples = outputs.samples
         parent_seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
         existing_finished_seqs = seq_group.get_finished_seqs()
-        
-        #if enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
-        if existing_finished_seqs:
-            if self.scheduler.block_manager.enable_radix_caching \
-                or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
-                    and self.deploy_config.role == "decoder"):
-                self.radix_manager_update(existing_finished_seqs)
+    
                 
         parent_child_dict = {
             parent_seq.seq_id: []
@@ -832,10 +826,16 @@ class LLMEngine:
             seq_group = scheduled_seq_group.seq_group
             token_chunk_size = scheduled_seq_group.token_chunk_size
             seq_group.update_num_computed_tokens(token_chunk_size)
+            
+            if seq_group.is_finished():
+                #if enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
+                if self.scheduler.block_manager.enable_radix_caching \
+                    or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
+                        and self.deploy_config.role == "decoder"):
+                    self.radix_manager_update(seq_group)
+    
             self._process_sequence_group_outputs(seq_group, outputs)
-            # if seq_group.is_finished():
-            #     finished_seq_groups.append(seq_group)
-        
+
 
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
