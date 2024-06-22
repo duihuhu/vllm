@@ -7,6 +7,7 @@ from typing import Optional
 import numpy as np
 import torch
 from tqdm import tqdm
+import math
 
 from vllm import LLM, SamplingParams
 
@@ -29,6 +30,8 @@ def main(args: argparse.Namespace):
               enable_chunked_prefill=args.enable_chunked_prefill,
               download_dir=args.download_dir,
               block_size=args.block_size,
+              max_num_batched_tokens=4096,
+              max_num_seqs=7,
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -40,10 +43,31 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
-    dummy_prompt_token_ids = np.random.randint(10000,
+    initial_length = math.ceil(args.input_len * (args.reuse_ratio / 100))
+    np.random.seed(42)
+    prefix_input = np.random.randint(10000, size=initial_length).tolist()
+    if initial_length < args.input_len:
+        suffix_input = np.random.randint(10000, size=(args.input_len - initial_length)).tolist()
+    else:
+        suffix_input = []
+    dummy_prompt_token_ids = []
+    for i in range(args.batch_size):
+        if i == 0:
+            dummy_prompt_token_ids.append(prefix_input)
+        elif i >= 1 and i <= 3:
+            temp = []
+            temp.extend(prefix_input)
+            temp.extend(suffix_input)
+            dummy_prompt_token_ids.append(temp)
+        else:
+            temp = []
+            temp.extend(prefix_input)
+            temp.extend(suffix_input)
+            dummy_prompt_token_ids.append(temp)
+    '''dummy_prompt_token_ids = np.random.randint(10000,
                                                size=(args.batch_size,
                                                      args.input_len))
-    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
+    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()'''
 
     def run_to_completion(profile_dir: Optional[str] = None):
         if profile_dir:
@@ -68,7 +92,8 @@ def main(args: argparse.Namespace):
             return latency
 
     print("Warming up...")
-    run_to_completion(profile_dir=None)
+    #run_to_completion(profile_dir=None)
+    print("Skip outside pre-warm")
 
     if args.profile:
         profile_dir = args.profile_result_dir
@@ -99,8 +124,8 @@ if __name__ == '__main__':
                         default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=32)
-    parser.add_argument('--output-len', type=int, default=128)
-    parser.add_argument('--batch-size', type=int, default=8)
+    parser.add_argument('--output-len', type=int, default=1)
+    parser.add_argument('--batch-size', type=int, default=7)
     parser.add_argument('--n',
                         type=int,
                         default=1,
@@ -108,7 +133,7 @@ if __name__ == '__main__':
     parser.add_argument('--use-beam-search', action='store_true')
     parser.add_argument('--num-iters',
                         type=int,
-                        default=3,
+                        default=1,
                         help='Number of iterations to run.')
     parser.add_argument('--trust-remote-code',
                         action='store_true',
@@ -171,5 +196,15 @@ if __name__ == '__main__':
     parser.add_argument('--use-agg-block',
                         action='store_true',
                         help='whether to use agg block or not')
+    parser.add_argument('--reuse-ratio',
+                        type=int,
+                        default=5,
+                        help='the ratio of the first prompt being reused')
+    parser.add_argument('--file-path1',
+                        type=str,
+                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log1.txt')
+    parser.add_argument('--file-path2',
+                        type=str,
+                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log2.txt')
     args = parser.parse_args()
     main(args)
