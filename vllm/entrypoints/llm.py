@@ -219,20 +219,20 @@ class LLM:
                         dynamic_ncols=True)
         # Run the engine.
         outputs: List[RequestOutput] = []
-        ite = 0
+        #ite = 0
         while self.llm_engine.has_unfinished_requests():
             if file_name:
-                st = time.time()
-                step_outputs = self.llm_engine.step()
+                #st = time.time()
+                step_outputs = self.llm_engine.step(file_name)
                 ed = time.time()
                 for output in step_outputs:
                     if output.finished:
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
-                with open(file_name, 'a') as file:
-                    file.write(f"ite {ite} costs {ed - st}\n")
-                ite = ite + 1
+                        with open(file_name, 'a') as file:
+                            file.write(f"request {output.request_id} ends at {ed}\n")
+                #ite = ite + 1
             else:
                 step_outputs = self.llm_engine.step()
                 for output in step_outputs:
