@@ -484,7 +484,7 @@ class LLMEngine:
         while self.scheduler.decode_waiting:
             seq_group = self.scheduler.decode_waiting[0][0]
             prefill_request_output = self.scheduler.decode_waiting[0][1]
-            can_allocate = self.scheduler.block_manager.can_allocate(seq_group, True)
+            can_allocate = self.scheduler.block_manager.can_allocate(seq_group, False)
             #TODO there may has some issue
             if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
                 if can_allocate == AllocStatus.OK:
