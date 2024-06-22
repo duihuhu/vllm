@@ -80,7 +80,9 @@ def main(args: argparse.Namespace):
                         str(profile_dir))) as p:
                 llm.generate(prompt_token_ids=dummy_prompt_token_ids,
                              sampling_params=sampling_params,
-                             use_tqdm=False)
+                             use_tqdm=False,
+                             filepath1=args.file_path1,
+                             filepath2=args.file_path2)
             print(p.key_averages())
         else:
             start_time = time.perf_counter()
@@ -89,7 +91,9 @@ def main(args: argparse.Namespace):
                 inputs.append(dummy_prompt_token_ids[i])
                 llm.generate(prompt_token_ids=inputs,
                          sampling_params=sampling_params,
-                         use_tqdm=False)
+                         use_tqdm=False,
+                         filepath1=args.file_path1,
+                         filepath2=args.file_path2)
             end_time = time.perf_counter()
             latency = end_time - start_time
             return latency
