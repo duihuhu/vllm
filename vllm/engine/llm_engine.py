@@ -674,12 +674,12 @@ class LLMEngine:
                                                      seq_group.sampling_params)
             self._check_stop(seq, seq_group.sampling_params)
             
-            if seq.is_finished():
-                #enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
-                if self.scheduler.block_manager.enable_radix_caching \
-                    or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
-                        and self.deploy_config.role == "decoder"):
-                    self.radix_manager_update(seq_group)
+        if seq_group.is_finished():
+            #enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
+            if self.scheduler.block_manager.enable_radix_caching \
+                or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
+                    and self.deploy_config.role == "decoder"):
+                self.radix_manager_update([seq_group])
 
         # Non-beam search case
         if not seq_group.sampling_params.use_beam_search:
