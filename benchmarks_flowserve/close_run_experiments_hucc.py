@@ -27,7 +27,7 @@ import time
 basename = 'end2end_exp_results'
 dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 configs = {
-    'type': 'disagg_ncache',
+    'type': 'colocate',
     'num_requests': 256,
 }
 if "disagg" in configs['type']:
