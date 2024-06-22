@@ -28,14 +28,14 @@ async def handle_main_request(main_request_id, reqs, args):
         waiting_time = waiting_time + np.random.exponential(1.0 / args.request_rate)
         time_elapsed = time.perf_counter() - time_start
         assert waiting_time >= time_elapsed, 'Fail to keep up with the rate of Poisson Distribution' 
-        # res = await post_request_and_get_response(args, reqs[i], waiting_time - time_elapsed)
-        res = await dummy_post_request_and_get_response(
-            args, 
-            reqs[i], 
-            waiting_time - time_elapsed,
-            main_request_id=main_request_id,
-            sub_request_id=i
-        )
+        res = await post_request_and_get_response(args, reqs[i], waiting_time - time_elapsed)
+        # res = await dummy_post_request_and_get_response(
+        #     args, 
+        #     reqs[i], 
+        #     waiting_time - time_elapsed,
+        #     main_request_id=main_request_id,
+        #     sub_request_id=i
+        # )
         response.append(res)
 
 async def run(args, reqs, multi_conversations_range):
