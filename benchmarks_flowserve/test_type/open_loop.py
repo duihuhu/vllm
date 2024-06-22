@@ -4,6 +4,7 @@ import numpy as np
 import time
 from .common import post_request_and_get_response, dummy_post_request_and_get_response
 import math 
+import sys
 
 '''
 Warning: The code snippet in this file is purely asynchronous and single-threaded.
@@ -36,8 +37,8 @@ async def handle_main_request(main_request_id, reqs, args):
         waiting_time = waiting_time + np.random.exponential(1.0 / args.request_rate)
         time_elapsed = time.perf_counter() - time_start
         if waiting_time < time_elapsed:
-            print(f"\033[93m Warning: main_request_id {main_request_id} sub_request_id {i}: Poisson violation\033[0m")
-            print(f"\033[93m Should have been sent at {time_elapsed - waiting_time:.3} seconds ago\033[0m")
+            print(f"\033[93m Warning: main_request_id {main_request_id} sub_request_id {i}: Poisson violation\033[0m", file=sys.stderr)
+            print(f"\033[93m Should have been sent at {time_elapsed - waiting_time:.3} seconds ago\033[0m", file=sys.stderr)
         res = await post_request_and_get_response(args, reqs[i], waiting_time - time_elapsed)
         # res = await dummy_post_request_and_get_response(
         #     args, 
@@ -74,7 +75,7 @@ async def run(args, reqs, multi_conversations_range):
 
     # Deal with the rest of the sessions, add them when the first few sessions cannot meet the Poisson speed
     main_request_id = first_few_sessions
-    while num_requests_sent < num_requests_todo:
+    while num_requests_sent < num_requests_todo and main_request_id < len(multi_conversations_range) - 1:
         coroutines.append(asyncio.create_task(handle_main_request(
             main_request_id, 
             reqs[multi_conversations_range[main_request_id]:multi_conversations_range[main_request_id+1]], 
@@ -84,6 +85,8 @@ async def run(args, reqs, multi_conversations_range):
         # Sleep for enough time to avoid too many sessions to enter at the same time
         # To avoid oversleep, we subtract 0.1 seconds  
         await asyncio.sleep(waiting_time - (time.perf_counter() - time_start) - 0.1)
+        while waiting_time - (time.perf_counter() - time_start) - 0.1 > 0:
+            await asyncio.sleep(waiting_time - (time.perf_counter() - time_start) - 0.1)
     
     await asyncio.gather(*coroutines)
 
