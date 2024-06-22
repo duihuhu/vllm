@@ -1,6 +1,28 @@
 from utils import get_args, set_seed
 import asyncio
 from transformers import AutoTokenizer
+import argparse
+
+
+def get_args() -> argparse.Namespace:
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", type=str, default="localhost")
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--n", type=int, default=1)
+    parser.add_argument("--prompt", type=str, default="San Francisco is a")
+    parser.add_argument("--stream", action="store_true")
+    parser.add_argument("--request-rate", type=float, default=1)
+    parser.add_argument("--num-requests", type=int, default=16)
+    parser.add_argument("--input-len", type=int, default=1)
+    parser.add_argument("--output-len", type=int, default=1)
+    parser.add_argument("--dataset", type=str, default="LooGLE", choices=["ShareGPT", "LooGLE", "ReAct"])
+    parser.add_argument("--test-type", type=str, default="open", choices=["open", "closed"])
+    parser.add_argument("--num-clients", type=int, default=10)
+
+    args = parser.parse_args()
+
+    return args
     
 if __name__ == "__main__":
 
