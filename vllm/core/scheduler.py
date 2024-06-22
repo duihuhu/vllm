@@ -864,7 +864,7 @@ class Scheduler:
             evict_hbm_nums = 0
         else:
             evict_hbm_nums = num_used_blocks
-        # print("num_free_blocks , num_used_blocks ", num_free_blocks, num_used_blocks, evict_hbm_nums)
+        print("num_free_blocks , num_used_blocks ", num_free_blocks, num_used_blocks, evict_hbm_nums)
         return evict_hbm_nums
 
     def evict_dram_num(self):
