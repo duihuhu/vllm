@@ -51,10 +51,11 @@ def main(args: argparse.Namespace):
         suffix = np.random.randint(10000, size = suffix_length).tolist()
     else:
         suffix = []
+    id2 = prefix + suffix
     input1 = []
     input2 = []
     input1.append(prefix)
-    input2.append(prefix.extend(suffix))
+    input2.append(id2)
     
     #dummy_prompt_token_ids = np.random.randint(10000,
     #                                           size=(args.batch_size,

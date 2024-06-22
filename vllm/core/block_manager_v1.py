@@ -388,7 +388,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 block = self.gpu_allocator.allocate(
                     seq.hash_of_block(logical_idx),
                     seq.num_hashed_tokens_of_block(logical_idx))
-                print("allocate block ", seq.seq_id, logical_idx, seq.hash_of_block(logical_idx), block.block_number, block.block_hash, block.computed, block.num_hashed_tokens)
+                #print("allocate block ", seq.seq_id, logical_idx, seq.hash_of_block(logical_idx), block.block_number, block.block_hash, block.computed, block.num_hashed_tokens)
             else:
                 block = self.gpu_allocator.allocate()
                 # Set the reference counts of the token blocks.
