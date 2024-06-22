@@ -451,16 +451,19 @@ class _AsyncLLMEngine(LLMEngine):
         swap_id = None
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
             self.scheduler._check_swap_finished()
-            is_hbm_evict = self.scheduler.check_hbm_usage()
-            if is_hbm_evict:
-                can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
-                if can_evicted_nodes:
-                    evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
-                    for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
-                    if evicted_blocks_to_swap_out:
-                        swap_id = random_uuid()
-                        self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
-                        self.radix_swap_scheduler.add_swap_task(swap_id)
+            # is_hbm_evict = self.scheduler.check_hbm_usage()
+            evict_hbm_nums = self.scheduler.evict_dram_num()
+            if evict_hbm_nums:
+                evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.GPU)
+            # if is_hbm_evict:
+                # can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
+                # if can_evicted_nodes:
+                #     evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
+                #     for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+                #     if evicted_blocks_to_swap_out:
+                #         swap_id = random_uuid()
+                #         self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
+                #         self.radix_swap_scheduler.add_swap_task(swap_id)
             #TODO evict dram block
             evict_dram_nums = self.scheduler.evict_dram_num()
             # print("cpu blocks remain " , self.scheduler.block_manager.cpu_allocator.get_radix_num_free_blocks(),

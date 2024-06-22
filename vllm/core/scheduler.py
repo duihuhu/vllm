@@ -485,19 +485,19 @@ class Scheduler:
         # Reserve new token slots for the running sequence groups.
         running: Deque[SequenceGroup] = deque()
         preempted: List[SequenceGroup] = []
-        run_blocks_to_swap_out = None
-        if self.deploy_config.enable_radix_caching and self.block_manager.get_num_free_gpu_blocks()< len(self.running) and self.cache_config.enable_radix_evictor:
-            can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
-            real_evicted_num = 0
-            if len(self.running) >= can_evicted_num:
-                real_evicted_num = can_evicted_num
-            else:
-                real_evicted_num = len(self.running)
-            can_evicted_nodes = self.block_manager.get_evicted_nodes(real_evicted_num)
-            cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
-            run_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
-        if run_blocks_to_swap_out:
-            blocks_to_swap_out.update(run_blocks_to_swap_out)
+        # run_blocks_to_swap_out = None
+        # if self.deploy_config.enable_radix_caching and self.block_manager.get_num_free_gpu_blocks()< len(self.running) and self.cache_config.enable_radix_evictor:
+        #     can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
+        #     real_evicted_num = 0
+        #     if len(self.running) >= can_evicted_num:
+        #         real_evicted_num = can_evicted_num
+        #     else:
+        #         real_evicted_num = len(self.running)
+        #     can_evicted_nodes = self.block_manager.get_evicted_nodes(real_evicted_num)
+        #     cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
+        #     run_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+        # if run_blocks_to_swap_out:
+        #     blocks_to_swap_out.update(run_blocks_to_swap_out)
         
         while self.running:
             seq_group = self.running.popleft()
@@ -855,16 +855,28 @@ class Scheduler:
         if used_ratio > 0.8:
             return True
         return False
-    
-    def evict_dram_num(self):
-        num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
-        num_used_blocks = self.block_manager.get_radix_num_cpu_used_blocks()
+
+    def evict_hbm_num(self):
+        num_free_blocks = self.block_manager.get_radix_num_free_blocks()
+        num_used_blocks = self.block_manager.get_radix_num_used_blocks()
         # if num_free_blocks > (num_used_blocks + num_free_blocks) * 0.2 :
         #     evict_dram_nums = 0
         # else:
         #     evict_dram_nums =  (num_used_blocks + num_free_blocks) * 0.2 - num_free_blocks
         # return evict_dram_nums
         return num_used_blocks
+
+    def evict_dram_num(self):
+        num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
+        num_used_blocks = self.block_manager.get_radix_num_cpu_used_blocks()
+        if num_free_blocks < 2 * len(self.running):
+            return num_used_blocks
+        # if num_free_blocks > (num_used_blocks + num_free_blocks) * 0.2 :
+        #     evict_dram_nums = 0
+        # else:
+        #     evict_dram_nums =  (num_used_blocks + num_free_blocks) * 0.2 - num_free_blocks
+        # return evict_dram_nums
+        return 0
     
     def evict_radix_tree(self, evict_nums, device):
         return self.block_manager.evict_radix_tree(evict_nums=evict_nums, device=device)
