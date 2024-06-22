@@ -38,9 +38,9 @@ if __name__ == "__main__":
 
     if args.test_type == "open":
         from test_type.open_loop import run
-        asyncio.run(run(args, reqs))
+        asyncio.run(run(args, reqs, multi_conversations_range))
     elif args.test_type == "closed":
-        from test_type.closed_loop import run
+        from vllm.benchmarks_flowserve.test_type.open_loop import run
         asyncio.run(run(args, reqs, multi_conversations_range))
 
 

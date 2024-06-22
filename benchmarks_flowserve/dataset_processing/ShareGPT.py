@@ -28,7 +28,7 @@ def sample_requests(
             if len(conversations) % 2 != 0:
                 continue
             for j in range(0, len(conversations), 2):
-                human_side = 'Human: ' + conversations[j]['value'] + '\n' 
+                human_side = 'Human: ' + conversations[j]['value'] + '\n'
                 gpt_side = 'GPT: ' + conversations[j+1]['value'] + '\n'
                 s += human_side
                 prompts.append(s)

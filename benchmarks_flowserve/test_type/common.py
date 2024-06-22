@@ -47,6 +47,7 @@ async def post_request_and_get_response(args, req, waiting_time):
     end_time = 0
     ttft = 0
     tbt = []
+    completion_token_ids = []
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
@@ -60,11 +61,17 @@ async def post_request_and_get_response(args, req, waiting_time):
                 tbt.append(resp['tbt'])
             elif resp['finished'] == True:
                 end_time = resp['end_time']
+        completion_token_ids.append(resp['prefilled_token_id'])
+    
+    print('completion_token_ids', completion_token_ids)
+    print('completion_token_ids length', len(completion_token_ids))
+    print('ground truth length', req[-1])
+    assert len(completion_token_ids) == req[-1], 'Fail to keep the length of completion token ids'
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
-    return (end_time-start_time, ttft, tbt[1:], tbt, tbt[0], req[-2] , req[-1])
+    return (end_time-start_time, ttft, tbt[1:], tbt, tbt[0], req[-2] , req[-1], completion_token_ids)
 
 
 async def dummy_post_request_and_get_response(args, req, waiting_time):
     await asyncio.sleep(waiting_time)
 
-    return (0.1, 1.1, [1.1, 2.2], [3.3, 4.4], 1.1, req[-2], req[-1])
+    return (0.1, 1.1, [1.1, 2.2], [3.3, 4.4], 1.1, req[-2], req[-1], list(range(req[-1])))
