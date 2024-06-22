@@ -31,6 +31,7 @@ def main(args: argparse.Namespace):
               download_dir=args.download_dir,
               block_size=args.block_size,
               enable_radix_caching=args.enable_radix_caching, #max_num_seqs==256, max_batched_tokens==max_model_len==4096
+              max_num_seqs=args.batch_size,
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -54,8 +55,10 @@ def main(args: argparse.Namespace):
     id2 = prefix + suffix
     input1 = []
     input2 = []
-    input1.append(prefix)
-    input2.append(id2)
+    for _ in range(args.batch_size):
+        input1.append(prefix)
+    for _ in range(args.batch_size):
+        input2.append(id2)
     
     #dummy_prompt_token_ids = np.random.randint(10000,
     #                                           size=(args.batch_size,
@@ -128,6 +131,7 @@ if __name__ == '__main__':
     parser.add_argument('--input-len', type=int, default=64)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--num-seqs', type=int, default=7)
+    parser.add_argument('--batch-size', type=int, default=2)
     parser.add_argument('--n',
                         type=int,
                         default=1,
