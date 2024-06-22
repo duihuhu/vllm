@@ -632,6 +632,14 @@ class LLMEngine:
         samples = outputs.samples
         parent_seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
         existing_finished_seqs = seq_group.get_finished_seqs()
+        
+        #if enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
+        if existing_finished_seqs:
+            if self.scheduler.block_manager.enable_radix_caching \
+                or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
+                    and self.deploy_config.role == "decoder"):
+                self.radix_manager_update(existing_finished_seqs)
+                
         parent_child_dict = {
             parent_seq.seq_id: []
             for parent_seq in parent_seqs
@@ -818,23 +826,17 @@ class LLMEngine:
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
-        finished_seq_groups = []
+        # finished_seq_groups = []
         
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
             token_chunk_size = scheduled_seq_group.token_chunk_size
             seq_group.update_num_computed_tokens(token_chunk_size)
             self._process_sequence_group_outputs(seq_group, outputs)
-            if seq_group.is_finished():
-                finished_seq_groups.append(seq_group)
+            # if seq_group.is_finished():
+            #     finished_seq_groups.append(seq_group)
         
-        #if enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
-        if finished_seq_groups:
-            if self.scheduler.block_manager.enable_radix_caching \
-                or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
-                    and self.deploy_config.role == "decoder"):
-                self.radix_manager_update(finished_seq_groups)
-                
+
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 
