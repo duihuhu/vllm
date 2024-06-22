@@ -10,7 +10,7 @@ def post_request(api_url, request_dict: Optional[Dict] = {}):
 
 def reset_system(host, port):
 
-    creat_comm_api_url = cfg.create_comm_url % (host, port)
+    creat_comm_api_url = cfg.reset_system_url % (host, port)
     payload = {"reset":"reset"}
     resp = post_request(creat_comm_api_url, payload)
     return resp
