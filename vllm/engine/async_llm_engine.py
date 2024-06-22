@@ -458,7 +458,7 @@ class _AsyncLLMEngine(LLMEngine):
             if evict_hbm_nums:
                 real_evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_hbm_nums, device=Device.GPU)
             t2 = time.time()
-            print("real evict_hbm_nums ", t2-t1, real_evicted_nums)
+            print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
             # if is_hbm_evict:
                 # can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
                 # if can_evicted_nodes:
