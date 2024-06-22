@@ -2,6 +2,7 @@ from utils import set_seed
 import asyncio
 from transformers import AutoTokenizer
 import argparse
+import sys
 
 
 def get_args() -> argparse.Namespace:
@@ -62,6 +63,8 @@ if __name__ == "__main__":
         from test_type.open_loop import run
         asyncio.run(run(args, reqs, multi_conversations_range))
     elif args.test_type == "closed":
+        print(f'maximum number of clients: {len(multi_conversations_range)}', file=sys.stderr)
+        assert args.num_clients <= len(multi_conversations_range), 'Number of clients should be less than or equal to the number of sessions'
         from test_type.closed_loop import run
         asyncio.run(run(args, reqs, multi_conversations_range))
 
