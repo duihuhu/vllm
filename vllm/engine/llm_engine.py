@@ -680,7 +680,7 @@ class LLMEngine:
                 or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
                     and self.deploy_config.role == "decoder"):
                 self.radix_manager_update([seq_group])
-
+                
         # Non-beam search case
         if not seq_group.sampling_params.use_beam_search:
             # For newly created child sequences, add them to the sequence group
@@ -833,8 +833,6 @@ class LLMEngine:
             token_chunk_size = scheduled_seq_group.token_chunk_size
             seq_group.update_num_computed_tokens(token_chunk_size)
             self._process_sequence_group_outputs(seq_group, outputs)
-
-            print("seq_group is_finished ",  seq_group.is_finished())
 
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
