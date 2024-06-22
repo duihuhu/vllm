@@ -80,12 +80,23 @@ class CachedBlockAllocator(BlockAllocatorBase):
         self.evictor: Evictor = make_evictor(eviction_policy)
 
         self.radix_evictor: Evictor = make_evictor(eviction_policy)
-
+        
         self.default_hash_ctr = count()
 
         self.radix_cache: RadixCache = RadixCache()
         self.radix_block_hash = 0
+    
+        self.eviction_policy = eviction_policy
         
+    def reset_radix_cache(self):
+        self.current_num_blocks = 0
+        self.cached_blocks = {}
+        self.radix_block_hash = 0
+        while self.radix_evictor.num_blocks:    
+            self.radix_evictor.evict()
+        self.radix_evictor: Evictor = make_evictor(self.eviction_policy)
+        self.radix_cache: RadixCache = RadixCache()
+
     def radix_manager_allocate_block(self) -> PhysicalTokenBlock:
         if self.current_num_blocks == self.num_blocks:
             block = self.radix_evictor.evict()
@@ -356,6 +367,23 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Mapping: request_id -> BlockTable, use for pull data
         self.req_pull_block_tables: Dict[str, BlockTable] = {}
     
+    def reset_block_manager(self) -> None:
+        for kv, blocks in self.block_tables.items():
+            del self.block_tables[kv]
+        for kv, blocks in self.kv_block_tables.items():
+            del self.block_tables[kv]
+        self.block_tables: Dict[int, BlockTable] = {}
+        self.kv_block_tables: Dict[int, BlockTable] = {}
+        
+        self.gpu_allocator.reset_radix_cache()
+        self.cpu_allocator.reset_radix_cache()
+        num_nodes = self.radix_tree_manager.get_num_nodes()
+        self.radix_tree_manager.evict(num_nodes=num_nodes, device=Device.GPU, evict_callback=self.gpu_allocator.free_radix_manager_node_cache)
+        self.radix_tree_manager.evict(num_nodes=num_nodes, device=Device.CPU, evict_callback=self.cpu_allocator.free_radix_manager_node_cache)
+        print("self.radix_tree_manager.get_num_nodes ", self.radix_tree_manager.get_num_nodes(), self.gpu_allocator.get_num_free_blocks(), self.gpu_allocator.get_num_used_blocks(), self.cpu_allocator.get_num_free_blocks(), self.cpu_allocator.get_num_used_blocks())
+        self.radix_tree_manager = RadixTreeManager(self.block_size)
+        
+        
     def allocate_for_swap(self, seq_group: SequenceGroup, blocks_to_swap_in: Dict[int, int]) -> None:
         seq = seq_group.get_seqs(status=SequenceStatus.RUNNING)[0]
         ori_blocks = self.block_tables[seq.seq_id]

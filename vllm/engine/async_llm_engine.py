@@ -1391,6 +1391,19 @@ class AsyncLLMEngine:
         else:
             res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_type="sender")
     
+    async def reset_system(self) -> None:
+        
+        while self.engine.scheduler.waiting:
+            self.engine.scheduler.waiting.popleft()
+        while self.engine.scheduler.running:
+            self.engine.scheduler.waiting.popleft()
+        while self.engine.scheduler.swapped:
+            self.engine.scheduler.waiting.popleft()
+
+        self.engine.scheduler.block_manager.reset_block_manager()
+
+
+        
     async def notify_finished_id(self, request_id) -> None:
         if request_id in self.engine.scheduler.recv_transfering and self.engine.scheduler.deploy_config.role=="decoder":
             seq_group = self.engine.scheduler.recv_transfering[request_id]

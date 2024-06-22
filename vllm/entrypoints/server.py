@@ -24,6 +24,13 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+
+@app.post("/reset_system")
+async def reset_system(request: Request) -> Response:
+    payload = await request.json()
+    await server.engine.reset_system()
+    return {"ret": "success"}
+
 @app.post("/notify_swap_finished_id")
 async def notify_swap_finished_id(request: Request) -> Response:
     payload = await request.json()
@@ -31,7 +38,7 @@ async def notify_swap_finished_id(request: Request) -> Response:
     await server.engine.notify_finished_id(request_id)
     return {"ret": "success"}
 
-    
+
 @app.post("/create_comm")
 async def create_comm(request: Request) -> Response:
     payload = await request.json()
