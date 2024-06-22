@@ -31,7 +31,7 @@ def main(args: argparse.Namespace):
               download_dir=args.download_dir,
               block_size=args.block_size,
               max_num_batched_tokens=4096,
-              max_num_seqs=7,
+              max_num_seqs=2,
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -84,7 +84,10 @@ def main(args: argparse.Namespace):
             print(p.key_averages())
         else:
             start_time = time.perf_counter()
-            llm.generate(prompt_token_ids=dummy_prompt_token_ids,
+            for i in range(args.batch_size):
+                inputs = []
+                inputs.append(dummy_prompt_token_ids[i])
+                llm.generate(prompt_token_ids=inputs,
                          sampling_params=sampling_params,
                          use_tqdm=False)
             end_time = time.perf_counter()
