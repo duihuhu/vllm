@@ -326,7 +326,9 @@ class BlockSpaceManagerV1(BlockSpaceManager):
 
         self.watermark_blocks = int(watermark * num_gpu_blocks)
     
-
+        self.kv_watermark = 0.1
+        self.kv_watermark_blocks = int(watermark * num_gpu_blocks)
+        
         if self.enable_caching or self.enable_radix_caching:
             self.gpu_allocator = CachedBlockAllocator(Device.GPU, block_size,
                                                       num_gpu_blocks)
@@ -401,7 +403,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return AllocStatus.LATER
 
-    def can_allocate(self, seq_group: SequenceGroup) -> AllocStatus:
+    def can_allocate(self, seq_group: SequenceGroup, is_kv: False) -> AllocStatus:
         # FIXME(woosuk): Here we assume that all sequences in the group share
         # the same prompt. This may not be true for preempted sequences.
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
@@ -415,14 +417,25 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
 
-        # Use watermark to avoid frequent cache eviction.
-        if (self.num_total_gpu_blocks - num_required_blocks <
-                self.watermark_blocks):
-            return AllocStatus.NEVER
-        if num_free_gpu_blocks - num_required_blocks >= self.watermark_blocks:
-            return AllocStatus.OK
+        if is_kv:
+            # Use watermark to avoid frequent cache eviction.
+            if (self.num_total_gpu_blocks - num_required_blocks <
+                    self.kv_watermark_blocks):
+                return AllocStatus.NEVER
+            if num_free_gpu_blocks - num_required_blocks >= self.kv_watermark_blocks:
+                return AllocStatus.OK
+            else:
+                return AllocStatus.LATER
         else:
-            return AllocStatus.LATER
+            # Use watermark to avoid frequent cache eviction.
+            if (self.num_total_gpu_blocks - num_required_blocks <
+                    self.watermark_blocks):
+                return AllocStatus.NEVER
+            if num_free_gpu_blocks - num_required_blocks >= self.watermark_blocks:
+                return AllocStatus.OK
+            else:
+                return AllocStatus.LATER
+
     
     def query_kv_blocks(self, query_cache_meta):
         blocks = []

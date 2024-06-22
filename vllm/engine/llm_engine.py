@@ -289,7 +289,7 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
-        can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+        can_allocate = self.scheduler.block_manager.can_allocate(seq_group, True)
         if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
             if can_allocate == AllocStatus.OK:
                 phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
@@ -484,7 +484,7 @@ class LLMEngine:
         while self.scheduler.decode_waiting:
             seq_group = self.scheduler.decode_waiting[0][0]
             prefill_request_output = self.scheduler.decode_waiting[0][1]
-            can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+            can_allocate = self.scheduler.block_manager.can_allocate(seq_group, True)
             #TODO there may has some issue
             if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
                 if can_allocate == AllocStatus.OK:

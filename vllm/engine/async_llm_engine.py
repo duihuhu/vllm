@@ -455,7 +455,7 @@ class _AsyncLLMEngine(LLMEngine):
             t1 = time.time()
             evict_hbm_nums = self.scheduler.evict_hbm_num()
             real_evicted_nums = 0 
-            if evict_hbm_nums:
+            if evict_hbm_nums > 0:
                 real_evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_hbm_nums, device=Device.GPU)
             t2 = time.time()
             print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
@@ -475,6 +475,8 @@ class _AsyncLLMEngine(LLMEngine):
             if evict_dram_nums:
                 evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
                 # print("evicted_nums ", evicted_nums)
+                
+                
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
         #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
