@@ -453,12 +453,12 @@ class _AsyncLLMEngine(LLMEngine):
             self.scheduler._check_swap_finished()
             # is_hbm_evict = self.scheduler.check_hbm_usage()
             t1 = time.time()
-            evict_hbm_nums = self.scheduler.evict_dram_num()
+            evict_hbm_nums = self.scheduler.evict_hbm_num()
             real_evicted_nums = 0 
             if evict_hbm_nums:
                 real_evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_hbm_nums, device=Device.GPU)
             t2 = time.time()
-            print("evict_hbm_nums ", t2-t1, real_evicted_nums)
+            print("real evict_hbm_nums ", t2-t1, real_evicted_nums)
             # if is_hbm_evict:
                 # can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
                 # if can_evicted_nodes:
