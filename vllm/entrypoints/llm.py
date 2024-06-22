@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+import time
 
 import torch
 from tqdm import tqdm
@@ -131,6 +132,7 @@ class LLM:
         use_tqdm: bool = True,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
+        filepath: Optional[str] = None
     ) -> List[RequestOutput]:
         """Generates the completions for the input prompts.
 
@@ -187,7 +189,7 @@ class LLM:
                     data=multi_modal_data.data[i].unsqueeze(0))
                 if multi_modal_data else None,
             )
-        return self._run_engine(use_tqdm)
+        return self._run_engine(use_tqdm, filepath)
 
     def _add_request(
         self,
@@ -205,7 +207,9 @@ class LLM:
                                     lora_request=lora_request,
                                     multi_modal_data=multi_modal_data)
 
-    def _run_engine(self, use_tqdm: bool) -> List[RequestOutput]:
+    def _run_engine(self, 
+                    use_tqdm: bool, 
+                    filepath: Optional[str] = None) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -214,13 +218,25 @@ class LLM:
                         dynamic_ncols=True)
         # Run the engine.
         outputs: List[RequestOutput] = []
-        while self.llm_engine.has_unfinished_requests():
-            step_outputs = self.llm_engine.step()
-            for output in step_outputs:
-                if output.finished:
-                    outputs.append(output)
-                    if use_tqdm:
-                        pbar.update(1)
+        if filepath:
+            while self.llm_engine.has_unfinished_requests():
+                step_outputs = self.llm_engine.step(filepath)
+                ed = time.time()
+                for output in step_outputs:
+                    if output.finished:
+                        outputs.append(output)
+                        if use_tqdm:
+                            pbar.update(1)
+                        with open(filepath, 'a') as file:
+                            file.write(f"request {output.request_id} ends at {ed}\n")
+        else:
+            while self.llm_engine.has_unfinished_requests():
+                step_outputs = self.llm_engine.step()
+                for output in step_outputs:
+                    if output.finished:
+                        outputs.append(output)
+                        if use_tqdm:
+                            pbar.update(1)
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.

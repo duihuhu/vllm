@@ -130,6 +130,8 @@ class LLMEngine:
         
         self.radix_swap_scheduler = RadixSwapScheduler(self.parallel_config.tensor_parallel_size)
 
+        self.loggs = set()
+
         # If usage stat is enabled, collect relevant info.
         if is_usage_stats_enabled():
             usage_message.report_usage(
@@ -860,7 +862,8 @@ class LLMEngine:
             return
         #TODO add sync interface if need 
 
-    def step(self) -> List[RequestOutput]:
+    def step(self,
+             filepath: Optional[str] = None) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         .. figure:: https://i.imgur.com/sv2HssD.png
@@ -912,6 +915,15 @@ class LLMEngine:
             >>>         break
         """
         seq_group_metadata_list, scheduler_outputs, _ = self.scheduler.schedule()
+
+        if filepath:
+            if not scheduler_outputs.is_empty():
+                for seq_group_metadata in seq_group_metadata_list:
+                    if seq_group_metadata.request_id not in self.loggs:
+                        st = time.time()
+                        with open(filepath, 'a') as file:
+                            file.write(f"request {seq_group_metadata.request_id} starts at {st}\n")
+                        self.loggs.add(seq_group_metadata.request_id)
 
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
