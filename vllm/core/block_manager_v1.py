@@ -428,7 +428,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         #         return AllocStatus.LATER
         # else:
         # Use watermark to avoid frequent cache eviction.
-        print("num_free_gpu_blocks, num_required_blocks ", num_free_gpu_blocks, num_required_blocks, self.gpu_allocator.get_num_used_blocks())
+        #print("num_free_gpu_blocks, num_required_blocks ", num_free_gpu_blocks, num_required_blocks, self.gpu_allocator.get_num_used_blocks())
         if (self.num_total_gpu_blocks - num_required_blocks <
                 self.watermark_blocks):
             return AllocStatus.NEVER
