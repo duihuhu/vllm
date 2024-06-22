@@ -65,6 +65,8 @@ def main(args: argparse.Namespace):
             temp.extend(prefix_input)
             temp.extend(suffix_input)
             dummy_prompt_token_ids.append(temp)
+    for s in dummy_prompt_token_ids:
+        print(len(s))
     '''dummy_prompt_token_ids = np.random.randint(10000,
                                                size=(args.batch_size,
                                                      args.input_len))
