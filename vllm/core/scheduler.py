@@ -864,6 +864,7 @@ class Scheduler:
             evict_hbm_nums = 0
         else:
             evict_hbm_nums = num_used_blocks
+        # print("num_free_blocks , num_used_blocks ", num_free_blocks, num_used_blocks, evict_hbm_nums)
         return evict_hbm_nums
 
     def evict_dram_num(self):
@@ -894,7 +895,6 @@ class Scheduler:
         
     def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
         for seq_group in finished_seq_groups:
-            print("radix_manager_update ",seq_group.request_id)
             seq = seq_group.get_seqs()[0]
             block_table = self.block_manager.block_tables[seq.seq_id]
             seq.cache_blocks_to_insert = block_table
