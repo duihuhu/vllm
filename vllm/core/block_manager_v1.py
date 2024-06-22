@@ -417,24 +417,25 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             num_free_gpu_blocks = self.gpu_allocator.get_num_free_blocks()
 
-        if is_kv:
-            # Use watermark to avoid frequent cache eviction.
-            if (self.num_total_gpu_blocks - num_required_blocks <
-                    self.kv_watermark_blocks):
-                return AllocStatus.NEVER
-            if num_free_gpu_blocks - num_required_blocks >= self.kv_watermark_blocks:
-                return AllocStatus.OK
-            else:
-                return AllocStatus.LATER
+        # if is_kv:
+        #     # Use watermark to avoid frequent cache eviction.
+        #     if (self.num_total_gpu_blocks - num_required_blocks <
+        #             self.kv_watermark_blocks):
+        #         return AllocStatus.NEVER
+        #     if num_free_gpu_blocks - num_required_blocks >= self.kv_watermark_blocks:
+        #         return AllocStatus.OK
+        #     else:
+        #         return AllocStatus.LATER
+        # else:
+        # Use watermark to avoid frequent cache eviction.
+        print("num_free_gpu_blocks, num_required_blocks ", num_free_gpu_blocks, num_required_blocks, self.gpu_allocator.get_num_used_blocks())
+        if (self.num_total_gpu_blocks - num_required_blocks <
+                self.watermark_blocks):
+            return AllocStatus.NEVER
+        if num_free_gpu_blocks - num_required_blocks >= self.watermark_blocks:
+            return AllocStatus.OK
         else:
-            # Use watermark to avoid frequent cache eviction.
-            if (self.num_total_gpu_blocks - num_required_blocks <
-                    self.watermark_blocks):
-                return AllocStatus.NEVER
-            if num_free_gpu_blocks - num_required_blocks >= self.watermark_blocks:
-                return AllocStatus.OK
-            else:
-                return AllocStatus.LATER
+            return AllocStatus.LATER
 
     
     def query_kv_blocks(self, query_cache_meta):

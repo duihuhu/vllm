@@ -860,10 +860,10 @@ class Scheduler:
         evict_hbm_nums = 0 
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_used_blocks()
-        if num_free_blocks  > (num_free_blocks + num_used_blocks) * 0.8:
+        if num_free_blocks  > (num_free_blocks + num_used_blocks) * 0.7:
             evict_hbm_nums = 0
         else:
-            evict_hbm_nums = num_used_blocks
+            evict_hbm_nums = num_used_blocks * 0.5
         # print("num_free_blocks , num_used_blocks ", num_free_blocks, num_used_blocks, evict_hbm_nums)
         return evict_hbm_nums
 
