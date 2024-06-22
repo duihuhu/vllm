@@ -40,6 +40,7 @@ async def run(args, reqs, multi_conversations_range):
     second_token = []
     multi_conversations_range.append(len(reqs))
 
+
     semaphore = asyncio.Semaphore(args.num_clients)
     coroutines = [
         asyncio.create_task(handle_main_request(

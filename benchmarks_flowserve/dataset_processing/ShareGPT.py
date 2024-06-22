@@ -44,10 +44,12 @@ def sample_requests(
             if prompt_len + completion_len > 4090:
                 continue
             reqs.append((prompts[i], prompt_token_ids[i], prompt_len, completion_len))
-        # Caution: we only cache the first 512 requests
-        pickle.dump(reqs[:512], open(cached_file_name, 'wb'))
+        # Caution: we only cache the first 1024 requests
+        pickle.dump(reqs[:1024], open(cached_file_name, 'wb'))
 
     sampled_requests = reqs[:num_requests]
+    while len(sampled_requests) < num_requests:
+        sampled_requests.extend(reqs[:num_requests - len(sampled_requests)])
     multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
     
     return sampled_requests, multi_conversations_range
