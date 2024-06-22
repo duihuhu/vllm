@@ -30,7 +30,7 @@ def main(args: argparse.Namespace):
               enable_chunked_prefill=args.enable_chunked_prefill,
               download_dir=args.download_dir,
               block_size=args.block_size,
-              enable_prefix_caching=args.enable_prefix_caching, #max_num_seqs==256, max_batched_tokens==max_model_len==4096
+              enable_radix_caching=args.enable_radix_caching, #max_num_seqs==256, max_batched_tokens==max_model_len==4096
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -198,9 +198,9 @@ if __name__ == '__main__':
     parser.add_argument('--use-agg-block',
                         action='store_true',
                         help='whether to use agg block or not')
-    parser.add_argument('--enable-prefix-caching',
+    parser.add_argument('--enable-radix-caching',
                         action='store_true',
-                        help='enable prefix caching')
+                        help='enable radix caching')
     parser.add_argument('--ratio',
                         type=int,
                         default=50,
