@@ -859,10 +859,12 @@ class Scheduler:
     def evict_hbm_num(self):
         evict_hbm_nums = 0 
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
+        num_used_blocks = self.block_manager.get_radix_num_used_blocks()
         if num_free_blocks > 2 * len(self.running):
             evict_hbm_nums = 0
         else:
             evict_hbm_nums = 2 * len(self.running)
+        print("num_free_blocks , num_used_blocks ", num_free_blocks, num_used_blocks)
         return evict_hbm_nums
 
     def evict_dram_num(self):
