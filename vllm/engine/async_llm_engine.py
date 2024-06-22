@@ -535,11 +535,11 @@ class _AsyncLLMEngine(LLMEngine):
             evict_hbm_nums = self.scheduler.evict_hbm_num()
             real_evicted_nums = 0 
             if evict_hbm_nums > 0:
-                t1 = time.time()
+                # t1 = time.time()
                 real_evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_hbm_nums, device=Device.GPU)
-                if real_evicted_nums > 0:
-                    t2 = time.time()
-                    print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
+                # if real_evicted_nums > 0:
+                #     t2 = time.time()
+                    # print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
 
         if self.deploy_config.enable_layer:
             processed_output_without_layer = []
