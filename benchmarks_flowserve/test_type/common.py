@@ -81,6 +81,6 @@ async def dummy_post_request_and_get_response(args, req, waiting_time, **kwargs)
     main_request_id = kwargs['main_request_id']
     sub_request_id = kwargs['sub_request_id']
     print(f"main_request_id {main_request_id} sub_request_id {sub_request_id}")
-    await asyncio.sleep(3) # Do some work here
+    await asyncio.sleep(1) # Do some work here
 
     return (0.1, 1.1, [1.1, 2.2], [3.3, 4.4], 1.1, req[-2], req[-1], list(range(req[-1])))
