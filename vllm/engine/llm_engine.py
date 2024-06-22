@@ -835,6 +835,7 @@ class LLMEngine:
     
             self._process_sequence_group_outputs(seq_group, outputs)
 
+            print("seq_group is_finished ",  seq_group.is_finished())
 
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
