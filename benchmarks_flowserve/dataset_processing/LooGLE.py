@@ -30,6 +30,9 @@ def sample_requests(
             s = 'Title: ' + doc_QAs[i]['title'] + '\n' + doc_QAs[i]['input'][:len(PROMPT_FORWORD)] + '\n'
             QAs = eval(doc_QAs[i]['qa_pairs'])
             for j in range(len(QAs)):
+                # Since there are too many QAs for one single document, we only sample the first 5 QAs
+                if j > 5:
+                    break
                 s += 'Question: ' + QAs[j]['Q'] + '\n'
                 prompts.append(s)
                 completions.append('Answer: ' + QAs[j]['A'] + '\n')
@@ -50,7 +53,7 @@ def sample_requests(
 
     sampled_requests = reqs[:num_requests]
     while len(sampled_requests) < num_requests:
-        sample_requests.extend(reqs[:num_requests - len(sampled_requests)])
+        sampled_requests.extend(reqs[:num_requests - len(sampled_requests)])
     multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
     
     return sampled_requests, multi_conversations_range

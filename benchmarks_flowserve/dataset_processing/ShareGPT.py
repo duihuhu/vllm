@@ -49,7 +49,7 @@ def sample_requests(
 
     sampled_requests = reqs[:num_requests]
     while len(sampled_requests) < num_requests:
-        sample_requests.extend(reqs[:num_requests - len(sampled_requests)])
+        sampled_requests.extend(reqs[:num_requests - len(sampled_requests)])
     multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
     
     return sampled_requests, multi_conversations_range
