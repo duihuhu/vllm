@@ -9,15 +9,11 @@ Warning: The code snippet in this file is purely asynchronous and single-threade
 And that is why we are going wild in using global variables.
 Please do not follow the code convention in this file in other settings.
 '''
-waiting_time = 0
-time_start = time.perf_counter()
 response = []
 
 # Handle all subrequests of one main request
-async def handle_main_request(reqs, args, semaphore):
+async def handle_main_request(main_request_id, reqs, args, semaphore):
     async with semaphore:
-        global waiting_time
-        global time_start
         global response
         res = None
         for i in range(len(reqs)):
@@ -26,10 +22,14 @@ async def handle_main_request(reqs, args, semaphore):
                 prev_completion_len = reqs[i-1][-1]
                 prev_completion_token_ids = res[-1]
                 reqs[i][1][prev_prompt_len:prev_prompt_len+prev_completion_len] = prev_completion_token_ids
-            waiting_time = waiting_time + np.random.exponential(1.0 / args.request_rate)
-            time_elapsed = time.perf_counter() - time_start
-            assert waiting_time >= time_elapsed, 'Fail to keep up with the rate of Poisson Distribution' 
-            res = await post_request_and_get_response(args, reqs[i], waiting_time - time_elapsed)
+            res = await post_request_and_get_response(args, reqs[i], 0)
+            # res = await dummy_post_request_and_get_response(
+            #     args, 
+            #     reqs[i], 
+            #     0,
+            #     main_request_id=main_request_id,
+            #     sub_request_id=i
+            # )
             response.append(res)
 
 async def run(args, reqs, multi_conversations_range):
@@ -43,7 +43,7 @@ async def run(args, reqs, multi_conversations_range):
     semaphore = asyncio.Semaphore(args.num_clients)
     coroutines = [
         asyncio.create_task(handle_main_request(
-        reqs[multi_conversations_range[i]:multi_conversations_range[i+1]], args, semaphore))
+        i, reqs[multi_conversations_range[i]:multi_conversations_range[i+1]], args, semaphore))
         for i in range(len(multi_conversations_range) - 1)
     ]
     await asyncio.gather(*coroutines)
