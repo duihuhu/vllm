@@ -30,10 +30,8 @@ def main(args: argparse.Namespace):
               enable_chunked_prefill=args.enable_chunked_prefill,
               download_dir=args.download_dir,
               block_size=args.block_size,
-              max_num_batched_tokens=4096,
-              max_num_seqs=2,
-              enable_prefix_caching=args.enable_prefix_caching,
-              use_agg_block=args.use_agg_block)
+              enable_radix_caching=args.enable_radix_caching,
+              use_agg_block=args.use_agg_block) # max_num_seqs==256, max_batched_tokens==max_model_len==4096 for LLama2 13B
 
     sampling_params = SamplingParams(
         n=args.n,
@@ -44,35 +42,28 @@ def main(args: argparse.Namespace):
         max_tokens=args.output_len,
     )
     print(sampling_params)
-    initial_length = math.ceil(args.input_len * (args.reuse_ratio / 100))
+    
     np.random.seed(42)
-    prefix_input = np.random.randint(10000, size=initial_length).tolist()
-    if initial_length < args.input_len:
-        suffix_input = np.random.randint(10000, size=(args.input_len - initial_length)).tolist()
+    prefix_length = math.ceil(args.input_len * (args.reuse_ratio / 100))
+    suffix_length = args.input_len - prefix_length
+    prefix = np.random.randint(10000, size = prefix_length).tolist()
+    if suffix_length > 0:
+        suffix = np.random.randint(10000, size = suffix_length).tolist()
     else:
-        suffix_input = []
-    dummy_prompt_token_ids = []
-    for i in range(args.batch_size):
-        if i == 0:
-            dummy_prompt_token_ids.append(prefix_input)
-        elif i >= 1 and i <= 3:
-            temp = []
-            temp.extend(prefix_input)
-            temp.extend(suffix_input)
-            dummy_prompt_token_ids.append(temp)
-        else:
-            temp = []
-            temp.extend(prefix_input)
-            temp.extend(suffix_input)
-            dummy_prompt_token_ids.append(temp)
-    for s in dummy_prompt_token_ids:
-        print(len(s))
+        suffix = []
+    ids2 = prefix + suffix
+    input1 = []
+    input2 = []
+    input1.append(prefix)
+    input2.append(ids2)
+
     '''dummy_prompt_token_ids = np.random.randint(10000,
                                                size=(args.batch_size,
                                                      args.input_len))
     dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()'''
 
-    def run_to_completion(profile_dir: Optional[str] = None):
+    def run_to_completion(profile_dir: Optional[str] = None,
+                          file_path: Optional[str] = None):
         if profile_dir:
             with torch.profiler.profile(
                     activities=[
@@ -81,29 +72,29 @@ def main(args: argparse.Namespace):
                     ],
                     on_trace_ready=torch.profiler.tensorboard_trace_handler(
                         str(profile_dir))) as p:
-                llm.generate(prompt_token_ids=dummy_prompt_token_ids,
+                llm.generate(prompt_token_ids=input1,
                              sampling_params=sampling_params,
-                             use_tqdm=False,
-                             filepath1=args.file_path1,
-                             filepath2=args.file_path2)
+                             use_tqdm=False)
             print(p.key_averages())
         else:
             start_time = time.perf_counter()
-            for i in range(args.batch_size):
-                inputs = []
-                inputs.append(dummy_prompt_token_ids[i])
-                llm.generate(prompt_token_ids=inputs,
-                         sampling_params=sampling_params,
-                         use_tqdm=False,
-                         filepath1=args.file_path1,
-                         filepath2=args.file_path2)
+            for i in range(args.num_seqs):
+                if i == 0:
+                    llm.generate(prompt_token_ids=input1,
+                            sampling_params=sampling_params,
+                            use_tqdm=False,
+                            filepath=file_path)
+                else:
+                    llm.generate(prompt_token_ids=input2,
+                            sampling_params=sampling_params,
+                            use_tqdm=False,
+                            filepath=file_path)
             end_time = time.perf_counter()
             latency = end_time - start_time
             return latency
 
-    print("Warming up...")
+    print("Warming up... (Does Nothing Here)")
     #run_to_completion(profile_dir=None)
-    print("Skip outside pre-warm")
 
     if args.profile:
         profile_dir = args.profile_result_dir
@@ -118,7 +109,7 @@ def main(args: argparse.Namespace):
     # Benchmark.
     latencies = []
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
-        latencies.append(run_to_completion(profile_dir=None))
+        latencies.append(run_to_completion(profile_dir=None, file_path=args.file_path))
     print(f'Avg latency: {np.mean(latencies)} seconds')
 
 
@@ -135,7 +126,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=32)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--batch-size', type=int, default=7)
+    parser.add_argument('--num-seqs', type=int, default=7)
     parser.add_argument('--n',
                         type=int,
                         default=1,
@@ -203,7 +194,7 @@ if __name__ == '__main__':
                         default=None,
                         help='directory to download and load the weights, '
                         'default to the default cache dir of huggingface')
-    parser.add_argument('--enable-prefix-caching',
+    parser.add_argument('--enable-radix-caching',
                         action='store_true',
                         help='enable prefix caching')
     parser.add_argument('--use-agg-block',
@@ -211,13 +202,11 @@ if __name__ == '__main__':
                         help='whether to use agg block or not')
     parser.add_argument('--reuse-ratio',
                         type=int,
-                        default=5,
+                        default=25,
                         help='the ratio of the first prompt being reused')
-    parser.add_argument('--file-path1',
+    parser.add_argument('--file-path',
                         type=str,
-                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log1.txt')
-    parser.add_argument('--file-path2',
-                        type=str,
-                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log2.txt')
+                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log.txt',
+                        help='where to store the logs')
     args = parser.parse_args()
     main(args)

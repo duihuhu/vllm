@@ -862,7 +862,7 @@ class LLMEngine:
         #TODO add sync interface if need 
 
     def step(self, 
-             filepath: Optional[str]) -> List[RequestOutput]:
+             filepath: Optional[str] = None) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.
 
         .. figure:: https://i.imgur.com/sv2HssD.png
@@ -915,15 +915,14 @@ class LLMEngine:
         """
         seq_group_metadata_list, scheduler_outputs, _ = self.scheduler.schedule()
         
-        if not scheduler_outputs.is_empty():
-            for seq_group_metadata in seq_group_metadata_list:
-                if seq_group_metadata.request_id in self.loggs:
-                    continue
-                else:
-                    st = time.time()
-                    with open(filepath, 'a') as file:
-                        file.write(f"request {seq_group_metadata.request_id} starts prefill at {st}\n")
-                    self.loggs.add(seq_group_metadata.request_id)
+        if filepath:
+            if not scheduler_outputs.is_empty():
+                for seq_group_metadata in seq_group_metadata_list:
+                    if seq_group_metadata.request_id not in self.loggs:
+                        st = time.time()
+                        with open(filepath, 'a') as file:
+                            file.write(f"request {seq_group_metadata.request_id} starts at {st}\n")
+                        self.loggs.add(seq_group_metadata.request_id)
         
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
