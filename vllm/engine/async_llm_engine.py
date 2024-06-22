@@ -452,13 +452,13 @@ class _AsyncLLMEngine(LLMEngine):
         if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
             self.scheduler._check_swap_finished()
             # is_hbm_evict = self.scheduler.check_hbm_usage()
-            t1 = time.time()
+            # t1 = time.time()
             evict_hbm_nums = self.scheduler.evict_hbm_num()
             real_evicted_nums = 0 
             if evict_hbm_nums > 0:
                 real_evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_hbm_nums, device=Device.GPU)
-            t2 = time.time()
-            print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
+            # t2 = time.time()
+            # print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
             # if is_hbm_evict:
                 # can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
                 # if can_evicted_nodes:
