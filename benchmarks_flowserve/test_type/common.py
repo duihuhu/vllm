@@ -57,16 +57,17 @@ async def post_request_and_get_response(args, req, waiting_time):
             ttft = resp['ttft']
             if resp['finished'] == True:
                 end_time = resp['end_time']
+                completion_token_ids.extend(resp['prefilled_token_id'])
         else:
             if resp['finished'] != True:
                 tbt.append(resp['tbt'])
             elif resp['finished'] == True:
                 end_time = resp['end_time']
-        completion_token_ids.append(resp['prefilled_token_id'])
+                completion_token_ids.extend(resp['prefilled_token_id'])
     
-    print('completion_token_ids', completion_token_ids)
-    print('completion_token_ids length', len(completion_token_ids))
-    print('ground truth length', req[-1])
+    # print('completion_token_ids', completion_token_ids)
+    # print('completion_token_ids length', len(completion_token_ids))
+    # print('ground truth length', req[-1])
     assert len(completion_token_ids) == req[-1], 'Fail to keep the length of completion token ids'
         # yield (json.dumps(resp, ensure_ascii=False) + "\0").encode("utf-8")
     return (end_time-start_time, ttft, tbt[1:], tbt, tbt[0], req[-2] , req[-1], completion_token_ids)
