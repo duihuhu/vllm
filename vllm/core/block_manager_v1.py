@@ -90,7 +90,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
         
     def reset_radix_cache(self):
         self.current_num_blocks = 0
-        self.cached_blocks = {}
+        self.cached_blocks.clear()
         self.radix_block_hash = 0
         while self.radix_evictor.num_blocks:    
             self.radix_evictor.evict()
@@ -368,12 +368,8 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         self.req_pull_block_tables: Dict[str, BlockTable] = {}
     
     def reset_block_manager(self) -> None:
-        for kv, blocks in self.block_tables.items():
-            del self.block_tables[kv]
-        for kv, blocks in self.kv_block_tables.items():
-            del self.block_tables[kv]
-        self.block_tables: Dict[int, BlockTable] = {}
-        self.kv_block_tables: Dict[int, BlockTable] = {}
+        self.block_tables.clear()
+        self.kv_block_tables.clear()
         
         self.gpu_allocator.reset_radix_cache()
         self.cpu_allocator.reset_radix_cache()
