@@ -31,6 +31,7 @@ def main(args: argparse.Namespace):
               download_dir=args.download_dir,
               block_size=args.block_size,
               enable_radix_caching=args.enable_radix_caching,
+              max_num_seqs=args.batch_size,
               use_agg_block=args.use_agg_block) # max_num_seqs==256, max_batched_tokens==max_model_len==4096 for LLama2 13B
 
     sampling_params = SamplingParams(
@@ -52,10 +53,16 @@ def main(args: argparse.Namespace):
     else:
         suffix = []
     ids2 = prefix + suffix
-    input1 = []
-    input2 = []
-    input1.append(prefix)
-    input2.append(ids2)
+    inputs = []
+    for i in range(args.num_seqs * args.batch_size):
+        if i < args.batch_size:
+            inputs.append(prefix)
+        else:
+            inputs.append(ids2)
+    #input1 = []
+    #input2 = []
+    #input1.append(prefix)
+    #input2.append(ids2)
 
     '''dummy_prompt_token_ids = np.random.randint(10000,
                                                size=(args.batch_size,
@@ -72,13 +79,17 @@ def main(args: argparse.Namespace):
                     ],
                     on_trace_ready=torch.profiler.tensorboard_trace_handler(
                         str(profile_dir))) as p:
-                llm.generate(prompt_token_ids=input1,
+                llm.generate(prompt_token_ids=inputs,
                              sampling_params=sampling_params,
                              use_tqdm=False)
             print(p.key_averages())
         else:
             start_time = time.perf_counter()
-            for i in range(args.num_seqs):
+            llm.generate(prompt_token_ids=inputs,
+                            sampling_params=sampling_params,
+                            use_tqdm=False,
+                            filepath=file_path)
+            '''for i in range(args.num_seqs):
                 if i == 0:
                     llm.generate(prompt_token_ids=input1,
                             sampling_params=sampling_params,
@@ -88,7 +99,7 @@ def main(args: argparse.Namespace):
                     llm.generate(prompt_token_ids=input2,
                             sampling_params=sampling_params,
                             use_tqdm=False,
-                            filepath=file_path)
+                            filepath=file_path)'''
             end_time = time.perf_counter()
             latency = end_time - start_time
             return latency
@@ -124,9 +135,10 @@ if __name__ == '__main__':
                         choices=['awq', 'gptq', 'squeezellm', None],
                         default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=32)
+    parser.add_argument('--input-len', type=int, default=512)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--num-seqs', type=int, default=7)
+    parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,
                         default=1,

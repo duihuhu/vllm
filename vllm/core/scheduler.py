@@ -15,7 +15,7 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
 from vllm.outputs import RequestOutput
 from vllm.block import PhysicalTokenBlock
 from vllm.radix_tree_ys.radix_cache import TreeNode, kvCacheProgressStatus
-
+from vllm.utils import Device
 
 
 logger = init_logger(__name__)
@@ -897,6 +897,8 @@ class Scheduler:
             print("radix_manager_update ",seq_group.request_id)
             seq = seq_group.get_seqs()[0]
             block_table = self.block_manager.block_tables[seq.seq_id]
+            for block in block_table:
+                block.device = Device.CPU
             seq.cache_blocks_to_insert = block_table
             self.block_manager.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.block_manager.cpu_allocator.free_radix_manager_blocks_cache)
 
