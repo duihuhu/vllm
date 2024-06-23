@@ -28,20 +28,15 @@ def execute_exp(deploy_type):
     basename = 'end2end_exp_results'
     dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
     configs = {
-        'num_requests': 1000,
+        'num_requests': 256,
     }
     configs['deploy_type'] = deploy_type
-
-    # if "disagg" in configs['deploy_type']:
-    #     request_rates = [0.2, 0.4, 0.6, 0.8] # x-axis 
-    # else:
-    #     request_rates= [0.1, 0.2, 0.3, 0.4] # x-axis 
-
+    
     request_rates = []
-    req = 0.5
-    while req <= 20:
+    req = 1
+    while req <= 10:
         request_rates.append(req)
-        req = req + 0.5
+        req = req + 1
     
     if "disagg" in configs['deploy_type']:
         request_rates = [x * 2 for x in request_rates]
@@ -54,7 +49,7 @@ def execute_exp(deploy_type):
 
     for request_rate in request_rates:
         duration = 100 / request_rate
-        command = f'python3 main.py --test-type {"open"} --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}  --duration {duration} '
+        command = f'python3 main.py --test-type {"open"} --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]} '
         print(f'Running command: {configs["deploy_type"]}, {command}')
         os.system(f'{command}')
         time.sleep(5)

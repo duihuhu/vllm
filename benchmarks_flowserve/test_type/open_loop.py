@@ -14,21 +14,14 @@ Please do not follow the code convention in this file in other settings.
 waiting_time = 0
 time_start = time.perf_counter()
 response = []
-num_requests_todo = 0
-num_requests_sent = 0
 
 # Handle all subrequests of one main request
 async def handle_main_request(main_request_id, reqs, args):
-    global num_requests_sent
-    global num_requests_todo
     global waiting_time
     global time_start
     global response
     res = None
     for i in range(len(reqs)):
-        if num_requests_sent >= num_requests_todo:
-            break
-        num_requests_sent += 1
         if i != 0:
             prev_prompt_len = reqs[i-1][-2]
             prev_completion_len = reqs[i-1][-1]
@@ -50,10 +43,7 @@ async def handle_main_request(main_request_id, reqs, args):
         response.append(res)
 
 async def run(args, reqs, multi_conversations_range):
-    global num_requests_todo
-    global num_requests_sent
     global time_start
-    num_requests_todo = math.ceil(args.request_rate * args.duration)
     jct = []
     ttft = []
     tbt_no_second_token = []
@@ -75,7 +65,7 @@ async def run(args, reqs, multi_conversations_range):
 
     # Deal with the rest of the sessions, add them when the first few sessions cannot meet the Poisson speed
     main_request_id = first_few_sessions
-    while num_requests_sent < num_requests_todo and main_request_id < len(multi_conversations_range) - 1:
+    while main_request_id < len(multi_conversations_range) - 1:
         coroutines.append(asyncio.create_task(handle_main_request(
             main_request_id, 
             reqs[multi_conversations_range[main_request_id]:multi_conversations_range[main_request_id+1]], 
@@ -91,7 +81,7 @@ async def run(args, reqs, multi_conversations_range):
     await asyncio.gather(*coroutines)
 
     global response 
-    assert len(response) == num_requests_todo, 'Fail to handle all requests'
+    assert len(response) == len(reqs), 'Fail to handle all requests'
     for res in response:
         jct.append(res[0])
         ttft.append(res[1])
