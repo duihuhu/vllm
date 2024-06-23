@@ -13,7 +13,7 @@ for tl in total_len:
         costs = []
         with open(file_name, 'r') as file:
             lines = file.readlines()
-            for i, in range(len(lines)):
+            for i in range(len(lines)):
                 if i == 8 or i == 10 or i == 12:
                     st = float(lines[i].strip().split(' ')[-1])
                     ed = float(lines[i+1].strip().split(' ')[-1])
