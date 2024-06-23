@@ -227,20 +227,28 @@ class Worker:
         # Issue cache operations.
         # TODO(woosuk): Profile swapping overhead and optimize if needed.
         if blocks_to_swap_in:
+            print("Swap in")
+            print(f"Swap {len(blocks_to_swap_in.items())} blocks")
             if self.use_agg_block:
                 #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu,
                 #                              self.caches_addresses_tensors_gpu,
                 #                              blocks_to_swap_in)
+                print("In agg")
                 self.cache_engine.swap_by_agg2_in(blocks_to_swap_in)
             else:
+                print("In vllm")
                 self.cache_engine.swap_in(blocks_to_swap_in)
         if blocks_to_swap_out:
+            print("Swap out")
+            print(f"Swap {len(blocks_to_swap_out.items())} blocks")
             if self.use_agg_block:
                 #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu,
                 #                              self.caches_addresses_tensors_cpu,
                 #                              blocks_to_swap_out)
+                print("In agg")
                 self.cache_engine.swap_by_agg2_out(blocks_to_swap_out)
             else:
+                print("In vllm")
                 self.cache_engine.swap_out(blocks_to_swap_out)
         if blocks_to_copy:
             if self.use_agg_block:

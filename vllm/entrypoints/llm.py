@@ -235,6 +235,7 @@ class LLM:
                             file.write(f"request {output.request_id} ends at {ed}\n")
                 #ite = ite + 1
                 if self.llm_engine.get_num_decoded_requests() == stall:
+                    print(f"Do Swap")
                     self.llm_engine.swap_decode_requests(True)
                     self.llm_engine.swap_decode_requests(False)
                     self.llm_engine.swap_decode_requests(True)

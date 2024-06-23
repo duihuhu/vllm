@@ -31,7 +31,6 @@ def main(args: argparse.Namespace):
               download_dir=args.download_dir,
               block_size=args.block_size,
               enable_radix_caching=args.enable_radix_caching, #max_num_seqs==256, max_batched_tokens==max_model_len==4096
-              max_num_seqs=args.batch_size,
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -88,13 +87,13 @@ def main(args: argparse.Namespace):
                                 sampling_params=sampling_params,
                                 use_tqdm=False,
                                 file_name=file_name,
-                                stall=(args.num_seqs - 1) / 2)
+                                stall = (args.num_seqs + 1) / 2 * args.batch_size)
                 else:
                     llm.generate(prompt_token_ids=input2,
                                 sampling_params=sampling_params,
                                 use_tqdm=False,
                                 file_name=file_name,
-                                stall=(args.num_seqs - 1) / 2)
+                                stall = (args.num_seqs + 1) / 2 * args.batch_size)
             end_time = time.perf_counter()
             latency = end_time - start_time
             return latency
@@ -130,10 +129,10 @@ if __name__ == '__main__':
                         choices=['awq', 'gptq', 'squeezellm', None],
                         default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=64)
+    parser.add_argument('--input-len', type=int, default=512)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--num-seqs', type=int, default=7)
-    parser.add_argument('--batch-size', type=int, default=2)
+    parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,
                         default=1,
@@ -209,11 +208,11 @@ if __name__ == '__main__':
                         help='enable radix caching')
     parser.add_argument('--ratio',
                         type=int,
-                        default=50,
+                        default=25,
                         help='ratio for re-use')
     parser.add_argument('--file-name',
                         type=str,
-                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log.txt',
+                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log3.txt',
                         help='where to store the logs')
     args = parser.parse_args()
     main(args)
