@@ -29,9 +29,9 @@ async def handle_main_request(main_request_id, reqs, args):
             reqs[i][1][prev_prompt_len:prev_prompt_len+prev_completion_len] = prev_completion_token_ids
         waiting_time = waiting_time + np.random.exponential(1.0 / args.request_rate)
         time_elapsed = time.perf_counter() - time_start
-        if waiting_time < time_elapsed:
-            print(f"\033[93m Warning: main_request_id {main_request_id} sub_request_id {i}: Poisson violation\033[0m", file=sys.stderr)
-            print(f"\033[93m Should have been sent at {time_elapsed - waiting_time:.3} seconds ago\033[0m", file=sys.stderr)
+        # if waiting_time < time_elapsed:
+        #     print(f"\033[93m Warning: main_request_id {main_request_id} sub_request_id {i}: Poisson violation\033[0m", file=sys.stderr)
+        #     print(f"\033[93m Should have been sent at {time_elapsed - waiting_time:.3} seconds ago\033[0m", file=sys.stderr)
         res = await post_request_and_get_response(args, reqs[i], waiting_time - time_elapsed)
         # res = await dummy_post_request_and_get_response(
         #     args, 
