@@ -28,12 +28,13 @@ basename = 'end2end_exp_results'
 dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 configs = {
     'type': 'disagg_ncache',
-    'num_requests': 256,
+    'num_requests': 1000,
 }
+
 if "disagg" in configs['type']:
-    num_clients= [4, 8, 16, 32, 64, 128] # x-axis 
+    request_rates = [0.2, 0.4, 0.6, 0.8] # x-axis 
 else:
-    num_clients= [2, 4, 8, 16, 32, 64] # x-axis 
+    request_rates= [0.1, 0.2, 0.3, 0.4] # x-axis 
 
 # Derived parameters
 dirname = f'{basename}/{dataset}/{configs["type"]}'
@@ -41,9 +42,8 @@ dirname = f'{basename}/{dataset}/{configs["type"]}'
 if not os.path.exists(dirname):
     os.makedirs(dirname)
 
-
-for i, num_client in enumerate(num_clients):
-    command = f'python3 main.py --test-type {"closed"} --dataset {dataset} --num-clients {num_client} --num-requests {configs["num_requests"]}'
-    print(f'Running command: {command}')
+for i, request_rate in enumerate(request_rates):
+    command = f'python3 main.py --test-type {"open"} --dataset {dataset} --num-clients {request_rate} --num-requests {configs["num_requests"]}  --duration 10 '
+    print(f'Running command: {configs['type']}, {command}')
     os.system(f'{command}')
     time.sleep(5)
