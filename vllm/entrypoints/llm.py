@@ -212,6 +212,7 @@ class LLM:
                     use_tqdm: bool,
                     file_name: Optional[str] = None,
                     stall: Optional[int] = -1) -> List[RequestOutput]:
+        print(f"Stall is {stall}")
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -234,6 +235,7 @@ class LLM:
                         with open(file_name, 'a') as file:
                             file.write(f"request {output.request_id} ends at {ed}\n")
                 #ite = ite + 1
+                print(f"Decoded Num is {self.llm_engine.get_num_decoded_requests()}")
                 if self.llm_engine.get_num_decoded_requests() == stall:
                     print(f"Do Swap")
                     self.llm_engine.swap_decode_requests(True)
