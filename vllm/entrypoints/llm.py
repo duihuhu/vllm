@@ -133,8 +133,8 @@ class LLM:
         use_tqdm: bool = True,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
-        file_name: Optional[str] = None
-    ) -> List[RequestOutput]:
+        file_name: Optional[str] = None,
+        stall: Optional[int] = -1) -> List[RequestOutput]:
         """Generates the completions for the input prompts.
 
         NOTE: This class automatically batches the given prompts, considering
@@ -190,7 +190,7 @@ class LLM:
                     data=multi_modal_data.data[i].unsqueeze(0))
                 if multi_modal_data else None,
             )
-        return self._run_engine(use_tqdm, file_name)
+        return self._run_engine(use_tqdm, file_name, stall)
 
     def _add_request(
         self,
@@ -210,7 +210,8 @@ class LLM:
 
     def _run_engine(self, 
                     use_tqdm: bool,
-                    file_name: Optional[str] = None) -> List[RequestOutput]:
+                    file_name: Optional[str] = None,
+                    stall: Optional[int] = -1) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -233,6 +234,10 @@ class LLM:
                         with open(file_name, 'a') as file:
                             file.write(f"request {output.request_id} ends at {ed}\n")
                 #ite = ite + 1
+                if self.llm_engine.get_num_decoded_requests() == stall:
+                    self.llm_engine.swap_decode_requests(True)
+                    self.llm_engine.swap_decode_requests(False)
+                    self.llm_engine.swap_decode_requests(True)
             else:
                 step_outputs = self.llm_engine.step()
                 for output in step_outputs:

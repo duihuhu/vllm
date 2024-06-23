@@ -269,6 +269,20 @@ class RayGPUExecutor(ExecutorBase):
 
     def _init_trans_manager(self) -> None:
         self._run_workers("init_trans_manager")
+    
+    def swap_decoded_requests(self, blocks_to_swap: Dict[int, int], loc: bool) -> None:
+        blocks_to_swap2: Dict[int, int] = {}
+        blocks_to_swap3: Dict[int, List[int]] = {}
+        if loc:
+            self._run_workers("cache_swap",
+                            blocks_to_swap_in = blocks_to_swap2,
+                            blocks_to_swap_out = blocks_to_swap,
+                            blocks_to_copy = blocks_to_swap3)
+        else:
+            self._run_workers("cache_swap",
+                            blocks_to_swap_in = blocks_to_swap,
+                            blocks_to_swap_out = blocks_to_swap2,
+                            blocks_to_copy = blocks_to_swap3)
 
     def execute_model(self,
                       seq_group_metadata_list: List[SequenceGroupMetadata],

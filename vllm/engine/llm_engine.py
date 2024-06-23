@@ -529,6 +529,13 @@ class LLMEngine:
     def has_unfinished_requests(self) -> bool:
         """Returns True if there are unfinished requests."""
         return self.scheduler.has_unfinished_seqs()
+    
+    def get_num_decoded_requests(self) -> int:
+        return self.scheduler.get_num_decoded_seq_groups()
+    
+    def swap_decode_requests(self, loc: bool) -> None:
+        blocks_to_swap = self.scheduler.swap_decoded_seq_groups(loc)
+        self.model_executor.swap_decoded_requests(blocks_to_swap, loc)
 
     def _check_beam_search_early_stopping(
         self,

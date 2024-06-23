@@ -307,12 +307,24 @@ class Scheduler:
     def get_num_unfinished_seq_groups(self) -> int:
         return len(self.waiting) + len(self.running) + len(self.swapped)
     
+    def get_num_decoded_seq_groups(self) -> int:
+        return len(self.decoded)
+    
     def fetch_kv_blocks(self, seq_group: SequenceGroup) -> List[int]:
         seq = seq_group.get_seqs()[0]
         block_table = self.block_manager.block_tables[seq.seq_id]
         blocks = [phy_block.block_number for phy_block in block_table]
         return blocks
-
+    
+    def swap_decoded_seq_groups(self, loc: bool) -> Dict[int, int]:
+        blocks_to_swap: Dict[int, int] = {} 
+        for seq_group in self.decoded:
+            if loc:
+                self._swap_out(seq_group, blocks_to_swap)
+            else:
+                self._swap_in(seq_group, blocks_to_swap)
+        return blocks_to_swap
+            
     def _schedule(self) -> SchedulerOutputs:
         
         #to record req when enable-cache-meta
@@ -741,6 +753,26 @@ class Scheduler:
         blocks_to_swap_out.update(mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.RUNNING):
             seq.status = SequenceStatus.SWAPPED
+    
+    def _swap_in_decoded(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_in: Dict[int, int],
+    ) -> None:
+        mapping = self.block_manager.swap_in(seq_group)
+        blocks_to_swap_in.update(mapping)
+
+    def _swap_out_decoded(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: Dict[int, int],
+    ) -> None:
+        if not self.block_manager.can_swap_out(seq_group):
+            raise RuntimeError(
+                "Aborted due to the lack of CPU swap space. Please increase "
+                "the swap space to avoid this error.")
+        mapping = self.block_manager.swap_out(seq_group)
+        blocks_to_swap_out.update(mapping)
 
     def _passed_delay(self, now: float) -> bool:
         if self.prev_prompt:

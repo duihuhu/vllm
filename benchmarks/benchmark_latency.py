@@ -87,12 +87,14 @@ def main(args: argparse.Namespace):
                     llm.generate(prompt_token_ids=input1,
                                 sampling_params=sampling_params,
                                 use_tqdm=False,
-                                file_name=file_name)
+                                file_name=file_name,
+                                stall=(args.num_seqs - 1) / 2)
                 else:
                     llm.generate(prompt_token_ids=input2,
                                 sampling_params=sampling_params,
                                 use_tqdm=False,
-                                file_name=file_name)
+                                file_name=file_name,
+                                stall=(args.num_seqs - 1) / 2)
             end_time = time.perf_counter()
             latency = end_time - start_time
             return latency
