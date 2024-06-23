@@ -22,8 +22,8 @@ for tl in total_len:
             lines = file.readlines()
             length = len(lines)
             for i in range(length):
-                if i == (length - 1) or i == (length - 3) or i == (length - 5):
-                    st = float(lines[i - 1].strip().split(' ')[-1])
+                if i == (length - 1) or i == (length - 5) or i == (length - 9):
+                    st = float(lines[i - 2].strip().split(' ')[-1])
                     ed = float(lines[i].strip().split(' ')[-1])
                     costs.append(ed - st)
         tl_costs.append(sum(costs) / len(costs))
