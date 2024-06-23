@@ -42,7 +42,9 @@ def reset_system(host, port):
 def execute_exp(deploy_type, is_cache):
     # Configurable parameters
     basename = 'end2end_exp_results'
-    dataset = 'ReAct' # ['ShareGPT', 'LooGLE', 'ReAct']
+    # dataset = 'ReAct' # ['ShareGPT', 'LooGLE', 'ReAct']
+    datasets = ['ReAct', 'LooGLE', 'ShareGPT']
+
     configs = {
         'num_requests': 256,
     }
@@ -58,21 +60,22 @@ def execute_exp(deploy_type, is_cache):
     if "disagg" in configs['deploy_type']:
         request_rates = [x * 2 for x in request_rates]
 
-    # Derived parameters
-    dirname = f'{basename}/{dataset}/{configs["deploy_type"]}'
-    
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
+    for dataset in datasets:
+        # Derived parameters
+        dirname = f'{basename}/{dataset}/{configs["deploy_type"]}'
+        
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
 
-    for request_rate in request_rates:
-        command = f'python3 main.py --test-type {"open"} --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]} '
-        print(f'Running command: {configs["deploy_type"]}, {command}')
-        os.system(f'{command}')
-        if is_cache > 0:
-            resp = reset_system(cfg.eprefill_host, 8082)
-        time.sleep(5)
+        for request_rate in request_rates:
+            command = f'python3 main.py --test-type {"open"} --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]} '
+            print(f'Running command: {configs["deploy_type"]}, {command}')
+            os.system(f'{command}')
+            if is_cache > 0:
+                resp = reset_system(cfg.eprefill_host, 8082)
+            time.sleep(5)
 
 if __name__ == "__main__":
     deploy_type = sys.argv[1]
-    is_cache = sys.argv[2]
+    is_cache = int(sys.argv[2])
     execute_exp(deploy_type, is_cache)
