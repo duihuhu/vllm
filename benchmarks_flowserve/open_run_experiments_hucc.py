@@ -43,7 +43,7 @@ def execute_exp(deploy_type):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    for request_rate in enumerate(request_rates):
+    for request_rate in request_rates:
         duration = 100 / request_rate
         command = f'python3 main.py --test-type {"open"} --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}  --duration {duration} '
         print(f'Running command: {configs["deploy_type"]}, {command}')
