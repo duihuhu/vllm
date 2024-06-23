@@ -438,30 +438,48 @@ class _AsyncLLMEngine(LLMEngine):
         the sequences and returns the newly generated results.
         """
         self.scheduler._check_tranfer_finished_req()
-        
-        #TODO evict block from gpu to dram in radix tree
-        evicted_blocks_to_swap_out = None
-        swap_id = None
-        if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
-            is_hbm_evict = self.scheduler.check_hbm_usage()
-            if is_hbm_evict:
-                can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
-                if can_evicted_nodes:
-                    evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
-                    for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
-                    if evicted_blocks_to_swap_out:
-                        swap_id = random_uuid()
-                        self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
-                        self.radix_swap_scheduler.add_swap_task(swap_id)
-            self.scheduler._check_swap_finished()
-            evict_dram_nums = self.scheduler.evict_dram_num()
-            if evict_dram_nums:
-                self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
             
         # if self.deploy_config.enable_separate and self.deploy_config.role=="decoder":
         #     print("req recv " , len(self.scheduler.meta_recv_finished), len(self.scheduler.decode_recv_finished), len(self.scheduler.kv_prepared_seq_group), len(self.scheduler.recv_transfering))
+
+        
         seq_group_metadata_list, scheduler_outputs, cached_seq_groups = self.scheduler.schedule()
 
+
+        #TODO evict block from gpu to dram in radix tree
+        evicted_blocks_to_swap_out = None
+        swap_id = None
+        # if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
+        #     self.scheduler._check_swap_finished()
+        #     # is_hbm_evict = self.scheduler.check_hbm_usage()
+        #     # t1 = time.time()
+        #     evict_hbm_nums = self.scheduler.evict_hbm_num()
+        #     real_evicted_nums = 0 
+        #     if evict_hbm_nums > 0:
+        #         t1 = time.time()
+        #         real_evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_hbm_nums, device=Device.GPU)
+        #         if real_evicted_nums > 0:
+        #             t2 = time.time()
+        #             print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
+                
+            # if is_hbm_evict:
+                # can_evicted_nodes, cpu_blocks = self.scheduler.get_evicted_blocks()
+                # if can_evicted_nodes:
+                #     evicted_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number
+                #     for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+                #     if evicted_blocks_to_swap_out:
+                #         swap_id = random_uuid()
+                #         self.scheduler.add_swaping_out(swap_id, (can_evicted_nodes, cpu_blocks))
+                #         self.radix_swap_scheduler.add_swap_task(swap_id)
+            # #TODO evict dram block
+            # evict_dram_nums = self.scheduler.evict_dram_num()
+            # # print("cpu blocks remain " , self.scheduler.block_manager.cpu_allocator.get_radix_num_free_blocks(),
+            # #       self.scheduler.block_manager.cpu_allocator.get_num_used_blocks(), self.scheduler.block_manager.cpu_allocator.evictor.num_blocks, evict_dram_nums)
+            # if evict_dram_nums:
+            #     evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_dram_nums, device=Device.CPU)
+            #     # print("evicted_nums ", evicted_nums)
+                
+                
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \
         #         self.scheduler.send_transfering or self.scheduler.recv_transfering or self.scheduler.req_pull_send_transfering:
@@ -509,7 +527,20 @@ class _AsyncLLMEngine(LLMEngine):
                 swap_id=swap_id)
                 
         processed_outputs = self._process_model_outputs(output, scheduler_outputs)
-        
+
+        if self.scheduler.cache_config.enable_radix_caching and self.scheduler.cache_config.enable_radix_evictor:    
+            self.scheduler._check_swap_finished()
+            # is_hbm_evict = self.scheduler.check_hbm_usage()
+            # t1 = time.time()
+            evict_hbm_nums = self.scheduler.evict_hbm_num()
+            real_evicted_nums = 0 
+            if evict_hbm_nums > 0:
+                # t1 = time.time()
+                real_evicted_nums = self.scheduler.evict_radix_tree(evict_nums=evict_hbm_nums, device=Device.GPU)
+                # if real_evicted_nums > 0:
+                #     t2 = time.time()
+                    # print("real evict_hbm_nums ", t2-t1, evict_hbm_nums, real_evicted_nums)
+
         if self.deploy_config.enable_layer:
             processed_output_without_layer = []
             for processed_output in processed_outputs:
@@ -1360,6 +1391,19 @@ class AsyncLLMEngine:
         else:
             res = await self.engine.model_executor._run_workers_async("create_comm", nccl_id=nccl_id, dst_channel=dst_channel, worker_type="sender")
     
+    async def reset_system(self) -> None:
+        
+        while self.engine.scheduler.waiting:
+            self.engine.scheduler.waiting.popleft()
+        while self.engine.scheduler.running:
+            self.engine.scheduler.waiting.popleft()
+        while self.engine.scheduler.swapped:
+            self.engine.scheduler.waiting.popleft()
+
+        self.engine.scheduler.block_manager.reset_block_manager()
+
+
+        
     async def notify_finished_id(self, request_id) -> None:
         if request_id in self.engine.scheduler.recv_transfering and self.engine.scheduler.deploy_config.role=="decoder":
             seq_group = self.engine.scheduler.recv_transfering[request_id]

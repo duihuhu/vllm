@@ -21,15 +21,18 @@ and our method. Each .csv file represents one line in the figure.
 '''
 import os
 import pandas as pd
+import subprocess
+from io import StringIO
 
 # Configurable parameters
 basename = 'end2end_exp_results'
-dataset = 'ReAct' # ['ShareGPT', 'LooGLE', 'ReAct']
+dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 configs = {
     'type': 'disagg_layer',
-    'num_requests': 256
+    'num_requests': 4
 }
-request_rates= [3.2, 6.4, 12.8, 25.6, 51.2, 102.4] # x-axis
+request_rates= [1,2,3] # x-axis 
+
 
 # Derived parameters
 dirname = f'{basename}/{dataset}'
@@ -37,20 +40,22 @@ dirname = f'{basename}/{dataset}'
 if not os.path.exists(dirname):
     os.makedirs(dirname)
 
-# Run experiments and record results
-output_file = f'{dirname}/{configs["type"]}_{configs["num_requests"]}.csv'
-temp_file = f'{dirname}/temp.csv'
-
 for i, request_rate in enumerate(request_rates):
     command = f'python3 ./main.py --dataset {dataset} --request-rate {request_rate} --num-requests {configs["num_requests"]}'
-    print(f'Running command: {command} > {temp_file}')
-    os.system(f'{command} > {temp_file}')
+    print(f'Running command: {command}')
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    out, err = process.communicate()
+    out = out.decode('utf-8')
+    csv_data = StringIO(out)
     if i == 0:
-        output_csv = pd.read_csv(temp_file)
-        output_csv['request_rate'] = request_rate
+        df = pd.read_csv(csv_data)
     else:
-        temp_csv = pd.read_csv(temp_file)
-        temp_csv['request_rate'] = request_rate
-        output_csv = pd.concat([output_csv, temp_csv])
-    
-output_csv.to_csv(output_file, index=False)
+        df = pd.concat([df, pd.read_csv(csv_data)])
+
+
+df.insert(0, 'request_rate', request_rates)
+df.to_csv(f'{dirname}/{configs["type"]}.csv', index=False)
+
+
+# Plotting
+os.system('python plot_result.py')

@@ -38,4 +38,5 @@ comm_uniqe_id_url ="http://%s:%s/get_nccl_id"
 
 create_comm_url="http://%s:%s/create_comm"
 
+reset_system_url="http://%s:%s/reset_system"
 

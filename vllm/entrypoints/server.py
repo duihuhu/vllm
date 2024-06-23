@@ -24,6 +24,13 @@ ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
 server=None
 
+
+@app.post("/reset_system")
+async def reset_system(request: Request) -> Response:
+    payload = await request.json()
+    await server.engine.reset_system()
+    return {"ret": "success"}
+
 @app.post("/notify_swap_finished_id")
 async def notify_swap_finished_id(request: Request) -> Response:
     payload = await request.json()
@@ -31,7 +38,7 @@ async def notify_swap_finished_id(request: Request) -> Response:
     await server.engine.notify_finished_id(request_id)
     return {"ret": "success"}
 
-    
+
 @app.post("/create_comm")
 async def create_comm(request: Request) -> Response:
     payload = await request.json()
@@ -77,7 +84,7 @@ async def response_kv_result(response: Request) -> None:
     payload = await response.json()
     global_ranks = payload.pop("global_ranks")
     kv_response = KvPreparedResponse(**payload)
-    print("response_kv_result ", kv_response.computed_blocks)
+    # print("response_kv_result ", kv_response.computed_blocks)
     kv_response.global_ranks = global_ranks
     await server.engine.add_kv_response(kv_response)
 
@@ -457,8 +464,8 @@ class Server:
         self.engine = AsyncLLMEngine.from_engine_args(engine_args=engine_args)
         self.global_ranks = self.engine.engine.get_global_ranks()
         
-        # self.reporter = threading.Thread(target=self.report_local_info, args=(server_args.report_interval_time,))
-        # self.reporter.start()
+        self.reporter = threading.Thread(target=self.report_local_info, args=(server_args.report_interval_time,))
+        self.reporter.start()
     
     def get_used_gpu_blocks(self):
         if self.engine.engine.deploy_config.enable_radix_caching:

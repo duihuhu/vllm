@@ -1,6 +1,30 @@
-from utils import get_args, set_seed
+from utils import set_seed
 import asyncio
 from transformers import AutoTokenizer
+import argparse
+import sys
+
+
+def get_args() -> argparse.Namespace:
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", type=str, default="localhost")
+    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--n", type=int, default=1)
+    parser.add_argument("--prompt", type=str, default="San Francisco is a")
+    parser.add_argument("--stream", action="store_true")
+    parser.add_argument("--request-rate", type=float, default=10)
+    parser.add_argument("--num-requests", type=int, default=1000)
+    parser.add_argument("--input-len", type=int, default=1)
+    parser.add_argument("--output-len", type=int, default=1)
+    parser.add_argument("--dataset", type=str, default="ReAct", choices=["ShareGPT", "LooGLE", "ReAct"])
+    parser.add_argument("--test-type", type=str, default="open", choices=["open", "closed"])
+    parser.add_argument("--num-clients", type=int, default=5)
+    parser.add_argument("--duration", type=int, default=10)
+
+    args = parser.parse_args()
+
+    return args
     
 if __name__ == "__main__":
 
@@ -35,20 +59,13 @@ if __name__ == "__main__":
             tokenizer, 
             args.num_requests
         )
-    
-
-    # print(reqs[0][0])
-    # print('*' * 100)
-    # print(reqs[3][0])
-    # print('*' * 100)
-    # print(reqs[4][0])
-
-    # print(multi_conversations_range)
 
     if args.test_type == "open":
         from test_type.open_loop import run
-        asyncio.run(run(args, reqs))
+        asyncio.run(run(args, reqs, multi_conversations_range))
     elif args.test_type == "closed":
+        print(f'maximum number of clients: {len(multi_conversations_range)}', file=sys.stderr)
+        assert args.num_clients <= len(multi_conversations_range), 'Number of clients should be less than or equal to the number of sessions'
         from test_type.closed_loop import run
         asyncio.run(run(args, reqs, multi_conversations_range))
 

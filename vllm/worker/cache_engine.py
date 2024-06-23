@@ -79,7 +79,6 @@ class CacheEngine:
         if use_agg_block:
             kv_cache_shape = self.attn_backend.get_kv_cache_shape(
             num_blocks, self.block_size, self.num_heads, self.head_size, self.num_layers)
-            print("use_agg_block kv_cache_shape ", kv_cache_shape)
             for _ in range(num_blocks):
                 kv_cache.append(
                     torch.empty(
@@ -122,11 +121,11 @@ class CacheEngine:
 
     def get_blocks_address(self, gpu: bool) -> List[int]:
         if self.use_agg_block:
-            # key_caches = []
+            key_caches = []
             blocks_address = [] 
             if gpu is True:
                 for cache_block in self.gpu_cache:
-                    # key_caches.append(cache_block[0])
+                #     key_caches.append(cache_block[0])
                 # blocks_address = ops.tensor_for_blocks_address(key_caches)
                     blocks_address.append(cache_block.data_ptr())
                 return blocks_address
@@ -177,7 +176,7 @@ class CacheEngine:
                  src_to_dsts: Dict[int, List[int]]) -> None:
         num_layers = self.gpu_cache[0][0].shape[0]
         numel_per_layer = self.gpu_cache[0][0].stride(0)
-        self.attn_backend.copy_blocks_agg(kv_cache_addresses, src_to_dsts, num_layers, numel_per_layer)
+        self.attn_backend.copy_blocks_agg(kv_cache_addresses, self.gpu_cache[0][0,0,0], src_to_dsts, num_layers, numel_per_layer)
 
     @staticmethod
     def get_cache_block_size(

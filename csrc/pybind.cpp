@@ -256,6 +256,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   py::class_<SwapManager>(swap_ops, "SwapManager")
       .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, std::vector<std::pair<at::Tensor, at::Tensor>>&, bool, int>())
+      .def(py::init<int, std::vector<uint64_t>&, std::vector<uint64_t>& >())
       .def("add_swap_tasks", &SwapManager::add_swap_tasks, "add_swap_tasks")
       .def("get_finished_swap_tasks", &SwapManager::get_finished_swap_tasks, "get_finished_swap_tasks");
 
@@ -268,6 +269,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   py::enum_<SwapType>(swap_ops, "SwapType")
       .value("SWAP_OUT_BLOCKS", SwapType::SWAP_OUT_BLOCKS)
       .value("SWAP_IN_BLOCKS", SwapType::SWAP_IN_BLOCKS)
+      .value("SWAP_OUT_FULL_BLOCKS", SwapType::SWAP_OUT_FULL_BLOCKS)
       .export_values();
 
 #ifndef USE_ROCM

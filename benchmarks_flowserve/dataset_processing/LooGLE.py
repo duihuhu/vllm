@@ -5,13 +5,13 @@ from transformers import PreTrainedTokenizerBase
 import pickle 
 import os
 from .common import find_range_of_multi_turn_conversations
+from .ReAct import PROMPT_FORWORD
 
 def sample_requests(
     dataset_path: str,
     tokenizer: PreTrainedTokenizerBase,
     num_requests: int 
-) -> List[Tuple[str, List[int], int, int]]:
-    
+) -> Tuple[List[Tuple[str, List[int], int, int]], List[int]]:
 
     cached_file_name = dataset_path.split('.')[0] + '_cached.pkl'
     if os.path.exists(cached_file_name):
@@ -26,13 +26,17 @@ def sample_requests(
         prompts = []
         completions = []
         for i in range(len(doc_QAs)):
-            doc = 'Title: ' + doc_QAs[i]['title'] + '\n' + doc_QAs[i]['input']
+            # Cut the long document
+            s = 'Title: ' + doc_QAs[i]['title'] + '\n' + doc_QAs[i]['input'][:len(PROMPT_FORWORD)] + '\n'
             QAs = eval(doc_QAs[i]['qa_pairs'])
             for j in range(len(QAs)):
-                question = QAs[j]['Q']
-                answer = QAs[j]['A']
-                prompts.append(doc + '\nQuestion: ' + question)
-                completions.append(answer)
+                # Since there are too many QAs for one single document, we only sample the first 5 QAs
+                if j > 5:
+                    break
+                s += 'Question: ' + QAs[j]['Q'] + '\n'
+                prompts.append(s)
+                completions.append('Answer: ' + QAs[j]['A'] + '\n')
+                s += completions[-1]
 
         prompt_token_ids = tokenizer(prompts).input_ids
         completion_token_ids = tokenizer(completions).input_ids
@@ -41,11 +45,15 @@ def sample_requests(
         for i in range(len(prompts)):
             prompt_len = len(prompt_token_ids[i])
             completion_len = len(completion_token_ids[i])
+            if prompt_len + completion_len > 4090:
+                continue
             reqs.append((prompts[i], prompt_token_ids[i], prompt_len, completion_len))
-        # Caution: we only cache the first 512 requests
-        pickle.dump(reqs[:512], open(cached_file_name, 'wb')) 
+        # Caution: we only cache the first 1024 requests
+        pickle.dump(reqs[:1024], open(cached_file_name, 'wb')) 
 
     sampled_requests = reqs[:num_requests]
+    while len(sampled_requests) < num_requests:
+        sampled_requests.extend(reqs[:num_requests - len(sampled_requests)])
     multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
     
     return sampled_requests, multi_conversations_range

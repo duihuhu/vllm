@@ -485,11 +485,25 @@ class Scheduler:
         # Reserve new token slots for the running sequence groups.
         running: Deque[SequenceGroup] = deque()
         preempted: List[SequenceGroup] = []
+        # run_blocks_to_swap_out = None
+        # if self.deploy_config.enable_radix_caching and self.block_manager.get_num_free_gpu_blocks()< len(self.running) and self.cache_config.enable_radix_evictor:
+        #     can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
+        #     real_evicted_num = 0
+        #     if len(self.running) >= can_evicted_num:
+        #         real_evicted_num = can_evicted_num
+        #     else:
+        #         real_evicted_num = len(self.running)
+        #     can_evicted_nodes = self.block_manager.get_evicted_nodes(real_evicted_num)
+        #     cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
+        #     run_blocks_to_swap_out =  {evicted_node.value.physicalTokenBlock.block_number: cpu_block.block_number for evicted_node, cpu_block in zip(can_evicted_nodes, cpu_blocks)}
+        # if run_blocks_to_swap_out:
+        #     blocks_to_swap_out.update(run_blocks_to_swap_out)
+        
         while self.running:
             seq_group = self.running.popleft()
             while not self.block_manager.can_append_slot(seq_group):
                 if self.running:
-                    # Preempt the lowest-priority sequence groups.
+                    # Preempt the lowest-priority sequence groups.                        
                     victim_seq_group = self.running.pop()
                     self._preempt(victim_seq_group, blocks_to_swap_out)
                     preempted.append(victim_seq_group)
@@ -504,23 +518,25 @@ class Scheduler:
                 self._append_slot(seq_group, blocks_to_copy)
                 running.append(seq_group)
         self.running = running
-
-        #if running_with_dram has seq_group, we should add it to running queue when it can run
-        running_with_dram: Deque[SequenceGroup] = deque()
-        while self.running_with_dram:
-            seq_group = self.running_with_dram.popleft()
-            if self.block_manager.can_allocate_for_swap(seq_group):
-                self.block_manager.allocate_for_swap(seq_group, blocks_to_swap_in)
-                self._append_slot(seq_group, blocks_to_copy)
-                self.running.append(seq_group)
-                # print("get_num_free_blocks ", seq_group.request_id, self.block_manager.cpu_allocator.get_num_free_blocks())
-            else:
-                running_with_dram.append(seq_group)
-        self.running_with_dram = running_with_dram
             
         # Swap in the sequence groups in the SWAPPED state if possible.
         self.swapped = self.policy.sort_by_priority(now, self.swapped)
-        if not preempted:
+        if not preempted and not blocks_to_swap_out:
+        
+            #if running_with_dram has seq_group, we should add it to running queue when it can run
+            running_with_dram: Deque[SequenceGroup] = deque()
+            while self.running_with_dram:
+                seq_group = self.running_with_dram.popleft()
+                can_allocate_swap = self.block_manager.can_allocate_for_swap(seq_group)
+                if can_allocate_swap == AllocStatus.OK:
+                    self.block_manager.allocate_for_swap(seq_group, blocks_to_swap_in)
+                    self._append_slot(seq_group, blocks_to_copy)
+                    self.running.append(seq_group)
+
+                else:
+                    running_with_dram.append(seq_group)
+            self.running_with_dram = running_with_dram
+            
             num_curr_seqs = sum(seq_group.get_max_num_running_seqs()
                                 for seq_group in self.running)
             curr_loras = set(
@@ -754,10 +770,12 @@ class Scheduler:
         # TODO(woosuk): Support recomputation for sequence groups with multiple
         # sequences. This may require a more sophisticated CUDA kernel.
         if preemption_mode is None:
-            if seq_group.get_max_num_running_seqs() == 1:
-                preemption_mode = PreemptionMode.RECOMPUTE
-            else:
-                preemption_mode = PreemptionMode.SWAP
+            # if seq_group.get_max_num_running_seqs() == 1:
+            #     preemption_mode = PreemptionMode.RECOMPUTE
+            # else:
+            #     preemption_mode = PreemptionMode.SWAP
+            preemption_mode = PreemptionMode.SWAP
+
         if preemption_mode == PreemptionMode.RECOMPUTE:
             self._preempt_by_recompute(seq_group)
         elif preemption_mode == PreemptionMode.SWAP:
@@ -833,25 +851,41 @@ class Scheduler:
         num_free_blocks = self.block_manager.get_radix_num_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_used_blocks()
         used_ratio = num_used_blocks/(num_used_blocks + num_free_blocks)
+        # print("check_hbm_usage ", num_free_blocks, num_used_blocks)
         if used_ratio > 0.8:
             return True
         return False
-    
+
+    def evict_hbm_num(self):
+        evict_hbm_nums = 0 
+        num_free_blocks = self.block_manager.get_radix_num_free_blocks()
+        num_used_blocks = self.block_manager.get_radix_num_used_blocks()
+        if num_free_blocks  > (num_free_blocks + num_used_blocks) * 0.7:
+            evict_hbm_nums = 0
+        else:
+            evict_hbm_nums = num_used_blocks
+        # print("num_free_blocks , num_used_blocks ", num_free_blocks, num_used_blocks, evict_hbm_nums)
+        return evict_hbm_nums
+
     def evict_dram_num(self):
         num_free_blocks = self.block_manager.get_radix_num_cpu_free_blocks()
         num_used_blocks = self.block_manager.get_radix_num_cpu_used_blocks()
-        evict_dram_nums = int((num_used_blocks + num_free_blocks) * 0.8 - num_free_blocks)
-        return evict_dram_nums
+        if num_free_blocks < 2 * len(self.running):
+            return num_used_blocks
+        # if num_free_blocks > (num_used_blocks + num_free_blocks) * 0.2 :
+        #     evict_dram_nums = 0
+        # else:
+        #     evict_dram_nums =  (num_used_blocks + num_free_blocks) * 0.2 - num_free_blocks
+        # return evict_dram_nums
+        return 0
     
     def evict_radix_tree(self, evict_nums, device):
-        self.block_manager.evict_radix_tree(evict_nums=evict_nums, device=device)
+        return self.block_manager.evict_radix_tree(evict_nums=evict_nums, device=device)
 
     
     def get_evicted_blocks(self) ->  Tuple[List[TreeNode], List[PhysicalTokenBlock]]:
         can_evicted_num = self.block_manager.get_num_nodes_can_swap_out()
         # num_nodes = self.block_manager.get_num_nodes()
-        # print("can_evicted_num ", can_evicted_num, num_nodes)
-        
         if can_evicted_num > 0:
             can_evicted_nodes = self.block_manager.get_evicted_nodes(can_evicted_num)
             cpu_blocks = self.block_manager.get_evicted_cpu_blocks(can_evicted_nodes)
@@ -864,7 +898,7 @@ class Scheduler:
             seq = seq_group.get_seqs()[0]
             block_table = self.block_manager.block_tables[seq.seq_id]
             seq.cache_blocks_to_insert = block_table
-            self.block_manager.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.block_manager.cpu_allocator.free_radix_manager_cache)
+            self.block_manager.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.block_manager.cpu_allocator.free_radix_manager_blocks_cache)
 
     #kv缓存传输完了
     def _check_tranfer_finished_req(self) -> None:

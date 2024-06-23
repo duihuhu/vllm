@@ -198,6 +198,8 @@ class Worker:
             self.caches_addresses_tensors_gpu = self.cache_engine.get_tensor_for_caches_address(gpu=True)
             self.caches_addresses_tensors_cpu = self.cache_engine.get_tensor_for_caches_address(gpu=False)
             self.gpu_blocks_address = self.cache_engine.get_blocks_address(gpu=True)
+            self.cpu_blocks_address = self.cache_engine.get_blocks_address(gpu=False)
+
         else:
             self.caches_addresses_tensors_gpu = None
             self.caches_addresses_tensors_cpu = None
@@ -205,8 +207,10 @@ class Worker:
     def init_swap_manager(self):
         gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
         cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.cpu_cache]
-        self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False, self.model_config.get_num_layers(self.parallel_config))
-
+        if not self.use_agg_block:
+            self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_size_per_block, gpu_cache, cpu_cache, False, self.model_config.get_num_layers(self.parallel_config))
+        else:
+            self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_block_size, self.gpu_blocks_address, self.cpu_blocks_address)
 
     def init_trans_manager(self):
         if not self.use_agg_block:
@@ -290,9 +294,13 @@ class Worker:
 
         #todo hucc
         if evicted_blocks_to_swap_out:
-            self.swap_manager.add_swap_tasks(
-                swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
-        
+            if self.use_agg_block:
+                self.swap_manager.add_swap_tasks(
+                swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_FULL_BLOCKS))
+            else:
+                self.swap_manager.add_swap_tasks(
+                    swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
+            
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
@@ -336,7 +344,10 @@ class Worker:
     def evict_blocks(self,
                      swap_id: str,
                      evicted_blocks_to_swap_out: Dict[int,int]) -> None:
-        self.swap_manager.add_swap_tasks(swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
+        if self.use_agg_block:
+            self.swap_manager.add_swap_tasks(swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_FULL_BLOCKS))
+        else:
+            self.swap_manager.add_swap_tasks(swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
 
     def trans_blocks(
         self,
@@ -349,6 +360,12 @@ class Worker:
         if send_tasks:
             self.trans_manager.add_tasks(send_tasks)
         if recv_tasks:
+            # if self.deploy_config.role == "prompt":
+            #     for task in recv_tasks:
+            #         tsk = trans_ops.TransferTask.deserialize(task)
+            #         blocks = tsk.blocks
+            #         for block in blocks:
+            #             print("block " , tsk.meta.request_id, self.gpu_cache[block].data_ptr(), self.gpu_cache[block][-1][-1][-1])
             self.trans_manager.add_tasks(recv_tasks)   
         if swap_to_remote_tasks:
             self.trans_manager.add_tasks(swap_to_remote_tasks)
@@ -382,10 +399,9 @@ class Worker:
                     self.trans_manager.init_dst_cpu_cache(dst_channel, dst_cpu_cache, dst_blocks_cpu_cache)
                 else:
                     null_dst_cpu_cache = [(torch.empty(1), torch.empty(1))]
-                    key_caches = []
+                    blocks_address = [] 
                     for cache_block in dst_tensor:
-                        key_caches.append(cache_block[0])
-                    blocks_address = ops.tensor_for_blocks_address(key_caches)
+                        blocks_address.append(cache_block.data_ptr())
                     self.trans_manager.init_dst_cpu_cache(dst_channel, null_dst_cpu_cache, blocks_address)
         
     def get_dst_shm_rank(self, dst_channel):
@@ -454,7 +470,8 @@ class Worker:
             # 从共享内存中读取数据并恢复成 Torch Tensor
             tensor_flat_np_array = shm_np_array[index:index + tensor_size].view(np.uint8)
             tensor_np_array = np.ndarray(kv_cache_shape, dtype=np.float16, buffer=tensor_flat_np_array)
-            tensor = torch.from_numpy(tensor_np_array).to(self.device)
+            # tensor = torch.from_numpy(tensor_np_array).to(self.device)
+            tensor = torch.from_numpy(tensor_np_array)
             dst_tensors.append(tensor)
             index += tensor_size
 

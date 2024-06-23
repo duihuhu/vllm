@@ -6,6 +6,12 @@ SwapManager::SwapManager(int cache_size_per_block, std::vector<std::pair<at::Ten
     execute = std::thread(&SwapManager::worker, this);
 }
 
+SwapManager::SwapManager(int cache_block_size, std::vector<uint64_t>& gpu_blocks_address, std::vector<uint64_t>& cpu_blocks_address): cache_block_size(cache_block_size), gpu_blocks_address(gpu_blocks_address), cpu_blocks_address(cpu_blocks_address){
+    swap_out_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+
+    execute = std::thread(&SwapManager::worker, this);
+}
+
 SwapManager::~SwapManager()
 {
     if (execute.joinable()) {
@@ -25,6 +31,9 @@ void SwapManager::worker() {
                     swap_out(swap_id, evicted_blocks);
                     break;
                 case SwapType::SWAP_IN_BLOCKS:
+                    break;
+                case SwapType::SWAP_OUT_FULL_BLOCKS:
+                    swap_out_full_blocks(swap_id, evicted_blocks);
                     break;
                 default:
                     throw std::runtime_error("invalid swap_type.");
@@ -70,6 +79,25 @@ void SwapManager::swap_out(const std::string& swap_id, const std::map<int, int>&
             memcpy_type,
             swap_out_streams[0]);
         }
+    }
+    at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
+    event->record();
+    swap_out_events[swap_id] = event;
+}
+
+void SwapManager::swap_out_full_blocks(const std::string& swap_id, const std::map<int, int>& evicted_blocks){
+    c10::cuda::CUDAStreamGuard guard(swap_out_streams[0]);
+    cudaMemcpyKind memcpy_type = cudaMemcpyDeviceToHost;
+    for (const auto& pair : evicted_blocks) {
+        void *srcCachePtr = (void*)gpu_blocks_address[pair.first];
+        void *dstCachePtr = (void*)cpu_blocks_address[pair.first];
+
+        cudaMemcpyAsync(
+        srcCachePtr,
+        dstCachePtr,
+        cache_block_size,
+        memcpy_type,
+        swap_out_streams[0]);
     }
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
     event->record();

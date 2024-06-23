@@ -271,7 +271,6 @@ class LLMEngine:
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
         request_output: Optional[RequestOutput] = None):
-
         # Create the sequences.
         block_size = self.cache_config.block_size
         seq_id = next(self.seq_counter)
@@ -290,7 +289,7 @@ class LLMEngine:
         seq_group = SequenceGroup(request_id, [seq], sampling_params,
                                   arrival_time, lora_request, multi_modal_data, eprefill_host=request_output.eprefill_host,eprefill_port=request_output.eprefill_port,edecode_host=request_output.edecode_host,edecode_port=request_output.edecode_port)
         
-        can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+        can_allocate = self.scheduler.block_manager.can_allocate(seq_group, True)
         if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
             if can_allocate == AllocStatus.OK:
                 phy_blocks = self.scheduler.allocate_kv_blocks(seq_group, True)
@@ -305,15 +304,18 @@ class LLMEngine:
                 else:
                     if blocks:
                         self.scheduler.add_recv_transfering(seq_group)
+                        # print("add_kv_results_request request_output.prompt request id ", request_id, seq.prompt, blocks)
                         transfer_tag = self.recv_kv_trans_scheduler.add_kv_request(request_id, request_output.global_ranks, blocks)
                         kv_response =  KvPreparedResponse(request_id, 0, None, len(computed_blocks), transfer_tag)
                     else:
                         kv_response = KvPreparedResponse(request_id, 0, None, len(phy_blocks), 0)
+            else:
+                kv_response = KvPreparedResponse(request_id, 0, None, 0, -1 , None)
         else:
-            if self.deploy_config.enable_radix_caching:
-                self.scheduler.match_allocate_kv_blocks(seq_group)
             can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
             if can_allocate == AllocStatus.OK:
+                if self.deploy_config.enable_radix_caching:
+                    self.scheduler.match_allocate_kv_blocks(seq_group)
                 computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
                 seq_group.has_dram = True
                 self.scheduler.add_recv_transfering(seq_group)
@@ -482,8 +484,8 @@ class LLMEngine:
         while self.scheduler.decode_waiting:
             seq_group = self.scheduler.decode_waiting[0][0]
             prefill_request_output = self.scheduler.decode_waiting[0][1]
-
-            can_allocate = self.scheduler.block_manager.can_allocate(seq_group)
+            
+            can_allocate = self.scheduler.block_manager.can_allocate(seq_group, True)
             #TODO there may has some issue
             if can_allocate == AllocStatus.OK or not self.deploy_config.enable_trans_to_dram:
                 if can_allocate == AllocStatus.OK:
@@ -520,6 +522,7 @@ class LLMEngine:
                             self.scheduler.running.append(seq_group)
                             self.scheduler.block_manager.move_kv_blocks_meta(seq_group)
                 else:
+                    print("schedule_decode_waiting break ", seq_group.request_id, len(self.scheduler.decode_waiting), self.scheduler.block_manager.get_radix_num_free_blocks())
                     break
             else:
                 seq_group.eprefill_host = prefill_request_output.eprefill_host
@@ -527,10 +530,10 @@ class LLMEngine:
                 seq_group.edecode_host = prefill_request_output.edecode_host
                 seq_group.edecode_port = prefill_request_output.edecode_port
                 
-                if self.deploy_config.enable_radix_caching:
-                    self.scheduler.match_allocate_kv_blocks(seq_group)
                 can_allocate = self.scheduler.block_manager.can_allocate_dram(seq_group)
                 if can_allocate == AllocStatus.OK:
+                    if self.deploy_config.enable_radix_caching:
+                        self.scheduler.match_allocate_kv_blocks(seq_group)
                     self.scheduler.decode_waiting.popleft()
                     computed_blocks, cpu_blocks = self.scheduler.allocate_dram_kv_blocks(seq_group)
                     seq_group.has_dram = True
@@ -630,6 +633,7 @@ class LLMEngine:
         samples = outputs.samples
         parent_seqs = seq_group.get_seqs(status=SequenceStatus.RUNNING)
         existing_finished_seqs = seq_group.get_finished_seqs()
+                
         parent_child_dict = {
             parent_seq.seq_id: []
             for parent_seq in parent_seqs
@@ -670,7 +674,14 @@ class LLMEngine:
             self.detokenizer.decode_sequence_inplace(seq,
                                                      seq_group.sampling_params)
             self._check_stop(seq, seq_group.sampling_params)
-
+            
+        if seq_group.is_finished():
+            #enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
+            if self.scheduler.block_manager.enable_radix_caching \
+                or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
+                    and self.deploy_config.role == "decoder"):
+                self.radix_manager_update([seq_group])
+                
         # Non-beam search case
         if not seq_group.sampling_params.use_beam_search:
             # For newly created child sequences, add them to the sequence group
@@ -816,23 +827,14 @@ class LLMEngine:
         # Update the scheduled sequence groups with the model outputs.
         scheduled_seq_groups = scheduler_outputs.scheduled_seq_groups
 
-        finished_seq_groups = []
+        # finished_seq_groups = []
         
         for scheduled_seq_group, outputs in zip(scheduled_seq_groups, output):
             seq_group = scheduled_seq_group.seq_group
             token_chunk_size = scheduled_seq_group.token_chunk_size
             seq_group.update_num_computed_tokens(token_chunk_size)
             self._process_sequence_group_outputs(seq_group, outputs)
-            if seq_group.is_finished():
-                finished_seq_groups.append(seq_group)
-        
-        #if enable_radix_caching in pd or enable_radix_caching in p/d's decoder, we should update radix tree
-        if finished_seq_groups:
-            if self.scheduler.block_manager.enable_radix_caching \
-                or (self.scheduler.block_manager.enable_radix_caching and self.deploy_config.enable_separate \
-                    and self.deploy_config.role == "decoder"):
-                self.radix_manager_update(finished_seq_groups)
-                
+
         # Free the finished sequence groups.
         self.scheduler.free_finished_seq_groups()
 

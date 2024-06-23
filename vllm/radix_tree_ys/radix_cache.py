@@ -96,9 +96,11 @@ class RadixCache:
         def evict_node(node: TreeNode, device: Device) -> int:
             num_node_evicted = 0
             for child in node.children.values():
-                num_node_evicted += evict_node(child)
-            evict_callback(node)
+                num_node_evicted += evict_node(child, device)
+                
             if node.value.physicalTokenBlock.device == device:
+                #why it may be other device
+                evict_callback(node)
                 num_node_evicted += 1
             return num_node_evicted
         
@@ -228,7 +230,6 @@ class RadixCache:
             new_node = TreeNode()
             new_node.parent = node
             block = block_table.pop(0)
-            #TODO check why add ref_count in there
             block.ref_count += 1
             new_node.value = TreeNodeValue(block)
             node.children[key.pop(0)] = new_node
@@ -322,7 +323,7 @@ class RadixCache:
                 num_nodes += 1
             
             for child_node in cur_node.children.values():
-                print("child_node ", child_node.value.physicalTokenBlock.ref_count)
+                # print("child_node ", child_node.value.physicalTokenBlock.ref_count)
                 num_nodes += dfs_(child_node)
             
             return num_nodes

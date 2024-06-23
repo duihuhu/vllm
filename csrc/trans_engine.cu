@@ -171,6 +171,7 @@ void TransEngine::recv_comms_layer_blocks(const std::string& channel, const std:
 void TransEngine::recv_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
 
     c10::cuda::CUDAStreamGuard guard(stream);
+
     RecvFullBlocks(blocks_gpu_cache, src_blocks, cache_block_size, opposite_rank, comm);
 
     at::cuda::CUDAEvent* event = new at::cuda::CUDAEvent();
@@ -518,6 +519,16 @@ void TransEngine::checkNcclError(ncclResult_t result, const char* file, int line
     }
 }
 
+// void TransEngine::throwError(const std::string& request_id, int blockIdx,  void* dstBlockPtr, int srcRank, size_t cacheSize) {
+//     std::string errMsg = "RecvFullBlocks dstCaches " 
+//                         + request_id + " " 
+//                         + std::to_string(blockIdx) + " " 
+//                         + std::to_string(reinterpret_cast<uintptr_t>(dstBlockPtr)) + " " 
+//                         + std::to_string(srcRank) + " " 
+//                         + std::to_string(cacheSize);
+    
+//     throw std::runtime_error(errMsg);
+// }
 
 void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
     const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize, uint32_t srcRank, ncclComm_t& comm)
@@ -534,7 +545,9 @@ void TransEngine::RecvFullBlocks(std::vector<uint64_t>& dstCaches, \
         if (ncclSuccess != ncclRecv(dstBlockPtr, cacheSize, ncclInt8, srcRank,\
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclRecv key cache error!!" << std::endl;
+            // throwError(request_id, blockIdx, dstBlockPtr, srcRank, cacheSize);
         }
+        // cudaStreamSynchronize(cudaStream);
         // std::cout<< "after RecvFullBlocks dstCaches[blockIdx] " << dstCaches[blockIdx] << " " << dstBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
     NCCLCHECK(ncclGroupEnd());
@@ -556,11 +569,11 @@ void TransEngine::SendFullBlocks(std::vector<uint64_t>& srcCaches, \
             comm, cudaStream)) {
             std::cout << "[ERROR]  ncclSend key cache error!!" << std::endl;
         }        
+        // cudaStreamSynchronize(cudaStream);
         // std::cout<< "after SendFullBlocks srcCaches[blockIdx] " << srcCaches[blockIdx] << " " << srcBlockPtr << " " << blockIdx << " " << cacheSize <<std::endl;
     }
     NCCLCHECK(ncclGroupEnd());
 }
-
 
 void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at::Tensor>>& srcCaches, \
     std::vector<std::pair<at::Tensor, at::Tensor>>& dstCaches, const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize)
@@ -590,8 +603,8 @@ void TransEngine::SwapHbmToRemoteDramBlocks(std::vector<std::pair<at::Tensor, at
             memcpy_type,
             cudaStream);
             cudaMemcpyAsync(
-            dstKeyCachePtr,
-            srcKeyCachePtr,
+            dstValueCachePtr,
+            srcValueCachePtr,
             cacheSize,
             memcpy_type,
             cudaStream);

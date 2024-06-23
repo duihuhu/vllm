@@ -28,7 +28,7 @@ def sample_requests(
             if len(conversations) % 2 != 0:
                 continue
             for j in range(0, len(conversations), 2):
-                human_side = 'Human: ' + conversations[j]['value'] + '\n' 
+                human_side = 'Human: ' + conversations[j]['value'] + '\n'
                 gpt_side = 'GPT: ' + conversations[j+1]['value'] + '\n'
                 s += human_side
                 prompts.append(s)
@@ -41,11 +41,15 @@ def sample_requests(
         for i in range(len(prompts)):
             prompt_len = len(prompt_token_ids[i])
             completion_len = len(completion_token_ids[i])
+            if prompt_len + completion_len > 4090:
+                continue
             reqs.append((prompts[i], prompt_token_ids[i], prompt_len, completion_len))
-        # Caution: we only cache the first 512 requests
-        pickle.dump(reqs[:512], open(cached_file_name, 'wb'))
+        # Caution: we only cache the first 1024 requests
+        pickle.dump(reqs[:1024], open(cached_file_name, 'wb'))
 
     sampled_requests = reqs[:num_requests]
+    while len(sampled_requests) < num_requests:
+        sampled_requests.extend(reqs[:num_requests - len(sampled_requests)])
     multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
     
     return sampled_requests, multi_conversations_range
