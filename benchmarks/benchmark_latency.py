@@ -54,12 +54,10 @@ def main(args: argparse.Namespace):
         suffix = []
     id2 = prefix + suffix
     inputs = []
-    print(len(prefix))
-    print(len(id2))
     #input1 = []
     #input2 = []
     for i in range(args.batch_size * args.num_seqs):
-        if i >=0 or i < args.batch_size:
+        if i < args.batch_size:
             inputs.append(prefix)
         else:
             inputs.append(id2)
@@ -71,8 +69,6 @@ def main(args: argparse.Namespace):
     #                                           size=(args.batch_size,
     #                                                 args.input_len))
     #dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
-    for item in inputs:
-        print(len(item))
     def run_to_completion(profile_dir: Optional[str] = None,
                           file_name: Optional[str] = None):
         if profile_dir:
