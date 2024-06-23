@@ -233,10 +233,10 @@ class Worker:
                 #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_cpu,
                 #                              self.caches_addresses_tensors_gpu,
                 #                              blocks_to_swap_in)
-                print("In agg")
+                #print("In agg")
                 self.cache_engine.swap_by_agg2_in(blocks_to_swap_in)
             else:
-                print("In vllm")
+                #print("In vllm")
                 self.cache_engine.swap_in(blocks_to_swap_in)
         if blocks_to_swap_out:
             print("Swap out")
@@ -245,10 +245,10 @@ class Worker:
                 #self.cache_engine.swap_by_agg(self.caches_addresses_tensors_gpu,
                 #                              self.caches_addresses_tensors_cpu,
                 #                              blocks_to_swap_out)
-                print("In agg")
+                #print("In agg")
                 self.cache_engine.swap_by_agg2_out(blocks_to_swap_out)
             else:
-                print("In vllm")
+                #print("In vllm")
                 self.cache_engine.swap_out(blocks_to_swap_out)
         if blocks_to_copy:
             if self.use_agg_block:

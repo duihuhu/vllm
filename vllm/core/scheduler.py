@@ -319,7 +319,7 @@ class Scheduler:
         return blocks
     
     def swap_decoded_seq_groups(self, loc: bool) -> Dict[int, int]:
-        print(f"In scheduler.py do swap_decoded_seq_groups()")
+        #print(f"In scheduler.py do swap_decoded_seq_groups()")
         blocks_to_swap: Dict[int, int] = {} 
         for seq_group in self.decoded:
             if loc:
