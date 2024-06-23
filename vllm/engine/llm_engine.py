@@ -900,14 +900,14 @@ class LLMEngine:
         """
         seq_group_metadata_list, scheduler_outputs, _ = self.scheduler.schedule()
 
-        st = time.time()
+        '''st = time.time()
         if file_name:
             if not scheduler_outputs.is_empty():
                 for seq_group_metadata in seq_group_metadata_list:
                     if seq_group_metadata.request_id not in self.loggs:
                         with open(file_name, 'a') as file:
                             file.write(f"request {seq_group_metadata.request_id} starts at {st}\n")
-                        self.loggs.add(seq_group_metadata.request_id)
+                        self.loggs.add(seq_group_metadata.request_id)'''
 
         # if scheduler_outputs.is_empty():
         #     if self.scheduler.swapping_in or self.scheduler.swapping_out or \

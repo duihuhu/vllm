@@ -226,21 +226,34 @@ class LLM:
             if file_name:
                 #st = time.time()
                 step_outputs = self.llm_engine.step(file_name)
-                ed = time.time()
+                #ed = time.time()
                 for output in step_outputs:
                     if output.finished:
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
-                        with open(file_name, 'a') as file:
-                            file.write(f"request {output.request_id} ends at {ed}\n")
+                        #with open(file_name, 'a') as file:
+                        #    file.write(f"request {output.request_id} ends at {ed}\n")
                 #ite = ite + 1
                 print(f"Decoded Num is {self.llm_engine.get_num_decoded_requests()}")
                 if self.llm_engine.get_num_decoded_requests() == stall:
                     print(f"Do Swap")
                     self.llm_engine.swap_decode_requests(True)
+                    st1 = time.time()
                     self.llm_engine.swap_decode_requests(False)
+                    ed1 = time.time()
                     self.llm_engine.swap_decode_requests(True)
+                    st2 = time.time()
+                    self.llm_engine.swap_decode_requests(False)
+                    ed2 = time.time()
+                    self.llm_engine.swap_decode_requests(True)
+                    st3 = time.time()
+                    self.llm_engine.swap_decode_requests(False)
+                    ed3 = time.time()
+                    t = ((ed1-st1) + (ed2-st2) + (ed3-st3)) / 3
+                    with open(file_name, 'a') as file:
+                            file.write(f"swap costs {t}\n")
+
             else:
                 step_outputs = self.llm_engine.step()
                 for output in step_outputs:
