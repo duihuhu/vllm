@@ -45,7 +45,7 @@ def execute_exp(deploy_type):
 
     for i, request_rate in enumerate(request_rates):
         command = f'python3 main.py --test-type {"open"} --dataset {dataset} --num-clients {request_rate} --num-requests {configs["num_requests"]}  --duration 10 '
-        print(f'Running command: {configs['deploy_type']}, {command}')
+        print(f'Running command: {configs["deploy_type"]}, {command}')
         os.system(f'{command}')
         time.sleep(5)
 
