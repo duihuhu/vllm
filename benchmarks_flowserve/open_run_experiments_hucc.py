@@ -37,6 +37,18 @@ def execute_exp(deploy_type):
     else:
         request_rates= [0.1, 0.2, 0.3, 0.4] # x-axis 
 
+    request_rates = []
+    req = 0.5
+    while req <= 20:
+        request_rates.append(req)
+        req = req + 0.5
+    
+    if "disagg" in configs['deploy_type']:
+        request_rates = [x * 2 for x in request_rates]
+
+    # Derived parameters
+    dirname = f'{basename}/{dataset}/{configs["deploy_type"]}'
+    
     # Derived parameters
     dirname = f'{basename}/{dataset}/{configs["deploy_type"]}'
 
