@@ -32,10 +32,10 @@ def execute_exp(deploy_type):
     }
     configs['deploy_type'] = deploy_type
 
-    if "disagg" in configs['deploy_type']:
-        request_rates = [0.2, 0.4, 0.6, 0.8] # x-axis 
-    else:
-        request_rates= [0.1, 0.2, 0.3, 0.4] # x-axis 
+    # if "disagg" in configs['deploy_type']:
+    #     request_rates = [0.2, 0.4, 0.6, 0.8] # x-axis 
+    # else:
+    #     request_rates= [0.1, 0.2, 0.3, 0.4] # x-axis 
 
     request_rates = []
     req = 0.5
