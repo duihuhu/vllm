@@ -31,6 +31,7 @@ def main(args: argparse.Namespace):
               download_dir=args.download_dir,
               block_size=args.block_size,
               enable_radix_caching=args.enable_radix_caching, #max_num_seqs==256, max_batched_tokens==max_model_len==4096
+              max_num_seqs=args.batch_size,
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -52,12 +53,17 @@ def main(args: argparse.Namespace):
     else:
         suffix = []
     id2 = prefix + suffix
-    input1 = []
-    input2 = []
-    for _ in range(args.batch_size):
-        input1.append(prefix)
-    for _ in range(args.batch_size):
-        input2.append(id2)
+    inputs = []
+    #input1 = []
+    #input2 = []
+    for i in range(args.batch_size * args.num_seqs):
+        if i >=0 or i < args.batch_size:
+            inputs.append(prefix)
+        else:
+            inputs.append(id2)
+        #input1.append(prefix)
+    #for _ in range(args.batch_size):
+    #    input2.append(id2)
     
     #dummy_prompt_token_ids = np.random.randint(10000,
     #                                           size=(args.batch_size,
@@ -74,14 +80,19 @@ def main(args: argparse.Namespace):
                     ],
                     on_trace_ready=torch.profiler.tensorboard_trace_handler(
                         str(profile_dir))) as p:
-                llm.generate(prompt_token_ids=input1,#dummy_prompt_token_ids,
+                llm.generate(prompt_token_ids=inputs,#dummy_prompt_token_ids,
                              sampling_params=sampling_params,
                              use_tqdm=False,
                              file_name=None)
             print(p.key_averages())
         else:
             start_time = time.perf_counter()
-            for i in range(args.num_seqs):
+            llm.generate(prompt_token_ids=inputs,
+                         sampling_params=sampling_params,
+                         use_tqdm=False,
+                         file_name=file_name,
+                         stall=4 * args.batch_size)
+            '''for i in range(args.num_seqs):
                 if i == 0:
                     llm.generate(prompt_token_ids=input1,
                                 sampling_params=sampling_params,
@@ -93,7 +104,7 @@ def main(args: argparse.Namespace):
                                 sampling_params=sampling_params,
                                 use_tqdm=False,
                                 file_name=file_name,
-                                stall = (args.num_seqs + 1) / 2 * args.batch_size)
+                                stall = (args.num_seqs + 1) / 2 * args.batch_size)'''
             end_time = time.perf_counter()
             latency = end_time - start_time
             return latency
