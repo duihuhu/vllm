@@ -766,8 +766,8 @@ class LLMEngine:
             seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
             seq.last_node = prefix_info[1] 
             seq.last_node_matched_len = last_node_matched_len
-            if not self.deploy_config.enable_dcache:
-                del self.scheduler.block_manager.block_tables[seq.seq_id]
+            #if not self.deploy_config.enable_dcache:
+            #    del self.scheduler.block_manager.block_tables[seq.seq_id]
                     
     def _process_model_outputs(
             self, output: SamplerOutput,
