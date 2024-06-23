@@ -39,7 +39,7 @@ def execute_exp(deploy_type):
         num_clients = [x * 2 for x in num_clients]
     
     # Derived parameters
-    dirname = f'{basename}/{dataset}/{configs["type"]}'
+    dirname = f'{basename}/{dataset}/{configs["deploy_type"]}'
 
     if not os.path.exists(dirname):
         os.makedirs(dirname)
