@@ -689,7 +689,7 @@ class ModelRunner:
             }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
-        t1 = time.time()
+        # t1 = time.time()
         hidden_states = model_executable(**execute_model_kwargs)
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
@@ -701,8 +701,8 @@ class ModelRunner:
             logits=logits,
             sampling_metadata=sampling_metadata,
         )
-        t2 = time.time()
-        print("execute model time ", t2-t1)
+        # t2 = time.time()
+        # print("execute model time ", t2-t1)
         return output
 
     @torch.inference_mode()
