@@ -18,7 +18,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--input-len", type=int, default=1)
     parser.add_argument("--output-len", type=int, default=1)
     parser.add_argument("--dataset", type=str, default="ReAct", choices=["ShareGPT", "LooGLE", "ReAct"])
-    parser.add_argument("--test-type", type=str, default="closed", choices=["open", "closed"])
+    parser.add_argument("--test-type", type=str, default="open", choices=["open", "closed"])
     parser.add_argument("--num-clients", type=int, default=5)
     parser.add_argument("--duration", type=int, default=10)
 
