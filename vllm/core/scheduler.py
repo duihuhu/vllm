@@ -172,6 +172,8 @@ class Scheduler:
         # Sequence groups in the SWAPPED state.
         self.swapped: Deque[SequenceGroup] = deque()
 
+        self.decoded: Deque[SequenceGroup] = deque()
+
         # Time at previous scheduling step
         self.prev_time = 0.0
         # Did we schedule a prompt at previous step?
@@ -639,8 +641,11 @@ class Scheduler:
 
     def free_finished_seq_groups(self) -> None:
         #to record req decoded  
-        self.decoded = deque(seq_group for seq_group in self.running
-                             if seq_group.is_finished())
+        for seq_group in self.running:
+            if seq_group.is_finished():
+                self.decoded.append(seq_group)
+        #self.decoded = deque(seq_group for seq_group in self.running
+        #                     if seq_group.is_finished())
         
         self.running = deque(seq_group for seq_group in self.running
                              if not seq_group.is_finished())
