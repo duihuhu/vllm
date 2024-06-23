@@ -319,12 +319,13 @@ class Scheduler:
         return blocks
     
     def swap_decoded_seq_groups(self, loc: bool) -> Dict[int, int]:
+        print(f"In scheduler.py do swap_decoded_seq_groups()")
         blocks_to_swap: Dict[int, int] = {} 
         for seq_group in self.decoded:
             if loc:
-                self._swap_out(seq_group, blocks_to_swap)
+                self._swap_out_decoded(seq_group, blocks_to_swap)
             else:
-                self._swap_in(seq_group, blocks_to_swap)
+                self._swap_in_decoded(seq_group, blocks_to_swap)
         return blocks_to_swap
             
     def _schedule(self) -> SchedulerOutputs:
@@ -764,7 +765,7 @@ class Scheduler:
         seq_group: SequenceGroup,
         blocks_to_swap_in: Dict[int, int],
     ) -> None:
-        mapping = self.block_manager.swap_in(seq_group)
+        mapping = self.block_manager.swap_in_decoded(seq_group)
         blocks_to_swap_in.update(mapping)
 
     def _swap_out_decoded(
@@ -772,11 +773,11 @@ class Scheduler:
         seq_group: SequenceGroup,
         blocks_to_swap_out: Dict[int, int],
     ) -> None:
-        if not self.block_manager.can_swap_out(seq_group):
+        if not self.block_manager.can_swap_out_decoded(seq_group):
             raise RuntimeError(
                 "Aborted due to the lack of CPU swap space. Please increase "
                 "the swap space to avoid this error.")
-        mapping = self.block_manager.swap_out(seq_group)
+        mapping = self.block_manager.swap_out_decoded(seq_group)
         blocks_to_swap_out.update(mapping)
 
     def _passed_delay(self, now: float) -> bool:
