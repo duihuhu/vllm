@@ -25,15 +25,15 @@ import time
 
 # Configurable parameters
 basename = 'end2end_exp_results'
-dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
+dataset = 'ReAct' # ['ShareGPT', 'LooGLE', 'ReAct']
 configs = {
     'type': 'disagg_ncache',
     'num_requests': 256,
 }
 if "disagg" in configs['type']:
-    num_clients= [4, 8, 16, 32, 64, 128] # x-axis 
+    num_clients= [4, 8, 16, 32] # x-axis 
 else:
-    num_clients= [2, 4, 8, 16, 32, 64] # x-axis 
+    num_clients= [2, 4, 8, 16] # x-axis 
 
 # Derived parameters
 dirname = f'{basename}/{dataset}/{configs["type"]}'
