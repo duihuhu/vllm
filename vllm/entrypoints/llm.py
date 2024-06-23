@@ -224,16 +224,16 @@ class LLM:
         #ite = 0
         while self.llm_engine.has_unfinished_requests():
             if file_name:
-                st = time.time()
+                #st = time.time()
                 step_outputs = self.llm_engine.step(file_name)
-                ed = time.time()
+                #ed = time.time()
                 for output in step_outputs:
                     if output.finished:
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
-                        with open(file_name, 'a') as file:
-                            file.write(f"request {output.request_id} costs {ed - st}\n")
+                        #with open(file_name, 'a') as file:
+                        #    file.write(f"request {output.request_id} costs {ed - st}\n")
                 #ite = ite + 1
                 '''print(f"Decoded Num is {self.llm_engine.get_num_decoded_requests()}")
                 if self.llm_engine.get_num_decoded_requests() == stall:

@@ -31,7 +31,7 @@ def main(args: argparse.Namespace):
               download_dir=args.download_dir,
               block_size=args.block_size,
               enable_radix_caching=args.enable_radix_caching, #max_num_seqs==256, max_batched_tokens==max_model_len==4096
-              max_num_seqs=args.batch_size,
+              max_num_seqs=256, #args.batch_size,
               use_agg_block=args.use_agg_block)
 
     sampling_params = SamplingParams(
@@ -61,7 +61,7 @@ def main(args: argparse.Namespace):
             inputs.append(id2)'''
     
     dummy_prompt_token_ids = np.random.randint(10000,
-                                               size=(args.num_seqs,
+                                               size=(args.batch_size,
                                                      args.input_len))
     dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
     def run_to_completion(profile_dir: Optional[str] = None,
@@ -104,7 +104,7 @@ def main(args: argparse.Namespace):
             return latency
 
     print("Warming up...(Does Nothing)")
-    #run_to_completion(profile_dir=None, file_name=None)
+    run_to_completion(profile_dir=None, file_name=None)
 
     if args.profile:
         profile_dir = args.profile_result_dir
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     parser.add_argument('--use-beam-search', action='store_true')
     parser.add_argument('--num-iters',
                         type=int,
-                        default=1,
+                        default=3,
                         help='Number of iterations to run.')
     parser.add_argument('--trust-remote-code',
                         action='store_true',
