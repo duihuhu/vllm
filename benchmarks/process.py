@@ -1,8 +1,8 @@
 root_path = "/home/jovyan/hhy/vllm-hhy/benchmarks/"
 dir_path = "logs3/"
-prefix_path = "log2_2_"
+prefix_path = "log2_4_"
 suffix_path = ".txt"
-total_len = [32,64,128,256,512,1024,2040]
+total_len = [32,64,128,256,512,1020]
 ratio = [10,20,30,40,50,60,70,80,90,100]
 
 total_costs = []
@@ -22,8 +22,8 @@ for tl in total_len:
             lines = file.readlines()
             length = len(lines)
             for i in range(length):
-                if i == (length - 1) or i == (length - 5) or i == (length - 9):
-                    st = float(lines[i - 2].strip().split(' ')[-1])
+                if i == (length - 1) or i == (length - 9) or i == (length - 17):
+                    st = float(lines[i - 4].strip().split(' ')[-1])
                     ed = float(lines[i].strip().split(' ')[-1])
                     costs.append(ed - st)
         tl_costs.append(sum(costs) / len(costs))
