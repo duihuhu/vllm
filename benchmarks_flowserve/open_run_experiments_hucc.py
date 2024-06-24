@@ -46,16 +46,16 @@ def execute_exp(deploy_type, is_cache):
     datasets = ['ReAct', 'LooGLE', 'ShareGPT']
 
     configs = {
-        'num_requests': 256,
+        'num_requests': 512,
     }
     configs['deploy_type'] = deploy_type
     
     request_rates = []
 
-    req = 0.5
-    while req <= 5:
+    req = 6
+    while req <= 10:
         request_rates.append(req)
-        req = req + 0.5
+        req = req + 2
     
     if "disagg" in configs['deploy_type']:
         request_rates = [x * 2 for x in request_rates]

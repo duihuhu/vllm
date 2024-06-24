@@ -25,17 +25,17 @@ import os
 from typing import List, Union
 
 # Configurable parameters
-basename = 'end2end_exp_results'
+basename = 'end2end'
 dataset = 'LooGLE' # ['ShareGPT', 'LooGLE', 'ReAct']
 
 # Derived parameters
-dirname = f'{basename}/{dataset}'
+dirname = "/Users/gaofz/Desktop/胡cunchen/Phd/LLM/vllm/benchmarks_flowserve/end2end/ShareGPT"
 
 def plot_figure(x_axis: str, y_axis: Union[str, List[str]]):
     plt.figure(figsize=(12, 10))
     for file in os.listdir(dirname):
         if os.path.isfile(os.path.join(dirname, file)) and '.csv' in file:
-            df = pd.read_csv(f'{dirname}/{file}')
+            df = pd.read_csv(f'{dirname}/{file}', sep='\t')
             type = file.split('.')[0] + '_'
             plt.plot(df[x_axis], df[y_axis], label = type + df[y_axis].columns)
     
