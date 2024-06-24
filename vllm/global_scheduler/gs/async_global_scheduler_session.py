@@ -70,7 +70,7 @@ async def monitor_report(request: Request) -> Response:
     key = host + "_" + str(port) + "_" + engine_type
     # print("key global_ranks", key, global_ranks)
     # print(key, unfinished_req, unfinished_tokens)
-    print("engine_type ", EngineType.EPREFILL.value)
+    print("engine_type ", engine_type, EngineType.EPREFILL.value)
     if engine_type == EngineType.EPREFILL.value:
         if infight_prefill_req.get(key):
             instance = infight_prefill_req[key]
