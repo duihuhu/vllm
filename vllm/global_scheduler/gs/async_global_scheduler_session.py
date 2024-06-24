@@ -70,6 +70,7 @@ async def monitor_report(request: Request) -> Response:
     key = host + "_" + str(port) + "_" + engine_type
     # print("key global_ranks", key, global_ranks)
     # print(key, unfinished_req, unfinished_tokens)
+    print("engine_type ", EngineType.EPREFILL.value)
     if engine_type == EngineType.EPREFILL.value:
         if infight_prefill_req.get(key):
             instance = infight_prefill_req[key]
@@ -247,7 +248,8 @@ def least_load_instance(instance_type):
     else:
         for key, value in infight_decode_req.items():
             if least_load > value:
-                instance = key      
+                instance = key     
+    print("instance " , instance) 
     return instance 
 
 def least_load_choice(instance_type):
