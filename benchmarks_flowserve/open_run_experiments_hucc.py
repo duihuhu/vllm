@@ -39,6 +39,12 @@ def reset_system(host, port):
     resp = post_request(creat_comm_api_url, payload)
     return resp
 
+def reset_gs(host, port):
+    creat_comm_api_url = cfg.reset_gs_url % (host, port)
+    payload = {"reset":"reset"}
+    resp = post_request(creat_comm_api_url, payload)
+    return resp
+
 def execute_exp(deploy_type, is_cache):
     # Configurable parameters
     basename = 'end2end_exp_results'
@@ -73,6 +79,9 @@ def execute_exp(deploy_type, is_cache):
             os.system(f'{command}')
             if is_cache > 0:
                 resp = reset_system(cfg.eprefill_host, 8082)
+                resp = reset_system(cfg.eprefill_host, 8083)
+                resp = reset_system(cfg.eprefill_host, 8084)
+
             time.sleep(5)
 
 if __name__ == "__main__":
