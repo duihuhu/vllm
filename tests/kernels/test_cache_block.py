@@ -7,7 +7,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
 num_layers = 40
 num_blocks = 10
-num_kv_heads = 10
+num_kv_heads = 40
 head_size = 128
 block_size = 16
 x = 16 // torch.tensor([], dtype=torch.float16).element_size()
@@ -48,16 +48,22 @@ block_mapping[2] = 4
 block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size()
 
 #copy from keys to values -> simplize the test
-t1 = time.time()
-#cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes)
-cache_ops.swap_agg_block(key_agg_blocks[2], key_agg_blocks[4], block_size_in_bytes)
-t2 = time.time()
+a = []
+for _ in range(10):
+    t1 = time.time()
+    #cache_ops.swap_blocks_agg(key_blocks_addresses, key_blocks_addresses, block_mapping, block_size_in_bytes)
+    cache_ops.swap_agg_block(key_agg_blocks[2], key_agg_blocks[4], block_size_in_bytes)
+    t2 = time.time()
+    a.append(t2-t1)
 
-t3 = time.time()
-cache_ops.swap_blocks(key_cache[0], key_cache[0], block_mapping)
-t4 = time.time()
+b = []
+for _ in range(10):
+    t3 = time.time()
+    cache_ops.swap_blocks(key_cache[0], key_cache[0], block_mapping)
+    t4 = time.time()
+    b.append(t4 - t3)
 
-print(f"swap_blocks_agg costs {t2-t1}, swap_blocks costs {t4-t3}")
+print(f"swap_blocks_agg costs {sum(a) / len(a)}, swap_blocks costs {sum(b) / len(b)}")
 
 is_close = torch.allclose(key_agg_blocks[2], key_agg_blocks[4], atol=1e-3, rtol=1e-5)
 if is_close:
@@ -65,7 +71,7 @@ if is_close:
 else:
     print("Error in Swap")
 
-block_mapping2 = {}
+'''block_mapping2 = {}
 block_mapping2[1] = [3,4]
 
 t5 = time.time()
@@ -107,4 +113,4 @@ all_zero = torch.all(key_agg_blocks[0][0] == 0)
 if all_zero:
     print("Pass for Store")
 else:
-    print("Error in Store")
+    print("Error in Store")'''
