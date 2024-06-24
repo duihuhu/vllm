@@ -14,13 +14,13 @@ x = 16 // torch.tensor([], dtype=torch.float16).element_size()
 
 key_agg_blocks = []
 for _ in range(num_blocks):
-    key_block_tensor = torch.empty(size = (num_layers, num_kv_heads, head_size // x, block_size, x), 
+    key_block_tensor = torch.empty(size = (2, num_layers, num_kv_heads, head_size // x, block_size, x), 
                                  dtype=torch.float16, 
                                  device='cuda').uniform_(-1e-3, 1e-3)
     key_agg_blocks.append(key_block_tensor)
 value_agg_blocks = []
 for _ in range(num_blocks):
-    value_block_tensor = torch.empty(size = (num_layers, num_kv_heads, head_size, block_size), 
+    value_block_tensor = torch.empty(size = (2, num_layers, num_kv_heads, head_size, block_size), 
                                  dtype=torch.float16, 
                                  device='cuda').uniform_(-1e-3, 1e-3)
     value_agg_blocks.append(value_block_tensor)
@@ -59,9 +59,10 @@ for _ in range(10):
 b = []
 for _ in range(10):
     t3 = time.time()
-    cache_ops.swap_blocks(key_cache[0], key_cache[0], block_mapping)
+    for _ in range(num_layers):
+        cache_ops.swap_blocks(key_cache[0], key_cache[0], block_mapping)
     t4 = time.time()
-    b.append(t4 - t3)
+    b.append(2*(t4 - t3))
 
 print(f"swap_blocks_agg costs {sum(a) / len(a)}, swap_blocks costs {sum(b) / len(b)}")
 
