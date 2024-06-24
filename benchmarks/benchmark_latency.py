@@ -121,6 +121,8 @@ def main(args: argparse.Namespace):
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
         latencies.append(run_to_completion(profile_dir=None, file_name=args.file_name))
     print(f'Avg latency: {np.mean(latencies)} seconds')
+    with open(args.file_name, 'a') as file:
+        file.write(f"{args.input_len} {args.batch_size} {np.mean(latencies)}\n")
 
 
 if __name__ == '__main__':
