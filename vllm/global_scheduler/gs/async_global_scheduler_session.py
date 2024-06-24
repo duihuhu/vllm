@@ -152,7 +152,7 @@ def select_instance(prompt_token_ids, policy, instance_type):
         infight_prefill_req[instance] = infight_prefill_req[instance] + 1
     else:
         infight_decode_req[instance] = infight_decode_req[instance] + 1
-    
+    return instance
 def select_disagg_instance(prompt_token_ids, prefill_policy, decode_policy) -> Tuple[InstanceInfo, InstanceInfo]:
     ep_instance = select_instance(prompt_token_ids, prefill_policy, EngineType.EPREFILL.value)
     ed_instance  = select_instance(prompt_token_ids, decode_policy, EngineType.EDECODE.value)
@@ -249,7 +249,6 @@ def least_load_instance(instance_type):
         for key, value in infight_decode_req.items():
             if least_load > value:
                 instance = key     
-    print("instance " , instance) 
     return instance 
 
 def least_load_choice(instance_type):
