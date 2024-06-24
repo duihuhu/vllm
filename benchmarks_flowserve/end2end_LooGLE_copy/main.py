@@ -17,11 +17,12 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--num-requests", type=int, default=512)
     parser.add_argument("--input-len", type=int, default=1)
     parser.add_argument("--output-len", type=int, default=1)
-    parser.add_argument("--dataset", type=str, default="ShareGPT", choices=["ShareGPT", "LooGLE", "ReAct"])
-    parser.add_argument("--test-type", type=str, default="open", choices=["open", "closed"])
+    parser.add_argument("--dataset", type=str, default="LooGLE", choices=["ShareGPT", "LooGLE", "ReAct"])
+    parser.add_argument("--test-type", type=str, default="closed", choices=["open", "closed"])
     parser.add_argument("--num-clients", type=int, default=5)
     parser.add_argument("--duration", type=int, default=10)
-    parser.add_argument("--loogle-partition", type=int, default=1)
+    parser.add_argument("--share-ratio", type=int, default=10)
+    parser.add_argument("--num-sessions", type=int, default=10)
 
     args = parser.parse_args()
 
@@ -61,6 +62,8 @@ if __name__ == "__main__":
             tokenizer, 
             args.num_requests
         )
+
+    import pdb; pdb.set_trace()
 
     if args.test_type == "open":
         from test_type.open_loop import run

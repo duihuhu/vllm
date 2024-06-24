@@ -32,7 +32,7 @@ def sample_requests(
             s = 'Title: ' + doc_QAs[i]['title'] + '\n' + doc_QAs[i]['input'][:len(PROMPT_FORWORD)] + '\n'
             QAs = eval(doc_QAs[i]['qa_pairs'])
             for j in range(len(QAs)):
-                # Since there are too many QAs for one single document, we only sample the first 5 QAs
+                # Since there are too many QAs for one single document, we only sample the first 6 QAs
                 if j > 5:
                     break
                 s += 'Question: ' + QAs[j]['Q'] + '\n'
@@ -57,12 +57,10 @@ def sample_requests(
     while len(sampled_requests) < num_requests:
         sampled_requests.extend(reqs[:num_requests - len(sampled_requests)])
 
-    partitioned_sampled_requests = []
-    partitioned_num_requests = math.ceil(num_requests / args.loogle_partition)
-    for i in range(args.loogle_partition):
-        partitioned_sampled_requests.extend(sampled_requests[:partitioned_num_requests])
-    sampled_requests = partitioned_sampled_requests[:num_requests]
-
     multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
-    
+
+    # Copy the first args.num_sessions sessions args.share_ratio times
+    sampled_requests = sampled_requests[:multi_conversations_range[args.num_sessions]] * args.share_ratio
+    multi_conversations_range = find_range_of_multi_turn_conversations(sampled_requests)
+
     return sampled_requests, multi_conversations_range
