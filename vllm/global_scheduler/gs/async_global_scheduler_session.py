@@ -51,6 +51,14 @@ ep_token_tree = RadixTreeManager(block_size)
 ed_token_tree = RadixTreeManager(block_size)
 epd_token_tree = RadixTreeManager(block_size)
 
+@app.post("/reset_gs")
+async def monitor_report(request: Request) -> Response:
+    global ep_token_tree
+    global ed_token_tree
+    global epd_token_tree
+    ep_token_tree = RadixTreeManager(block_size)
+    ed_token_tree = RadixTreeManager(block_size)
+    epd_token_tree = RadixTreeManager(block_size)
 
 @app.post("/monitor_report")
 async def monitor_report(request: Request) -> Response:
