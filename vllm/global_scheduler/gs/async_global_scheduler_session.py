@@ -70,7 +70,7 @@ async def monitor_report(request: Request) -> Response:
     key = host + "_" + str(port) + "_" + engine_type
     # print("key global_ranks", key, global_ranks)
     # print(key, unfinished_req, unfinished_tokens)
-    print("engine_type ", engine_type, EngineType.EPREFILL.value)
+    # print("engine_type ", engine_type, EngineType.EPREFILL.value)
     if engine_type == EngineType.EPREFILL.value:
         if infight_prefill_req.get(key):
             instance = infight_prefill_req[key]
@@ -215,8 +215,9 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
         
     #if not find, Degrade to other policy
     if not nodes:
-        instance = least_load_choice(instance_type=instance_type)
+        # instance = least_load_choice(instance_type=instance_type)
         # instance = random_choice(instance_type=instance_type)
+        instance = rr_choice(instance_type)
     else:
         start_instances = nodes[0].instances
         end_instances = nodes[-1].instances
@@ -293,13 +294,13 @@ async def add_request(request: Request) -> Response:
             if resp['n'] == 0:
                 infight_prefill_req[ep_instance] =  infight_prefill_req[ep_instance] - 1
                 if args.ep_policy == "prefix":
-                    print("resp['prompt_token_ids'] ", resp['prompt_token_ids'])
+                    # print("resp['prompt_token_ids'] ", resp['prompt_token_ids'])
                     ep_token_tree.insert(resp['prompt_token_ids'], ep_instance)
                 
             if resp['finished'] == True :
                 if args.ed_policy == "prefix":
                     infight_decode_req[ed_instance] =  infight_decode_req[ed_instance] - 1
-                    print("resp['prompt_token_ids'] + resp['prefilled_token_id'] ", resp['prompt_token_ids'])
+                    # print("resp['prompt_token_ids'] + resp['prefilled_token_id'] ", resp['prompt_token_ids'])
                     ed_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], ed_instance)
                     # epd_token_tree.insert(resp['prompt_token_ids'] + resp['prefilled_token_id'], epd_instance)
                     
