@@ -135,16 +135,22 @@ async def asyc_forward_request_resp(request_dict, api_url):
 
 def select_instance(prompt_token_ids, policy, instance_type):
     policy = DistPolicy(policy)
+    instance = None
     if policy == DistPolicy.RANDOM:
-        return random_choice(instance_type)
+        instance = random_choice(instance_type)
     elif policy == DistPolicy.RR:
-        return rr_choice(instance_type)
+        instance = rr_choice(instance_type)
     elif policy == DistPolicy.PREFIX_CACHE:
-        return prefix_cache_choice(prompt_token_ids, instance_type)
+        instance = prefix_cache_choice(prompt_token_ids, instance_type)
     elif policy == DistPolicy.LEAST_LOAD:
-        return least_load_choice(instance_type)
+        instance = least_load_choice(instance_type)
     else:
         print("policy not finished ")
+
+    if instance_type ==  EngineType.EPREFILL.value:
+        infight_prefill_req[instance] = infight_prefill_req[instance] + 1
+    else:
+        infight_decode_req[instance] = infight_decode_req[instance] + 1
     
 def select_disagg_instance(prompt_token_ids, prefill_policy, decode_policy) -> Tuple[InstanceInfo, InstanceInfo]:
     ep_instance = select_instance(prompt_token_ids, prefill_policy, EngineType.EPREFILL.value)
@@ -208,8 +214,8 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
         
     #if not find, Degrade to other policy
     if not nodes:
-        # instance = least_load_choice(instance_type=instance_type)
-        instance = random_choice(instance_type=instance_type)
+        instance = least_load_choice(instance_type=instance_type)
+        # instance = random_choice(instance_type=instance_type)
     else:
         start_instances = nodes[0].instances
         end_instances = nodes[-1].instances
@@ -234,19 +240,14 @@ def least_load_instance(instance_type):
     #                 least_load = value.num_unfinished_reqs
     instance = None
     least_load = sys.maxsize
-    instances = []
     if instance_type ==  EngineType.EPREFILL.value:
         for key, value in infight_prefill_req.items():
             if least_load > value:
                 instance = key
-            instances.append(key)
     else:
         for key, value in infight_decode_req.items():
             if least_load > value:
                 instance = key      
-            instances.append(key)
-    if instance == None:
-        instance = random.choice(instances)
     return instance 
 
 def least_load_choice(instance_type):
@@ -257,16 +258,16 @@ def least_load_choice(instance_type):
 async def add_request(request: Request) -> Response:
     request_dict = await request.json()   
     prompt_token_ids = request_dict["prompt_token_ids"]
-    request_id = request_dict["request_id"]
-    session_id = request_dict.pop("session_id")
+    # request_id = request_dict["request_id"]
+    # session_id = request_dict.pop("session_id")
     #TODO decide when use ep/ed and when use epd
     #select ep and ed instance for request 
     if args.enable_separate:
-        if session_id in session_instance:
-            ep_instance, ed_instance = session_instance[session_id][0], session_instance[session_id][1]
-        else:
-            ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
-            select_instance[session_id] = (ep_instance, ed_instance)
+        # if session_id in session_instance:
+        #     ep_instance, ed_instance = session_instance[session_id][0], session_instance[session_id][1]
+        # else:
+        ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
+            # select_instance[session_id] = (ep_instance, ed_instance)
         # print("ep instance ", ep_instance.host, ep_instance.service_port)
         # print("ed instance ", ed_instance.host, ed_instance.service_port)
         #add prefill and decode info in request_dict, belong to one request
@@ -276,18 +277,7 @@ async def add_request(request: Request) -> Response:
         request_dict["edecode_port"] = ed_instance.service_port
         prefill_response = asyc_forward_request(request_dict, cfg.forward_eprefill_url % 
                                                         (ep_instance.host, ep_instance.service_port))
-        
-        if ep_instance in infight_prefill_req:
-            infight_prefill_req[ep_instance] = infight_prefill_req[ep_instance] + 1
-        else:
-            infight_prefill_req[ep_instance] = 1
-        
-        if ed_instance in infight_decode_req:
-            infight_decode_req[ed_instance] = infight_decode_req[ed_instance] + 1
-        else:
-            infight_decode_req[ed_instance] = 1
-
-
+    
     else:
         # select epd instance for request 
         epd_instance = select_agg_instance(prompt_token_ids, args.epd_policy)
