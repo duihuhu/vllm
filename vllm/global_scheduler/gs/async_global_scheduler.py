@@ -254,7 +254,7 @@ async def add_request(request: Request) -> Response:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--port", type=int, default=9000)
+    parser.add_argument("--port", type=int, default=8081)
     parser.add_argument("--model", type=str, default="/workspace/opt-125m")
     parser.add_argument('--enable-separate', action="store_true", help=('separate or not '))
     parser.add_argument("--ep-policy",  type=str, default="random")
