@@ -18,7 +18,7 @@ import aiohttp
 from vllm.entrypoints.server_meta import PrefilledMeta
 import threading
 
-AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=600)
+AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5
 ITMEOUTOUT_TO_PREVENT_DEADLOCK = 1
 app =FastAPI()
