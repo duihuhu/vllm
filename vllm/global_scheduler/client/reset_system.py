@@ -15,4 +15,14 @@ def reset_system(host, port):
     resp = post_request(creat_comm_api_url, payload)
     return resp
 
+def reset_gs(host, port):
+    creat_comm_api_url = cfg.reset_gs_url % (host, port)
+    payload = {"reset":"reset"}
+    resp = post_request(creat_comm_api_url, payload)
+    return resp
+
+resp = reset_gs(cfg.eprefill_host, 8081)
+
 resp = reset_system(cfg.eprefill_host, 8082)
+resp = reset_system(cfg.eprefill_host, 8083)
+resp = reset_system(cfg.eprefill_host, 8084)

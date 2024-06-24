@@ -40,3 +40,6 @@ create_comm_url="http://%s:%s/create_comm"
 
 reset_system_url="http://%s:%s/reset_system"
 
+reset_gs_url="http://%s:%s/reset_gs"
+
+
