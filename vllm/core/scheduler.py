@@ -638,7 +638,11 @@ class Scheduler:
 
     def free_seq(self, seq: Sequence) -> None:
         """Free a sequence from a block table."""
+        st = time.time()
         self.block_manager.free(seq)
+        ed = time.time()
+        with open("/home/jovyan/hhy/vllm-hhy/benchmarks/log4.txt", 'a') as file:
+            file.write(f"free {ed - st}\n")
 
     def free_finished_seq_groups(self) -> None:
         #to record req decoded  
@@ -658,7 +662,11 @@ class Scheduler:
         if self.block_manager.enable_radix_caching:
             self.block_manager.allocate_radix_cache(seq_group, is_kv_prepared)
         else:
+            st = time.time()
             self.block_manager.allocate(seq_group, is_kv_prepared)
+            ed = time.time()
+            with open("/home/jovyan/hhy/vllm-hhy/benchmarks/log4.txt", 'a') as file:
+                file.write(f"allocate {ed - st}\n")
             
         if not self.deploy_config.enable_separate or (self.deploy_config.role == "prompt") or (self.deploy_config.role == "decoder" and is_kv_prepared):
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
