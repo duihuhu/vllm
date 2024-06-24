@@ -35,6 +35,8 @@ def test_insert(args) -> float:
     first_request = second_request[:math.ceil(args.num_blocks * args.cache_ratio)]
     first_blocks = second_blocks[:math.ceil(args.num_blocks * args.cache_ratio)]
 
+
+
     # Initialize the cache with the first request
     radix_cache.insert(first_request, first_blocks, None)
 

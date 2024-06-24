@@ -20,7 +20,7 @@ from io import StringIO
 basename = 'radix_tree_exp_results'
 configs = {
     'block_size': 16,
-    'num_blocks': 256,
+    'num_blocks': 16,
 }
 cache_ratio = [i / 10 for i in range(11)] # x-axis 
 
