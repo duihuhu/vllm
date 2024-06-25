@@ -12,6 +12,8 @@ import aiohttp
 import random
 from vllm.global_scheduler.gs.gs_radix_tree_manager import RadixTreeManager
 import sys
+import threading
+global_lock = threading.Lock()
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
@@ -198,16 +200,16 @@ def rr_instance(instance_type):
     else:
         for key, value in infight_decode_req.items():
             instances.append(key)  
-            
-    if instance_type == EngineType.EPD.value:    
-        instance = instances[epd_rr_num] 
-        epd_rr_num = (epd_rr_num + 1) % len(instances)
-    elif instance_type == EngineType.EPREFILL.value:
-        instance = instances[ep_rr_num] 
-        ep_rr_num = (ep_rr_num + 1) % len(instances)
-    elif instance_type == EngineType.EDECODE.value:
-        instance = instances[ed_rr_num] 
-        ed_rr_num = (ed_rr_num + 1) % len(instances)
+    with global_lock:
+        if instance_type == EngineType.EPD.value:    
+            instance = instances[epd_rr_num] 
+            epd_rr_num = (epd_rr_num + 1) % len(instances)
+        elif instance_type == EngineType.EPREFILL.value:
+            instance = instances[ep_rr_num] 
+            ep_rr_num = (ep_rr_num + 1) % len(instances)
+        elif instance_type == EngineType.EDECODE.value:
+            instance = instances[ed_rr_num] 
+            ed_rr_num = (ed_rr_num + 1) % len(instances)
     return instance
 
 def rr_choice(instance_type):
@@ -282,9 +284,10 @@ async def add_request(request: Request) -> Response:
                 ep_instance, ed_instance = session_instance[session_id][0], session_instance[session_id][1]
             else:
                 ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
+                select_instance[session_id] = (ep_instance, ed_instance)
+#
         else:
             ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
-            # select_instance[session_id] = (ep_instance, ed_instance)
         # print("ep instance ", ep_instance.host, ep_instance.service_port)
         # print("ed instance ", ed_instance.host, ed_instance.service_port)
         #add prefill and decode info in request_dict, belong to one request
