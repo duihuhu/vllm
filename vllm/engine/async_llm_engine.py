@@ -1165,12 +1165,13 @@ class AsyncLLMEngine:
                                     arrival_time, None, None, None, eprefill_host=eprefill_host, eprefill_port=eprefill_port, edecode_host=edecode_host, edecode_port=edecode_port)
             can_allocate = self.engine.scheduler.block_manager.can_allocate(seq_group)
             while True:
-                can_allocate = self.engine.scheduler.block_manager.can_allocate(seq_group)
                 if can_allocate == AllocStatus.OK:
                     break
                 else:
+                    print("in can allocate ")
                     await asyncio.sleep(0)
-                
+                    can_allocate = self.engine.scheduler.block_manager.can_allocate(seq_group)
+
             if can_allocate == AllocStatus.OK:
                 phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
                 blocks = [phy_block.block_number for phy_block in phy_blocks if phy_block.computed == False]
