@@ -1168,6 +1168,8 @@ class AsyncLLMEngine:
                 can_allocate = self.engine.scheduler.block_manager.can_allocate(seq_group)
                 if can_allocate == AllocStatus.OK:
                     break
+                else:
+                    await asyncio.sleep(0)
                 
             if can_allocate == AllocStatus.OK:
                 phy_blocks = self.engine.scheduler.allocate_kv_blocks(seq_group, True)
