@@ -275,8 +275,11 @@ async def add_request(request: Request) -> Response:
     #TODO decide when use ep/ed and when use epd
     #select ep and ed instance for request 
     if args.enable_separate:
-        if session_id in session_instance:
-            ep_instance, ed_instance = session_instance[session_id][0], session_instance[session_id][1]
+        if args.enable_session:
+            if session_id in session_instance:
+                ep_instance, ed_instance = session_instance[session_id][0], session_instance[session_id][1]
+            else:
+                ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
         else:
             ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
             # select_instance[session_id] = (ep_instance, ed_instance)
@@ -326,6 +329,7 @@ if __name__ == "__main__":
     parser.add_argument("--ep-policy",  type=str, default="random")
     parser.add_argument("--ed-policy",  type=str, default="random")
     parser.add_argument("--epd-policy",  type=str, default="random")
+    parser.add_argument('--enable-session', action="store_true", help=('separate or not '))
 
 
     args = parser.parse_args()
