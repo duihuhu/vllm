@@ -12,8 +12,8 @@ import aiohttp
 import random
 from vllm.global_scheduler.gs.gs_radix_tree_manager import RadixTreeManager
 import sys
-import threading
-global_lock = threading.Lock()
+import asyncio
+global_lock = asyncio.Lock()
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 TIMEOUT_KEEP_ALIVE = 5  # seconds.
@@ -38,7 +38,7 @@ reqs_prefix_table: Dict[str, PrefixReqInfo] = {}
 req_engine_info: Dict[str, List[str]] = {}
 
 #record session id with instance session_instance
-session_instance: Dict[str, Tuple[InstanceInfo, InstanceInfo]] = {}
+session_instances: Dict[str, Tuple[InstanceInfo, InstanceInfo]] = {}
 
 
 coroutines: Dict[str, List] = {}
@@ -148,17 +148,17 @@ async def asyc_forward_request_resp(request_dict, api_url):
                                 headers=headers) as response:
             return await response.text()
 
-def select_instance(prompt_token_ids, policy, instance_type):
+async def select_instance(prompt_token_ids, policy, instance_type):
     policy = DistPolicy(policy)
     instance = None
     if policy == DistPolicy.RANDOM:
-        instance = random_choice(instance_type)
+        instance = await random_choice(instance_type)
     elif policy == DistPolicy.RR:
-        instance = rr_choice(instance_type)
+        instance = await rr_choice(instance_type)
     elif policy == DistPolicy.PREFIX_CACHE:
-        instance = prefix_cache_choice(prompt_token_ids, instance_type)
+        instance = await prefix_cache_choice(prompt_token_ids, instance_type)
     elif policy == DistPolicy.LEAST_LOAD:
-        instance = least_load_choice(instance_type)
+        instance = await least_load_choice(instance_type)
     else:
         print("policy not finished ")
 
@@ -167,16 +167,16 @@ def select_instance(prompt_token_ids, policy, instance_type):
     else:
         infight_decode_req[instance] = infight_decode_req[instance] + 1
     return instance
-def select_disagg_instance(prompt_token_ids, prefill_policy, decode_policy) -> Tuple[InstanceInfo, InstanceInfo]:
-    ep_instance = select_instance(prompt_token_ids, prefill_policy, EngineType.EPREFILL.value)
-    ed_instance  = select_instance(prompt_token_ids, decode_policy, EngineType.EDECODE.value)
+async def select_disagg_instance(prompt_token_ids, prefill_policy, decode_policy) -> Tuple[InstanceInfo, InstanceInfo]:
+    ep_instance = await select_instance(prompt_token_ids, prefill_policy, EngineType.EPREFILL.value)
+    ed_instance  = await select_instance(prompt_token_ids, decode_policy, EngineType.EDECODE.value)
     return ep_instance, ed_instance
 
 def select_agg_instance(prompt_token_ids, policy):
     epd_instance = select_instance(prompt_token_ids, policy, EngineType.EPD.value)
     return epd_instance
 
-def random_instance(instance_type):
+async def random_instance(instance_type):
     instances = []
     if instance_type == EngineType.EPREFILL.value:
         for key, value in infight_prefill_req.items():
@@ -186,12 +186,13 @@ def random_instance(instance_type):
             instances.append(key)
     return random.choice(instances)
 
-def random_choice(instance_type):
-    instance = random_instance(instance_type)
+async def random_choice(instance_type):
+    instance = await random_instance(instance_type)
     return instance
 
-def rr_instance(instance_type):
+async def rr_instance(instance_type):
     global ep_rr_num, ed_rr_num, epd_rr_num
+    global global_lock
     instances = []
     instance = None
     if instance_type == EngineType.EPREFILL.value:
@@ -200,7 +201,7 @@ def rr_instance(instance_type):
     else:
         for key, value in infight_decode_req.items():
             instances.append(key)  
-    with global_lock:
+    async with global_lock:
         if instance_type == EngineType.EPD.value:    
             instance = instances[epd_rr_num] 
             epd_rr_num = (epd_rr_num + 1) % len(instances)
@@ -212,11 +213,11 @@ def rr_instance(instance_type):
             ed_rr_num = (ed_rr_num + 1) % len(instances)
     return instance
 
-def rr_choice(instance_type):
-    instance = rr_instance(instance_type)
+async def rr_choice(instance_type):
+    instance = await rr_instance(instance_type)
     return instance
 
-def prefix_cache_instance(prompt_token_ids, instance_type):
+async def prefix_cache_instance(prompt_token_ids, instance_type):
     global ep_token_tree, ed_token_tree, epd_token_tree
     instances = None
     instance = None
@@ -231,7 +232,7 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
     if not nodes:
         # instance = least_load_choice(instance_type=instance_type)
         # instance = random_choice(instance_type=instance_type)
-        instance = rr_choice(instance_type)
+        instance = await rr_choice(instance_type)
     else:
         start_instances = nodes[0].instances
         end_instances = nodes[-1].instances
@@ -239,11 +240,11 @@ def prefix_cache_instance(prompt_token_ids, instance_type):
         instance = random.choice(instances)
     return instance
 
-def prefix_cache_choice(prompt_token_ids, instance_type):
-    instance = prefix_cache_instance(prompt_token_ids, instance_type)    
+async def prefix_cache_choice(prompt_token_ids, instance_type):
+    instance = await prefix_cache_instance(prompt_token_ids, instance_type)    
     return instance
 
-def least_load_instance(instance_type):
+async def least_load_instance(instance_type):
     # instance = None
     # least_load = 0
     # for key, value in instance_table.items():
@@ -266,8 +267,8 @@ def least_load_instance(instance_type):
                 instance = key     
     return instance 
 
-def least_load_choice(instance_type):
-    instance = least_load_instance(instance_type)
+async def least_load_choice(instance_type):
+    instance = await least_load_instance(instance_type)
     return instance
 
 @app.post("/add_request")
@@ -280,14 +281,14 @@ async def add_request(request: Request) -> Response:
     #select ep and ed instance for request 
     if args.enable_separate:
         if args.enable_session:
-            if session_id in session_instance:
+            if session_id in session_instances:
                 ep_instance, ed_instance = session_instance[session_id][0], session_instance[session_id][1]
             else:
-                ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
-                select_instance[session_id] = (ep_instance, ed_instance)
+                ep_instance, ed_instance = await select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
+                session_instances[session_id] = (ep_instance, ed_instance)
 #
         else:
-            ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
+            ep_instance, ed_instance = await select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
         # print("ep instance ", ep_instance.host, ep_instance.service_port)
         # print("ed instance ", ed_instance.host, ed_instance.service_port)
         #add prefill and decode info in request_dict, belong to one request
