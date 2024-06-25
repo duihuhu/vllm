@@ -57,9 +57,11 @@ async def monitor_report(request: Request) -> Response:
     global ep_token_tree
     global ed_token_tree
     global epd_token_tree
+    global session_instance
     ep_token_tree = RadixTreeManager(block_size)
     ed_token_tree = RadixTreeManager(block_size)
     epd_token_tree = RadixTreeManager(block_size)
+    session_instance = {}
     return {"ret": "success"}
 
 @app.post("/monitor_report")
