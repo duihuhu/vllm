@@ -7,6 +7,7 @@ _BLANK_TOKEN_ID = -1
 
 DEFAULT_LAST_ACCESSED_TIME = -1
 
+from vllm.radix_tree_ys.radix_cache import TreeNode
 
 class LogicalTokenBlock:
     """A block that stores a contiguous chunk of tokens from left to right.
@@ -79,7 +80,9 @@ class PhysicalTokenBlock:
                 f'ref_count={self.ref_count}, '
                 f'last_accessed={self.last_accessed}, '
                 f'computed={self.computed})')
-
+    
+    def set_tree_node(self, node: TreeNode) -> None:
+        self.tree_node = node
 
 # Mapping: logical block number -> physical block.
 BlockTable = List[PhysicalTokenBlock]

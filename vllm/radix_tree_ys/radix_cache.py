@@ -219,6 +219,7 @@ class RadixCache:
                     child.value.progressStatus = kvCacheProgressStatus.STABLE
                     child.value.physicalTokenBlock = block_table[0]
                     block_table[0].ref_count += 1
+                    block_table[0].set_tree_node(child)
                 # if child.value.physicalTokenBlock.block_number != block_table[0].block_number:
                 #往下insert
                 key.pop(0)
@@ -233,6 +234,7 @@ class RadixCache:
             block.ref_count += 1
             new_node.value = TreeNodeValue(block)
             node.children[key.pop(0)] = new_node
+            block.set_tree_node(new_node)
 
             # 往下insert
             if not key and not block_table:

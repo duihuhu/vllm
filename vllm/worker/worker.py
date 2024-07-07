@@ -228,6 +228,12 @@ class Worker:
         # the model initialization and profiling.
         set_random_seed(self.model_config.seed)
 
+    @torch.inference_mode()
+    def swap_decoded(self, 
+                     blocks_to_swap_in_decoded: Dict[int, int],
+                     blocks_to_swap_out_decoded: Dict[int, int]) -> None:
+        self.cache_swap(blocks_to_swap_in_decoded, blocks_to_swap_out_decoded, None)
+
     def cache_swap(
         self,
         blocks_to_swap_in: Dict[int, int],

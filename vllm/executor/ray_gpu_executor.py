@@ -315,6 +315,13 @@ class RayGPUExecutor(ExecutorBase):
 
     def list_loras(self) -> List[int]:
         return self._run_workers("list_loras")
+    
+    def swap_decoded(self,
+                     blocks_to_swap_in_decoded: Dict[int, int],
+                     blocks_to_swap_out_decoded: Dict[int, int]) -> None:
+        self._run_workers("swap_decoded",
+                          blocks_to_swap_in_decoded=blocks_to_swap_in_decoded,
+                          blocks_to_swap_out_decoded=blocks_to_swap_out_decoded)
 
     def _run_workers(
         self,

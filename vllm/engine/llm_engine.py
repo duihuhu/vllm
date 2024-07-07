@@ -859,6 +859,14 @@ class LLMEngine:
         if not self.deploy_config.enable_separate:
             return
         #TODO add sync interface if need 
+    
+    def swap_decoded(self, out: bool):
+        if out:
+            blocks_to_swap_out_decoded = self.scheduler.swap_out_decoded()
+            self.model_executor.swap_decoded(None, blocks_to_swap_out_decoded)
+        else:
+            blocks_to_swap_in_decoded = self.scheduler.swap_in_decoded()
+            self.model_executor.swap_decoded(blocks_to_swap_in_decoded, None)
 
     def step(self) -> List[RequestOutput]:
         """Performs one decoding iteration and returns newly generated results.

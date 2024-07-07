@@ -48,6 +48,12 @@ class ExecutorBase(ABC):
     @abstractmethod
     def list_loras(self) -> List[int]:
         raise NotImplementedError
+    
+    @abstractmethod
+    def swap_decoded(self,
+                     blocks_to_swap_in_decoded: Dict[int, int],
+                     blocks_to_swap_out_decoded: Dict[int, int]) -> None:
+        raise NotImplementedError
 
     @abstractmethod
     def check_health(self) -> None:

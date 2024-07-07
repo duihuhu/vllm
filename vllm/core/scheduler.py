@@ -13,9 +13,9 @@ from vllm.sequence import (Sequence, SequenceData, SequenceGroup,
                            SequenceGroupMetadata, SequenceStatus)
 
 from vllm.outputs import RequestOutput
-from vllm.block import PhysicalTokenBlock
+from vllm.block import PhysicalTokenBlock, BlockTable
 from vllm.radix_tree_ys.radix_cache import TreeNode, kvCacheProgressStatus
-
+from vllm.utils import Device
 
 
 logger = init_logger(__name__)
@@ -335,6 +335,28 @@ class Scheduler:
         block_table = self.block_manager.block_tables[seq.seq_id]
         blocks = [phy_block.block_number for phy_block in block_table]
         return blocks
+
+    def swap_in_decoded(self) -> Dict[int, int]:
+        blocks_to_swap_in_decoded: Dict[int, int]
+        for seq_group in self.decoded:
+            self._swap_in_decoded(seq_group, blocks_to_swap_in_decoded)
+            for seq in seq_group.get_seqs():
+                blocks = self.block_manager.block_tables[seq.seq_id]
+                for block in blocks:
+                    block.tree_node.value.physicalTokenBlock.device = Device.GPU
+                    block.tree_node.value.physicalTokenBlock.block_number = blocks_to_swap_in_decoded[block.block_number]
+        return blocks_to_swap_in_decoded 
+
+    def swap_out_decoded(self) -> Dict[int, int]:
+        blocks_to_swap_out_decoded: Dict[int, int]
+        for seq_group in self.decoded:
+            self._swap_out_decoded(seq_group, blocks_to_swap_out_decoded)
+            for seq in seq_group.get_seqs():
+                blocks = self.block_manager.block_tables[seq.seq_id]
+                for block in blocks:
+                    block.tree_node.value.physicalTokenBlock.device = Device.CPU
+                    block.tree_node.value.physicalTokenBlock.block_number = blocks_to_swap_out_decoded[block.block_number]
+        return blocks_to_swap_out_decoded
 
     def _schedule(self) -> SchedulerOutputs:
         
@@ -814,7 +836,26 @@ class Scheduler:
         blocks_to_swap_in.update(mapping)
         for seq in seq_group.get_seqs(status=SequenceStatus.SWAPPED):
             seq.status = SequenceStatus.RUNNING
+    
+    def _swap_in_decoded(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_in: Dict[int, int]) -> None:
+        if self.block_manager.can_swap_in_decoded(seq_group):
+            mapping = self.block_manager.swap_in_decoded(seq_group)
+            blocks_to_swap_in.update(mapping)
+        else:
+            raise RuntimeError("Not Enough GPU Blocks")
 
+    def _swap_out_decoded(
+        self,
+        seq_group: SequenceGroup,
+        blocks_to_swap_out: Dict[int, int]) -> None:
+        if not self.block_manager.can_swap_out_decoded(seq_group):
+            raise RuntimeError("Not Enough CPU Blocks")
+        mapping = self.block_manager.swap_out_decoded(seq_group)
+        blocks_to_swap_out.update(mapping)
+    
     def _swap_out(
         self,
         seq_group: SequenceGroup,

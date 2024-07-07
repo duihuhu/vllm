@@ -1,4 +1,5 @@
 from typing import List, Optional, Union
+import time
 
 import torch
 from tqdm import tqdm
@@ -131,6 +132,7 @@ class LLM:
         use_tqdm: bool = True,
         lora_request: Optional[LoRARequest] = None,
         multi_modal_data: Optional[MultiModalData] = None,
+        file_name: Optional[str] = None
     ) -> List[RequestOutput]:
         """Generates the completions for the input prompts.
 
@@ -187,7 +189,7 @@ class LLM:
                     data=multi_modal_data.data[i].unsqueeze(0))
                 if multi_modal_data else None,
             )
-        return self._run_engine(use_tqdm)
+        return self._run_engine(use_tqdm,file_name)
 
     def _add_request(
         self,
@@ -205,7 +207,7 @@ class LLM:
                                     lora_request=lora_request,
                                     multi_modal_data=multi_modal_data)
 
-    def _run_engine(self, use_tqdm: bool) -> List[RequestOutput]:
+    def _run_engine(self, use_tqdm: bool, file_name: Optional[str] = None) -> List[RequestOutput]:
         # Initialize tqdm.
         if use_tqdm:
             num_requests = self.llm_engine.get_num_unfinished_requests()
@@ -215,12 +217,21 @@ class LLM:
         # Run the engine.
         outputs: List[RequestOutput] = []
         while self.llm_engine.has_unfinished_requests():
+            st = time.time()
             step_outputs = self.llm_engine.step()
+            ed = time.time()
             for output in step_outputs:
                 if output.finished:
                     outputs.append(output)
                     if use_tqdm:
                         pbar.update(1)
+                    if file_name:
+                        with open(file_name, 'a') as file:
+                            file.write(f"{output.request_id} costs {ed - st}\n")
+            if len(self.llm_engine.scheduler.decoded) == 4:
+                self.llm_engine.swap_decoded(True)
+                self.llm_engine.swap_decoded(False)
+                self.llm_engine.swap_decoded(True)
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
