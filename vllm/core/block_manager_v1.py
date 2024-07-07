@@ -526,7 +526,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:       
             for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
                 self.kv_block_tables[seq.seq_id] = block_table.copy()
-
+        
+        for block in seq.data.prefix_blocks:
+            if block.device == Device.CPU:
+                print(f"Prefix Block {block.block_number} is on CPU")
+            else:
+                continue
+            
         #when allocate seq, we should insert it before next seq coming 
         # self.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.cpu_allocator.free_radix_manager_cache)
 
