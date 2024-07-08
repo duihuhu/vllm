@@ -529,9 +529,11 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         for block in seq.data.prefix_blocks:
             if block.device == Device.CPU:
-                print(f"Prefix Block {block.block_number} is on CPU")
+                print("Prefix Block {block.block_number} is on CPU")
+                break
             else:
-                continue
+                print("Prefix Block {block.block_number} is on GPU")
+                break
             
         #when allocate seq, we should insert it before next seq coming 
         # self.radix_tree_manager.insert(seq=seq, cpu_free_call_back=self.cpu_allocator.free_radix_manager_cache)
