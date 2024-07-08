@@ -337,7 +337,7 @@ class Scheduler:
         return blocks
 
     def swap_in_decoded(self) -> Dict[int, int]:
-        blocks_to_swap_in_decoded: Dict[int, int]
+        '''blocks_to_swap_in_decoded: Dict[int, int]
         for seq_group in self.decoded:
             self._swap_in_decoded(seq_group, blocks_to_swap_in_decoded)
             for seq in seq_group.get_seqs():
@@ -345,18 +345,19 @@ class Scheduler:
                 for block in blocks:
                     block.tree_node.value.physicalTokenBlock.device = Device.GPU
                     block.tree_node.value.physicalTokenBlock.block_number = blocks_to_swap_in_decoded[block.block_number]
-        return blocks_to_swap_in_decoded 
+        return blocks_to_swap_in_decoded'''
+        return self.block_manager.swap_all_nodes(False)
 
     def swap_out_decoded(self) -> Dict[int, int]:
-        blocks_to_swap_out_decoded: Dict[int, int]
+        '''blocks_to_swap_out_decoded: Dict[int, int]
         for seq_group in self.decoded:
             self._swap_out_decoded(seq_group, blocks_to_swap_out_decoded)
             for seq in seq_group.get_seqs():
                 blocks = self.block_manager.block_tables[seq.seq_id]
                 for block in blocks:
                     block.tree_node.value.physicalTokenBlock.device = Device.CPU
-                    block.tree_node.value.physicalTokenBlock.block_number = blocks_to_swap_out_decoded[block.block_number]
-        return blocks_to_swap_out_decoded
+                    block.tree_node.value.physicalTokenBlock.block_number = blocks_to_swap_out_decoded[block.block_number]'''
+        return self.block_manager.swap_all_nodes(True)
 
     def _schedule(self) -> SchedulerOutputs:
         

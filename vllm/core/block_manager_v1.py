@@ -367,6 +367,21 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         # Mapping: request_id -> BlockTable, use for pull data
         self.req_pull_block_tables: Dict[str, BlockTable] = {}
     
+    def swap_all_nodes(self, out: bool) -> Dict[int, int]:
+        blocks = self.radix_tree_manager.tree_cache.get_all_blocks()
+        if out:
+            if self.can_swap_out_all_nodes(len(blocks)):
+                blocks_to_swap_out = self.swap_out_all_nodes()
+                blocks_number_to_reset = [block_number for block_number in blocks_to_swap_out.values()]
+                self.radix_tree_manager.tree_cache.reset_all_nodes(blocks_number_to_reset)
+                return blocks_to_swap_out
+        else:
+            if self.can_swap_in_all_nodes(len(blocks)):
+                blocks_to_swap_in = self.swap_in_all_nodes()
+                blocks_number_to_reset = [block_number for block_number in blocks_to_swap_in.values()]
+                self.radix_tree_manager.tree_cache.reset_all_nodes(blocks_number_to_reset)
+                return blocks_to_swap_in
+
     def reset_block_manager(self) -> None:
         self.block_tables.clear()
         self.kv_block_tables.clear()
@@ -529,10 +544,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         
         for block in seq.data.prefix_blocks:
             if block.device == Device.CPU:
-                print("Prefix Block {block.block_number} is on CPU")
+                print("Prefix Block is on CPU")
                 break
             else:
-                print("Prefix Block {block.block_number} is on GPU")
+                print("Prefix Block is on GPU")
                 break
             
         #when allocate seq, we should insert it before next seq coming 
@@ -888,6 +903,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             num_free_blocks = self.gpu_allocator.get_num_free_blocks()
         num_required_blocks = len(blocks) + num_swapped_seqs
         return num_free_blocks - num_required_blocks >= self.watermark_blocks
+    
+    def can_swap_in_all_nodes(self, blocks_num: int) -> bool:
+        if self.enable_radix_caching:
+            num_free_blocks = self.gpu_allocator.get_radix_num_free_blocks()
+        else:
+            num_free_blocks = self.gpu_allocator.get_num_free_blocks()
+        return num_free_blocks - blocks_num >= self.watermark_blocks
 
     def swap_in(self, seq_group: SequenceGroup) -> Dict[int, int]:
         # CPU block -> GPU block.
@@ -937,13 +959,27 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                         gpu_block = self.gpu_allocator.allocate(
                             cpu_block.block_hash, cpu_block.num_hashed_tokens)
                     mapping[cpu_block] = gpu_block
-                    cpu_block
                 new_block_table.append(gpu_block)
             self.block_tables[seq.seq_id] = new_block_table
         block_number_mapping = {
             cpu_block.block_number: gpu_block.block_number
             for cpu_block, gpu_block in mapping.items()
         }
+        return block_number_mapping
+    
+    def swap_in_all_nodes(self, blocks: List[PhysicalTokenBlock]) -> Dict[int, int]:
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+        for cpu_block in blocks:
+            if cpu_block in mapping:
+                gpu_block = mapping[cpu_block]
+                gpu_block.ref_count += 1
+            else:
+                if self.enable_radix_caching:
+                    gpu_block = self.gpu_allocator.radix_manager_allocate()
+                else:
+                    gpu_block = self.gpu_allocator.allocate(cpu_block.block_hash, cpu_block.num_hashed_tokens)
+                mapping[cpu_block] = gpu_block
+        block_number_mapping = {cpu_block.block_number: gpu_block.block_number for cpu_block, gpu_block in mapping.items()}
         return block_number_mapping
 
     def can_swap_out(self, seq_group: SequenceGroup) -> bool:
@@ -957,6 +993,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         if self.enable_radix_caching:
             return len(blocks) <= self.cpu_allocator.get_radix_num_free_blocks()
         return len(blocks) <= self.cpu_allocator.get_num_free_blocks()
+    
+    def can_swap_out_all_nodes(self, blocks_num: int) -> bool:
+        if self.enable_radix_caching:
+            num_free_blocks = self.cpu_allocator.get_radix_num_free_blocks()
+        else:
+            num_free_blocks = self.cpu_allocator.get_num_free_blocks()
+        return blocks_num <= num_free_blocks
 
     def swap_out(self, seq_group: SequenceGroup) -> Dict[int, int]:
         # GPU block -> CPU block.
@@ -1011,6 +1054,21 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             gpu_block.block_number: cpu_block.block_number
             for gpu_block, cpu_block in mapping.items()
         }
+        return block_number_mapping
+    
+    def swap_out_all_nodes(self, blocks: List[PhysicalTokenBlock]) -> Dict[int, int]:
+        mapping: Dict[PhysicalTokenBlock, PhysicalTokenBlock] = {}
+        for gpu_block in blocks:
+            if gpu_block in mapping:
+                cpu_block = mapping[gpu_block]
+                cpu_block.ref_count += 1
+            else:
+                if self.enable_radix_caching:
+                    cpu_block = self.cpu_allocator.radix_manager_allocate()
+                else:
+                    cpu_block = self.cpu_allocator.allocate(gpu_block.block_hash, gpu_block.num_hashed_tokens)
+                mapping[gpu_block] = cpu_block
+        block_number_mapping = {gpu_block.block_number: cpu_block.block_number for gpu_block, cpu_block in mapping.items()}
         return block_number_mapping
 
     def _free_block_table(self, block_table: BlockTable) -> None:

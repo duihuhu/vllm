@@ -81,8 +81,8 @@ class PhysicalTokenBlock:
                 f'last_accessed={self.last_accessed}, '
                 f'computed={self.computed})')
     
-    def set_tree_node(self, node) -> None:
-        self.tree_node = node
+    #def set_tree_node(self, node) -> None:
+    #    self.tree_node = node
 
 # Mapping: logical block number -> physical block.
 BlockTable = List[PhysicalTokenBlock]

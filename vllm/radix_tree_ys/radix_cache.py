@@ -58,7 +58,32 @@ class RadixCache:
         self.root_node = TreeNode()
         self.root_node.value = TreeNodeValue(PhysicalTokenBlock(None, -1, block_size, -1, -1))
         self.block_size = block_size
-        
+
+    def get_all_blocks(self) -> List[PhysicalTokenBlock]:
+        return self._get_all_blocks(self.root_node)
+    
+    def _get_all_blocks(self, node: TreeNode) -> List[PhysicalTokenBlock]:
+        blocks: List[PhysicalTokenBlock] = []
+        blocks.append(node.value.physicalTokenBlock)
+        for child in node.children.values():
+            blocks.extend(self._get_all_blocks(child))
+        return blocks
+    
+    def _get_all_nodes(self, node: TreeNode) -> List[TreeNode]:
+        nodes: List[TreeNode] = []
+        nodes.append(node)
+        for child in node.children.values():
+            nodes.extend(self.get_all_nodes(child))
+        return nodes
+    
+    def reset_all_nodes(self, blocks_number_to_reset: List[int]) -> None:
+        nodes = self._get_all_nodes(self.root_node)
+        for node, block_number in zip(nodes, blocks_number_to_reset):
+            node.value.physicalTokenBlock.block_number = block_number
+            if node.value.physicalTokenBlock.device == Device.GPU:
+                node.value.physicalTokenBlock.device = Device.CPU
+            else:
+                node.value.physicalTokenBlock.device = Device.GPU
 
     ##### Public API #####
     # 查找匹配点位置，并返回匹配点的value
@@ -219,7 +244,7 @@ class RadixCache:
                     child.value.progressStatus = kvCacheProgressStatus.STABLE
                     child.value.physicalTokenBlock = block_table[0]
                     block_table[0].ref_count += 1
-                    block_table[0].set_tree_node(child)
+                    #block_table[0].set_tree_node(child)
                 # if child.value.physicalTokenBlock.block_number != block_table[0].block_number:
                 #往下insert
                 key.pop(0)
@@ -234,7 +259,7 @@ class RadixCache:
             block.ref_count += 1
             new_node.value = TreeNodeValue(block)
             node.children[key.pop(0)] = new_node
-            block.set_tree_node(new_node)
+            #block.set_tree_node(new_node)
 
             # 往下insert
             if not key and not block_table:
