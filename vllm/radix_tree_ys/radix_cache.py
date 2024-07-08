@@ -73,7 +73,7 @@ class RadixCache:
         nodes: List[TreeNode] = []
         nodes.append(node)
         for child in node.children.values():
-            nodes.extend(self.get_all_nodes(child))
+            nodes.extend(self._get_all_nodes(child))
         return nodes
     
     def reset_all_nodes(self, blocks_number_to_reset: List[int]) -> None:
