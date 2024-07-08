@@ -371,13 +371,13 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         blocks = self.radix_tree_manager.tree_cache.get_all_blocks()
         if out:
             if self.can_swap_out_all_nodes(len(blocks)):
-                blocks_to_swap_out = self.swap_out_all_nodes()
+                blocks_to_swap_out = self.swap_out_all_nodes(blocks)
                 blocks_number_to_reset = [block_number for block_number in blocks_to_swap_out.values()]
                 self.radix_tree_manager.tree_cache.reset_all_nodes(blocks_number_to_reset)
                 return blocks_to_swap_out
         else:
             if self.can_swap_in_all_nodes(len(blocks)):
-                blocks_to_swap_in = self.swap_in_all_nodes()
+                blocks_to_swap_in = self.swap_in_all_nodes(blocks)
                 blocks_number_to_reset = [block_number for block_number in blocks_to_swap_in.values()]
                 self.radix_tree_manager.tree_cache.reset_all_nodes(blocks_number_to_reset)
                 return blocks_to_swap_in
