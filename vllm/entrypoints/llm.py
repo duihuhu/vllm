@@ -228,6 +228,7 @@ class LLM:
                     if file_name:
                         with open(file_name, 'a') as file:
                             file.write(f"{output.request_id} costs {ed - st}\n")
+            print(f"self.decoded {len(self.llm_engine.scheduler.decoded)}")
             if len(self.llm_engine.scheduler.decoded) == 4:
                 print("Do The Swaps")
                 self.llm_engine.swap_decoded(True)
