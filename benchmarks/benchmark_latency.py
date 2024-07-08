@@ -81,7 +81,7 @@ def main(args: argparse.Namespace):
             print(p.key_averages())'''
         else:
             start_time = time.perf_counter()
-            llm.generate(prompt_token_ids=input, #dummy_prompt_token_ids,
+            llm.generate(prompt_token_ids=inputs, #dummy_prompt_token_ids,
                          sampling_params=sampling_params,
                          use_tqdm=False,
                          file_name=file_name)
