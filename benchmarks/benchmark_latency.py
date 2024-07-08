@@ -44,12 +44,12 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
 
-    np.random.seed(42)
+    np.random.seed(66)
     prefix_length = math.ceil(args.input_len * (args.ratio / 100))
     suffix_length = args.input_len - prefix_length
-    prefix = np.random.randint(10000, size = prefix_length).tolist()
+    prefix = np.random.randint(100, size = prefix_length).tolist()
     if suffix_length > 0:
-        suffix = np.random.randint(10000, size = suffix_length).tolist()
+        suffix = np.random.randint(100, size = suffix_length).tolist()
     else:
         suffix = []
     ids = prefix + suffix
