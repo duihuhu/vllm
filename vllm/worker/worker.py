@@ -232,6 +232,11 @@ class Worker:
     def swap_decoded(self, 
                      blocks_to_swap_in_decoded: Dict[int, int],
                      blocks_to_swap_out_decoded: Dict[int, int]) -> None:
+        print("Successfully Enter Swap_Decoded")
+        if blocks_to_swap_in_decoded:
+            print("Swap In")
+        if blocks_to_swap_out_decoded:
+            print("Swap Out")
         self.cache_swap(blocks_to_swap_in_decoded, blocks_to_swap_out_decoded, None)
 
     def cache_swap(
