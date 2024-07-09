@@ -12,25 +12,25 @@ num_blocks = 300
 num_kv_heads = 20
 head_size = 128
 block_size = 16
-#x = 16 // torch.tensor([], dtype=torch.float16).element_size()
+x = 16 // torch.tensor([], dtype=torch.float16).element_size()
 
-'''key_agg_blocks = []
+gpu_agg_blocks = []
 for _ in range(num_blocks):
-    key_block_tensor = torch.empty(size = (2, num_layers, num_kv_heads, head_size // x, block_size, x), 
+    gpu_block_tensor = torch.zeros(size = (2, num_layers, num_kv_heads * head_size * block_size), 
                                  dtype=torch.float16, 
-                                 device='cuda').uniform_(-1e-3, 1e-3)
-    key_agg_blocks.append(key_block_tensor)
-value_agg_blocks = []
+                                 device='cuda')
+    gpu_agg_blocks.append(gpu_block_tensor)
+cpu_agg_blocks = []
 for _ in range(num_blocks):
-    value_block_tensor = torch.empty(size = (2, num_layers, num_kv_heads, head_size, block_size), 
+    cpu_block_tensor = torch.zeros(size = (2, num_layers, num_kv_heads * head_size * block_size), 
                                  dtype=torch.float16, 
-                                 device='cuda').uniform_(-1e-3, 1e-3)
-    value_agg_blocks.append(value_block_tensor)
+                                 device='cpu')
+    cpu_agg_blocks.append(cpu_block_tensor)
 
-key_blocks_addresses = ops.tensor_for_caches_addresses(key_agg_blocks)
-value_blocks_addresses = ops.tensor_for_caches_addresses(value_agg_blocks)'''
+key_blocks_addresses = ops.tensor_for_caches_addresses(cpu_agg_blocks)
+value_blocks_addresses = ops.tensor_for_caches_addresses(gpu_agg_blocks)
 
-gpu_cache = []
+'''gpu_cache = []
 for _ in range(num_layers):
     gpu_block_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
                                  dtype = torch.float16, 
@@ -41,7 +41,7 @@ for _ in range(num_layers):
     cpu_block_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
                                  dtype = torch.float16, 
                                  device = 'cpu')
-    cpu_cache.append(cpu_block_tensor)
+    cpu_cache.append(cpu_block_tensor)'''
 
 random.seed(66)
 all_keys = list(range(num_blocks))
@@ -61,9 +61,12 @@ for length in lengths:
             unique_dict[key] = value
         unique_dicts.append(unique_dict)
 
+block_size_in_bytes = gpu_agg_blocks[0].numel() * gpu_agg_blocks[0].element_size()
+
 print("----------Warm Up----------")
 for _ in range(10):
-     cache_ops.swap_blocks(cpu_cache[0][0], gpu_cache[0][0], unique_dicts[0])
+    cache_ops.swap_agg_block(cpu_agg_blocks[2], gpu_agg_blocks[4], block_size_in_bytes)
+    #cache_ops.swap_blocks(cpu_cache[0][0], gpu_cache[0][0], unique_dicts[0])
 print("---------End---------")
 
 print("----------Sleep----------")
@@ -84,11 +87,12 @@ for i in range(3):
         print(unique_dict)
         for _ in range(3):
             st = time.time()
-            for layer in range(num_layers):
-                cache_ops.swap_blocks(cpu_cache[layer][0], gpu_cache[layer][0], unique_dict)
-                cache_ops.swap_blocks(cpu_cache[layer][1], gpu_cache[layer][1], unique_dict)
+            for src, dst in unique_dict.items():
+                cache_ops.swap_agg_block(cpu_agg_blocks[src], gpu_agg_blocks[dst], block_size_in_bytes)
+                #cache_ops.swap_blocks(cpu_cache[layer][0], gpu_cache[layer][0], unique_dict)
+                #cache_ops.swap_blocks(cpu_cache[layer][1], gpu_cache[layer][1], unique_dict)
             ed = time.time()
-            t = t + ed - st
+            t = t + (ed - st)
         slots.append(t / 3)
     outputs.append(slots)
 print("----------End-----------")
