@@ -85,21 +85,22 @@ for i in range(3):
     for j in range(10):
         k = i * 10 + j
         unique_dict = unique_dicts[k]
-        #t = 0
+        temp = []
         print(f"Length {lengths[i]} Ratio {ratios[j]}")
         print(f"K {k}")
         print(f"Len Map {len(unique_dict.items())}")
         print(unique_dict)
-        #for _ in range(3):
-        st = time.time()
-        for src, dst in unique_dict.items():
-            cache_ops.swap_agg_block(cpu_agg_blocks[src], gpu_agg_blocks[dst], block_size_in_bytes)
+        for _ in range(10):
+            st = time.time()
+            for src, dst in unique_dict.items():
+                cache_ops.swap_agg_block(cpu_agg_blocks[src], gpu_agg_blocks[dst], block_size_in_bytes)
                 #cache_ops.swap_blocks(cpu_cache[layer][0], gpu_cache[layer][0], unique_dict)
                 #cache_ops.swap_blocks(cpu_cache[layer][1], gpu_cache[layer][1], unique_dict)
-        ed = time.time()
-        print(ed - st)
+            ed = time.time()
+            #print(ed - st)
+            temp.append(ed - st)
         #t = t + (ed - st)
-        slots.append(ed - st)
+        slots.append(sum(temp) / len(temp))
     outputs.append(slots)
 print("----------End-----------")
 
