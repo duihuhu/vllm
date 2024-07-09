@@ -34,7 +34,7 @@ gpu_cache = []
 for _ in range(num_layers):
     gpu_block_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
                                  dtype = torch.float16, 
-                                 device = 'cuda:1')
+                                 device = 'cuda')
     gpu_cache.append(gpu_block_tensor)
 cpu_cache = []
 for _ in range(num_layers):
@@ -73,8 +73,8 @@ print("----------End----------")
 print("-----------Start----------")
 outputs = []
 for i in range(3):
+    slots = []
     for j in range(10):
-        slots = []
         k = i * 10 + j
         unique_dict = unique_dicts[k]
         t = 0
