@@ -85,15 +85,16 @@ for i in range(3):
         print(f"K {k}")
         print(f"Len Map {len(unique_dict.items())}")
         print(unique_dict)
-        for _ in range(3):
-            st = time.time()
-            for src, dst in unique_dict.items():
-                cache_ops.swap_agg_block(cpu_agg_blocks[src], gpu_agg_blocks[dst], block_size_in_bytes)
+        #for _ in range(3):
+        st = time.time()
+        for src, dst in unique_dict.items():
+            cache_ops.swap_agg_block(cpu_agg_blocks[src], gpu_agg_blocks[dst], block_size_in_bytes)
                 #cache_ops.swap_blocks(cpu_cache[layer][0], gpu_cache[layer][0], unique_dict)
                 #cache_ops.swap_blocks(cpu_cache[layer][1], gpu_cache[layer][1], unique_dict)
-            ed = time.time()
-            t = t + (ed - st)
-        slots.append(t / 3)
+        ed = time.time()
+        print(ed - st)
+        #t = t + (ed - st)
+        slots.append(ed - st)
     outputs.append(slots)
 print("----------End-----------")
 
