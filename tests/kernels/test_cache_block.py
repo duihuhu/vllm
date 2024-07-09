@@ -64,8 +64,13 @@ for length in lengths:
 block_size_in_bytes = gpu_agg_blocks[0].numel() * gpu_agg_blocks[0].element_size()
 
 print("----------Warm Up----------")
+t = 0
 for _ in range(10):
-    cache_ops.swap_agg_block(cpu_agg_blocks[2], gpu_agg_blocks[4], block_size_in_bytes)
+    s = time.time()
+    cache_ops.swap_agg_block(cpu_agg_blocks[0], gpu_agg_blocks[0], block_size_in_bytes)
+    e = time.time()
+    t = t + (e - s)
+print(t / 10)
     #cache_ops.swap_blocks(cpu_cache[0][0], gpu_cache[0][0], unique_dicts[0])
 print("---------End---------")
 
@@ -80,7 +85,7 @@ for i in range(3):
     for j in range(10):
         k = i * 10 + j
         unique_dict = unique_dicts[k]
-        t = 0
+        #t = 0
         print(f"Length {lengths[i]} Ratio {ratios[j]}")
         print(f"K {k}")
         print(f"Len Map {len(unique_dict.items())}")
