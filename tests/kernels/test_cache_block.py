@@ -5,14 +5,14 @@ import random
 import math
 from vllm._C import cache_ops, ops
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 num_layers = 40
-num_blocks = 260
+num_blocks = 300
 num_kv_heads = 20
 head_size = 128
 block_size = 16
-x = 16 // torch.tensor([], dtype=torch.float16).element_size()
+#x = 16 // torch.tensor([], dtype=torch.float16).element_size()
 
 '''key_agg_blocks = []
 for _ in range(num_blocks):
@@ -32,20 +32,20 @@ value_blocks_addresses = ops.tensor_for_caches_addresses(value_agg_blocks)'''
 
 gpu_cache = []
 for _ in range(num_layers):
-    gpu_block_tensor2 = torch.empty(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
-                                 dtype=torch.float16, 
-                                 device='cuda').uniform_(-1e-3, 1e-3)
-    gpu_cache.append(gpu_block_tensor2)
+    gpu_block_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
+                                 dtype = torch.float16, 
+                                 device = 'cuda:1')
+    gpu_cache.append(gpu_block_tensor)
 cpu_cache = []
 for _ in range(num_layers):
-    cpu_block_tensor2 = torch.empty(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
-                                 dtype=torch.float16, 
-                                 device='cpu').uniform_(-1e-3, 1e-3)
-    cpu_cache.append(cpu_block_tensor2)
+    cpu_block_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
+                                 dtype = torch.float16, 
+                                 device = 'cpu')
+    cpu_cache.append(cpu_block_tensor)
 
 random.seed(66)
-all_keys = list(range(260))
-all_values = list(range(260))
+all_keys = list(range(num_blocks))
+all_values = list(range(num_blocks))
 random.shuffle(all_keys)
 random.shuffle(all_values)
 unique_dicts = []
@@ -63,9 +63,14 @@ for length in lengths:
 
 print("----------Warm Up----------")
 for _ in range(10):
-     cache_ops.swap_blocks(gpu_cache[0], cpu_cache[0], unique_dicts[0])
+     cache_ops.swap_blocks(cpu_cache[0][0], gpu_cache[0][0], unique_dicts[0])
 print("---------End---------")
 
+print("----------Sleep----------")
+time.sleep(5)
+print("----------End----------")
+
+print("-----------Start----------")
 outputs = []
 for i in range(3):
     for j in range(10):
@@ -73,14 +78,20 @@ for i in range(3):
         k = i * 10 + j
         unique_dict = unique_dicts[k]
         t = 0
+        print(f"Length {lengths[i]} Ratio {ratios[j]}")
+        print(f"K {k}")
+        print(f"Len Map {len(unique_dict.items())}")
+        print(unique_dict)
         for _ in range(3):
             st = time.time()
-            for i in range(num_layers):
-                cache_ops.swap_blocks(cpu_cache[i], gpu_cache[i], unique_dict)
+            for layer in range(num_layers):
+                cache_ops.swap_blocks(cpu_cache[layer][0], gpu_cache[layer][0], unique_dict)
+                cache_ops.swap_blocks(cpu_cache[layer][1], gpu_cache[layer][1], unique_dict)
             ed = time.time()
             t = t + ed - st
         slots.append(t / 3)
     outputs.append(slots)
+print("----------End-----------")
 
 print("---------Outputs---------")
 print(outputs)
