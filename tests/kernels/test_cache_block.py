@@ -1,18 +1,20 @@
 import os
 import torch
 import time
+import random
+import math
 from vllm._C import cache_ops, ops
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
 num_layers = 40
-num_blocks = 10
-num_kv_heads = 40
+num_blocks = 260
+num_kv_heads = 20
 head_size = 128
 block_size = 16
 x = 16 // torch.tensor([], dtype=torch.float16).element_size()
 
-key_agg_blocks = []
+'''key_agg_blocks = []
 for _ in range(num_blocks):
     key_block_tensor = torch.empty(size = (2, num_layers, num_kv_heads, head_size // x, block_size, x), 
                                  dtype=torch.float16, 
@@ -26,23 +28,64 @@ for _ in range(num_blocks):
     value_agg_blocks.append(value_block_tensor)
 
 key_blocks_addresses = ops.tensor_for_caches_addresses(key_agg_blocks)
-value_blocks_addresses = ops.tensor_for_caches_addresses(value_agg_blocks)
+value_blocks_addresses = ops.tensor_for_caches_addresses(value_agg_blocks)'''
 
-key_cache = []
+gpu_cache = []
 for _ in range(num_layers):
-    key_block_tensor2 = torch.empty(size = (num_blocks, num_kv_heads, head_size // x, block_size, x), 
+    gpu_block_tensor2 = torch.empty(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
                                  dtype=torch.float16, 
                                  device='cuda').uniform_(-1e-3, 1e-3)
-    key_cache.append(key_block_tensor2)
-
-value_cache = []
+    gpu_cache.append(gpu_block_tensor2)
+cpu_cache = []
 for _ in range(num_layers):
-    value_block_tensor2 = torch.empty(size = (num_blocks, num_kv_heads, head_size // x, block_size, x), 
+    cpu_block_tensor2 = torch.empty(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
                                  dtype=torch.float16, 
-                                 device='cuda').uniform_(-1e-3, 1e-3)
-    value_cache.append(value_block_tensor2)
+                                 device='cpu').uniform_(-1e-3, 1e-3)
+    cpu_cache.append(cpu_block_tensor2)
 
-block_mapping = {}
+random.seed(66)
+all_keys = list(range(260))
+all_values = list(range(260))
+random.shuffle(all_keys)
+random.shuffle(all_values)
+unique_dicts = []
+lengths = [1024, 2048, 4096]
+ratios = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+for length in lengths:
+    for ratio in ratios:
+        blocks_num = math.ceil(math.ceil(length * (ratio / 100)) / block_size)
+        unique_dict = {}
+        for i in range(blocks_num):
+            key = all_keys[i]
+            value = all_values[i]
+            unique_dict[key] = value
+        unique_dicts.append(unique_dict)
+
+print("----------Warm Up----------")
+for _ in range(10):
+     cache_ops.swap_blocks(gpu_cache[0], cpu_cache[0], unique_dicts[0])
+print("---------End---------")
+
+outputs = []
+for i in range(3):
+    for j in range(10):
+        slots = []
+        k = i * 10 + j
+        unique_dict = unique_dicts[k]
+        t = 0
+        for _ in range(3):
+            st = time.time()
+            for i in range(num_layers):
+                cache_ops.swap_blocks(cpu_cache[i], gpu_cache[i], unique_dict)
+            ed = time.time()
+            t = t + ed - st
+        slots.append(t / 3)
+    outputs.append(slots)
+
+print("---------Outputs---------")
+print(outputs)
+
+'''block_mapping = {}
 block_mapping[2] = 4
 
 block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size()
@@ -70,7 +113,7 @@ is_close = torch.allclose(key_agg_blocks[2], key_agg_blocks[4], atol=1e-3, rtol=
 if is_close:
     print("Pass for Swap")
 else:
-    print("Error in Swap")
+    print("Error in Swap")'''
 
 '''block_mapping2 = {}
 block_mapping2[1] = [3,4]
