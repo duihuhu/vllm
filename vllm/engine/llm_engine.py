@@ -807,19 +807,7 @@ class LLMEngine:
     def radix_manager_update(self, finished_seq_groups: List[SequenceGroup]):
         self.scheduler.radix_manager_update(finished_seq_groups)
             
-    #todo need record seq last node when transfering 
-    def update_radix_tree(self, finished_seq_groups: List[SequenceGroup]):
-        for seq_group in finished_seq_groups:
-            seq = seq_group.get_seqs()[0]
-            radix_token_ids = seq.data.get_radix_token_ids()
-            block_table = self.scheduler.block_manager.block_tables[seq.seq_id]
-            prefix_info, last_node_matched_len = self.scheduler.block_manager.gpu_allocator.insert_radix_cache_on_node(None, radix_token_ids, block_table)
-            seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
-            seq.last_node = prefix_info[1] 
-            seq.last_node_matched_len = last_node_matched_len
-            if not self.deploy_config.enable_dcache:
-                del self.scheduler.block_manager.block_tables[seq.seq_id]
-                    
+      
     def _process_model_outputs(
             self, output: SamplerOutput,
             scheduler_outputs: SchedulerOutputs) -> List[RequestOutput]:

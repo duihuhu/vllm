@@ -3,8 +3,6 @@ from typing import Dict, List, Optional, Union, Tuple
 from vllm.block import PhysicalTokenBlock
 from vllm.sequence import Sequence
 from vllm.logger import init_logger
-# from vllm.xds_rtc.radix_cache import (RadixCache, TreeNode,
-#                                       kvCacheProgressStatus)
 from vllm.radix_tree_ys.radix_cache import (RadixCache, TreeNode, kvCacheProgressStatus)
 
 

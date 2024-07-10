@@ -83,7 +83,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
         
         self.default_hash_ctr = count()
 
-        self.radix_cache: RadixCache = RadixCache()
         self.radix_block_hash = 0
     
         self.eviction_policy = eviction_policy
@@ -95,7 +94,6 @@ class CachedBlockAllocator(BlockAllocatorBase):
         while self.radix_evictor.num_blocks:    
             self.radix_evictor.evict()
         self.radix_evictor: Evictor = make_evictor(self.eviction_policy)
-        self.radix_cache: RadixCache = RadixCache()
 
     def radix_manager_allocate_block(self) -> PhysicalTokenBlock:
         if self.current_num_blocks == self.num_blocks:
@@ -125,22 +123,8 @@ class CachedBlockAllocator(BlockAllocatorBase):
         self.current_num_blocks += 1
         return block
         
-    def insert_radix_cache(self, key, value):
-        return self.radix_cache.insert(key, value)
-    
-    def insert_radix_cache_on_node(self, node, key, value):
-        last_node_matched_len = [0]
-        if node == None:
-            node = self.radix_cache.root_node
-        return self.radix_cache._insert_helper(node, key, value, last_node_matched_len), last_node_matched_len[0]
-
     def radix_manager_allocate(self) -> PhysicalTokenBlock:
         block = self.radix_manager_allocate_block()
-        block.ref_count += 1
-        return block
-
-    def allocate_radix_cache(self, token, num_tokens: int = 0) -> PhysicalTokenBlock:
-        block = self.allocate_block(token, num_tokens)
         block.ref_count += 1
         return block
 
@@ -198,16 +182,7 @@ class CachedBlockAllocator(BlockAllocatorBase):
         if node.value.physicalTokenBlock.ref_count == 0:
             self.radix_evictor.add(node.value.physicalTokenBlock)
 
-    #todo if only manage block.ref_count there, use background thread to release
-    #not need self.evictor.add(block)
-    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
-        if block.ref_count == 0:
-            raise ValueError(f"Double free! {block} is already freed.")
-        block.ref_count -= 1
-        if block.ref_count == 0:
-            assert block.block_hash not in self.evictor
-            self.evictor.add(block)
-    
+
     def get_radix_num_free_blocks(self) -> int:
         return (self.num_blocks - self.current_num_blocks +
                 self.radix_evictor.num_blocks)
@@ -278,9 +253,6 @@ class UncachedBlockAllocator(BlockAllocatorBase):
         if block.ref_count == 0:
             self.free_blocks.append(block)
     def free_radix_manager_cache(self, block: PhysicalTokenBlock) -> None:
-        pass
-
-    def free_radix_cache(self, block: PhysicalTokenBlock) -> None:
         pass
     
     def get_radix_num_used_blocks(self) -> int:
@@ -544,61 +516,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         for seq in seq_group.get_seqs():
             self.kv_block_tables[seq.seq_id] = block_table.copy()
         return cpu_blocks
-            
-    def allocate_radix_cache(self, seq_group: SequenceGroup, is_kv_prepared=None) -> None:
-         #todo if mcache open, should consider cache in dram
-        blocks_to_swap_in = {}
-        
-        seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
-        # Allocate new physical token blocks that will store the prompt tokens.
-        num_prompt_blocks = len(seq.logical_token_blocks)     
-        radix_token_ids = seq.data.get_radix_token_ids()
-        blocks, last_node, last_node_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(radix_token_ids)
-        # print("allocate_radix_cache " , blocks, self.gpu_allocator.radix_cache.pretty_print())
-        seq.last_node = last_node
-        seq.last_node_matched_len = last_node_matched_len
-        block_table: BlockTable  = []
-        if blocks:
-            block_table = blocks.copy()
-            pre_prefix_len = len(blocks)
-            seq.prefix_len = pre_prefix_len
-        else:
-            pre_prefix_len = 0
-
-        for block in blocks:
-            if block.block_hash in self.gpu_allocator.evictor:
-                self.gpu_allocator.evictor.free_table.pop(block.block_hash)
-        
-        for logical_idx in range(pre_prefix_len, num_prompt_blocks):
-            block = self.gpu_allocator.allocate_radix_cache(self.num_hash,
-                            seq.num_hashed_tokens_of_block(logical_idx))
-            self.num_hash = self.num_hash + 1
-            block_table.append(block)
-        
-        if seq.last_node == self.gpu_allocator.radix_cache.root_node:
-            prefix_info, last_node_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node,\
-                radix_token_ids[(pre_prefix_len-seq.last_node_matched_len):], block_table[(pre_prefix_len-seq.last_node_matched_len):])
-
-            seq.last_node_matched_len = last_node_matched_len
-            seq.prefix_len = prefix_info[0]
-            seq.last_node = prefix_info[1]
-        else:
-            if pre_prefix_len <= num_prompt_blocks:
-                prefix_info, last_node_matched_len = self.gpu_allocator.insert_radix_cache_on_node(seq.last_node.parent, \
-                    radix_token_ids[(pre_prefix_len-seq.last_node_matched_len):], block_table[(pre_prefix_len-seq.last_node_matched_len):])
-
-                seq.prefix_len = seq.prefix_len - seq.last_node_matched_len + prefix_info[0]
-                seq.last_node = prefix_info[1]
-                seq.last_node_matched_len = last_node_matched_len
-                # Assign the block table for each sequence.
-        if not is_kv_prepared:
-            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-                self.block_tables[seq.seq_id] = block_table.copy()     
-
-        else:       
-            for seq in seq_group.get_seqs(status=SequenceStatus.WAITING):
-                self.kv_block_tables[seq.seq_id] = block_table.copy()
-            
+                 
     
     def allocate_kv_cpu_cache(self, seq_group: SequenceGroup) -> None:
         seq = seq_group.get_seqs(status=SequenceStatus.WAITING)[0]
@@ -676,15 +594,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             self.gpu_allocator.update_hash(new_hash, last_block)
             return last_block
 
-    def _promote_last_block_radix_cache(
-        self,
-        seq: Sequence,
-        last_block: PhysicalTokenBlock,
-    ) -> PhysicalTokenBlock:
-        assert self.enable_radix_caching
-        #todo only for last block , I think it should be merge when accomplished seq
-        return last_block
-
     def _is_last_block_full(
         self,
         seq: Sequence,
@@ -708,15 +617,7 @@ class BlockSpaceManagerV1(BlockSpaceManager):
     )-> PhysicalTokenBlock:
         return last_block
 
-    def _maybe_promote_last_block_radix_cache(
-        self,
-        seq: Sequence,
-        last_block: PhysicalTokenBlock,
-    )-> PhysicalTokenBlock:
-        if self._is_last_block_full(seq):
-            return self._promote_last_block_radix_cache(seq, last_block)
-        else:
-            return last_block
+
 
     def _allocate_last_physical_block_radix_manager_cache(
         self,
@@ -725,20 +626,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             return self.gpu_allocator.allocate()
         
         new_block = self.gpu_allocator.radix_manager_allocate()
-        return new_block
-
-
-    def _allocate_last_physical_block_radix_cache(
-        self,
-        seq: Sequence,
-    ) -> PhysicalTokenBlock:
-        if not self.enable_caching and not self.enable_radix_caching:
-            return self.gpu_allocator.allocate()
-        #todo can when seq finished, merging to radix tree
-        num_hashed_tokens = seq.num_hashed_tokens_of_block(
-            len(seq.logical_token_blocks) - 1)
-        new_block = self.gpu_allocator.allocate_radix_cache(self.num_hash, num_hashed_tokens)
-        self.num_hash = self.num_hash + 1
         return new_block
 
     def _allocate_last_physical_block(
@@ -790,7 +677,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
                 # The sequence has a new logical block.
                 # Allocate a new physical block.
                 if self.enable_radix_caching:
-                    # new_block = self._allocate_last_physical_block_radix_cache(seq)
                     new_block = self._allocate_last_physical_block_radix_manager_cache()
                 else:
                     new_block = self._allocate_last_physical_block(seq)
@@ -804,8 +690,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # Not shared with other sequences. Appendable.
             if self.enable_radix_caching:
                 maybe_new_block = self._maybe_promote_last_block_radix_manager_cache(seq, last_block)
-                # maybe_new_block = self._maybe_promote_last_block_radix_cache(
-                #     seq, last_block)
                 block_table[-1] = maybe_new_block
             elif self.enable_caching:
                 # If the last block is now complete, we may reuse an old block
@@ -819,7 +703,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             # Copy on Write: Allocate a new block and copy the tokens.
             #TODO there may be wrong, I am not sure, need consider
             if self.enable_radix_caching:
-                # new_block = self._allocate_last_physical_block_radix_cache(seq)
                 new_block = self._allocate_last_physical_block_radix_manager_cache()
             else:
                 new_block = self._allocate_last_physical_block(seq)
@@ -947,7 +830,6 @@ class BlockSpaceManagerV1(BlockSpaceManager):
             if block.device == Device.GPU:
                 if self.enable_radix_caching:
                     self.gpu_allocator.free_radix_manager_cache(block)
-                    # self.gpu_allocator.free_radix_cache(block)
                 else:
                     self.gpu_allocator.free(block)
             else:
