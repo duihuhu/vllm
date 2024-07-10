@@ -432,10 +432,10 @@ class BlockSpaceManagerV1(BlockSpaceManager):
         else:
             return AllocStatus.LATER
 
-    
+    # there should be change when use dceched len
     def query_kv_blocks(self, query_cache_meta):
         blocks = []
-        blocks, last_node, last_node_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(tuple(query_cache_meta.prompt_token_ids))
+        # blocks, last_node, last_node_matched_len = self.gpu_allocator.radix_cache.only_match_prefix(tuple(query_cache_meta.prompt_token_ids))
         self.req_pull_block_tables[query_cache_meta.request_id] = blocks
         return len(blocks)
     
