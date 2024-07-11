@@ -3,11 +3,160 @@ import torch
 import time
 import random
 import math
-from vllm._C import cache_ops, ops
+from typing import Dict, List, Tuple, Optional
+from vllm._C import cache_ops
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
-num_layers = 40
+def swap_blocks_vllm(
+        src_kv_cache: torch.Tensor,
+        dst_kv_cache: torch.Tensor,
+        src_to_dst: Dict[int, int]) -> None:
+        src_key_cache = src_kv_cache[0]
+        dst_key_cache = dst_kv_cache[0]
+        cache_ops.swap_blocks(src_key_cache, dst_key_cache, src_to_dst)
+
+        src_value_cache = src_kv_cache[1]
+        dst_value_cache = dst_kv_cache[1]
+        cache_ops.swap_blocks(src_value_cache, dst_value_cache, src_to_dst)
+
+def swap_blocks_agg(
+        src_kv: torch.Tensor,
+        dst_kv: torch.Tensor,
+        block_size_in_bytes: int) -> None:
+        cache_ops.swap_agg_block(src_kv, dst_kv, block_size_in_bytes)
+
+def swap_vllm(cpu_cache: List[torch.Tensor],
+              gpu_cache: List[torch.Tensor],
+              num_layers, 
+              src_to_dst: Dict[int, int]
+              ) -> None:
+        for i in range(num_layers):
+            swap_blocks_vllm(cpu_cache[i], gpu_cache[i], src_to_dst)
+
+def swap_agg(cpu_cache: List[torch.Tensor], 
+             gpu_cache: List[torch.Tensor],
+             src_to_dst: Dict[int, int]) -> None:
+        block_size_in_bytes = cpu_cache[0].element_size() * cpu_cache[0].numel()
+        for src, dst in src_to_dst.items():
+            swap_blocks_agg(cpu_cache[src], gpu_cache[dst], block_size_in_bytes)
+
+def get_tensors(num_layers: int,
+                num_blocks: int,
+                num_kv_heads: int,
+                tp: int,
+                head_size: int,
+                block_size: int,
+                device: str) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+     agg_blocks = []
+     for _ in range(num_blocks):
+          agg_block_tensor = torch.zeros(size = (2, num_layers, num_kv_heads//tp * head_size * block_size),
+                                         dtype = torch.float16, # use fp16 by default
+                                         device = device)
+          agg_blocks.append(agg_block_tensor)
+     vllm_tensors = []
+     for _ in range(num_layers):
+          vllm_layer_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads//tp * head_size * block_size),
+                                          dtype = torch.float16,
+                                          device = device)
+          vllm_tensors.append(vllm_layer_tensor)
+     return (agg_blocks, vllm_tensors)
+
+def get_mappings(seed: int,
+                 num_blocks: int,
+                 block_size: int) -> List[Dict[int, int]]:
+    random.seed(seed)
+    all_keys = list(range(num_blocks))
+    all_values = list(range(num_blocks))
+    random.shuffle(all_keys)
+    random.shuffle(all_values)
+    unique_dicts = []
+    lengths = [1024, 2048, 4096] # only test the useful lengths
+    ratios = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] # tests all ratios
+    for length in lengths:
+        for ratio in ratios:
+            blocks_num = math.ceil(math.ceil(length * (ratio / 100)) / block_size)
+            unique_dict = {}
+            for i in range(blocks_num):
+                key = all_keys[i]
+                value = all_values[i]
+                unique_dict[key] = value
+            unique_dicts.append(unique_dict)
+    return unique_dicts
+
+def warm_up(iters: int,
+            src_kv: torch.Tensor,
+            dst_kv: torch.Tensor,
+            src_kv_cache: torch.Tensor,
+            dst_kv_cache: torch.Tensor,
+            block_size_in_bytes: int,
+            src_to_dst: Dict[int, int]) -> None:
+     for _ in range(iters):
+          cache_ops.swap_agg_block(src_kv, dst_kv, block_size_in_bytes)
+     for _ in range(iters):
+          cache_ops.swap_blocks(src_kv_cache, dst_kv_cache, src_to_dst)
+
+def test_swap(unique_dicts: List[Dict[int, int]],
+              agg: bool,
+              agg_cpu_cache: Optional[List[torch.Tensor]] = None,
+              agg_gpu_cache: Optional[List[torch.Tensor]] = None,
+              vllm_cpu_cache: Optional[List[torch.Tensor]] = None,
+              vllm_gpu_cache: Optional[List[torch.Tensor]] = None) -> None:
+    num_lengths = 3
+    num_ratios = 10
+    num_iters = 10
+    outputs = []
+    for i in range(num_lengths):
+        slots = []
+        for j in range(num_ratios):
+            k = i * num_ratios + j
+            unique_dict = unique_dicts[k]
+            temp = []
+            for _ in range(num_iters):
+                st = time.time()
+                if agg:
+                     swap_agg(agg_cpu_cache, agg_gpu_cache, unique_dict)
+                else:
+                     swap_vllm(vllm_cpu_cache, vllm_gpu_cache, unique_dict)
+                ed = time.time()               
+                temp.append(ed - st)
+            slots.append(sum(temp) / len(temp))
+        outputs.append(slots)
+    print(outputs)
+
+def test() -> None:
+     num_layers = 40
+     num_blocks = 300
+     num_kv_heads = 40
+     tp = 2
+     head_size = 128
+     block_size = 16
+     seed = 42
+     warm_ites = 10
+
+     agg_cpu_cache, vllm_cpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'cpu')
+     agg_gpu_cache, vllm_gpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'gpu')
+
+     unique_dicts = get_mappings(seed, num_blocks, block_size)
+
+     block_size_in_bytes = agg_cpu_cache[0].numel() * agg_cpu_cache[0].element_size()
+
+     print("----------Warm Up----------")
+     warm_up(warm_ites, agg_cpu_cache[0], agg_gpu_cache[0], vllm_cpu_cache[0], vllm_gpu_cache[0], block_size_in_bytes, 
+             unique_dicts[0])
+     print("----------End----------")
+
+     print("-----------Test Aggg----------")
+     test_swap(unique_dicts = unique_dicts, agg = True, agg_cpu_cache = agg_cpu_cache, agg_gpu_cache = agg_gpu_cache)
+     print("-----------End----------")
+
+     print("------------Test vllm----------")
+     test_swap(unique_dicts = unique_dicts, agg = False, vllm_cpu_cache = vllm_cpu_cache, vllm_gpu_cache = vllm_gpu_cache)
+     print("-----------End----------")
+
+test()
+
+'''num_layers = 40
 num_blocks = 300
 num_kv_heads = 20
 head_size = 128
@@ -30,7 +179,7 @@ for _ in range(num_blocks):
 key_blocks_addresses = ops.tensor_for_caches_addresses(cpu_agg_blocks)
 value_blocks_addresses = ops.tensor_for_caches_addresses(gpu_agg_blocks)
 
-'''gpu_cache = []
+gpu_cache = []
 for _ in range(num_layers):
     gpu_block_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
                                  dtype = torch.float16, 
@@ -41,7 +190,7 @@ for _ in range(num_layers):
     cpu_block_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads * head_size * block_size), 
                                  dtype = torch.float16, 
                                  device = 'cpu')
-    cpu_cache.append(cpu_block_tensor)'''
+    cpu_cache.append(cpu_block_tensor)
 
 random.seed(66)
 all_keys = list(range(num_blocks))
@@ -107,7 +256,7 @@ print("----------End-----------")
 print("---------Outputs---------")
 print(outputs)
 
-'''block_mapping = {}
+block_mapping = {}
 block_mapping[2] = 4
 
 block_size_in_bytes = key_agg_blocks[0].numel() * key_agg_blocks[0].element_size()
@@ -135,9 +284,9 @@ is_close = torch.allclose(key_agg_blocks[2], key_agg_blocks[4], atol=1e-3, rtol=
 if is_close:
     print("Pass for Swap")
 else:
-    print("Error in Swap")'''
+    print("Error in Swap")
 
-'''block_mapping2 = {}
+block_mapping2 = {}
 block_mapping2[1] = [3,4]
 
 t5 = time.time()
