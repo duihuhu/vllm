@@ -91,13 +91,14 @@ def warm_up(iters: int,
             dst_kv_cache: torch.Tensor,
             block_size_in_bytes: int,
             src_to_dst: Dict[int, int]) -> None:
-     t = 0
+     temp = []
      for _ in range(iters):
           st = time.time()
           cache_ops.swap_agg_block(src_kv, dst_kv, block_size_in_bytes)
           ed = time.time()
-          t = t + (ed - st)
-     print(t / iters)
+          temp.append(ed - st)
+     print(temp)
+     print(sum(temp) / len(temp))
      t2 = 0
      for _ in range(iters):
           st2 = time.time()
