@@ -120,7 +120,7 @@ if __name__ == '__main__':
                         choices=['awq', 'gptq', 'squeezellm', None],
                         default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=32)
+    parser.add_argument('--input-len', type=int, default=1024)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--num-seqs', type=int, default=7)
     parser.add_argument('--batch-size', type=int, default=1)
@@ -199,11 +199,11 @@ if __name__ == '__main__':
                         help='enable radix caching')
     parser.add_argument('--ratio',
                         type=int,
-                        default=25,
+                        default=50,
                         help='ratio for re-use')
     parser.add_argument('--file-name',
                         type=str,
-                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log3.txt',
+                        default='/home/jovyan/vllm/benchmarks/log3.txt',
                         help='where to store the logs')
     args = parser.parse_args()
     main(args)
