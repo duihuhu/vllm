@@ -98,6 +98,7 @@ def warm_up(iters: int,
 
 def test_swap(unique_dicts: List[Dict[int, int]],
               agg: bool,
+              num_layers: int,
               agg_cpu_cache: Optional[List[torch.Tensor]] = None,
               agg_gpu_cache: Optional[List[torch.Tensor]] = None,
               vllm_cpu_cache: Optional[List[torch.Tensor]] = None,
@@ -117,7 +118,7 @@ def test_swap(unique_dicts: List[Dict[int, int]],
                 if agg:
                      swap_agg(agg_cpu_cache, agg_gpu_cache, unique_dict)
                 else:
-                     swap_vllm(vllm_cpu_cache, vllm_gpu_cache, unique_dict)
+                     swap_vllm(vllm_cpu_cache, vllm_gpu_cache, num_layers, unique_dict)
                 ed = time.time()               
                 temp.append(ed - st)
             slots.append(sum(temp) / len(temp))
@@ -146,12 +147,14 @@ def test() -> None:
              unique_dicts[0])
      print("----------End----------")
 
-     print("-----------Test Aggg----------")
-     test_swap(unique_dicts = unique_dicts, agg = True, agg_cpu_cache = agg_cpu_cache, agg_gpu_cache = agg_gpu_cache)
+     print("-----------Test Agg----------")
+     test_swap(unique_dicts = unique_dicts, agg = True, num_layers = num_layers, agg_cpu_cache = agg_cpu_cache, 
+               agg_gpu_cache = agg_gpu_cache)
      print("-----------End----------")
 
      print("------------Test vllm----------")
-     test_swap(unique_dicts = unique_dicts, agg = False, vllm_cpu_cache = vllm_cpu_cache, vllm_gpu_cache = vllm_gpu_cache)
+     test_swap(unique_dicts = unique_dicts, agg = False, num_layers = num_layers, vllm_cpu_cache = vllm_cpu_cache, 
+               vllm_gpu_cache = vllm_gpu_cache)
      print("-----------End----------")
 
 test()
