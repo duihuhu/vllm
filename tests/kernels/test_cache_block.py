@@ -91,10 +91,20 @@ def warm_up(iters: int,
             dst_kv_cache: torch.Tensor,
             block_size_in_bytes: int,
             src_to_dst: Dict[int, int]) -> None:
+     t = 0
      for _ in range(iters):
+          st = time.time()
           cache_ops.swap_agg_block(src_kv, dst_kv, block_size_in_bytes)
+          ed = time.time()
+          t = t + (ed - st)
+     print(t / iters)
+     t2 = 0
      for _ in range(iters):
+          st2 = time.time()
           cache_ops.swap_blocks(src_kv_cache, dst_kv_cache, src_to_dst)
+          ed2 = time.time()
+          t2 = t2 + (ed2 - st2)
+     print(t2 / iters)
 
 def test_swap(unique_dicts: List[Dict[int, int]],
               agg: bool,
@@ -105,7 +115,7 @@ def test_swap(unique_dicts: List[Dict[int, int]],
               vllm_gpu_cache: Optional[List[torch.Tensor]] = None) -> None:
     num_lengths = 3
     num_ratios = 10
-    num_iters = 50
+    num_iters = 10
     outputs = []
     for i in range(num_lengths):
         slots = []
@@ -133,7 +143,7 @@ def test() -> None:
      head_size = 128
      block_size = 16
      seed = 42
-     warm_ites = 50
+     warm_ites = 10
 
      agg_cpu_cache, vllm_cpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'cpu')
      agg_gpu_cache, vllm_gpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'cuda')
@@ -143,8 +153,7 @@ def test() -> None:
      block_size_in_bytes = agg_cpu_cache[0].numel() * agg_cpu_cache[0].element_size()
 
      print("----------Warm Up----------")
-     warm_up(warm_ites, agg_cpu_cache[0], agg_gpu_cache[0], vllm_cpu_cache[0], vllm_gpu_cache[0], block_size_in_bytes, 
-             unique_dicts[0])
+     warm_up(warm_ites, agg_cpu_cache[0], agg_gpu_cache[0], vllm_cpu_cache[0], vllm_gpu_cache[0], block_size_in_bytes, {2: 4})
      print("----------End----------")
 
      print("-----------Test Agg----------")
