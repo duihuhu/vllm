@@ -135,7 +135,7 @@ def test() -> None:
      warm_ites = 10
 
      agg_cpu_cache, vllm_cpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'cpu')
-     agg_gpu_cache, vllm_gpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'gpu')
+     agg_gpu_cache, vllm_gpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'cuda')
 
      unique_dicts = get_mappings(seed, num_blocks, block_size)
 
