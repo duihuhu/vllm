@@ -154,7 +154,7 @@ def test() -> None:
      block_size_in_bytes = agg_cpu_cache[0].numel() * agg_cpu_cache[0].element_size()
 
      print("----------Warm Up----------")
-     warm_up(warm_ites, agg_cpu_cache[0], agg_gpu_cache[0], vllm_cpu_cache[0], vllm_gpu_cache[0], block_size_in_bytes, {2: 4})
+     warm_up(warm_ites, agg_cpu_cache[0][0], agg_gpu_cache[0][0], vllm_cpu_cache[0], vllm_gpu_cache[0], block_size_in_bytes, {2: 4})
      print("----------End----------")
 
      print("-----------Test Agg----------")
