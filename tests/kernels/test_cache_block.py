@@ -65,11 +65,11 @@ def get_tensors(num_layers: int,
 def get_mappings(seed: int,
                  num_blocks: int,
                  block_size: int) -> List[Dict[int, int]]:
-    #random.seed(seed)
+    random.seed(seed)
     all_keys = list(range(num_blocks))
     all_values = list(range(num_blocks))
-    #random.shuffle(all_keys)
-    #random.shuffle(all_values)
+    random.shuffle(all_keys)
+    random.shuffle(all_values)
     unique_dicts = []
     lengths = [1024, 2048, 4096] # only test the useful lengths
     ratios = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] # tests all ratios
@@ -105,7 +105,7 @@ def test_swap(unique_dicts: List[Dict[int, int]],
               vllm_gpu_cache: Optional[List[torch.Tensor]] = None) -> None:
     num_lengths = 3
     num_ratios = 10
-    num_iters = 10
+    num_iters = 50
     outputs = []
     for i in range(num_lengths):
         slots = []
@@ -133,7 +133,7 @@ def test() -> None:
      head_size = 128
      block_size = 16
      seed = 42
-     warm_ites = 10
+     warm_ites = 50
 
      agg_cpu_cache, vllm_cpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'cpu')
      agg_gpu_cache, vllm_gpu_cache = get_tensors(num_layers, num_blocks, num_kv_heads, tp, head_size, block_size, 'cuda')
