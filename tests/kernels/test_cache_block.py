@@ -50,26 +50,26 @@ def get_tensors(num_layers: int,
                 device: str) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
      agg_blocks = []
      for _ in range(num_blocks):
-          agg_block_tensor = torch.zeros(size = (2, num_layers, num_kv_heads//tp * head_size * block_size),
+          agg_block_tensor = torch.empty(size = (2, num_layers, num_kv_heads//tp * head_size * block_size),
                                          dtype = torch.float16, # use fp16 by default
-                                         device = device)
+                                         device = device).uniform_(-1e-3, 1e-3)
           agg_blocks.append(agg_block_tensor)
      vllm_tensors = []
      for _ in range(num_layers):
-          vllm_layer_tensor = torch.zeros(size = (2, num_blocks, num_kv_heads//tp * head_size * block_size),
+          vllm_layer_tensor = torch.empty(size = (2, num_blocks, num_kv_heads//tp * head_size * block_size),
                                           dtype = torch.float16,
-                                          device = device)
+                                          device = device).uniform_(-1e-3, 1e-3)
           vllm_tensors.append(vllm_layer_tensor)
      return (agg_blocks, vllm_tensors)
 
 def get_mappings(seed: int,
                  num_blocks: int,
                  block_size: int) -> List[Dict[int, int]]:
-    random.seed(seed)
+    #random.seed(seed)
     all_keys = list(range(num_blocks))
     all_values = list(range(num_blocks))
-    random.shuffle(all_keys)
-    random.shuffle(all_values)
+    #random.shuffle(all_keys)
+    #random.shuffle(all_values)
     unique_dicts = []
     lengths = [1024, 2048, 4096] # only test the useful lengths
     ratios = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100] # tests all ratios
