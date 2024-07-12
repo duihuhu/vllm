@@ -30,7 +30,7 @@ class EngineArgs:
     enable_prefix_caching: bool = False
     enable_radix_caching: bool = False
     use_v2_block_manager: bool = False
-    swap_space: int = 4  # GiB
+    swap_space: int = 80  # GiB
     gpu_memory_utilization: float = 0.90
     max_num_batched_tokens: Optional[int] = None
     max_num_seqs: int = 256
