@@ -48,16 +48,19 @@ def get_tensors(num_layers: int,
                 head_size: int,
                 block_size: int,
                 device: str) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
+     pin_memory = True if device == "cpu" else False
      agg_blocks = []
      for _ in range(num_blocks):
           agg_block_tensor = torch.empty(size = (2, num_layers, num_kv_heads//tp * head_size * block_size),
                                          dtype = torch.float16, # use fp16 by default
+                                         pin_memory = pin_memory,
                                          device = device).uniform_(-1e-3, 1e-3)
           agg_blocks.append(agg_block_tensor)
      vllm_tensors = []
      for _ in range(num_layers):
           vllm_layer_tensor = torch.empty(size = (2, num_blocks, num_kv_heads//tp * head_size * block_size),
                                           dtype = torch.float16,
+                                          pin_memory = pin_memory,
                                           device = device).uniform_(-1e-3, 1e-3)
           vllm_tensors.append(vllm_layer_tensor)
      return (agg_blocks, vllm_tensors)
