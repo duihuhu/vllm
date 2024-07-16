@@ -97,7 +97,6 @@ def warm_up(iters: int,
           cache_ops.swap_agg_block(src_kv, dst_kv, block_size_in_bytes)
           ed = time.time()
           temp.append(ed - st)
-     print(temp)
      print(sum(temp) / len(temp))
      t2 = 0
      for _ in range(iters):
@@ -154,7 +153,7 @@ def test() -> None:
      block_size_in_bytes = agg_cpu_cache[0].numel() * agg_cpu_cache[0].element_size()
 
      print("----------Warm Up----------")
-     warm_up(warm_ites, agg_cpu_cache[0][0], agg_gpu_cache[0][0], vllm_cpu_cache[0], vllm_gpu_cache[0], block_size_in_bytes, {2: 4})
+     warm_up(warm_ites, agg_cpu_cache[0], agg_gpu_cache[0], vllm_cpu_cache[0], vllm_gpu_cache[0], block_size_in_bytes, {2: 6})
      print("----------End----------")
 
      print("-----------Test Agg----------")
