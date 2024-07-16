@@ -46,7 +46,7 @@ int main() {
 
     // 进行多次数据拷贝
     for (size_t i = 0; i < numBuffers; ++i) {
-        CopyFromGPUToCPUAsync(gpuBuffers, cpuBuffers, buffers, streams);
+        CopyFromCPUToGPUAsync(gpuBuffers, cpuBuffers, buffers, streams);
     }
 
     for (int i = 0; i < numBuffers; ++i) {
@@ -61,7 +61,7 @@ int main() {
 
     // 进行多次数据拷贝
     for (size_t i = 0; i < numBuffers; ++i) {
-        CopyFromGPUToCPUAsync(gpuBuffers, cpuBuffers, buffers, streams);
+        CopyFromCPUToGPUAsync(gpuBuffers, cpuBuffers, buffers, streams);
     }
 
     for (int i = 0; i < numBuffers; ++i) {
@@ -75,7 +75,7 @@ int main() {
 
     // 进行多次数据拷贝
     for (size_t i = 0; i < numBuffers; ++i) {
-        CopyFromGPUToCPUAsync(gpuBuffers, cpuBuffers, buffers, streams);
+       CopyFromCPUToGPUAsync(gpuBuffers, cpuBuffers, buffers, streams);
     }
 
     for (int i = 0; i < numBuffers; ++i) {
