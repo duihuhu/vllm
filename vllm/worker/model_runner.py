@@ -667,8 +667,10 @@ class ModelRunner:
         if attn_metadata.use_cuda_graph:
             graph_batch_size = input_tokens.shape[0]
             model_executable = self.graph_runners[graph_batch_size]
+            print("choose cuda graph")
         else:
             model_executable = self.model
+            print("choose eager")
             
         if merge_reqs_info:
             execute_model_kwargs = {
@@ -693,6 +695,10 @@ class ModelRunner:
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         
+        if log_file_path:
+            print(f"{log_file_path} in model_runner -> execute_model")
+        else:
+            print("wrong in model_runner -> execute_model")
         hidden_states = model_executable(**execute_model_kwargs)
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
@@ -970,7 +976,8 @@ class CUDAGraphRunner:
             "kv_cache_address": kv_cache_address,
             "slot_mapping": attn_metadata.slot_mapping,
             "context_lens": attn_metadata.context_lens,
-            "block_tables": attn_metadata.block_tables
+            "block_tables": attn_metadata.block_tables,
+            "log_file_path": "/home/jovyan/vllm/benchmarks/logs/wrong.txt"
         }
         self.output_buffers = {"hidden_states": hidden_states}
         return
@@ -999,6 +1006,8 @@ class CUDAGraphRunner:
         self.input_buffers["block_tables"].copy_(attn_metadata.block_tables,
                                                  non_blocking=True)
         self.input_buffers["log_file_path"].copy_(log_file_path, non_blocking=True)
+        if log_file_path:
+            print(f"{log_file_path} in model_runner -> CUDAGrapRunner -> forward")
         # Run the graph.
         self.graph.replay()
         # Return the output tensor.

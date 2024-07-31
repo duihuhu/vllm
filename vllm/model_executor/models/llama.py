@@ -339,14 +339,15 @@ class LlamaModel(nn.Module):
         inputs_embeds: Optional[torch.Tensor] = None,
         log_file_path: Optional[str] = None
     ) -> torch.Tensor:
-        #if inputs_embeds is not None:
-        #    hidden_states = inputs_embeds
-        #else:
-        if log_file_path:
-            print(log_file_path)
+        if inputs_embeds is not None:
+            hidden_states = inputs_embeds
         else:
-            print("wrong")
-        hidden_states = self.get_input_embeddings(input_ids)
+            hidden_states = self.get_input_embeddings(input_ids)
+        if log_file_path:
+            print(f"{log_file_path} in llama -> LlamaModel -> forward")
+        else:
+            print("wrong in LlamaModel forward")
+        
 
         residual = None
         for i in range(len(self.layers)):
@@ -451,10 +452,10 @@ class LlamaForCausalLM(nn.Module):
     ) -> torch.Tensor:
         if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.model(input_ids, positions, kv_caches, None,
-                                    attn_metadata, merge_reqs_info, trans_manager, log_file_path)
+                                    attn_metadata, merge_reqs_info, trans_manager, None, log_file_path)
         else:
             hidden_states = self.model(input_ids, positions, kv_caches, kv_cache_address,
-                                    attn_metadata, merge_reqs_info, trans_manager, log_file_path)
+                                    attn_metadata, merge_reqs_info, trans_manager, None, log_file_path)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,
