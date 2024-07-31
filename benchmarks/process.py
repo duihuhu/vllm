@@ -39,7 +39,7 @@ for lens in total_len:
     rope_m = sum(rope) / len(rope)
     attn_m = sum(attn) / len(attn)
     o_proj_m = sum(o_proj) / len(o_proj)
-    layer_m = sum(layer) / len(layer)
+    layer_m = ffn1_m + ffn2_m + qkv_proj_m + rope_m + attn_m + o_proj_m 
     print(f"----------{lens}-----------")
     print(f"ffn1 ffn2 qkv_proj rope attn o_proj others")
     print(f"{ffn1_m / layer_m:.4f}")
@@ -48,4 +48,4 @@ for lens in total_len:
     print(f"{rope_m / layer_m:.4f}")
     print(f"{attn_m / layer_m:.4f}")
     print(f"{o_proj_m / layer_m:.4f}")
-    print(f"{(layer_m - ffn1_m - ffn1_m - qkv_proj_m - rope_m - attn_m - o_proj_m) / layer_m:.4f}")
+    #print(f"{(layer_m - ffn1_m - ffn1_m - qkv_proj_m - rope_m - attn_m - o_proj_m) / layer_m:.4f}")
