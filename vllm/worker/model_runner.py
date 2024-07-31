@@ -970,8 +970,7 @@ class CUDAGraphRunner:
             "kv_cache_address": kv_cache_address,
             "slot_mapping": attn_metadata.slot_mapping,
             "context_lens": attn_metadata.context_lens,
-            "block_tables": attn_metadata.block_tables,
-            "log_file_path": None
+            "block_tables": attn_metadata.block_tables
         }
         self.output_buffers = {"hidden_states": hidden_states}
         return

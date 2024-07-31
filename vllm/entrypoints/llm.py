@@ -232,8 +232,8 @@ class LLM:
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
-                        with open(file_name, 'a') as file:
-                            file.write(f"request {output.request_id} costs {ed - st}\n")
+                        #with open(file_name, 'a') as file:
+                        #    file.write(f"request {output.request_id} costs {ed - st}\n")
                 #ite = ite + 1
                 '''print(f"Decoded Num is {self.llm_engine.get_num_decoded_requests()}")
                 if self.llm_engine.get_num_decoded_requests() == stall:
