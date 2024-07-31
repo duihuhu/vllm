@@ -73,10 +73,20 @@ class LlamaMLP(nn.Module):
                              "Only silu is supported for now.")
         self.act_fn = SiluAndMul()
 
+        #logs
+        self.log_file_path = "/home/jovyan/vllm/benchmarks/logs/bd_4096.txt"
+
     def forward(self, x):
+        t1 = time.time()
         gate_up, _ = self.gate_up_proj(x)
         x = self.act_fn(gate_up)
+        e1 = time.time()
+        t2 = time.time()
         x, _ = self.down_proj(x)
+        e2 = time.time()
+        with open(self.log_file_path, 'a') as file:
+            file.write(f"ffn1 costs {e1 - t1} seconds\n")
+            file.write(f"ffn2 costs {e2 - t2} seconds\n")
         return x
 
 
@@ -121,6 +131,9 @@ class LlamaAttention(nn.Module):
         self.rope_theta = rope_theta
         self.max_position_embeddings = max_position_embeddings
 
+        #logs
+        self.log_file_path = "/home/jovyan/vllm/benchmarks/logs/bd_4096.txt"
+
         self.qkv_proj = QKVParallelLinear(
             hidden_size,
             self.head_dim,
@@ -160,14 +173,27 @@ class LlamaAttention(nn.Module):
         attn_metadata: AttentionMetadata,
         layer_id: Optional[int] = -1
     ) -> torch.Tensor:
+        t1 = time.time()
         qkv, _ = self.qkv_proj(hidden_states)
+        e1 = time.time()
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
+        t2 = time.time()
         q, k = self.rotary_emb(positions, q, k)
+        e2 = time.time()
+        t3 = time.time()
         if not self.use_agg_block:
             attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)
         else:
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
+        e3 = time.time()
+        t4 = time.time()
         output, _ = self.o_proj(attn_output)
+        e4 = time.time()
+        with open(self.log_file_path, 'a') as file:
+            file.write(f"qkv_proj costs {e1 - t1} seconds\n")
+            file.write(f"rope costs {e2 - t2} seconds\n")
+            file.write(f"attn costs {e3 - t3} seconds\n")
+            file.write(f"o_proj costs {e4 - t4} seconds\n")
         return output
 
 
@@ -215,6 +241,9 @@ class LlamaDecoderLayer(nn.Module):
                                        eps=config.rms_norm_eps)
         self.post_attention_layernorm = RMSNorm(config.hidden_size,
                                                 eps=config.rms_norm_eps)
+        
+        #logs
+        self.log_file_path = "/home/jovyan/vllm/benchmarks/logs/bd_4096.txt"
 
     def forward(
         self,
@@ -226,6 +255,7 @@ class LlamaDecoderLayer(nn.Module):
         residual: Optional[torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
+        t1 = time.time()
         if residual is None:
             residual = hidden_states
             hidden_states = self.input_layernorm(hidden_states)
@@ -254,6 +284,9 @@ class LlamaDecoderLayer(nn.Module):
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
         hidden_states = self.mlp(hidden_states)
+        e1 = time.time()
+        with open(self.log_file_path, 'a') as file:
+            file.write(f"layer costs {e1 - t1} seconds\n")
         return hidden_states, residual
 
 

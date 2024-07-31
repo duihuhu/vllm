@@ -136,9 +136,9 @@ if __name__ == '__main__':
                         choices=['awq', 'gptq', 'squeezellm', None],
                         default=None)
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=512)
+    parser.add_argument('--input-len', type=int, default=4096)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--num-seqs', type=int, default=7)
+    parser.add_argument('--num-seqs', type=int, default=1)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,
@@ -215,7 +215,7 @@ if __name__ == '__main__':
                         help='enable radix caching')
     parser.add_argument('--ratio',
                         type=int,
-                        default=25,
+                        default=0,
                         help='ratio for re-use')
     parser.add_argument('--file-name',
                         type=str,
