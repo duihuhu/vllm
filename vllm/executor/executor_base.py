@@ -39,7 +39,8 @@ class ExecutorBase(ABC):
     
     @abstractmethod
     def swap_decoded_requests(self, blocks_to_swap: Dict[int, int], loc: bool) -> None:
-        raise NotImplementedError
+        pass
+        #raise NotImplementedError
 
     @abstractmethod
     def add_lora(self, lora_request: LoRARequest) -> bool:
