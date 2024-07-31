@@ -8,7 +8,7 @@ bs = [1,2,4,8,16,32,64,128,256,512]
 #bs = [32, 64]
 
 # 基础命令模板
-base_command = "CUDA_VISIBLE_DEVICES=6,7 python3 benchmark_latency.py --input-len {x} --num-seqs{y} --file-name /home/jovyan/vllm/benchmarks/logs/bd_{x}_{y}.txt"
+base_command = "CUDA_VISIBLE_DEVICES=6,7 python3 benchmark_latency.py --input-len {x} --num-seqs {y} --file-name /home/jovyan/vllm/benchmarks/logs/bd_{x}_{y}.txt"
 
 # 遍历所有参数组合并生成命令
 
