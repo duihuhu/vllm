@@ -15,6 +15,7 @@ base_command = "CUDA_VISIBLE_DEVICES=6,7 python3 benchmark_latency.py --input-le
 for ite in iters:
     for input_length in input_lengths:
         #for b in bs:
+        input_length = input_length * 2
         command = base_command.format(x=input_length)
         print(f"Executing: {command}")
         os.system(command)

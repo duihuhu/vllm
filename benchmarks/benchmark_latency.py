@@ -103,8 +103,8 @@ def main(args: argparse.Namespace):
             latency = end_time - start_time
             return latency
 
-    print("Warming up...(Does Nothing)")
-    #run_to_completion(profile_dir=None, file_name=None)
+    print("Warming up...")
+    run_to_completion(profile_dir=None, file_name=None)
 
     if args.profile:
         profile_dir = args.profile_result_dir
@@ -138,8 +138,8 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
     parser.add_argument('--input-len', type=int, default=8)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--num-seqs', type=int, default=2)
-    parser.add_argument('--batch-size', type=int, default=2)
+    parser.add_argument('--num-seqs', type=int, default=1)
+    parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,
                         default=1,
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('--use-beam-search', action='store_true')
     parser.add_argument('--num-iters',
                         type=int,
-                        default=1,
+                        default=3,
                         help='Number of iterations to run.')
     parser.add_argument('--trust-remote-code',
                         action='store_true',
