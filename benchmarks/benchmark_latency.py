@@ -44,7 +44,7 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
     
-    np.random.seed(42)
+    '''np.random.seed(42)
     prefix_length = math.ceil(args.input_len * (args.ratio / 100))
     suffix_length = args.input_len - prefix_length
     prefix = np.random.randint(10000, size = prefix_length).tolist()
@@ -58,12 +58,12 @@ def main(args: argparse.Namespace):
         if i < args.batch_size:
             inputs.append(prefix)
         else:
-            inputs.append(id2)
+            inputs.append(id2)'''
     
-    '''dummy_prompt_token_ids = np.random.randint(10000,
+    dummy_prompt_token_ids = np.random.randint(10000,
                                                size=(args.num_seqs,
                                                      args.input_len))
-    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()'''
+    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
     def run_to_completion(profile_dir: Optional[str] = None,
                           file_name: Optional[str] = None):
         if profile_dir:
@@ -81,7 +81,7 @@ def main(args: argparse.Namespace):
             print(p.key_averages())'''
         else:
             start_time = time.perf_counter()
-            llm.generate(prompt_token_ids = inputs, #dummy_prompt_token_ids,
+            llm.generate(prompt_token_ids = dummy_prompt_token_ids,
                          sampling_params=sampling_params,
                          use_tqdm=False,
                          file_name=file_name,)
