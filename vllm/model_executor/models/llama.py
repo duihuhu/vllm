@@ -73,10 +73,7 @@ class LlamaMLP(nn.Module):
                              "Only silu is supported for now.")
         self.act_fn = SiluAndMul()
 
-        #logs
-        self.log_file_path = "/home/jovyan/vllm/benchmarks/logs/bd_4096.txt"
-
-    def forward(self, x):
+    def forward(self, x, log_file_path: Optional[str] = None):
         t1 = time.time()
         gate_up, _ = self.gate_up_proj(x)
         x = self.act_fn(gate_up)
@@ -84,9 +81,10 @@ class LlamaMLP(nn.Module):
         t2 = time.time()
         x, _ = self.down_proj(x)
         e2 = time.time()
-        with open(self.log_file_path, 'a') as file:
-            file.write(f"ffn1 costs {e1 - t1} seconds\n")
-            file.write(f"ffn2 costs {e2 - t2} seconds\n")
+        if log_file_path:
+            with open(log_file_path, 'a') as file:
+                file.write(f"ffn1 costs {e1 - t1} seconds\n")
+                file.write(f"ffn2 costs {e2 - t2} seconds\n")
         return x
 
 
@@ -131,9 +129,6 @@ class LlamaAttention(nn.Module):
         self.rope_theta = rope_theta
         self.max_position_embeddings = max_position_embeddings
 
-        #logs
-        self.log_file_path = "/home/jovyan/vllm/benchmarks/logs/bd_4096.txt"
-
         self.qkv_proj = QKVParallelLinear(
             hidden_size,
             self.head_dim,
@@ -171,7 +166,8 @@ class LlamaAttention(nn.Module):
         kv_cache: torch.Tensor,
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
-        layer_id: Optional[int] = -1
+        layer_id: Optional[int] = -1,
+        log_file_path: Optional[str] = None
     ) -> torch.Tensor:
         t1 = time.time()
         qkv, _ = self.qkv_proj(hidden_states)
@@ -189,11 +185,12 @@ class LlamaAttention(nn.Module):
         t4 = time.time()
         output, _ = self.o_proj(attn_output)
         e4 = time.time()
-        with open(self.log_file_path, 'a') as file:
-            file.write(f"qkv_proj costs {e1 - t1} seconds\n")
-            file.write(f"rope costs {e2 - t2} seconds\n")
-            file.write(f"attn costs {e3 - t3} seconds\n")
-            file.write(f"o_proj costs {e4 - t4} seconds\n")
+        if log_file_path:
+            with open(log_file_path, 'a') as file:
+                file.write(f"qkv_proj costs {e1 - t1} seconds\n")
+                file.write(f"rope costs {e2 - t2} seconds\n")
+                file.write(f"attn costs {e3 - t3} seconds\n")
+                file.write(f"o_proj costs {e4 - t4} seconds\n")
         return output
 
 
@@ -242,9 +239,6 @@ class LlamaDecoderLayer(nn.Module):
         self.post_attention_layernorm = RMSNorm(config.hidden_size,
                                                 eps=config.rms_norm_eps)
         
-        #logs
-        self.log_file_path = "/home/jovyan/vllm/benchmarks/logs/bd_4096.txt"
-
     def forward(
         self,
         positions: torch.Tensor,
@@ -253,6 +247,7 @@ class LlamaDecoderLayer(nn.Module):
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
         residual: Optional[torch.Tensor],
+        log_file_path: Optional[str] = None
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
         t1 = time.time()
@@ -269,7 +264,8 @@ class LlamaDecoderLayer(nn.Module):
                 kv_cache=kv_cache,
                 kv_cache_address=None,
                 attn_metadata=attn_metadata,
-                layer_id=-1
+                layer_id=-1,
+                log_file_path=log_file_path
             )
         else:
             hidden_states = self.self_attn(
@@ -278,15 +274,17 @@ class LlamaDecoderLayer(nn.Module):
                 kv_cache=kv_cache,
                 kv_cache_address=kv_cache_address,
                 attn_metadata=attn_metadata,
-                layer_id=self.layer_id
+                layer_id=self.layer_id,
+                log_file_path=log_file_path
             )
         # Fully Connected
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
-        hidden_states = self.mlp(hidden_states)
+        hidden_states = self.mlp(hidden_states, log_file_path)
         e1 = time.time()
-        with open(self.log_file_path, 'a') as file:
-            file.write(f"layer costs {e1 - t1} seconds\n")
+        if log_file_path:
+            with open(log_file_path, 'a') as file:
+                file.write(f"layer costs {e1 - t1} seconds\n")
         return hidden_states, residual
 
 
@@ -339,6 +337,7 @@ class LlamaModel(nn.Module):
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         trans_manager: Optional[trans_ops.TransManager] = None,
         inputs_embeds: Optional[torch.Tensor] = None,
+        log_file_path: Optional[str] = None
     ) -> torch.Tensor:
         if inputs_embeds is not None:
             hidden_states = inputs_embeds
@@ -356,6 +355,7 @@ class LlamaModel(nn.Module):
                     None,
                     attn_metadata,
                     residual,
+                    log_file_path
                 )
             else:
                 hidden_states, residual = layer(
@@ -365,6 +365,7 @@ class LlamaModel(nn.Module):
                     kv_cache_address,
                     attn_metadata,
                     residual,
+                    log_file_path
                 )
             if merge_reqs_info:
                 for merge_req_info in merge_reqs_info:
@@ -441,14 +442,15 @@ class LlamaForCausalLM(nn.Module):
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
-        trans_manager: Optional[trans_ops.TransManager] = None
+        trans_manager: Optional[trans_ops.TransManager] = None,
+        log_file_path: Optional[str] = None
     ) -> torch.Tensor:
         if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.model(input_ids, positions, kv_caches, None,
-                                    attn_metadata, merge_reqs_info, trans_manager)
+                                    attn_metadata, merge_reqs_info, trans_manager, log_file_path)
         else:
             hidden_states = self.model(input_ids, positions, kv_caches, kv_cache_address,
-                                    attn_metadata, merge_reqs_info, trans_manager)
+                                    attn_metadata, merge_reqs_info, trans_manager, log_file_path)
         return hidden_states
 
     def compute_logits(self, hidden_states: torch.Tensor,

@@ -266,6 +266,7 @@ class Worker:
         blocks_to_copy: Optional[Dict[int, List[int]]] = None,
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
         wait_for_swap_out: Optional[List[str]] = None,
+        log_file_path: Optional[str] = None
     ) -> Tuple[SamplerOutput, Tuple[List[str], List[str]]]:
         if self.is_driver_worker:
             assert seq_group_metadata_list is not None
@@ -306,13 +307,17 @@ class Worker:
         if num_seq_groups == 0:
             return {}
         if self.deploy_config.enable_layer:
-            output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                    self.gpu_cache, 
-                                                    self.caches_addresses_tensors_gpu,
-                                                    merge_reqs_info, 
-                                                    self.trans_manager)
+            output = self.model_runner.execute_model(seq_group_metadata_list = seq_group_metadata_list,
+                                                    kv_caches = self.gpu_cache, 
+                                                    kv_cache_address = self.caches_addresses_tensors_gpu,
+                                                    merge_reqs_info = merge_reqs_info, 
+                                                    trans_manager = self.trans_manager,
+                                                    log_file_path = log_file_path)
         else:
-            output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache, self.caches_addresses_tensors_gpu)
+            output = self.model_runner.execute_model(seq_group_metadata_list = seq_group_metadata_list, 
+                                                     kv_caches = self.gpu_cache, 
+                                                     kv_cache_address = self.caches_addresses_tensors_gpu, 
+                                                     log_file_path = log_file_path)
             
         swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, swap_finished_req_ids)

@@ -288,20 +288,22 @@ class RayGPUExecutor(ExecutorBase):
                       seq_group_metadata_list: List[SequenceGroupMetadata],
                       blocks_to_swap_in: Dict[int, int],
                       blocks_to_swap_out: Dict[int, int],
-                      blocks_to_copy: Dict[int, List[int]]) -> SamplerOutput:
-        all_outputs = self._run_workers(
-            "execute_model",
-            driver_kwargs={
-                "seq_group_metadata_list": seq_group_metadata_list,
-                "blocks_to_swap_in": blocks_to_swap_in,
-                "blocks_to_swap_out": blocks_to_swap_out,
-                "blocks_to_copy": blocks_to_copy,
-            },
-            use_ray_compiled_dag=USE_RAY_COMPILED_DAG)
+                      blocks_to_copy: Dict[int, List[int]],
+                      file_name: Optional[str] = None) -> SamplerOutput:
+            all_outputs = self._run_workers(
+                "execute_model",
+                driver_kwargs={
+                    "seq_group_metadata_list": seq_group_metadata_list,
+                    "blocks_to_swap_in": blocks_to_swap_in,
+                    "blocks_to_swap_out": blocks_to_swap_out,
+                    "blocks_to_copy": blocks_to_copy,
+                    "log_file_path": file_name
+                },
+                use_ray_compiled_dag=USE_RAY_COMPILED_DAG)
 
-        # Only the driver worker returns the sampling results.
-        output = all_outputs[0]
-        return output
+            # Only the driver worker returns the sampling results.
+            output = all_outputs[0]
+            return output
 
     def add_lora(self, lora_request: LoRARequest) -> bool:
         assert lora_request.lora_int_id > 0, "lora_id must be greater than 0."

@@ -219,7 +219,7 @@ if __name__ == '__main__':
                         help='ratio for re-use')
     parser.add_argument('--file-name',
                         type=str,
-                        default='/home/jovyan/hhy/vllm-hhy/benchmarks/log3.txt',
+                        default='/home/jovyan/vllm/benchmarks/logs/bd_4096.txt',
                         help='where to store the logs')
     args = parser.parse_args()
     main(args)

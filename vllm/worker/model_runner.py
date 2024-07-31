@@ -653,7 +653,8 @@ class ModelRunner:
         kv_caches: List[torch.Tensor],
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
         merge_reqs_info: Optional[List[MergeReqInfo]] = None,
-        trans_manager: Optional[trans_ops.TransManager] = None
+        trans_manager: Optional[trans_ops.TransManager] = None,
+        log_file_path: Optional[str] = None
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_input
@@ -677,7 +678,8 @@ class ModelRunner:
                 "kv_cache_address": kv_cache_address,
                 "attn_metadata": attn_metadata,
                 "merge_reqs_info": merge_reqs_info,
-                "trans_manager": trans_manager
+                "trans_manager": trans_manager,
+                "log_file_path": log_file_path
             }
         else:
             execute_model_kwargs = {
@@ -686,6 +688,7 @@ class ModelRunner:
                 "kv_caches": kv_caches,
                 "kv_cache_address": kv_cache_address,
                 "attn_metadata": attn_metadata,
+                "log_file_path": log_file_path
             }
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
@@ -968,6 +971,7 @@ class CUDAGraphRunner:
             "slot_mapping": attn_metadata.slot_mapping,
             "context_lens": attn_metadata.context_lens,
             "block_tables": attn_metadata.block_tables,
+            "log_file_path": None
         }
         self.output_buffers = {"hidden_states": hidden_states}
         return
@@ -979,6 +983,7 @@ class CUDAGraphRunner:
         kv_caches: List[torch.Tensor],
         kv_cache_address: Tuple[torch.Tensor, torch.Tensor],
         attn_metadata: AttentionMetadata,
+        log_file_path: Optional[str],
         **kwargs,
     ) -> torch.Tensor:
         # KV caches are fixed tensors, so we don't need to copy them.
@@ -994,6 +999,7 @@ class CUDAGraphRunner:
                                                  non_blocking=True)
         self.input_buffers["block_tables"].copy_(attn_metadata.block_tables,
                                                  non_blocking=True)
+        self.input_buffers["log_file_path"].copy_(log_file_path, non_blocking=True)
         # Run the graph.
         self.graph.replay()
         # Return the output tensor.
