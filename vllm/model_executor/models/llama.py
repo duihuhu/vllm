@@ -342,6 +342,10 @@ class LlamaModel(nn.Module):
         #if inputs_embeds is not None:
         #    hidden_states = inputs_embeds
         #else:
+        if log_file_path:
+            print(log_file_path)
+        else:
+            print("wrong")
         hidden_states = self.get_input_embeddings(input_ids)
 
         residual = None
