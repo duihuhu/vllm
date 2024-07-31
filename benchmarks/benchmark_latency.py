@@ -60,7 +60,7 @@ def main(args: argparse.Namespace):
         else:
             inputs.append(id2)'''
     
-    dummy_prompt_token_ids = np.random.randint(10000,
+    dummy_prompt_token_ids = np.random.randint(100,
                                                size=(args.num_seqs,
                                                      args.input_len))
     dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
@@ -135,11 +135,11 @@ if __name__ == '__main__':
                         '-q',
                         choices=['awq', 'gptq', 'squeezellm', None],
                         default=None)
-    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=2)
-    parser.add_argument('--input-len', type=int, default=4096)
+    parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
+    parser.add_argument('--input-len', type=int, default=8)
     parser.add_argument('--output-len', type=int, default=1)
     parser.add_argument('--num-seqs', type=int, default=1)
-    parser.add_argument('--batch-size', type=int, default=1)
+    parser.add_argument('--batch-size', type=int, default=256)
     parser.add_argument('--n',
                         type=int,
                         default=1,

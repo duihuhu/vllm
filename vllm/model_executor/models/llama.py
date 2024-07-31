@@ -171,8 +171,8 @@ class LlamaAttention(nn.Module):
     ) -> torch.Tensor:
         t1 = time.time()
         qkv, _ = self.qkv_proj(hidden_states)
-        e1 = time.time()
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
+        e1 = time.time()
         t2 = time.time()
         q, k = self.rotary_emb(positions, q, k)
         e2 = time.time()
