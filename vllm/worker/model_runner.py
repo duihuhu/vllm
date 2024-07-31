@@ -258,7 +258,7 @@ class ModelRunner:
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
                 
-        print("prompt_lens, subquery_lens", prompt_lens, subquery_lens)
+        #print("prompt_lens, subquery_lens", prompt_lens, subquery_lens)
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)
@@ -667,10 +667,10 @@ class ModelRunner:
         if attn_metadata.use_cuda_graph:
             graph_batch_size = input_tokens.shape[0]
             model_executable = self.graph_runners[graph_batch_size]
-            print("choose cuda graph")
+            #print("choose cuda graph")
         else:
             model_executable = self.model
-            print("choose eager")
+            #print("choose eager")
             
         if merge_reqs_info:
             execute_model_kwargs = {
@@ -695,10 +695,10 @@ class ModelRunner:
         if self.vision_language_config:
             execute_model_kwargs.update({"image_input": multi_modal_input})
         
-        if log_file_path:
-            print(f"{log_file_path} in model_runner -> execute_model")
-        else:
-            print("wrong in model_runner -> execute_model")
+        #if log_file_path:
+        #    print(f"{log_file_path} in model_runner -> execute_model")
+        #else:
+        #    print("wrong in model_runner -> execute_model")
         hidden_states = model_executable(**execute_model_kwargs)
 
         logits = self.model.compute_logits(hidden_states, sampling_metadata)

@@ -290,8 +290,8 @@ class RayGPUExecutor(ExecutorBase):
                       blocks_to_swap_out: Dict[int, int],
                       blocks_to_copy: Dict[int, List[int]],
                       file_name: Optional[str] = None) -> SamplerOutput:
-            if file_name:
-                print(f"{file_name} in ray_gpu_executor -> execute_model")
+            #if file_name:
+            #    print(f"{file_name} in ray_gpu_executor -> execute_model")
             all_outputs = self._run_workers(
                 "execute_model",
                 driver_kwargs={
