@@ -58,6 +58,7 @@ class GPUExecutor(ExecutorBase):
             local_rank=0,
             rank=0,
             distributed_init_method=distributed_init_method,
+            deploy_config=self.deploy_config,
             lora_config=self.lora_config,
             vision_language_config=self.vision_language_config,
             kv_cache_dtype=self.cache_config.cache_dtype,
