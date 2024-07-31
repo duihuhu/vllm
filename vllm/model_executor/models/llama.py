@@ -339,10 +339,10 @@ class LlamaModel(nn.Module):
         inputs_embeds: Optional[torch.Tensor] = None,
         log_file_path: Optional[str] = None
     ) -> torch.Tensor:
-        if inputs_embeds is not None:
-            hidden_states = inputs_embeds
-        else:
-            hidden_states = self.get_input_embeddings(input_ids)
+        #if inputs_embeds is not None:
+        #    hidden_states = inputs_embeds
+        #else:
+        hidden_states = self.get_input_embeddings(input_ids)
 
         residual = None
         for i in range(len(self.layers)):
