@@ -450,6 +450,10 @@ class LlamaForCausalLM(nn.Module):
         trans_manager: Optional[trans_ops.TransManager] = None,
         log_file_path: Optional[str] = None
     ) -> torch.Tensor:
+        if log_file_path:
+            print(f"{log_file_path} -> LlamaForCausalLM")
+        else:
+            print("wrong in LlamaForCausalLM")
         if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.model(input_ids, positions, kv_caches, None,
                                     attn_metadata, merge_reqs_info, trans_manager, None, log_file_path)
