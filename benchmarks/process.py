@@ -14,7 +14,7 @@ for lens in total_len:
     o_proj = []
     layer = []
     #for b in bs:
-    file_name = root_path + dir_path + prefix_path + str(lens) + suffix_path
+    file_name = root_path + prefix_path + str(lens) + suffix_path
     with open(file_name, 'r') as file:
         lines = file.readlines()
         for line in lines:
@@ -39,13 +39,13 @@ for lens in total_len:
     rope_m = sum(rope) / len(rope)
     attn_m = sum(attn) / len(attn)
     o_proj_m = sum(o_proj) / len(o_proj)
-    layer_m = sum(layer) / len(layer)
+    layer_m = ffn1_m + ffn2_m + qkv_proj_m + rope_m + attn_m + o_proj_m
     print(f"----------{lens}-----------")
-    print(f"ffn1 ffn2 qkv_proj rope attn o_proj others")
+    print(f"ffn1 ffn2 qkv_proj rope attn o_proj")
     print(f"{ffn1_m / layer_m:.4f}")
     print(f"{ffn2_m / layer_m:.4f}")
     print(f"{qkv_proj_m / layer_m:.4f}")
     print(f"{rope_m / layer_m:.4f}")
     print(f"{attn_m / layer_m:.4f}")
     print(f"{o_proj_m / layer_m:.4f}")
-    print(f"{(layer_m - ffn1_m - ffn1_m - qkv_proj_m - rope_m - attn_m - o_proj_m) / layer_m:.4f}")
+    #print(f"{(layer_m - ffn1_m - ffn1_m - qkv_proj_m - rope_m - attn_m - o_proj_m) / layer_m:.4f}")
