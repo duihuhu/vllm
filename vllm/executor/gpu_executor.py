@@ -104,16 +104,21 @@ class GPUExecutor(ExecutorBase):
         # if enforce_eager is False.
         self.driver_worker.warm_up_model()
 
+    def swap_decoded_requests(self, blocks_to_swap: Dict[int, int], loc: bool) -> None:
+        pass
+
     def execute_model(self,
                       seq_group_metadata_list: List[SequenceGroupMetadata],
                       blocks_to_swap_in: Dict[int, int],
                       blocks_to_swap_out: Dict[int, int],
-                      blocks_to_copy: Dict[int, List[int]]) -> SamplerOutput:
+                      blocks_to_copy: Dict[int, List[int]],
+                      file_name: Optional[str] = None) -> SamplerOutput:
         output = self.driver_worker.execute_model(
             seq_group_metadata_list=seq_group_metadata_list,
             blocks_to_swap_in=blocks_to_swap_in,
             blocks_to_swap_out=blocks_to_swap_out,
             blocks_to_copy=blocks_to_copy,
+            log_file_path=file_name
         )
         return output
 
