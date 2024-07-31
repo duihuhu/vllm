@@ -304,6 +304,10 @@ class Worker:
         #     return ([[]], swap_finished_req_ids)
         
         # If there is no input, we don't need to execute the model.
+        if log_file_path:
+            print(f"{log_file_path} in Worker -> execute_model")
+        else:
+            print("wrong in Worker -> execute_model")
         if num_seq_groups == 0:
             return {}
         if self.deploy_config.enable_layer:
