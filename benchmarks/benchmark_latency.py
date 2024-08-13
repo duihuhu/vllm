@@ -60,18 +60,19 @@ def main(args: argparse.Namespace):
         else:
             inputs.append(id2)'''
     
-    dummy_prompt_token_ids = []
+    '''dummy_prompt_token_ids = []
     for i in range(args.num_seqs):
         temp = np.full(args.input_len, i, dtype = int).tolist()
         dummy_prompt_token_ids.append(temp)
 
     warmups = []
     for _ in range(args.num_seqs):
-        warmups.append(np.full(args.input_len, 1000, dtype = int).tolist())
-    '''dummy_prompt_token_ids = np.random.randint(100,
+        warmups.append(np.full(args.input_len, 1000, dtype = int).tolist())'''
+
+    dummy_prompt_token_ids = np.random.randint(100,
                                                size=(args.num_seqs,
                                                      args.input_len))
-    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()'''
+    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
     def run_to_completion(
             inputs: List[List[int]],
             profile_dir: Optional[str] = None,
