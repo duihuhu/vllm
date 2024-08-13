@@ -164,23 +164,10 @@ class LlamaAttention(nn.Module):
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
 
-        if log_file_path:
-            start_event = torch.cuda.Event(enable_timing=True)
-            end_event = torch.cuda.Event(enable_timing=True)
-            start_event.record()
-            if not self.use_agg_block:
-                attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)    
-            else:
-                attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
-            end_event.record()
-            torch.cuda.synchronize()
-            with open(log_file_path, 'a') as file:
-                file.write(f"attn costs {start_event.elapsed_time(end_event)}\n")
+        if not self.use_agg_block:
+            attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)    
         else:
-            if not self.use_agg_block:
-                attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)    
-            else:
-                attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
+            attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
 
         output, _ = self.o_proj(attn_output)
 
@@ -332,24 +319,54 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-            if not self.use_agg_block or not kv_cache_address:
-                hidden_states, residual = layer(
-                    positions,
-                    hidden_states,
-                    kv_caches[i],
-                    None,
-                    attn_metadata,
-                    residual,
-                    log_file_path)
+
+            if log_file_path:
+                start_event = torch.cuda.Event(enable_timing=True)
+                end_event = torch.cuda.Event(enable_timing=True)
+
+                start_event.record()
+                if not self.use_agg_block or not kv_cache_address:
+                    hidden_states, residual = layer(
+                        positions,
+                        hidden_states,
+                        kv_caches[i],
+                        None,
+                        attn_metadata,
+                        residual,
+                        log_file_path)
+                else:
+                    hidden_states, residual = layer(
+                        positions,
+                        hidden_states,
+                        kv_caches[i],
+                        kv_cache_address,
+                        attn_metadata,
+                        residual,
+                        log_file_path)
+                end_event.record()
+                torch.cuda.synchronize()
+                with open(log_file_path, 'a') as file:
+                    file.write(f"a layer costs {start_event.elapsed_time(end_event)}\n")
+                    
             else:
-                hidden_states, residual = layer(
-                    positions,
-                    hidden_states,
-                    kv_caches[i],
-                    kv_cache_address,
-                    attn_metadata,
-                    residual,
-                    log_file_path)
+                if not self.use_agg_block or not kv_cache_address:
+                    hidden_states, residual = layer(
+                        positions,
+                        hidden_states,
+                        kv_caches[i],
+                        None,
+                        attn_metadata,
+                        residual,
+                        log_file_path)
+                else:
+                    hidden_states, residual = layer(
+                        positions,
+                        hidden_states,
+                        kv_caches[i],
+                        kv_cache_address,
+                        attn_metadata,
+                        residual,
+                        log_file_path)
             
             if merge_reqs_info:
                 for merge_req_info in merge_reqs_info:

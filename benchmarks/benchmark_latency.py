@@ -68,7 +68,7 @@ def main(args: argparse.Namespace):
     warmups = []
     for _ in range(args.num_seqs):
         warmups.append(np.full(args.input_len, 1000, dtype = int).tolist())'''
-
+    np.random.seed(42)
     dummy_prompt_token_ids = np.random.randint(100,
                                                size=(args.num_seqs,
                                                      args.input_len))
@@ -115,7 +115,7 @@ def main(args: argparse.Namespace):
             return latency
 
     print("Warming up...")
-    #run_to_completion(inputs=warmups, profile_dir=None, file_name=None)
+    run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=None)
 
     '''if args.profile:
         profile_dir = args.profile_result_dir
