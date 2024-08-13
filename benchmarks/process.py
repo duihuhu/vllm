@@ -1,4 +1,19 @@
-root_path = "/home/jovyan/vllm/benchmarks/logs/"
+root_path = "/home/jovyan/vllm/benchmarks/temp_"
+lengths = [128,256,384,512,640,768,896,1024,1152,1280]
+suffix_path = ".txt"
+
+for length in lengths:
+    file_path = root_path + str(length) + suffix_path
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+        datas = []
+        for line in lines:
+            data = float(line.strip().split(' ')[-1])
+            datas.append(data)
+        print(f"----------{length}----------")
+        print(sum(datas) / len(datas))
+
+'''root_path = "/home/jovyan/vllm/benchmarks/logs/"
 dir_path = "log_bd/"
 prefix_path = "bd_"
 suffix_path = ".txt"
@@ -55,4 +70,4 @@ for lens in total_len:
     print(f"{rope_m / layer_m:.4f}")
     print(f"{attn_m / layer_m:.4f}")
     print(f"{o_proj_m / layer_m:.4f}")
-    print(f"{(layer_m - ffn1_m - ffn1_m - qkv_proj_m - rope_m - attn_m - o_proj_m) / layer_m:.4f}")
+    print(f"{(layer_m - ffn1_m - ffn1_m - qkv_proj_m - rope_m - attn_m - o_proj_m) / layer_m:.4f}")'''
