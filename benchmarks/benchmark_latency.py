@@ -2,7 +2,7 @@
 import argparse
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 import math
 
 import numpy as np
@@ -60,12 +60,21 @@ def main(args: argparse.Namespace):
         else:
             inputs.append(id2)'''
     
-    dummy_prompt_token_ids = np.random.randint(100,
+    dummy_prompt_token_ids = []
+    for i in range(args.num_seqs):
+        temp = np.full(args.input_len, i, dtype = int).tolist()
+        dummy_prompt_token_ids.append(temp)
+
+    warmups = []
+    warmups.append(np.full(args.input_len, 100, dtype = int).tolist())
+    '''dummy_prompt_token_ids = np.random.randint(100,
                                                size=(args.num_seqs,
                                                      args.input_len))
-    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
-    def run_to_completion(profile_dir: Optional[str] = None,
-                          file_name: Optional[str] = None):
+    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()'''
+    def run_to_completion(
+            inputs: List[List[int]],
+            profile_dir: Optional[str] = None,
+            file_name: Optional[str] = None):
         if profile_dir:
             '''with torch.profiler.profile(
                     activities=[
@@ -81,7 +90,7 @@ def main(args: argparse.Namespace):
             print(p.key_averages())'''
         else:
             start_time = time.perf_counter()
-            llm.generate(prompt_token_ids = dummy_prompt_token_ids,
+            llm.generate(prompt_token_ids = inputs,
                          sampling_params=sampling_params,
                          use_tqdm=False,
                          file_name=file_name,)
@@ -104,9 +113,9 @@ def main(args: argparse.Namespace):
             return latency
 
     print("Warming up...")
-    run_to_completion(profile_dir=None, file_name=None)
+    run_to_completion(inputs=warmups, profile_dir=None, file_name=None)
 
-    if args.profile:
+    '''if args.profile:
         profile_dir = args.profile_result_dir
         if not profile_dir:
             profile_dir = Path(
@@ -114,12 +123,12 @@ def main(args: argparse.Namespace):
             ) / "vllm_benchmark_result" / f"latency_result_{time.time()}"
         print(f"Profiling (results will be saved to '{profile_dir}')...")
         run_to_completion(profile_dir=profile_dir, file_name=None)
-        return
+        return'''
 
     # Benchmark.
     latencies = []
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
-        latencies.append(run_to_completion(profile_dir=None, file_name=args.file_name))
+        latencies.append(run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=args.file_name))
     print(f'Avg latency: {np.mean(latencies)} seconds')
     #with open(args.file_name, 'a') as file:
     #    file.write(f"{args.input_len} {args.batch_size} {np.mean(latencies)}\n")
@@ -138,7 +147,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
     parser.add_argument('--input-len', type=int, default=896)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--num-seqs', type=int, default=1)
+    parser.add_argument('--num-seqs', type=int, default=3)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,
@@ -147,7 +156,7 @@ if __name__ == '__main__':
     parser.add_argument('--use-beam-search', action='store_true')
     parser.add_argument('--num-iters',
                         type=int,
-                        default=3,
+                        default=1,
                         help='Number of iterations to run.')
     parser.add_argument('--trust-remote-code',
                         action='store_true',

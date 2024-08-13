@@ -164,27 +164,23 @@ class LlamaAttention(nn.Module):
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
 
-        start_event = torch.cuda.Event(enable_timing=True)
-        end_event = torch.cuda.Event(enable_timing=True)
-
-        if not self.use_agg_block:
-            start_event.record()
-
-            attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)
-            
-            end_event.record()
-            torch.cuda.synchronize()
-        else:
-            start_event.record()
-
-            attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
-            
-            end_event.record()
-            torch.cuda.synchronize()
-
         if log_file_path:
-                with open(log_file_path, 'a') as file:
-                    file.write(f"attn costs {start_event.elapsed_time(end_event)}\n")
+            start_event = torch.cuda.Event(enable_timing=True)
+            end_event = torch.cuda.Event(enable_timing=True)
+            start_event.record()
+            if not self.use_agg_block:
+                attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)    
+            else:
+                attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
+            end_event.record()
+            torch.cuda.synchronize()
+            with open(log_file_path, 'a') as file:
+                file.write(f"attn costs {start_event.elapsed_time(end_event)}\n")
+        else:
+            if not self.use_agg_block:
+                attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)    
+            else:
+                attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
 
         output, _ = self.o_proj(attn_output)
 
