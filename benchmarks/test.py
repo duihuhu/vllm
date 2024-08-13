@@ -1,10 +1,10 @@
 import os
 
 # 定义参数范围
-input_lengths = [8,16,32,64,128,256,384,512,640,768,896,1024,1152,1280,1408,1536,1664,1792,1920,2048]
+input_lengths = [8,16,32,64,128,256,384,512,640,768,896,1024,1152,1280,1408,1536,1664,1792,1920,2048,4096]
 
 # 基础命令模板
-base_command = "python3 benchmark_latency.py --input-len {x} --enforce-eager --file-name /home/jovyan/vllm/benchmarks/temp_{x}.txt"
+base_command = "CUDA_VISIBLE_DEVICES=5,6 python3 benchmark_latency.py --input-len {x} --enforce-eager --file-name /home/jovyan/vllm/benchmarks/temp_{x}.txt"
 
 # 遍历所有参数组合并生成命令
 
