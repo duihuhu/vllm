@@ -224,9 +224,9 @@ class LLM:
         #ite = 0
         while self.llm_engine.has_unfinished_requests():
             if file_name:
-                st = time.time()
+                #st = time.time()
                 step_outputs = self.llm_engine.step(file_name)
-                ed = time.time()
+                #ed = time.time()
                 for output in step_outputs:
                     if output.finished:
                         outputs.append(output)

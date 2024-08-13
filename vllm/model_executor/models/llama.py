@@ -73,18 +73,10 @@ class LlamaMLP(nn.Module):
                              "Only silu is supported for now.")
         self.act_fn = SiluAndMul()
 
-    def forward(self, x, log_file_path: Optional[str] = None):
-        t1 = time.time()
+    def forward(self, x):
         gate_up, _ = self.gate_up_proj(x)
         x = self.act_fn(gate_up)
-        e1 = time.time()
-        t2 = time.time()
         x, _ = self.down_proj(x)
-        e2 = time.time()
-        if log_file_path:
-            with open(log_file_path, 'a') as file:
-                file.write(f"ffn1 costs {e1 - t1} seconds\n")
-                file.write(f"ffn2 costs {e2 - t2} seconds\n")
         return x
 
 
@@ -166,31 +158,15 @@ class LlamaAttention(nn.Module):
         kv_cache: torch.Tensor,
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
-        layer_id: Optional[int] = -1,
-        log_file_path: Optional[str] = None
-    ) -> torch.Tensor:
-        t1 = time.time()
+        layer_id: Optional[int] = -1) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
-        e1 = time.time()
-        t2 = time.time()
         q, k = self.rotary_emb(positions, q, k)
-        e2 = time.time()
-        t3 = time.time()
         if not self.use_agg_block:
             attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)
         else:
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
-        e3 = time.time()
-        t4 = time.time()
         output, _ = self.o_proj(attn_output)
-        e4 = time.time()
-        if log_file_path:
-            with open(log_file_path, 'a') as file:
-                file.write(f"qkv_proj costs {e1 - t1} seconds\n")
-                file.write(f"rope costs {e2 - t2} seconds\n")
-                file.write(f"attn costs {e3 - t3} seconds\n")
-                file.write(f"o_proj costs {e4 - t4} seconds\n")
         return output
 
 
@@ -246,9 +222,7 @@ class LlamaDecoderLayer(nn.Module):
         kv_cache: torch.Tensor,
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
-        residual: Optional[torch.Tensor],
-        log_file_path: Optional[str] = None
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        residual: Optional[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
         t1 = time.time()
         if residual is None:
@@ -264,9 +238,7 @@ class LlamaDecoderLayer(nn.Module):
                 kv_cache=kv_cache,
                 kv_cache_address=None,
                 attn_metadata=attn_metadata,
-                layer_id=-1,
-                log_file_path=log_file_path
-            )
+                layer_id=-1)
         else:
             hidden_states = self.self_attn(
                 positions=positions,
@@ -274,17 +246,11 @@ class LlamaDecoderLayer(nn.Module):
                 kv_cache=kv_cache,
                 kv_cache_address=kv_cache_address,
                 attn_metadata=attn_metadata,
-                layer_id=self.layer_id,
-                log_file_path=log_file_path
-            )
+                layer_id=self.layer_id)
         # Fully Connected
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
-        hidden_states = self.mlp(hidden_states, log_file_path)
-        e1 = time.time()
-        if log_file_path:
-            with open(log_file_path, 'a') as file:
-                file.write(f"layer costs {e1 - t1} seconds\n")
+        hidden_states = self.mlp(hidden_states)
         return hidden_states, residual
 
 
@@ -343,15 +309,16 @@ class LlamaModel(nn.Module):
             hidden_states = inputs_embeds
         else:
             hidden_states = self.get_input_embeddings(input_ids)
-        #if log_file_path:
-        #    print(f"{log_file_path} in llama -> LlamaModel -> forward")
-        #else:
-        #    print("wrong in LlamaModel forward")
         
-
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
+
+            start_event = torch.cuda.Event(enable_timing=True)
+            end_event = torch.cuda.Event(enable_timing=True)
+
+            start_event.record()
+
             if not self.use_agg_block or not kv_cache_address:
                 hidden_states, residual = layer(
                     positions,
@@ -359,9 +326,7 @@ class LlamaModel(nn.Module):
                     kv_caches[i],
                     None,
                     attn_metadata,
-                    residual,
-                    log_file_path
-                )
+                    residual)
             else:
                 hidden_states, residual = layer(
                     positions,
@@ -369,9 +334,14 @@ class LlamaModel(nn.Module):
                     kv_caches[i],
                     kv_cache_address,
                     attn_metadata,
-                    residual,
-                    log_file_path
-                )
+                    residual)
+            
+            end_event.record()
+            torch.cuda.synchronize()
+            if log_file_path:
+                with open(log_file_path, 'a') as file:
+                    file.write(f"layer {i} costs {start_event.elapsed_time(end_event)}\n")
+
             if merge_reqs_info:
                 for merge_req_info in merge_reqs_info:
                     trans_manager.add_tasks([trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, merge_req_info.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize()])
