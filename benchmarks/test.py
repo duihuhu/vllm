@@ -1,7 +1,7 @@
 import os
 
 # 定义参数范围
-input_lengths = [8,16,32,64,128,192,256,384,512,640,768,896,1024,1280,1536,1792,2048]
+input_lengths = [8,16,32,64,128,192,256,320,384,512,640,768,896,1024,1280,1536,1792,2048]
 
 # 基础命令模板
 base_command = "python3 benchmark_latency.py --input-len {x} --file-name /home/jovyan/vllm/benchmarks/temp_{x}.txt"

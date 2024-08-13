@@ -1,5 +1,5 @@
 root_path = "/home/jovyan/vllm/benchmarks/temp_"
-lengths = [8,16,32,64,128,192,256,384,512,640,768,896,1024,1280,1536,1792,2048]
+lengths = [8,16,32,64,128,192,256,320,384,512,640,768,896,1024,1280,1536,1792,2048]
 suffix_path = ".txt"
 
 for length in lengths:
