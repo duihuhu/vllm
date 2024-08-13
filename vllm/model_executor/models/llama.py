@@ -158,15 +158,36 @@ class LlamaAttention(nn.Module):
         kv_cache: torch.Tensor,
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
-        layer_id: Optional[int] = -1) -> torch.Tensor:
+        layer_id: Optional[int] = -1,
+        log_file_path: Optional[str] = None) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
+
+        start_event = torch.cuda.Event(enable_timing=True)
+        end_event = torch.cuda.Event(enable_timing=True)
+
         if not self.use_agg_block:
+            start_event.record()
+
             attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1)
+            
+            end_event.record()
+            torch.cuda.synchronize()
         else:
+            start_event.record()
+
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id)
+            
+            end_event.record()
+            torch.cuda.synchronize()
+
+        if log_file_path:
+                with open(log_file_path, 'a') as file:
+                    file.write(f"attn costs {start_event.elapsed_time(end_event)}\n")
+
         output, _ = self.o_proj(attn_output)
+
         return output
 
 
@@ -222,7 +243,8 @@ class LlamaDecoderLayer(nn.Module):
         kv_cache: torch.Tensor,
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
-        residual: Optional[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+        residual: Optional[torch.Tensor],
+        log_file_path: Optional[str] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
         if residual is None:
             residual = hidden_states
@@ -237,7 +259,8 @@ class LlamaDecoderLayer(nn.Module):
                 kv_cache=kv_cache,
                 kv_cache_address=None,
                 attn_metadata=attn_metadata,
-                layer_id=-1)
+                layer_id=-1,
+                log_file_path=log_file_path)
         else:
             hidden_states = self.self_attn(
                 positions=positions,
@@ -245,7 +268,8 @@ class LlamaDecoderLayer(nn.Module):
                 kv_cache=kv_cache,
                 kv_cache_address=kv_cache_address,
                 attn_metadata=attn_metadata,
-                layer_id=self.layer_id)
+                layer_id=self.layer_id,
+                log_file_path=log_file_path)
         # Fully Connected
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
@@ -312,41 +336,25 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-
-            start_event = torch.cuda.Event(enable_timing=True)
-            end_event = torch.cuda.Event(enable_timing=True)
-
             if not self.use_agg_block or not kv_cache_address:
-                start_event.record()
-
                 hidden_states, residual = layer(
                     positions,
                     hidden_states,
                     kv_caches[i],
                     None,
                     attn_metadata,
-                    residual)
-                
-                end_event.record()
-                torch.cuda.synchronize()
+                    residual,
+                    log_file_path)
             else:
-                start_event.record()
-
                 hidden_states, residual = layer(
                     positions,
                     hidden_states,
                     kv_caches[i],
                     kv_cache_address,
                     attn_metadata,
-                    residual)
-                
-                end_event.record()
-                torch.cuda.synchronize()
+                    residual,
+                    log_file_path)
             
-            if log_file_path:
-                with open(log_file_path, 'a') as file:
-                    file.write(f"layer {i} costs {start_event.elapsed_time(end_event)}\n")
-
             if merge_reqs_info:
                 for merge_req_info in merge_reqs_info:
                     trans_manager.add_tasks([trans_ops.TransferTask(trans_ops.TransferTaskMeta(merge_req_info.channel, merge_req_info.merage_request_id), merge_req_info.blocks, merge_req_info.opposite_ranks, trans_ops.TaskType.TRANSFER_SEND_LAYER_BLOCKS, i, i==(len(self.layers)-1)).serialize()])
