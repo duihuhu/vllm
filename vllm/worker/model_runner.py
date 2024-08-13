@@ -258,7 +258,7 @@ class ModelRunner:
                 slot = block_number * self.block_size + block_offset
                 slot_mapping.append(slot)
                 
-        print("prompt_lens, subquery_lens", prompt_lens, subquery_lens)
+        #print("prompt_lens, subquery_lens", prompt_lens, subquery_lens)
         max_subquery_len = max(subquery_lens)
         max_prompt_len = max(prompt_lens)
         num_prompt_tokens = len(input_tokens)

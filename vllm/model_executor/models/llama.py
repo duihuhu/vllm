@@ -224,7 +224,6 @@ class LlamaDecoderLayer(nn.Module):
         attn_metadata: AttentionMetadata,
         residual: Optional[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
-        t1 = time.time()
         if residual is None:
             residual = hidden_states
             hidden_states = self.input_layernorm(hidden_states)
@@ -317,9 +316,9 @@ class LlamaModel(nn.Module):
             start_event = torch.cuda.Event(enable_timing=True)
             end_event = torch.cuda.Event(enable_timing=True)
 
-            start_event.record()
-
             if not self.use_agg_block or not kv_cache_address:
+                start_event.record()
+
                 hidden_states, residual = layer(
                     positions,
                     hidden_states,
@@ -327,7 +326,12 @@ class LlamaModel(nn.Module):
                     None,
                     attn_metadata,
                     residual)
+                
+                end_event.record()
+                torch.cuda.synchronize()
             else:
+                start_event.record()
+
                 hidden_states, residual = layer(
                     positions,
                     hidden_states,
@@ -335,9 +339,10 @@ class LlamaModel(nn.Module):
                     kv_cache_address,
                     attn_metadata,
                     residual)
+                
+                end_event.record()
+                torch.cuda.synchronize()
             
-            end_event.record()
-            torch.cuda.synchronize()
             if log_file_path:
                 with open(log_file_path, 'a') as file:
                     file.write(f"layer {i} costs {start_event.elapsed_time(end_event)}\n")
