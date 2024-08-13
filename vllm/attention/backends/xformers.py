@@ -251,6 +251,8 @@ class XFormersImpl(AttentionImpl):
         if attn_metadata.is_prompt:
             # Prompt run.
             if kv_cache is None or attn_metadata.block_tables.numel() == 0:
+                with open("/home/jovyan/vllm/benchmarks/help.txt",'a') as file:
+                    file.write(f"xformers kernel\n")
                 # normal attention.
                 # block tables are empty if the prompt does not have a cached
                 # prefix.
@@ -302,6 +304,9 @@ class XFormersImpl(AttentionImpl):
                 # prefix-enabled attention
 
                 #TODO for hhy
+                with open("/home/jovyan/vllm/benchmarks/help.txt",'a') as file:
+                    file.write(f"prefix kernel\n")
+
                 if layer_id == -1:
                     output = PagedAttention.forward_prefix(
                         -1,-1,-1,-1,-1,
