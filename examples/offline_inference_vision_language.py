@@ -27,7 +27,7 @@ def run_llava(question, tp):
 
 
 # LLaVA-1.6/LLaVA-NeXT
-def run_llava_next(question):
+def run_llava_next(question,tp):
 
     prompt = f"[INST] <image>\n{question} [/INST]"
     llm = LLM(model="/home/jovyan/models/llava-v1.6-vicuna-7b-hf/models/snapshots/3677a7cf04d58d165580e6778abf768de1e6d4f4")
