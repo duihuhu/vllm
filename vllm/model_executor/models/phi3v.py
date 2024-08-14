@@ -569,6 +569,7 @@ class Phi3VForCausalLM(nn.Module, SupportsMultiModal):
             import time
             t1 = time.time()
             vision_embeddings = self._process_image_input(image_input)
+            torch.cuda.synchronize()
             t2 = time.time()
             print("vision_embeddings ", t2-t1, image_input["image_sizes"])
             inputs_embeds = self.model.get_input_embeddings(input_ids)

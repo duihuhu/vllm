@@ -126,7 +126,7 @@ def run_minicpmv(question):
 # InternVL
 def run_internvl(question):
     model_name = "OpenGVLab/InternVL2-2B"
-
+    model_name = "/home/jovyan/models/InternVL2-2B/models/snapshots/422ad7c6335917bfb514958233955512338485a6"
     llm = LLM(
         model=model_name,
         trust_remote_code=True,

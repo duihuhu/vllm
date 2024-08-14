@@ -567,7 +567,12 @@ class LlavaNextForConditionalGeneration(nn.Module, SupportsMultiModal):
         image_input = self._parse_and_validate_image_input(**kwargs)
 
         if image_input is not None:
+            import time
+            t1 = time.time()
             vision_embeddings = self._process_image_input(image_input)
+            torch.cuda.synchronize()
+            t2 = time.time()
+            print("vision_embeddings ", t2-t1)
             inputs_embeds = self.language_model.model.get_input_embeddings(
                 input_ids)
 
