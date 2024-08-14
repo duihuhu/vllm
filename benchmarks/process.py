@@ -5,7 +5,7 @@ suffix_path = ".txt"
 lengths = [8,16,32]
 i = 64
 while True:
-    if i >= 2048:
+    if i > 2048:
         break
     else:
         lengths.append(i)
