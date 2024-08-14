@@ -572,7 +572,7 @@ class LlavaNextForConditionalGeneration(nn.Module, SupportsMultiModal):
             vision_embeddings = self._process_image_input(image_input)
             torch.cuda.synchronize()
             t2 = time.time()
-            print("vision_embeddings ", t2-t1)
+            print("vision_embeddings time ", t2-t1)
             inputs_embeds = self.language_model.model.get_input_embeddings(
                 input_ids)
 
@@ -583,14 +583,16 @@ class LlavaNextForConditionalGeneration(nn.Module, SupportsMultiModal):
             input_ids = None
         else:
             inputs_embeds = None
-
+        t3 = time.time()
         hidden_states = self.language_model.model(input_ids,
                                                   positions,
                                                   kv_caches,
                                                   attn_metadata,
                                                   None,
                                                   inputs_embeds=inputs_embeds)
-
+        torch.cuda.synchronize()
+        t4 = time.time()
+        print("language_model time  ", t4-t3)
         return hidden_states
 
     def compute_logits(

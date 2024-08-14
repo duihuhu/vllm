@@ -579,14 +579,17 @@ class Phi3VForCausalLM(nn.Module, SupportsMultiModal):
             input_ids = None
         else:
             inputs_embeds = None
-
+            
+        t3 = time.time()
         hidden_states = self.model(input_ids,
                                    positions,
                                    kv_caches,
                                    attn_metadata,
                                    intermediate_tensors,
                                    inputs_embeds=inputs_embeds)
-
+        torch.cuda.synchronize()
+        t4 = time.time()
+        print("language_model time  ", t4-t3)
         return hidden_states
 
     def compute_logits(
