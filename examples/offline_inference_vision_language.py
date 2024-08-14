@@ -17,7 +17,7 @@ question = "What is the content of this image?"
 
 
 # LLaVA-1.5
-def run_llava(question):
+def run_llava(question, tp):
 
     prompt = f"USER: <image>\n{question}\nASSISTANT:"
 
