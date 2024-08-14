@@ -58,7 +58,8 @@ def run_phi3v(question, tp):
         model="/home/jovyan/models/Phi-3-vision-128k-instruct/models/snapshots/6065b7a1a412feff7ac023149f65358b71334984",
         trust_remote_code=True,
         max_num_seqs=5,
-        tensor_parallel_size=tp
+        tensor_parallel_size=tp,
+        enforce_eager=True
     )
     stop_token_ids = None
     return llm, prompt, stop_token_ids

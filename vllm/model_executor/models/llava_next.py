@@ -583,6 +583,7 @@ class LlavaNextForConditionalGeneration(nn.Module, SupportsMultiModal):
             input_ids = None
         else:
             inputs_embeds = None
+        import time
         t3 = time.time()
         hidden_states = self.language_model.model(input_ids,
                                                   positions,
