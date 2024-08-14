@@ -10,10 +10,10 @@ while True:
     else:
         input_lengths.append(i)
         i += 64
-tps = [1,2,4]
+tps = [2,4]
 
 # 基础命令模板
-base_command = "CUDA_VISIBLE_DEVICES=1,2,3,4 python3 benchmark_latency.py --input-len {x} --file-name /home/jovyan/vllm/benchmarks/tp_{y}/temp_{x}.txt"
+base_command = "CUDA_VISIBLE_DEVICES=1,2,3,4 python3 benchmark_latency.py --input-len {x} --tensor-parallel-size {y} --file-name /home/jovyan/vllm/benchmarks/tp_{y}/temp_{x}.txt"
 
 # 遍历所有参数组合并生成命令
 for tp in tps:

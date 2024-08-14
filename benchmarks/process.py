@@ -10,7 +10,7 @@ while True:
     else:
         lengths.append(i)
         i += 64
-tps = [1,2,4]
+tps = [2,4]
 for tp in tps:
     print(f"----------tp{tp}----------\n")
     for length in lengths:
