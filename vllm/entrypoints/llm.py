@@ -335,8 +335,11 @@ class LLM:
             lora_request=lora_request,
             prompt_adapter_request=prompt_adapter_request,
             guided_options=guided_options_request)
-
+        import time
+        t1 = time.time()
         outputs = self._run_engine(use_tqdm=use_tqdm)
+        t2 = time.time()
+        print("_run_engine time ", t2-t1)
         return LLMEngine.validate_outputs(outputs, RequestOutput)
 
     @overload  # LEGACY: single (prompt + optional token ids)
