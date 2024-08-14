@@ -45,7 +45,7 @@ def run_fuyu(question):
 
 
 # Phi-3-Vision
-def run_phi3v(question):
+def run_phi3v(question, tp):
 
     prompt = f"<|user|>\n<|image_1|>\n{question}<|end|>\n<|assistant|>\n"  # noqa: E501
     # Note: The default setting of max_num_seqs (256) and
@@ -57,7 +57,8 @@ def run_phi3v(question):
     llm = LLM(
         model="microsoft/Phi-3-vision-128k-instruct",
         trust_remote_code=True,
-        max_num_seqs=5,
+        # max_num_seqs=5,
+        tensor_parallel_size=tp
     )
     stop_token_ids = None
     return llm, prompt, stop_token_ids
@@ -177,7 +178,7 @@ def main(args):
     if model not in model_example_map:
         raise ValueError(f"Model type {model} is not supported.")
 
-    llm, prompt, stop_token_ids = model_example_map[model](question)
+    llm, prompt, stop_token_ids = model_example_map[model](question, args.tp)
 
     # We set temperature to 0.2 so that outputs can be different
     # even when all prompts are identical when running batch inference.
@@ -226,5 +227,10 @@ if __name__ == "__main__":
                         default=1,
                         help='Number of prompts to run.')
 
+    parser.add_argument('--tp',
+                        type=int,
+                        default=1,
+                        help='model tp.')
+    
     args = parser.parse_args()
     main(args)
