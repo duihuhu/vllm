@@ -1,14 +1,22 @@
 import os
 
 # 定义参数范围
-input_lengths = [8,16,32,64,128,192,256,320,384,512,640,768,896,1024,1280,1536,1792,2048]
+input_lengths = [8,16,32]
+i = 64
+while True:
+    if i >= 2048:
+        break
+    else:
+        input_lengths.append(i)
+        i += 64
+tps = [1,2,4]
 
 # 基础命令模板
-base_command = "python3 benchmark_latency.py --input-len {x} --file-name /home/jovyan/vllm/benchmarks/temp_{x}.txt"
+base_command = "python3 benchmark_latency.py --input-len {x} --file-name /home/jovyan/vllm/benchmarks/tp_{y}/temp_{x}.txt"
 
 # 遍历所有参数组合并生成命令
-
-for input_length in input_lengths:
-    command = base_command.format(x=input_length)
-    print(f"Executing: {command}")
-    os.system(command)
+for tp in tps:
+    for input_length in input_lengths:
+        command = base_command.format(x=input_length, y=tp)
+        print(f"Executing: {command}")
+        os.system(command)

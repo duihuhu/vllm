@@ -319,11 +319,9 @@ class LlamaModel(nn.Module):
         residual = None
         for i in range(len(self.layers)):
             layer = self.layers[i]
-
             if log_file_path:
                 start_event = torch.cuda.Event(enable_timing=True)
                 end_event = torch.cuda.Event(enable_timing=True)
-
                 start_event.record()
                 if not self.use_agg_block or not kv_cache_address:
                     hidden_states, residual = layer(
@@ -347,7 +345,6 @@ class LlamaModel(nn.Module):
                 torch.cuda.synchronize()
                 with open(log_file_path, 'a') as file:
                     file.write(f"a layer costs {start_event.elapsed_time(end_event)}\n")
-                    
             else:
                 if not self.use_agg_block or not kv_cache_address:
                     hidden_states, residual = layer(

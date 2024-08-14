@@ -149,7 +149,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
     parser.add_argument('--input-len', type=int, default=896)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--num-seqs', type=int, default=20)
+    parser.add_argument('--num-seqs', type=int, default=30)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,

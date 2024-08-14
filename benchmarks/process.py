@@ -1,17 +1,28 @@
-root_path = "/home/jovyan/vllm/benchmarks/temp_"
-lengths = [8,16,32,64,128,192,256,320,384,512,640,768,896,1024,1280,1536,1792,2048]
+root_path = "/home/jovyan/vllm/benchmarks/tp_"
+middle_path = "/temp_"
 suffix_path = ".txt"
 
-for length in lengths:
-    file_path = root_path + str(length) + suffix_path
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-        datas = []
-        for line in lines:
-            data = float(line.strip().split(' ')[-1])
-            datas.append(data)
-        print(f"----------{length}----------")
-        print(sum(datas) / len(datas))
+lengths = [8,16,32]
+i = 64
+while True:
+    if i >= 2048:
+        break
+    else:
+        lengths.append(i)
+        i += 64
+tps = [1,2,4]
+for tp in tps:
+    print(f"----------tp{tp}----------\n")
+    for length in lengths:
+        file_path = root_path + str(tp) + middle_path + str(length) + suffix_path
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            datas = []
+            for line in lines:
+                data = float(line.strip().split(' ')[-1])
+                datas.append(data)
+            print(f"----------{length}----------")
+            print(sum(datas) / len(datas))
 
 '''root_path = "/home/jovyan/vllm/benchmarks/logs/"
 dir_path = "log_bd/"
