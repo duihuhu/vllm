@@ -20,14 +20,24 @@ base_command = "nsys profile \
     --python-backtrace=cuda \
     python3 profile_xformers.py --num-tokens {x}"
 
-base_command2 = "CUDA_VISIBLE_DEVICES=1,2,3,4 \
-    ncu --metrics launch__block_count,launch__thread_count,duration,sm__inst_executed.sum,sm__warps_active.avg.pct_of_peak_sustained_active,dram__bytes_read.sum,dram__bytes_write.sum,l2__bytes_read.sum,l2__bytes_write.sum,dram__throughput.avg.pct_of_peak_sustained_elapsed \
-    --export temp \
-    python3 /home/jovyan/vllm/benchmarks/benchmark_latency.py --input-len 4096 --tensor-parallel-size 1"
+base_command2 = "CUDA_VISIBLE_DEVICES=5,6,7,8 \
+    ncu --max-waves 5 \
+    --metrics launch__thread_count,duration,sm__inst_executed.sum,sm__warps_active.avg.pct_of_peak_sustained_active,smsp__sass_thread_inst_executed_op_hadd_pred_on.sum,smsp__sass_thread_inst_executed_op_hmul_pred_on.sum,smsp__sass_thread_inst_executed_op_hfma_pred_on.sum,smsp__sass_thread_inst_executed_ops_hadd_hmul_hfma_pred_on.avg.pct_of_peak_sustained_elapsed,dram__sectors_read.sum,dram__sectors_write.sum,dram__throughput.avg.pct_of_peak_sustained_elapsed \
+    --call-stack \
+    --nvtx \
+    --export temp10 \
+    python3 /home/jovyan/vllm/benchmarks/benchmark_latency.py \
+    --model /home/jovyan/models/Llama-2-13b-hf/ \
+    --tensor-parallel-size {x} \
+    --input-len {y} \
+    --output-len 1 \
+    --num-seqs 1 \
+    --batch-size 1 \
+    --num-iters 1"
 
 base_command3 = "ncu -i temp.ncu-rep --page details --csv --log-file temp.csv"
 
 for length in lengths:
-    command = base_command.format(x = length)
+    command = base_command2.format(x = 1, y = length)
     os.system(command)
     time.sleep(3)

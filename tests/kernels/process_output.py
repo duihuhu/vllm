@@ -5,7 +5,7 @@ df = pd.read_csv(file_path, header = 0)
 kernels = set()
 datas = {}
 
-for row in df:
+for _, row in df.iterrows():
     if row['Kernel Name'] in kernels:
         continue
     else:
