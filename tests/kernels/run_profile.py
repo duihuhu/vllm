@@ -21,8 +21,8 @@ base_command = "nsys profile \
     python3 profile_xformers.py --num-tokens {x}"
 
 base_command2 = "CUDA_VISIBLE_DEVICES=7,8 \
-    ncu --metrics launch__thread_count,duration,sm__warps_active.avg.pct_of_peak_sustained_active \
-    --export thread_duration_sm_{x}_{y} \
+    ncu --metrics smsp__sass_thread_inst_executed_op_fp16_pred_on.sum,smsp__sass_thread_inst_executed_op_fp32_pred_on.sum \
+    --export total_fp16_fp32_{x}_{y} \
     python3 /home/jovyan/vllm/benchmarks/benchmark_latency.py \
     --model /home/jovyan/models/Llama-2-13b-hf/ \
     --tensor-parallel-size {x} \
