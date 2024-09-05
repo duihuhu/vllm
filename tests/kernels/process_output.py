@@ -21,12 +21,10 @@ for length in lengths:
     os.system(command)
 
 for length in lengths:
-    file_path = file_path_1 + str(length) + file_path_2
-
+    file_path = file_path_1 + str(length) + file_path_3
     df = pd.read_csv(file_path)
     for index, row in df[::-1].iterrows():
         if int(row['ID']) >= 1305 and int(row['ID']) <= 1314:
             print(f"Function Name: {row['Function Name']}")
             print(f"Grid Size: {row['Grid Size']}")
             print(f"Block Size: {row['Block Size']}")
-
