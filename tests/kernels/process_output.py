@@ -1,13 +1,32 @@
 import pandas as pd
+import os
 
-file_path = "/home/jovyan/vllm/tests/kernels/temp.csv"
-df = pd.read_csv(file_path, header = 0)
-kernels = set()
-datas = {}
-
-for _, row in df.iterrows():
-    if row['Kernel Name'] in kernels:
-        continue
+file_path_1 = "thread_duration_sm_1_"
+file_path_2 = ".ncu-rep"
+file_path_3 = ".csv"
+lengths = [8,16,32]
+i = 64
+while True:
+    if i > 2048:
+        break
     else:
-        kernels.add(row['Kernel Name'])
-        print(f"{row['Block Size', 'Grid Size']}\n")
+        lengths.append(i)
+        i += 64
+
+for length in lengths:
+    file_path_in = file_path_1 + str(length) + file_path_2
+    file_path_out = file_path_1 + str(length) + file_path_3
+    base_command = "ncu --import {x} --csv --output {y}"
+    command = base_command.format(x = file_path_in, y = file_path_out)
+    os.system(command)
+
+for length in lengths:
+    file_path = file_path_1 + str(length) + file_path_2
+
+    df = pd.read_csv(file_path)
+    for index, row in df[::-1].iterrows():
+        if int(row['ID']) >= 1305 and int(row['ID']) <= 1314:
+            print(f"Function Name: {row['Function Name']}")
+            print(f"Grid Size: {row['Grid Size']}")
+            print(f"Block Size: {row['Block Size']}")
+
