@@ -160,7 +160,20 @@ class LlamaAttention(nn.Module):
         attn_metadata: AttentionMetadata,
         layer_id: Optional[int] = -1,
         log_file_path: Optional[str] = None) -> torch.Tensor:
-        qkv, _ = self.qkv_proj(hidden_states)
+        if log_file_path:
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
+
+            start.record()
+            qkv, _ = self.qkv_proj(hidden_states)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"qkv proj costs {start.elapsed_time(end)}\n")
+        else:
+            qkv, _ = self.qkv_proj(hidden_states)
+        
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         q, k = self.rotary_emb(positions, q, k)
 
@@ -229,30 +242,12 @@ class LlamaDecoderLayer(nn.Module):
         residual: Optional[torch.Tensor],
         log_file_path: Optional[str] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
-        if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            if residual is None:
-                residual = hidden_states
-                hidden_states = self.input_layernorm(hidden_states)
-            else:
-                hidden_states, residual = self.input_layernorm(
-                    hidden_states, residual)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"post rmsnorm attn costs {start.elapsed_time(end)}\n")
+        if residual is None:
+            residual = hidden_states
+            hidden_states = self.input_layernorm(hidden_states)
         else:
-            if residual is None:
-                residual = hidden_states
-                hidden_states = self.input_layernorm(hidden_states)
-            else:
-                hidden_states, residual = self.input_layernorm(
-                    hidden_states, residual)
-        
+            hidden_states, residual = self.input_layernorm(
+                hidden_states, residual)
         if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.self_attn(
                 positions=positions,
