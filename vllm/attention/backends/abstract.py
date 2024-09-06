@@ -112,6 +112,7 @@ class AttentionImpl(ABC):
         kv_cache: torch.Tensor,
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
-        layer_id: Optional[int] = -1
+        layer_id: Optional[int] = -1,
+        log_file_path: Optional[str] = None
     ) -> torch.Tensor:
         raise NotImplementedError

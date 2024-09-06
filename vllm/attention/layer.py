@@ -45,6 +45,7 @@ class Attention(nn.Module):
         kv_cache: Optional[torch.Tensor],
         kv_cache_address: Optional[Tuple[torch.Tensor, torch.Tensor]],
         attn_metadata: AttentionMetadata,
-        layer_id: Optional[int] = -1
+        layer_id: Optional[int] = -1,
+        log_file_path: Optional[str] = None
     ) -> torch.Tensor:
-        return self.impl.forward(query, key, value, kv_cache, kv_cache_address, attn_metadata, layer_id)
+        return self.impl.forward(query, key, value, kv_cache, kv_cache_address, attn_metadata, layer_id, log_file_path)
