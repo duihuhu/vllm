@@ -72,26 +72,11 @@ class LlamaMLP(nn.Module):
                              "Only silu is supported for now.")
         self.act_fn = SiluAndMul()
 
-    def forward(self, x, log_file_path: Optional[str]):
+    def forward(self, x):        
         gate_up, _ = self.gate_up_proj(x)
         x = self.act_fn(gate_up)
-        
-        if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            x, _ = self.down_proj(x)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"ffn2 costs {start.elapsed_time(end)}\n")
-        else:
-            x, _ = self.down_proj(x)
-
+        x, _ = self.down_proj(x)
         return x
-
 
 class LlamaAttention(nn.Module):
 
@@ -243,12 +228,30 @@ class LlamaDecoderLayer(nn.Module):
         residual: Optional[torch.Tensor],
         log_file_path: Optional[str] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
-        if residual is None:
-            residual = hidden_states
-            hidden_states = self.input_layernorm(hidden_states)
+        if log_file_path:
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
+
+            start.record()
+            if residual is None:
+                residual = hidden_states
+                hidden_states = self.input_layernorm(hidden_states)
+            else:
+                hidden_states, residual = self.input_layernorm(
+                    hidden_states, residual)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"pre attn rmsnorm costs {start.elapsed_time(end)}\n")
         else:
-            hidden_states, residual = self.input_layernorm(
-                hidden_states, residual)
+            if residual is None:
+                residual = hidden_states
+                hidden_states = self.input_layernorm(hidden_states)
+            else:
+                hidden_states, residual = self.input_layernorm(
+                    hidden_states, residual)
+
         if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.self_attn(
                 positions=positions,
@@ -270,9 +273,8 @@ class LlamaDecoderLayer(nn.Module):
         # Fully Connected
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
-        hidden_states = self.mlp(hidden_states, log_file_path)
+        hidden_states = self.mlp(hidden_states)
         return hidden_states, residual
-
 
 class LlamaModel(nn.Module):
 
