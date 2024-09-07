@@ -158,8 +158,21 @@ class LlamaAttention(nn.Module):
         attn_metadata: AttentionMetadata,
         layer_id: Optional[int] = -1,
         log_file_path: Optional[str] = None) -> torch.Tensor:
-        qkv, _ = self.qkv_proj(hidden_states)
-        q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
+        if log_file_path:
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
+
+            start.record()
+            qkv, _ = self.qkv_proj(hidden_states)
+            q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"qkv proj costs {start.elapsed_time(end)}\n")
+        else:
+            qkv, _ = self.qkv_proj(hidden_states)
+            q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         
         q, k = self.rotary_emb(positions, q, k)
 
@@ -253,22 +266,10 @@ class LlamaDecoderLayer(nn.Module):
                 attn_metadata=attn_metadata,
                 layer_id=self.layer_id,
                 log_file_path=log_file_path)
+        
         # Fully Connected
-        if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            hidden_states, residual = self.post_attention_layernorm(
-                hidden_states, residual)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"post attn rmsnorm costs {start.elapsed_time(end)}\n")
-        else:
-            hidden_states, residual = self.post_attention_layernorm(
-                hidden_states, residual)
+        hidden_states, residual = self.post_attention_layernorm(
+            hidden_states, residual)
         
         hidden_states = self.mlp(hidden_states)
         
