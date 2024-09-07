@@ -46,7 +46,6 @@ from vllm.model_executor.sampling_metadata import SamplingMetadata
 from vllm.model_executor.weight_utils import (default_weight_loader,
                                               hf_model_weights_iterator)
 from vllm.sequence import SamplerOutput
-import time
 from vllm._C import trans_ops
 from vllm.outputs import MergeReqInfo
 
@@ -73,8 +72,21 @@ class LlamaMLP(nn.Module):
                              "Only silu is supported for now.")
         self.act_fn = SiluAndMul()
 
-    def forward(self, x):
-        gate_up, _ = self.gate_up_proj(x)
+    def forward(self, x, log_file_path: Optional[str]):
+        if log_file_path:    
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
+            
+            start.record()
+            gate_up, _ = self.gate_up_proj(x)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"ffn1 costs {start.elapsed_time(end)}\n")
+        else:
+            gate_up, _ = self.gate_up_proj(x)
+        
         x = self.act_fn(gate_up)
         x, _ = self.down_proj(x)
         return x
@@ -170,19 +182,7 @@ class LlamaAttention(nn.Module):
         else:
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id, log_file_path)
 
-        if log_file_path:    
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-            
-            start.record()
-            output, _ = self.o_proj(attn_output)
-            end.record()
-            torch.cuda.synchronize()
-                    
-            with open(log_file_path, 'a') as file:
-                file.write(f"o_proj costs {start.elapsed_time(end)}\n")
-        else:
-            output, _ = self.o_proj(attn_output)
+        output, _ = self.o_proj(attn_output)
 
         return output
 
@@ -269,7 +269,7 @@ class LlamaDecoderLayer(nn.Module):
         # Fully Connected
         hidden_states, residual = self.post_attention_layernorm(
             hidden_states, residual)
-        hidden_states = self.mlp(hidden_states)
+        hidden_states = self.mlp(hidden_states, log_file_path)
         return hidden_states, residual
 
 
