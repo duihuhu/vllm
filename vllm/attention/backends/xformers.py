@@ -228,58 +228,26 @@ class XFormersImpl(AttentionImpl):
         value = value.view(-1, self.num_kv_heads, self.head_size)
         
         if kv_cache is not None:
-            if log_file_path:
-                start = torch.cuda.Event(enable_timing = True)
-                end = torch.cuda.Event(enable_timing = True)
+            if kv_cache_address is None:
+                key_cache, value_cache = PagedAttention.split_kv_cache(
+                    kv_cache, self.num_kv_heads, self.head_size)
 
-                start.record()
-                if kv_cache_address is None:
-                    key_cache, value_cache = PagedAttention.split_kv_cache(
-                        kv_cache, self.num_kv_heads, self.head_size)
+                # Reshape the input keys and values and store them in the cache.
+                # If kv_cache is not provided, the new key and value tensors are
+                # not cached. This happens during the initial memory profiling run.
 
-                    # Reshape the input keys and values and store them in the cache.
-                    # If kv_cache is not provided, the new key and value tensors are
-                    # not cached. This happens during the initial memory profiling run.
-
-                    #TODO for hhy -> Done
-                    PagedAttention.write_to_paged_cache(key, value, key_cache,
-                                                        value_cache,
-                                                        attn_metadata.slot_mapping,
-                                                        attn_metadata.kv_cache_dtype)
-                else:
-                    PagedAttention.write_to_agg_paged_cache(key, value, kv_cache_address[0],
-                                                            kv_cache_address[1], attn_metadata.slot_mapping,
-                                                            attn_metadata.kv_cache_dtype,
-                                                            self.block_size,
-                                                            16 // key.element_size(),
-                                                            layer_id)
-                end.record()
-                torch.cuda.synchronize()
-                    
-                with open(log_file_path, 'a') as file:
-                    file.write(f"store costs {start.elapsed_time(end)}\n")
-            
+                #TODO for hhy -> Done
+                PagedAttention.write_to_paged_cache(key, value, key_cache,
+                                                    value_cache,
+                                                    attn_metadata.slot_mapping,
+                                                    attn_metadata.kv_cache_dtype)
             else:
-                if kv_cache_address is None:
-                    key_cache, value_cache = PagedAttention.split_kv_cache(
-                        kv_cache, self.num_kv_heads, self.head_size)
-
-                    # Reshape the input keys and values and store them in the cache.
-                    # If kv_cache is not provided, the new key and value tensors are
-                    # not cached. This happens during the initial memory profiling run.
-
-                    #TODO for hhy -> Done
-                    PagedAttention.write_to_paged_cache(key, value, key_cache,
-                                                        value_cache,
-                                                        attn_metadata.slot_mapping,
-                                                        attn_metadata.kv_cache_dtype)
-                else:
-                    PagedAttention.write_to_agg_paged_cache(key, value, kv_cache_address[0],
-                                                            kv_cache_address[1], attn_metadata.slot_mapping,
-                                                            attn_metadata.kv_cache_dtype,
-                                                            self.block_size,
-                                                            16 // key.element_size(),
-                                                            layer_id)
+                PagedAttention.write_to_agg_paged_cache(key, value, kv_cache_address[0],
+                                                        kv_cache_address[1], attn_metadata.slot_mapping,
+                                                        attn_metadata.kv_cache_dtype,
+                                                        self.block_size,
+                                                        16 // key.element_size(),
+                                                        layer_id)
 
         if attn_metadata.is_prompt:
             # Prompt run.
