@@ -1,4 +1,29 @@
-root_path = "/home/jovyan/vllm/benchmarks/tp_"
+ops = ["preattnrmsnorm","qkvproj","rope","store","attn","oproj","postattnrmsnorm","ffn1","act","ffn2"]
+lengths = [8,16,32]
+i = 64
+while True:
+    if i > 2048:
+        break
+    lengths.append(i)
+    i += 64
+prefix = "/home/jovyan/vllm/benchmarks/profile_logs/tp1_"
+suffix = ".txt"
+
+for op in ops:
+    print(f"----------{op}----------")
+    for length in lengths:
+        file_path = prefix + op + "_" + str(length) + suffix
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            datas = []
+            for line in lines:
+                data = float(line.strip().split(' ')[-1])
+                datas.append(data)
+            output = sum(datas) / len(datas)
+            print(output)
+    print(f"----------End----------")
+
+'''root_path = "/home/jovyan/vllm/benchmarks/tp_"
 middle_path = "/temp_"
 suffix_path = ".txt"
 
@@ -22,7 +47,7 @@ for tp in tps:
                 data = float(line.strip().split(' ')[-1])
                 datas.append(data)
             print(f"----------{length}----------")
-            print(sum(datas) / len(datas))
+            print(sum(datas) / len(datas))'''
 
 '''root_path = "/home/jovyan/vllm/benchmarks/logs/"
 dir_path = "log_bd/"
