@@ -19,4 +19,3 @@ for input_length in input_lengths:
     command = base_command.format(x = input_length)
     print(f"Executing: {command}")
     os.system(command)
-    time.sleep(3)
