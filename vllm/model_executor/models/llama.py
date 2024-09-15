@@ -168,19 +168,7 @@ class LlamaAttention(nn.Module):
         else:
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id, log_file_path)
 
-        if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            output, _ = self.o_proj(attn_output)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"o_proj costs {start.elapsed_time(end)}\n")
-        else:
-            output, _ = self.o_proj(attn_output)
+        output, _ = self.o_proj(attn_output)
 
         return output
 
@@ -266,8 +254,21 @@ class LlamaDecoderLayer(nn.Module):
                 log_file_path=log_file_path)
         
         # Fully Connected
-        hidden_states, residual = self.post_attention_layernorm(
-            hidden_states, residual)
+        if log_file_path:
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
+
+            start.record()
+            hidden_states, residual = self.post_attention_layernorm(
+                hidden_states, residual)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"post attn norm costs {start.elapsed_time(end)}\n")
+        else:
+            hidden_states, residual = self.post_attention_layernorm(
+                hidden_states, residual)
         
         hidden_states = self.mlp(hidden_states)
         
