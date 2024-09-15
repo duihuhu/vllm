@@ -299,21 +299,8 @@ class XFormersImpl(AttentionImpl):
                     # Use reshape instead.
                     return output.reshape(num_tokens, hidden_size)
                 
-                if log_file_path:
-                    start = torch.cuda.Event(enable_timing = True)
-                    end = torch.cuda.Event(enable_timing = True)
-
-                    start.record()
-                    output = self._run_memory_efficient_xformers_forward(
-                        query, key, value, attn_metadata)
-                    end.record()
-                    torch.cuda.synchronize()
-
-                    with open(log_file_path, 'a') as file:
-                        file.write(f"attn costs {start.elapsed_time(end)}\n")
-                else:
-                    output = self._run_memory_efficient_xformers_forward(
-                        query, key, value, attn_metadata)
+                output = self._run_memory_efficient_xformers_forward(
+                    query, key, value, attn_metadata)
                     
             else:
                 # prefix-enabled attention
