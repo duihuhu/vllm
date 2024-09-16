@@ -72,8 +72,21 @@ class LlamaMLP(nn.Module):
                              "Only silu is supported for now.")
         self.act_fn = SiluAndMul()
 
-    def forward(self, x):        
-        gate_up, _ = self.gate_up_proj(x)
+    def forward(self, x, log_file_path: Optional[str] = None):
+        if log_file_path:
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
+
+            start.record()
+            gate_up, _ = self.gate_up_proj(x)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"ffn1 costs {start.elapsed_time(end)}\n")
+        else:        
+            gate_up, _ = self.gate_up_proj(x)
+            
         x = self.act_fn(gate_up)
         x, _ = self.down_proj(x)
         return x
@@ -254,23 +267,10 @@ class LlamaDecoderLayer(nn.Module):
                 log_file_path=log_file_path)
         
         # Fully Connected
-        if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            hidden_states, residual = self.post_attention_layernorm(
-                hidden_states, residual)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"post attn norm costs {start.elapsed_time(end)}\n")
-        else:
-            hidden_states, residual = self.post_attention_layernorm(
-                hidden_states, residual)
+        hidden_states, residual = self.post_attention_layernorm(
+            hidden_states, residual)
         
-        hidden_states = self.mlp(hidden_states)
+        hidden_states = self.mlp(hidden_states, log_file_path)
         
         return hidden_states, residual
 
