@@ -1,4 +1,4 @@
-ops = ["preattnrmsnorm","qkvproj","rope","store","attn","oproj","postattnrmsnorm","ffn1","act","ffn2"]
+ops = ["preattnnorm","qkvproj","rope","kvcachestore","attn","oproj","postattnnorm","ffn1","act","ffn2"]
 lengths = [8,16,32]
 i = 64
 while True:
@@ -6,7 +6,7 @@ while True:
         break
     lengths.append(i)
     i += 64
-prefix = "/home/jovyan/vllm/benchmarks/profile_logs/tp1_"
+prefix = "/home/jovyan/vllm/benchmarks/profile_logs/tp2_"
 suffix = ".txt"
 
 for op in ops:
