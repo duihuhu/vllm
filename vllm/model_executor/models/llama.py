@@ -75,8 +75,9 @@ class LlamaMLP(nn.Module):
     def forward(self, x, log_file_path: Optional[str] = None):     
         gate_up, _ = self.gate_up_proj(x)
         x = self.act_fn(gate_up)
-
-        if log_file_path:
+        x, _ = self.down_proj(x)
+        
+        '''if log_file_path:
             start = torch.cuda.Event(enable_timing = True)
             end = torch.cuda.Event(enable_timing = True)
 
@@ -87,9 +88,8 @@ class LlamaMLP(nn.Module):
 
             with open(log_file_path, 'a') as file:
                 file.write(f"ffn2 costs {start.elapsed_time(end)}\n")
-        else:
-            x, _ = self.down_proj(x)
-
+        else:'''
+        
         return x
 
 class LlamaAttention(nn.Module):
