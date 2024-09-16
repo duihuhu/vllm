@@ -115,7 +115,7 @@ def main(args: argparse.Namespace):
             return latency
 
     print("Warming up...")
-    run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=None)
+    #run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=None)
 
     '''if args.profile:
         profile_dir = args.profile_result_dir
