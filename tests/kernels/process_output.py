@@ -77,56 +77,57 @@ for length in lengths:
         id = int(row['ID'])
         if id >= st and id <= ed:
             offset = (id - st) / iter_length
+            data = str(row['Metric Value']).replace(",", "")
             if offset == 0:
                 if row['Metric Unit'] == "sector":
-                    preattnnorm.append(int(row['Metric Value']))
+                    preattnnorm.append(int(data))
                 else:
-                    preattnnorm2.append(float(row['Metric Value']))
+                    preattnnorm2.append(float(data))
             if offset == 1:
                 if row['Metric Unit'] == "sector":
-                    qkvproj.append(int(row['Metric Value']))
+                    qkvproj.append(int(data))
                 else:
-                    qkvproj2.append(float(row['Metric Value']))
+                    qkvproj2.append(float(data))
             if offset == 2:
                 if row['Metric Unit'] == "sector":
-                    rope.append(int(row['Metric Value']))
+                    rope.append(int(data))
                 else:
-                    rope2.append(float(row['Metric Value']))
+                    rope2.append(float(data))
             if offset == 3:
                 if row['Metric Unit'] == "sector":
-                    store.append(int(row['Metric Value']))
+                    store.append(int(data))
                 else:
-                    store2.append(float(row['Metric Value']))
+                    store2.append(float(data))
             if offset == 4:
                 if row['Metric Unit'] == "sector":
-                    attn.append(int(row['Metric Value']))
+                    attn.append(int(data))
                 else:
-                    attn2.append(float(row['Metric Value']))
+                    attn2.append(float(data))
             if offset == 5:
                 if row['Metric Unit'] == "sector":
-                    oproj.append(int(row['Metric Value']))
+                    oproj.append(int(data))
                 else:
-                    oproj2.append(float(row['Metric Value']))
+                    oproj2.append(float(data))
             if offset == 6:
                 if row['Metric Unit'] == "sector":
-                    postattnnorm.append(int(row['Metric Value']))
+                    postattnnorm.append(int(data))
                 else:
-                    postattnnorm2.append(float(row['Metric Value']))
+                    postattnnorm2.append(float(data))
             if offset == 7:
                 if row['Metric Unit'] == "sector":
-                    ffn1.append(int(row['Metric Value']))
+                    ffn1.append(int(data))
                 else:
-                    ffn12.append(float(row['Metric Value']))
+                    ffn12.append(float(data))
             if offset == 8:
                 if row['Metric Unit'] == "sector":
-                    act.append(int(row['Metric Value']))
+                    act.append(int(data))
                 else:
-                    act2.append(float(row['Metric Value']))
+                    act2.append(float(data))
             if offset == 9:
                 if row['Metric Unit'] == "sector":
-                    ffn2.append(int(row['Metric Value']))
+                    ffn2.append(int(data))
                 else:
-                    ffn22.append(float(row['Metric Value']))
+                    ffn22.append(float(data))
     
     total_preattnnorm.append(sum(preattnnorm) / layers)
     total_qkvproj.append(sum(qkvproj) / layers)
