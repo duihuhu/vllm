@@ -76,54 +76,54 @@ for length in lengths:
     for _, row in df.iterrows():
         id = int(row['ID'])
         if id >= st and id <= ed:
-            offset = (id - st) / iter_length
+            offset = (id - st) % iter_length
             data = str(row['Metric Value']).replace(",", "")
             if offset == 0:
                 if row['Metric Unit'] == "sector":
                     preattnnorm.append(int(data))
                 else:
                     preattnnorm2.append(float(data))
-            if offset == 1:
+            elif offset == 1:
                 if row['Metric Unit'] == "sector":
                     qkvproj.append(int(data))
                 else:
                     qkvproj2.append(float(data))
-            if offset == 2:
+            elif offset == 2:
                 if row['Metric Unit'] == "sector":
                     rope.append(int(data))
                 else:
                     rope2.append(float(data))
-            if offset == 3:
+            elif offset == 3:
                 if row['Metric Unit'] == "sector":
                     store.append(int(data))
                 else:
                     store2.append(float(data))
-            if offset == 4:
+            elif offset == 4:
                 if row['Metric Unit'] == "sector":
                     attn.append(int(data))
                 else:
                     attn2.append(float(data))
-            if offset == 5:
+            elif offset == 5:
                 if row['Metric Unit'] == "sector":
                     oproj.append(int(data))
                 else:
                     oproj2.append(float(data))
-            if offset == 6:
+            elif offset == 6:
                 if row['Metric Unit'] == "sector":
                     postattnnorm.append(int(data))
                 else:
                     postattnnorm2.append(float(data))
-            if offset == 7:
+            elif offset == 7:
                 if row['Metric Unit'] == "sector":
                     ffn1.append(int(data))
                 else:
                     ffn12.append(float(data))
-            if offset == 8:
+            elif offset == 8:
                 if row['Metric Unit'] == "sector":
                     act.append(int(data))
                 else:
                     act2.append(float(data))
-            if offset == 9:
+            else:
                 if row['Metric Unit'] == "sector":
                     ffn2.append(int(data))
                 else:
