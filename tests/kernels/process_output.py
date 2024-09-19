@@ -13,18 +13,182 @@ while True:
         lengths.append(i)
         i += 64
 
-for length in lengths:
+'''for length in lengths:
     file_path_in = file_path_1 + str(length) + file_path_2
     file_path_out = file_path_1 + str(length) + file_path_3
     base_command = "ncu -i {x} --page details --csv --log-file {y}"
     command = base_command.format(x = file_path_in, y = file_path_out)
-    os.system(command)
+    os.system(command)'''
+
+iter_length = 10
+st = 975
+ed = 1374
+layers = 40
+
+total_preattnnorm = []
+total_qkvproj = []
+total_rope = []
+total_store = []
+total_attn = []
+total_oproj = []
+total_postattnnorm = []
+total_ffn1 = []
+total_act = []
+total_ffn2 = []
+
+total_preattnnorm2 = []
+total_qkvproj2 = []
+total_rope2 = []
+total_store2 = []
+total_attn2 = []
+total_oproj2 = []
+total_postattnnorm2 = []
+total_ffn12 = []
+total_act2 = []
+total_ffn22 = []
 
 for length in lengths:
+    preattnnorm = []
+    qkvproj =  []
+    rope = []
+    store = []
+    attn = []
+    oproj = []
+    postattnnorm = []
+    ffn1 = []
+    act = []
+    ffn2 = []
+
+    preattnnorm2 = []
+    qkvproj2 =  []
+    rope2 = []
+    store2 = []
+    attn2 = []
+    oproj2 = []
+    postattnnorm2 = []
+    ffn12 = []
+    act2 = []
+    ffn22 = []
+    
     file_path = file_path_1 + str(length) + file_path_3
     df = pd.read_csv(file_path)
-    for index, row in df[::-1].iterrows():
-        if int(row['ID']) >= 1305 and int(row['ID']) <= 1314:
-            print(f"Function Name: {row['Function Name']}")
-            print(f"Grid Size: {row['Grid Size']}")
-            print(f"Block Size: {row['Block Size']}")
+    
+    for _, row in df.iterrows():
+        id = int(row['ID'])
+        if id >= st and id <= ed:
+            offset = (id - st) / iter_length
+            if offset == 0:
+                if row['Metric Unit'] == "sector":
+                    preattnnorm.append(int(row['Metric Value']))
+                else:
+                    preattnnorm2.append(float(row['Metric Value']))
+            if offset == 1:
+                if row['Metric Unit'] == "sector":
+                    qkvproj.append(int(row['Metric Value']))
+                else:
+                    qkvproj2.append(float(row['Metric Value']))
+            if offset == 2:
+                if row['Metric Unit'] == "sector":
+                    rope.append(int(row['Metric Value']))
+                else:
+                    rope2.append(float(row['Metric Value']))
+            if offset == 3:
+                if row['Metric Unit'] == "sector":
+                    store.append(int(row['Metric Value']))
+                else:
+                    store2.append(float(row['Metric Value']))
+            if offset == 4:
+                if row['Metric Unit'] == "sector":
+                    attn.append(int(row['Metric Value']))
+                else:
+                    attn2.append(float(row['Metric Value']))
+            if offset == 5:
+                if row['Metric Unit'] == "sector":
+                    oproj.append(int(row['Metric Value']))
+                else:
+                    oproj2.append(float(row['Metric Value']))
+            if offset == 6:
+                if row['Metric Unit'] == "sector":
+                    postattnnorm.append(int(row['Metric Value']))
+                else:
+                    postattnnorm2.append(float(row['Metric Value']))
+            if offset == 7:
+                if row['Metric Unit'] == "sector":
+                    ffn1.append(int(row['Metric Value']))
+                else:
+                    ffn12.append(float(row['Metric Value']))
+            if offset == 8:
+                if row['Metric Unit'] == "sector":
+                    act.append(int(row['Metric Value']))
+                else:
+                    act2.append(float(row['Metric Value']))
+            if offset == 9:
+                if row['Metric Unit'] == "sector":
+                    ffn2.append(int(row['Metric Value']))
+                else:
+                    ffn22.append(float(row['Metric Value']))
+    
+    total_preattnnorm.append(sum(preattnnorm) / layers)
+    total_qkvproj.append(sum(qkvproj) / layers)
+    total_rope.append(sum(rope) / layers)
+    total_store.append(sum(store) / layers)
+    total_attn.append(sum(attn) / layers)
+    total_oproj.append(sum(oproj) / layers)
+    total_postattnnorm.append(sum(postattnnorm) / layers)
+    total_ffn1.append(sum(ffn1) / layers)
+    total_act.append(sum(act) / layers)
+    total_ffn2.append(sum(ffn2) / layers)
+
+    total_preattnnorm2.append(sum(preattnnorm2) / layers)
+    total_qkvproj2.append(sum(qkvproj2) / layers)
+    total_rope2.append(sum(rope2) / layers)
+    total_store2.append(sum(store2) / layers)
+    total_attn2.append(sum(attn2) / layers)
+    total_oproj2.append(sum(oproj2) / layers)
+    total_postattnnorm2.append(sum(postattnnorm2) / layers)
+    total_ffn12.append(sum(ffn12) / layers)
+    total_act2.append(sum(act2) / layers)
+    total_ffn22.append(sum(ffn22) / layers)
+
+outputs1 = []
+outputs2 = []
+
+outputs1.append(total_preattnnorm)
+outputs1.append(total_qkvproj)
+outputs1.append(total_rope)
+outputs1.append(total_store)
+outputs1.append(total_attn)
+outputs1.append(total_oproj)
+outputs1.append(total_postattnnorm)
+outputs1.append(total_ffn1)
+outputs1.append(total_act)
+outputs1.append(total_ffn2)
+    
+outputs2.append(total_preattnnorm2)
+outputs2.append(total_qkvproj2)
+outputs2.append(total_rope2)
+outputs2.append(total_store2)
+outputs2.append(total_attn2)
+outputs2.append(total_oproj2)
+outputs2.append(total_postattnnorm2)
+outputs2.append(total_ffn12)
+outputs2.append(total_act2)
+outputs2.append(total_ffn22)
+
+names= ["preattnnorm", "qkvproj", "rope", "store", "attn", "oproj", "postattnnorm", "ffn1", "act", "ffn2"]
+
+print(f"----------TRANSACTIONS----------")
+
+for i, name in enumerate(names):
+    print(f"----------{name}----------")
+    for data in outputs1[i]:
+        print(data)
+    print(f"----------END----------")
+
+print(f"----------UTILIZATION----------")
+
+for i, name in enumerate(names):
+    print(f"----------{name}----------")
+    for data in outputs2[i]:
+        print(data)
+    print(f"----------END----------")
