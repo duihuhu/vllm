@@ -22,7 +22,7 @@ base_command = "nsys profile \
 
 base_command2 = "CUDA_VISIBLE_DEVICES=4,5,6,7 \
     ncu --metrics dram__bytes_read.sum,dram__bytes_read.sum.per_second,dram__bytes_write.sum,dram__bytes_write.sum.per_second  \
-    --export total_transaction_{x}_{y} \
+    --export total_bytes_{x}_{y} \
     python3 /home/jovyan/vllm/benchmarks/benchmark_latency.py \
     --model /home/jovyan/models/Llama-2-13b-hf/ \
     --tensor-parallel-size {x} \
