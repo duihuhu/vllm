@@ -172,6 +172,18 @@ for length in lengths:
                 else:
                     ffn22.append(float(data))'''
     
+    print(f"----------CHECK----------")
+    print(len(preattnnorm))
+    print(len(qkvproj))
+    print(len(rope))
+    print(len(store))
+    print(len(attn))
+    print(len(oproj))
+    print(len(postattnnorm))
+    print(len(ffn1))
+    print(len(act))
+    print(len(ffn2))
+
     i = 0
     while i < layers * 4:
         d1 = get_input(preattnnorm, i)
