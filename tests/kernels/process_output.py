@@ -102,13 +102,13 @@ for length in lengths:
             if str(row['Metric Unit']) == "byte" or str(row['Metric Unit']) == "byte/second":
                 exp = 1
             elif str(row['Metric Unit']) == " Kbyte" or str(row['Metric Unit']) == " Kbyte/second":
-                exp1 = 1024
+                exp = 1024
             elif str(row['Metric Unit']) == " Mbyte" or str(row['Metric Unit']) == " Mbyte/second": 
-                exp1 = 1024 * 1024
+                exp = 1024 * 1024
             elif str(row['Metric Unit']) == " Gbyte" or str(row['Metric Unit']) == " Gbyte/second":
-                exp1 = 1024 * 1024 * 1024
+                exp = 1024 * 1024 * 1024
             elif str(row['Metric Unit']) == " Tbyte" or str(row['Metric Unit']) == " Tbyte/second":
-                exp1 = 1024 * 1024 * 1024 * 1024
+                exp = 1024 * 1024 * 1024 * 1024
 
             data = data * exp            
             if offset == 0:
