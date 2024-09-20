@@ -78,7 +78,7 @@ for length in lengths:
     act = []
     ffn2 = []
 
-    '''preattnnorm2 = []
+    preattnnorm2 = []
     qkvproj2 =  []
     rope2 = []
     store2 = []
@@ -87,7 +87,7 @@ for length in lengths:
     postattnnorm2 = []
     ffn12 = []
     act2 = []
-    ffn22 = []'''
+    ffn22 = []
     
     file_path = file_path_1 + str(length) + file_path_3
     df = pd.read_csv(file_path)
@@ -172,55 +172,44 @@ for length in lengths:
                 else:
                     ffn22.append(float(data))'''
     
-    print(f"----------CHECK----------")
-    print(len(preattnnorm))
-    print(len(qkvproj))
-    print(len(rope))
-    print(len(store))
-    print(len(attn))
-    print(len(oproj))
-    print(len(postattnnorm))
-    print(len(ffn1))
-    print(len(act))
-    print(len(ffn2))
-
     i = 0
-    while i < layers * 4:
+    total_length = layers * 4
+    while i < total_length:
         d1 = get_input(preattnnorm, i)
-        total_preattnnorm.append(d1)
+        preattnnorm2.append(d1)
         d2 = get_input(qkvproj, i)
-        total_qkvproj.append(d2)
+        qkvproj2.append(d2)
         d3 = get_input(rope, i)
-        total_rope.append(d3)
+        rope2.append(d3)
         d4 = get_input(store, i)
-        total_store.append(d4)
+        store2.append(d4)
         d5 = get_input(attn, i)
-        total_attn.append(d5)
+        attn2.append(d5)
         d6 = get_input(oproj, i)
-        total_oproj.append(d6)
+        oproj2.append(d6)
         d7 = get_input(postattnnorm, i)
-        total_postattnnorm.append(d7)
+        postattnnorm2.append(d7)
         d8 = get_input(ffn1, i)
-        total_ffn1.append(d8)
+        ffn12.append(d8)
         d9 = get_input(act, i)
-        total_act.append(d9)
+        act2.append(d9)
         d10 = get_input(ffn2, i)
-        total_ffn2.append(d10)
+        ffn22.append(d10)
         i += 4
 
 
-    '''total_preattnnorm.append(sum(preattnnorm) / layers)
-    total_qkvproj.append(sum(qkvproj) / layers)
-    total_rope.append(sum(rope) / layers)
-    total_store.append(sum(store) / layers)
-    total_attn.append(sum(attn) / layers)
-    total_oproj.append(sum(oproj) / layers)
-    total_postattnnorm.append(sum(postattnnorm) / layers)
-    total_ffn1.append(sum(ffn1) / layers)
-    total_act.append(sum(act) / layers)
-    total_ffn2.append(sum(ffn2) / layers)
+    total_preattnnorm.append(sum(preattnnorm2) / layers)
+    total_qkvproj.append(sum(qkvproj2) / layers)
+    total_rope.append(sum(rope2) / layers)
+    total_store.append(sum(store2) / layers)
+    total_attn.append(sum(attn2) / layers)
+    total_oproj.append(sum(oproj2) / layers)
+    total_postattnnorm.append(sum(postattnnorm2) / layers)
+    total_ffn1.append(sum(ffn12) / layers)
+    total_act.append(sum(act2) / layers)
+    total_ffn2.append(sum(ffn22) / layers)
 
-    total_preattnnorm2.append(sum(preattnnorm2) / layers)
+    '''total_preattnnorm2.append(sum(preattnnorm2) / layers)
     total_qkvproj2.append(sum(qkvproj2) / layers)
     total_rope2.append(sum(rope2) / layers)
     total_store2.append(sum(store2) / layers)
@@ -258,14 +247,15 @@ outputs2.append(total_ffn22)'''
 
 names= ["preattnnorm", "qkvproj", "rope", "store", "attn", "oproj", "postattnnorm", "ffn1", "act", "ffn2"]
 
-print(f"----------TRANSACTIONS----------")
+#print(f"----------TRANSACTIONS----------")
+print(f"----------BYTES----------")
 
 for i, name in enumerate(names):
     print(f"----------{name}----------")
-    print(len(outputs1[i]))
-    #for data in outputs1[i]:
-    #    print(data)
-    #print(f"----------END----------")
+    #print(len(outputs1[i]))
+    for data in outputs1[i]:
+        print(data)
+    print(f"----------END----------")
 
 '''print(f"----------UTILIZATION----------")
 
