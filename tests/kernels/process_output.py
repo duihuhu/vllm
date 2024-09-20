@@ -97,20 +97,21 @@ for length in lengths:
         if id >= st and id <= ed:
             offset = (id - st) % iter_length
             data = float(row['Metric Value'])
-            
+            print(row['Metric Unit'])
             exp = 1
             if row['Metric Unit'] == "byte" or row['Metric Unit'] == "byte/second":
                 exp = 1
-            elif row['Metric Unit'] == " Kbyte" or row['Metric Unit'] == " Kbyte/second":
+            if row['Metric Unit'] == " Kbyte" or row['Metric Unit'] == " Kbyte/second":
                 exp = 1024
-            elif row['Metric Unit'] == " Mbyte" or row['Metric Unit'] == " Mbyte/second": 
+            if row['Metric Unit'] == " Mbyte" or row['Metric Unit'] == " Mbyte/second": 
                 exp = 1024 * 1024
-            elif row['Metric Unit'] == " Gbyte" or row['Metric Unit'] == " Gbyte/second":
+            if row['Metric Unit'] == " Gbyte" or row['Metric Unit'] == " Gbyte/second":
                 exp = 1024 * 1024 * 1024
-            elif row['Metric Unit'] == " Tbyte" or row['Metric Unit'] == " Tbyte/second":
+            if row['Metric Unit'] == " Tbyte" or row['Metric Unit'] == " Tbyte/second":
                 exp = 1024 * 1024 * 1024 * 1024
 
-            data = data * exp            
+            data = data * exp
+            print(data)            
             if offset == 0:
                 preattnnorm.append(data)
                 '''if row['Metric Unit'] == "sector":
