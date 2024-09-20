@@ -76,20 +76,6 @@ class LlamaMLP(nn.Module):
         gate_up, _ = self.gate_up_proj(x)
         x = self.act_fn(gate_up)
         x, _ = self.down_proj(x)
-        
-        '''if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            x, _ = self.down_proj(x)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"ffn2 costs {start.elapsed_time(end)}\n")
-        else:'''
-        
         return x
 
 class LlamaAttention(nn.Module):
@@ -242,11 +228,27 @@ class LlamaDecoderLayer(nn.Module):
         residual: Optional[torch.Tensor],
         log_file_path: Optional[str] = None) -> Tuple[torch.Tensor, torch.Tensor]:
         # Self Attention
-        if residual is None:
-            residual = hidden_states
-            hidden_states = self.input_layernorm(hidden_states)
+        if log_file_path:
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
+
+            start.record()
+            if residual is None:
+                residual = hidden_states
+                hidden_states = self.input_layernorm(hidden_states)
+            else:
+                hidden_states, residual = self.input_layernorm(hidden_states, residual)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"preattnnorm costs {start.elapsed_time(end)}\n")
         else:
-            hidden_states, residual = self.input_layernorm(hidden_states, residual)
+            if residual is None:
+                residual = hidden_states
+                hidden_states = self.input_layernorm(hidden_states)
+            else:
+                hidden_states, residual = self.input_layernorm(hidden_states, residual)
 
         if not self.use_agg_block or not kv_cache_address:
             hidden_states = self.self_attn(

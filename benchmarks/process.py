@@ -6,7 +6,7 @@ while True:
         break
     lengths.append(i)
     i += 64
-prefix = "/home/jovyan/vllm/benchmarks/profile_logs/tp2_"
+prefix = "/home/jovyan/vllm/benchmarks/profile_logs_tp1/tp1_"
 suffix = ".txt"
 
 for op in ops:

@@ -12,10 +12,11 @@ while True:
         i += 64
 
 # 基础命令模板
-base_command = "CUDA_VISIBLE_DEVICES=4,5,6,7 python3 benchmark_latency.py --input-len {x} --file-name /home/jovyan/vllm/benchmarks/profile_logs/tp2_ffn2_{x}.txt"
+base_command = "CUDA_VISIBLE_DEVICES=4,5,6,7 python3 benchmark_latency.py --input-len {x} --file-name /home/jovyan/vllm/benchmarks/profile_logs_tp1/tp1_preattnnorm_{x}.txt"
 
 # 遍历所有参数组合并生成命令
 for input_length in input_lengths:
     command = base_command.format(x = input_length)
     print(f"Executing: {command}")
     os.system(command)
+    time.sleep(3)
