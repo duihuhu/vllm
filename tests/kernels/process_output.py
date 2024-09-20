@@ -96,18 +96,18 @@ for length in lengths:
         id = int(row['ID'])
         if id >= st and id <= ed:
             offset = (id - st) % iter_length
-            data = float(str(row['Metric Value']))
+            data = float(row['Metric Value'])
             
             exp = 1
-            if str(row['Metric Unit']) == "byte" or str(row['Metric Unit']) == "byte/second":
+            if row['Metric Unit'] == "byte" or row['Metric Unit'] == "byte/second":
                 exp = 1
-            elif str(row['Metric Unit']) == " Kbyte" or str(row['Metric Unit']) == " Kbyte/second":
+            elif row['Metric Unit'] == " Kbyte" or row['Metric Unit'] == " Kbyte/second":
                 exp = 1024
-            elif str(row['Metric Unit']) == " Mbyte" or str(row['Metric Unit']) == " Mbyte/second": 
+            elif row['Metric Unit'] == " Mbyte" or row['Metric Unit'] == " Mbyte/second": 
                 exp = 1024 * 1024
-            elif str(row['Metric Unit']) == " Gbyte" or str(row['Metric Unit']) == " Gbyte/second":
+            elif row['Metric Unit'] == " Gbyte" or row['Metric Unit'] == " Gbyte/second":
                 exp = 1024 * 1024 * 1024
-            elif str(row['Metric Unit']) == " Tbyte" or str(row['Metric Unit']) == " Tbyte/second":
+            elif row['Metric Unit'] == " Tbyte" or row['Metric Unit'] == " Tbyte/second":
                 exp = 1024 * 1024 * 1024 * 1024
 
             data = data * exp            
