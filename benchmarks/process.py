@@ -1,4 +1,4 @@
-ops = ["preattnnorm","qkvproj","rope","kvcachestore","attn","oproj","postattnnorm","ffn1","act","ffn2"]
+ops = ["preattnrmsnorm","qkvproj","rope","store","attn","oproj","postattnrmsnorm","ffn1","act","ffn2"]
 lengths = [8,16,32]
 i = 64
 while True:
