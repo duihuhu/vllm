@@ -250,9 +250,10 @@ print(f"----------TRANSACTIONS----------")
 
 for i, name in enumerate(names):
     print(f"----------{name}----------")
-    for data in outputs1[i]:
-        print(data)
-    print(f"----------END----------")
+    print(len(outputs1))
+    #for data in outputs1[i]:
+    #    print(data)
+    #print(f"----------END----------")
 
 '''print(f"----------UTILIZATION----------")
 
