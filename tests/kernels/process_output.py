@@ -101,13 +101,13 @@ for length in lengths:
             exp = 1
             if row['Metric Unit'] == "byte" or row['Metric Unit'] == "byte/second":
                 exp = 1
-            if row['Metric Unit'] == " Kbyte" or row['Metric Unit'] == " Kbyte/second":
+            elif row['Metric Unit'] == " Kbyte" or row['Metric Unit'] == " Kbyte/second":
                 exp = 1024
-            if row['Metric Unit'] == " Mbyte" or row['Metric Unit'] == " Mbyte/second": 
+            elif row['Metric Unit'] == " Mbyte" or row['Metric Unit'] == " Mbyte/second": 
                 exp = 1024 * 1024
-            if row['Metric Unit'] == " Gbyte" or row['Metric Unit'] == " Gbyte/second":
+            elif row['Metric Unit'] == " Gbyte" or row['Metric Unit'] == " Gbyte/second":
                 exp = 1024 * 1024 * 1024
-            if row['Metric Unit'] == " Tbyte" or row['Metric Unit'] == " Tbyte/second":
+            else: 
                 exp = 1024 * 1024 * 1024 * 1024
 
             data = data * exp
@@ -173,9 +173,9 @@ for length in lengths:
                 else:
                     ffn22.append(float(data))'''
     
-    i = 0
+    t = 0
     total_length = layers * 4
-    while i < total_length:
+    while t < total_length:
         d1 = get_input(preattnnorm, i)
         preattnnorm2.append(d1)
         d2 = get_input(qkvproj, i)
@@ -196,7 +196,7 @@ for length in lengths:
         act2.append(d9)
         d10 = get_input(ffn2, i)
         ffn22.append(d10)
-        i += 4
+        t += 4
 
 
     total_preattnnorm.append(sum(preattnnorm2) / layers)
@@ -251,11 +251,11 @@ names= ["preattnnorm", "qkvproj", "rope", "store", "attn", "oproj", "postattnnor
 #print(f"----------TRANSACTIONS----------")
 print(f"----------BYTES----------")
 
-for i, name in enumerate(names):
+for j, name in enumerate(names):
     print(f"----------{name}----------")
     #print(len(outputs1[i]))
-    for data in outputs1[i]:
-        print(data)
+    for data2 in outputs1[j]:
+        print(data2)
     print(f"----------END----------")
 
 '''print(f"----------UTILIZATION----------")
