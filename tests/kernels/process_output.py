@@ -3,9 +3,9 @@ import os
 
 def get_input(data, i):
     a = data[i]
-    b = data[i+1]
+    #b = data[i+1]
     c = data[i+2]
-    d = data[i+3]
+    '''d = data[i+3]
     x = 0
     y = 0
     z = 0
@@ -18,7 +18,8 @@ def get_input(data, i):
     else:
         y = 0
     z = x + y
-    return z
+    return z'''
+    return a + c
 
 file_path_1 = "/home/jovyan/vllm/tests/kernels/profile_logs_bytes/total_bytes_1_"
 file_path_2 = ".ncu-rep"
