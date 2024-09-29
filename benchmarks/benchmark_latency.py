@@ -70,7 +70,7 @@ def main(args: argparse.Namespace):
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
         latencies.append(run_to_completion(profile=False))
     print(f'Avg latency: {np.mean(latencies)} seconds')
-    #print(latencies)
+    print(latencies)
     #print(f'Avg throughput: {args.input_len * 1  / np.mean(latencies):.2f} token/s')
 
 
