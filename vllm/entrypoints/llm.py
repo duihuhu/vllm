@@ -176,7 +176,7 @@ class LLM:
             iteartion_end = time.time()
             iteration_time.append(iteartion_end-iteration_start)
             interation = interation  + 1
-            if interation == 2:
+            if interation == 2 and len(self.llm_engine.scheduler.mixing)!=0:
                 self.llm_engine.covert_mixing_to_waiting()
             for output in step_outputs:
                 if output.finished:
