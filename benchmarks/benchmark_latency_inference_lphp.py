@@ -38,13 +38,15 @@ def main(args: argparse.Namespace):
     
     dummy_prompt_token_ids = [[1] * args.input_len] * args.num_light
     prompt_token_ids.extend(dummy_prompt_token_ids)
-    
+    heavy_dummy_prompt_token_ids = [[2] * args.hinput_len] * args.num_heavy
+    prompt_token_ids.extend(heavy_dummy_prompt_token_ids)
+
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
         start_time = time.time()
         #print(f"start at {start_time}")
-        llm.generate(prompt_token_ids=dummy_prompt_token_ids,
+        llm.generate(prompt_token_ids=prompt_token_ids,
                      sampling_params=sampling_params,
                      use_tqdm=False)
 
@@ -82,8 +84,8 @@ if __name__ == '__main__':
     parser.add_argument('--num-light', type=int, default=1,
                         help='Number of generated sequences per heavy prompt.')
     
-    # parser.add_argument('--num-heavy', type=int, default=1,
-    #                     help='Number of generated sequences per heavy prompt.')
+    parser.add_argument('--num-heavy', type=int, default=1,
+                        help='Number of generated sequences per heavy prompt.')
         
     parser.add_argument('--use-beam-search', action='store_true')
     parser.add_argument('--num-iters', type=int, default=1,
