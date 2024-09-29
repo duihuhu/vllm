@@ -32,7 +32,7 @@ python3 benchmark_latency_inference_lphp.py --input-len 18 --hinput-len 508 --ou
 
 sleep 5
 
-python3 benchmark_latency_inference_lphp.py --input-len 18 --hinput-len 508 --output-len 1 --num-iter 5 --num-light 3 --num-heavy 1 --batch-size 4
+python3 benchmark_latency_inference_lphp.py --input-len 18 --hinput-len 508 --output-len 1 --num-iter 5 --num-light 1 --num-heavy 3 --batch-size 4
 
 echo "hplp"
 python3 benchmark_latency_inference_lphp.py --input-len 18 --hinput-len 508 --output-len 1 --num-iter 5 --num-light 7 --num-heavy 1 --batch-size 8
