@@ -156,7 +156,7 @@ class LLM:
 
         steps: int = 0
         st1 = time.time()
-        print(f"Start Prefill at {st1}")
+        # print(f"Start Prefill at {st1}")
         while self.llm_engine.has_unfinished_requests():
             step_outputs = self.llm_engine.step(banker = False, steps = steps)
             steps += 1
@@ -172,7 +172,7 @@ class LLM:
             if split_two_phase == 1:
                 self.llm_engine.covert_running_to_prefilled()
         ed1 = time.time()
-        print(f"End Prefill at {ed1}")
+        # print(f"End Prefill at {ed1}")
 
         if split_two_phase == 1:
             #print("block size ", self.llm_engine.cache_config.block_size)
@@ -195,9 +195,9 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
-            print(f"End Decode at {ed2}", "total decode time: ", ed2 - st2)
+            # print(f"End Decode at {ed2}", "total decode time: ", ed2 - st2)
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
-            print(f"Decode Throughput {(total_num_token2 / (ed2 - st2)):.2f} tokens/s")
+            # print(f"Decode Throughput {(total_num_token2 / (ed2 - st2)):.2f} tokens/s")
         if use_tqdm:
             pbar.close()
         # Sort the outputs by request ID.
