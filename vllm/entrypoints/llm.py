@@ -158,7 +158,10 @@ class LLM:
         st1 = time.time()
         # print(f"Start Prefill at {st1}")
         while self.llm_engine.has_unfinished_requests():
+            start_time = time.time()
             step_outputs = self.llm_engine.step(banker = False, steps = steps)
+            end_time = time.time()
+            print("step time ", end_time-start_time)
             steps += 1
             
             for output in step_outputs:
