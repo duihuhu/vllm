@@ -35,7 +35,7 @@ def main(args: argparse.Namespace):
     dummy_prompt_token_ids = [[0] * args.input_len] * args.num_prompt
     
     if args.mix_num_prompt!=0:
-        mix_sampling_params = SamplingParams(
+        mixed_sampling_params = SamplingParams(
             n=args.n,
             temperature=0.0 if args.use_beam_search else 1.0,
             top_p=1.0,
