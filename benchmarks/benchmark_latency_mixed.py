@@ -34,16 +34,20 @@ def main(args: argparse.Namespace):
     print(sampling_params)
     dummy_prompt_token_ids = [[0] * args.input_len] * args.num_prompt
     
-    mix_sampling_params = SamplingParams(
-        n=args.n,
-        temperature=0.0 if args.use_beam_search else 1.0,
-        top_p=1.0,
-        use_beam_search=args.use_beam_search,
-        ignore_eos=True,
-        max_tokens=args.mix_output_len,
-    )
-    mixed_dummy_prompt_token_ids = [[1] * args.mix_input_len] * args.mix_num_prompt
-    
+    if args.mix_num_prompt!=0:
+        mix_sampling_params = SamplingParams(
+            n=args.n,
+            temperature=0.0 if args.use_beam_search else 1.0,
+            top_p=1.0,
+            use_beam_search=args.use_beam_search,
+            ignore_eos=True,
+            max_tokens=args.mix_output_len,
+        )
+        mixed_dummy_prompt_token_ids = [[1] * args.mix_input_len] * args.mix_num_prompt
+    else:
+        mix_sampling_params = None
+        mixed_dummy_prompt_token_ids = None
+           
     def run_to_completion(profile: bool = False):
         if profile:
             torch.cuda.cudart().cudaProfilerStart()
@@ -83,7 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--mix-input-len', type=int, default=32)
     parser.add_argument('--mix-output-len', type=int, default=128)
     parser.add_argument('--num-prompt', type=int, default=1)
-    parser.add_argument('--mix-num-prompt', type=int, default=1)
+    parser.add_argument('--mix-num-prompt', type=int, default=0)
 
     parser.add_argument('--batch-size', type=int, default=8)
     parser.add_argument('--n', type=int, default=1,
