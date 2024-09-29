@@ -45,7 +45,7 @@ def main(args: argparse.Namespace):
         )
         mixed_dummy_prompt_token_ids = [[1] * args.mix_input_len] * args.mix_num_prompt
     else:
-        mix_sampling_params = None
+        mixed_sampling_params = None
         mixed_dummy_prompt_token_ids = None
            
     def run_to_completion(profile: bool = False):
@@ -56,7 +56,7 @@ def main(args: argparse.Namespace):
         llm.generate(prompt_token_ids=dummy_prompt_token_ids,
                      sampling_params=sampling_params,
                      mixed_dummy_prompt_token_ids=mixed_dummy_prompt_token_ids,
-                     mix_sampling_params=mix_sampling_params,
+                     mixed_sampling_params=mixed_sampling_params,
                      use_tqdm=False)
 
         end_time = time.time()
