@@ -165,7 +165,7 @@ class LLM:
         outputs: List[RequestOutput] = []
         interation = 0
         st = time.time()
-        print(f"Start Prefill at {st}")
+        # print(f"Start Prefill at {st}")
         if split_two_phase == 1:
             total_num_token = 0
         iteration_time = []
@@ -192,7 +192,7 @@ class LLM:
         with open("iteration_time.txt", "w") as fd:
             for line in iteration_time:
                 fd.write(str(line)+'\n')
-        print(f"iteration {interation}")
+        # print(f"iteration {interation}")
         if split_two_phase == 1:
             ed = time.time()
             print(f"End Prefill at {ed}", "total prefill time: ", ed-st)
