@@ -189,7 +189,7 @@ class LLM:
                 self.llm_engine.covert_running_to_prefilled()
                 total_num_token += sum(len(step_output.prompt_token_ids) for step_output in step_outputs)
 
-        with open("iteration_time.txt", "w") as fd:
+        with open("iteration_time.txt", "w+") as fd:
             for line in iteration_time:
                 fd.write(str(line)+'\n')
         # print(f"iteration {interation}")
