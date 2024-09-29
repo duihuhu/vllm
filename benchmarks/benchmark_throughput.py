@@ -40,13 +40,13 @@ def sample_requests(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for i in range(len(dataset)):
-        if i < num_requests :
+        if i %3 == 0 :
             output_len = len(completion_token_ids[8])
             tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
         else:
-            output_len = len(completion_token_ids[8])
-            tokenized_dataset.append((prompts[8], prompt_token_ids[8], output_len))
-            
+            output_len = len(completion_token_ids[443])
+            tokenized_dataset.append((prompts[443], prompt_token_ids[443], output_len))
+                
     # print(prompts[71])
     # Filter out too long sequences.
     filtered_dataset: List[Tuple[str, int, int]] = []
@@ -105,6 +105,7 @@ def run_vllm(
             prompt_token_ids=None,
             sampling_params=sampling_params,
         )
+        # outputs = llm._run_engine(use_tqdm=False, split_two_phase=split_two_phase)
 
     # Add the requests to the engine.
     for prompt, _, output_len in mix_requests:

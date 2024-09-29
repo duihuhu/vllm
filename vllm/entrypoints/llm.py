@@ -81,6 +81,8 @@ class LLM:
         prompts: Optional[Union[str, List[str]]] = None,
         sampling_params: Optional[SamplingParams] = None,
         prompt_token_ids: Optional[List[List[int]]] = None,
+        mixed_dummy_prompt_token_ids: Optional[List[List[int]]] = None,
+        mixed_sampling_params: Optional[SamplingParams] = None,
         use_tqdm: bool = True,
     ) -> List[RequestOutput]:
         """Generates the completions for the input prompts.
@@ -127,6 +129,11 @@ class LLM:
             else:
                 token_ids = prompt_token_ids[i]
             self._add_request(prompt, sampling_params, token_ids)
+        
+        if mixed_dummy_prompt_token_ids:
+            for i in range(len(mixed_dummy_prompt_token_ids)):
+                self._add_mix_request(None, mixed_sampling_params, mixed_dummy_prompt_token_ids[i])
+                
         return self._run_engine(use_tqdm)
 
     def _add_request(
