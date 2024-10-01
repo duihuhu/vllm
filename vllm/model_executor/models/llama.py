@@ -161,19 +161,7 @@ class LlamaAttention(nn.Module):
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
         
-        if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            q, k = self.rotary_emb(positions, q, k)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"qkvproj costs {start.elapsed_time(end)}\n")
-        else:
-            q, k = self.rotary_emb(positions, q, k)
+        q, k = self.rotary_emb(positions, q, k)
 
         if not self.use_agg_block:
             attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1, log_file_path)    
