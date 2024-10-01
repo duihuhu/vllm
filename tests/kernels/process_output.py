@@ -21,26 +21,26 @@ def get_input(data, i):
     return z'''
     return a + c
 
-file_path_1 = "/home/jovyan/vllm/tests/kernels/profile_logs_bytes/total_bytes_1_"
+file_path_1 = "/home/jovyan/vllm/tests/kernels/profile_logs_long_range/long_range_1_"
 file_path_2 = ".ncu-rep"
 file_path_3 = ".csv"
-lengths = [8,16,32]
-i = 64
+lengths = []
+i = 2048
 while True:
-    if i > 2048:
+    if i > 4096:
         break
     else:
         lengths.append(i)
         i += 64
 
-'''for length in lengths:
+for length in lengths:
     file_path_in = file_path_1 + str(length) + file_path_2
     file_path_out = file_path_1 + str(length) + file_path_3
     base_command = "ncu -i {x} --page details --csv --log-file {y}"
     command = base_command.format(x = file_path_in, y = file_path_out)
-    os.system(command)'''
+    os.system(command)
 
-iter_length = 10
+'''iter_length = 10
 st = 975
 ed = 1374
 layers = 40
@@ -56,7 +56,7 @@ total_ffn1 = []
 total_act = []
 total_ffn2 = []
 
-'''total_preattnnorm2 = []
+total_preattnnorm2 = []
 total_qkvproj2 = []
 total_rope2 = []
 total_store2 = []
@@ -65,7 +65,7 @@ total_oproj2 = []
 total_postattnnorm2 = []
 total_ffn12 = []
 total_act2 = []
-total_ffn22 = []'''
+total_ffn22 = []
 
 for length in lengths:
     preattnnorm = []
@@ -114,64 +114,64 @@ for length in lengths:
             data = data * exp         
             if offset == 0:
                 preattnnorm.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     qkvproj.append(int(data))
                 else:
-                    qkvproj2.append(float(data))'''
+                    qkvproj2.append(float(data))
             elif offset == 1:
                 qkvproj.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     qkvproj.append(int(data))
                 else:
-                    qkvproj2.append(float(data))'''
+                    qkvproj2.append(float(data))
             elif offset == 2:
                 rope.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     rope.append(int(data))
                 else:
-                    rope2.append(float(data))'''
+                    rope2.append(float(data))
             elif offset == 3:
                 store.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     store.append(int(data))
                 else:
-                    store2.append(float(data))'''
+                    store2.append(float(data))
             elif offset == 4:
                 attn.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     attn.append(int(data))
                 else:
-                    attn2.append(float(data))'''
+                    attn2.append(float(data))
             elif offset == 5:
                 oproj.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     oproj.append(int(data))
                 else:
-                    oproj2.append(float(data))'''
+                    oproj2.append(float(data))
             elif offset == 6:
                 postattnnorm.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     postattnnorm.append(int(data))
                 else:
-                    postattnnorm2.append(float(data))'''
+                    postattnnorm2.append(float(data))
             elif offset == 7:
                 ffn1.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     ffn1.append(int(data))
                 else:
-                    ffn12.append(float(data))'''
+                    ffn12.append(float(data))
             elif offset == 8:
                 act.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     act.append(int(data))
                 else:
-                    act2.append(float(data))'''
+                    act2.append(float(data))
             else:
                 ffn2.append(data)
-                '''if row['Metric Unit'] == "sector":
+                if row['Metric Unit'] == "sector":
                     ffn2.append(int(data))
                 else:
-                    ffn22.append(float(data))'''
+                    ffn22.append(float(data))
     
     t = 0
     total_length = layers * 4
@@ -210,7 +210,7 @@ for length in lengths:
     total_act.append(sum(act2) / layers)
     total_ffn2.append(sum(ffn22) / layers)
 
-    '''total_preattnnorm2.append(sum(preattnnorm2) / layers)
+    total_preattnnorm2.append(sum(preattnnorm2) / layers)
     total_qkvproj2.append(sum(qkvproj2) / layers)
     total_rope2.append(sum(rope2) / layers)
     total_store2.append(sum(store2) / layers)
@@ -219,7 +219,7 @@ for length in lengths:
     total_postattnnorm2.append(sum(postattnnorm2) / layers)
     total_ffn12.append(sum(ffn12) / layers)
     total_act2.append(sum(act2) / layers)
-    total_ffn22.append(sum(ffn22) / layers)'''
+    total_ffn22.append(sum(ffn22) / layers)
 
 outputs1 = []
 #outputs2 = []
@@ -235,7 +235,7 @@ outputs1.append(total_ffn1)
 outputs1.append(total_act)
 outputs1.append(total_ffn2)
     
-'''outputs2.append(total_preattnnorm2)
+outputs2.append(total_preattnnorm2)
 outputs2.append(total_qkvproj2)
 outputs2.append(total_rope2)
 outputs2.append(total_store2)
@@ -244,7 +244,7 @@ outputs2.append(total_oproj2)
 outputs2.append(total_postattnnorm2)
 outputs2.append(total_ffn12)
 outputs2.append(total_act2)
-outputs2.append(total_ffn22)'''
+outputs2.append(total_ffn22)
 
 names= ["preattnnorm", "qkvproj", "rope", "store", "attn", "oproj", "postattnnorm", "ffn1", "act", "ffn2"]
 
@@ -258,7 +258,7 @@ for j, name in enumerate(names):
         print(data2)
     print(f"----------END----------")
 
-'''print(f"----------UTILIZATION----------")
+print(f"----------UTILIZATION----------")
 
 for i, name in enumerate(names):
     print(f"----------{name}----------")
