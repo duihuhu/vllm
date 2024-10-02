@@ -96,10 +96,10 @@ for length in lengths:
         id = int(str(row['ID']))
         mname = str(row['Metric Name'])
         if id >= st and id <= ed and mname == "gpu__time_duration.avg":
-            x = int(str(row['Grid Size']).split("(")[1].split(",")[0])
-            y = int(str(row['Grid Size']).split("(")[1].split(",")[1])
-            z = int(str(row['Grid Size']).split("(")[1].split(",")[2].split(")")[0])
-            data1 = x * y * z
+            b0 = int(str(row['Grid Size']).split("(")[1].split(",")[0])
+            b1 = int(str(row['Grid Size']).split("(")[1].split(",")[1])
+            b2 = int(str(row['Grid Size']).split("(")[1].split(",")[2].split(")")[0])
+            data1 = b0 * b1 * b2
             data2 = float(str(row['Metric Value']))
 
             offset = (id - st) % iter_length
