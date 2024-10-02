@@ -167,8 +167,20 @@ class LlamaAttention(nn.Module):
             attn_output = self.attn(q, k, v, kv_cache, None, attn_metadata, -1, log_file_path)    
         else:
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id, log_file_path)
+        
+        if log_file_path:
+            start = torch.cuda.Event(enable_timing = True)
+            end = torch.cuda.Event(enable_timing = True)
 
-        output, _ = self.o_proj(attn_output)
+            start.record()
+            output, _ = self.o_proj(attn_output)
+            end.record()
+            torch.cuda.synchronize()
+
+            with open(log_file_path, 'a') as file:
+                file.write(f"oproj costs {start.elapsed_time(end)}\n")
+        else:
+            output, _ = self.o_proj(attn_output)
 
         return output
 
