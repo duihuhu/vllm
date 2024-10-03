@@ -1,12 +1,13 @@
-ops = ["preattnnorm","qkvproj","rope","store","attn","oproj","postattnnorm","ffn1","act","ffn2"]
-lengths = []
-i = 2048
+#ops = ["preattnnorm","qkvproj","rope","store","attn","oproj","postattnnorm","ffn1","act","ffn2"]
+ops = ["oproj"]
+lengths = [8, 16, 32]
+i = 64
 while True:
     if i > 4096:
         break
     lengths.append(i)
     i += 64
-prefix = "/home/jovyan/vllm/benchmarks/profile_logs_tp1_long_range/tp1_"
+prefix = "/home/jovyan/vllm/benchmarks/profile_logs_oproj/tp1_"
 suffix = ".txt"
 
 for op in ops:
