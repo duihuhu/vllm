@@ -18,9 +18,10 @@ for r in ratios:
         with open(file_path, 'r') as file:
             lines = file.readlines()
             datas = []
-            for line in lines:
-                data = float(line.strip().split(' ')[-1])
-                datas.append(data)
+            for j, line in enumerate(lines):
+                if j >= 40:
+                    data = float(line.strip().split(' ')[-1])
+                    datas.append(data)
             output = sum(datas) / len(datas)
             print(output)
     print(f"----------End----------")
