@@ -321,7 +321,7 @@ class LlamaModel(nn.Module):
         for i in range(len(self.layers)):
             layer = self.layers[i]
 
-            if log_file_path:
+            if log_file_path and attn_metadata.block_tables.numel() != 0:
                 start = torch.cuda.Event(enable_timing = True)
                 end = torch.cuda.Event(enable_timing = True)
 

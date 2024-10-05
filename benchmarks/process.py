@@ -1,20 +1,20 @@
 #ops = ["preattnnorm","qkvproj","rope","store","attn","oproj","postattnnorm","ffn1","act","ffn2"]
 #ops = ["oproj"]
-tps = [1, 2]
+ratios = [25, 75, 50]
 lengths = []
-i = 16
+i = 64
 while True:
     if i > 4096:
         break
     lengths.append(i)
-    i += 16
-prefix = "/home/jovyan/vllm/benchmarks/test_logs/tp_"
+    i += 64
+prefix = "/home/jovyan/vllm/benchmarks/test_logs/ratio_"
 suffix = ".txt"
 
-for tp in tps:
-    print(f"----------TP {tp}----------")
+for r in ratios:
+    print(f"----------RATIO {r}----------")
     for length in lengths:
-        file_path = prefix + str(tp) + "_" + str(length) + suffix
+        file_path = prefix + str(r) + "_" + str(length) + suffix
         with open(file_path, 'r') as file:
             lines = file.readlines()
             datas = []

@@ -44,21 +44,21 @@ def main(args: argparse.Namespace):
     )
     print(sampling_params)
     
-    '''np.random.seed(42)
+    np.random.seed(42)
     prefix_length = math.ceil(args.input_len * (args.ratio / 100))
     suffix_length = args.input_len - prefix_length
-    prefix = np.random.randint(10000, size = prefix_length).tolist()
+    prefix = np.random.randint(100, size = prefix_length).tolist()
     if suffix_length > 0:
-        suffix = np.random.randint(10000, size = suffix_length).tolist()
+        suffix = np.random.randint(100, size = suffix_length).tolist()
     else:
         suffix = []
-    id2 = prefix + suffix
+    ids = prefix + suffix
     inputs = []
     for i in range(args.batch_size * args.num_seqs):
         if i < args.batch_size:
             inputs.append(prefix)
         else:
-            inputs.append(id2)'''
+            inputs.append(ids)
     
     '''dummy_prompt_token_ids = []
     for i in range(args.num_seqs):
@@ -67,12 +67,12 @@ def main(args: argparse.Namespace):
 
     warmups = []
     for _ in range(args.num_seqs):
-        warmups.append(np.full(args.input_len, 1000, dtype = int).tolist())'''
+        warmups.append(np.full(args.input_len, 1000, dtype = int).tolist())
     np.random.seed(42)
     dummy_prompt_token_ids = np.random.randint(100,
                                                size=(args.num_seqs,
                                                      args.input_len))
-    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()
+    dummy_prompt_token_ids = dummy_prompt_token_ids.tolist()'''
     def run_to_completion(
             inputs: List[List[int]],
             profile_dir: Optional[str] = None,
@@ -115,7 +115,8 @@ def main(args: argparse.Namespace):
             return latency
 
     print("Warming up...")
-    run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=None)
+    #run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=None)
+    run_to_completion(inputs=inputs, profile_dir=None, file_name=None)
 
     '''if args.profile:
         profile_dir = args.profile_result_dir
@@ -130,7 +131,8 @@ def main(args: argparse.Namespace):
     # Benchmark.
     latencies = []
     for _ in tqdm(range(args.num_iters), desc="Profiling iterations"):
-        latencies.append(run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=args.file_name))
+        #latencies.append(run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=args.file_name))
+        latencies.append(run_to_completion(inputs=inputs, profile_dir=None, file_name=args.file_name))
     print(f'Avg latency: {np.mean(latencies)} seconds')
     #with open(args.file_name, 'a') as file:
     #    file.write(f"{args.input_len} {args.batch_size} {np.mean(latencies)}\n")
@@ -149,7 +151,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
     parser.add_argument('--input-len', type=int, default=896)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--num-seqs', type=int, default=30)
+    parser.add_argument('--num-seqs', type=int, default=11)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,
