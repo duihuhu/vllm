@@ -168,19 +168,7 @@ class LlamaAttention(nn.Module):
         else:
             attn_output = self.attn(q, k, v, kv_cache, kv_cache_address, attn_metadata, layer_id, log_file_path)
         
-        if log_file_path:
-            start = torch.cuda.Event(enable_timing = True)
-            end = torch.cuda.Event(enable_timing = True)
-
-            start.record()
-            output, _ = self.o_proj(attn_output)
-            end.record()
-            torch.cuda.synchronize()
-
-            with open(log_file_path, 'a') as file:
-                file.write(f"oproj costs {start.elapsed_time(end)}\n")
-        else:
-            output, _ = self.o_proj(attn_output)
+        output, _ = self.o_proj(attn_output)
 
         return output
 
@@ -333,24 +321,53 @@ class LlamaModel(nn.Module):
         for i in range(len(self.layers)):
             layer = self.layers[i]
 
-            if not self.use_agg_block or not kv_cache_address:
-                hidden_states, residual = layer(
-                    positions,
-                    hidden_states,
-                    kv_caches[i],
-                    None,
-                    attn_metadata,
-                    residual,
-                    log_file_path)
+            if log_file_path:
+                start = torch.cuda.Event(enable_timing = True)
+                end = torch.cuda.Event(enable_timing = True)
+
+                start.record()
+                if not self.use_agg_block or not kv_cache_address:
+                        hidden_states, residual = layer(
+                            positions,
+                            hidden_states,
+                            kv_caches[i],
+                            None,
+                            attn_metadata,
+                            residual,
+                            log_file_path)
+                else:
+                    hidden_states, residual = layer(
+                        positions,
+                        hidden_states,
+                        kv_caches[i],
+                        kv_cache_address,
+                        attn_metadata,
+                        residual,
+                        log_file_path)
+                end.record()
+                torch.cuda.synchronize()
+
+                with open(log_file_path, 'a') as file:
+                    file.write(f"a layer costs {start.elapsed_time(end)}\n")
             else:
-                hidden_states, residual = layer(
-                    positions,
-                    hidden_states,
-                    kv_caches[i],
-                    kv_cache_address,
-                    attn_metadata,
-                    residual,
-                    log_file_path)
+                if not self.use_agg_block or not kv_cache_address:
+                    hidden_states, residual = layer(
+                        positions,
+                        hidden_states,
+                        kv_caches[i],
+                        None,
+                        attn_metadata,
+                        residual,
+                        log_file_path)
+                else:
+                    hidden_states, residual = layer(
+                        positions,
+                        hidden_states,
+                        kv_caches[i],
+                        kv_cache_address,
+                        attn_metadata,
+                        residual,
+                        log_file_path)
             
             if merge_reqs_info:
                 for merge_req_info in merge_reqs_info:

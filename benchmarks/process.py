@@ -1,19 +1,20 @@
 #ops = ["preattnnorm","qkvproj","rope","store","attn","oproj","postattnnorm","ffn1","act","ffn2"]
-ops = ["oproj"]
-lengths = [8, 16, 32]
-i = 64
+#ops = ["oproj"]
+tps = [1, 2]
+lengths = []
+i = 16
 while True:
     if i > 4096:
         break
     lengths.append(i)
-    i += 64
-prefix = "/home/jovyan/vllm/benchmarks/profile_logs_oproj/tp1_"
+    i += 16
+prefix = "/home/jovyan/vllm/benchmarks/test_logs/tp_"
 suffix = ".txt"
 
-for op in ops:
-    print(f"----------{op}----------")
+for tp in tps:
+    print(f"----------TP {tp}----------")
     for length in lengths:
-        file_path = prefix + op + "_" + str(length) + suffix
+        file_path = prefix + str(tp) + "_" + str(length) + suffix
         with open(file_path, 'r') as file:
             lines = file.readlines()
             datas = []
