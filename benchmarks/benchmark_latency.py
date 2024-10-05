@@ -54,8 +54,8 @@ def main(args: argparse.Namespace):
         suffix = []
     ids = prefix + suffix
     inputs = []
-    for i in range(args.batch_size * args.num_seqs):
-        if i < args.batch_size:
+    for i in range(args.num_seqs):
+        if i == 0:
             inputs.append(prefix)
         else:
             inputs.append(ids)
@@ -114,9 +114,9 @@ def main(args: argparse.Namespace):
             latency = end_time - start_time
             return latency
 
-    print("Warming up...")
+    print("Warming Up... Dost Nothing Here!")
     #run_to_completion(inputs=dummy_prompt_token_ids, profile_dir=None, file_name=None)
-    run_to_completion(inputs=inputs, profile_dir=None, file_name=None)
+    #run_to_completion(inputs=inputs, profile_dir=None, file_name=None)
 
     '''if args.profile:
         profile_dir = args.profile_result_dir
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     parser.add_argument('--tensor-parallel-size', '-tp', type=int, default=1)
     parser.add_argument('--input-len', type=int, default=896)
     parser.add_argument('--output-len', type=int, default=1)
-    parser.add_argument('--num-seqs', type=int, default=11)
+    parser.add_argument('--num-seqs', type=int, default=31)
     parser.add_argument('--batch-size', type=int, default=1)
     parser.add_argument('--n',
                         type=int,
