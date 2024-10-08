@@ -192,7 +192,7 @@ class LLM:
         # with open("iteration_time.txt", "a+") as fd:
         #     for line in iteration_time:
         #         fd.write(str(line)+'\n')
-        print(f"iteration {iteration_time}")
+        # print(f"iteration {iteration_time}")
         if split_two_phase == 1:
             ed = time.time()
             print(f"End Prefill at {ed}", "total prefill time: ", ed-st)
