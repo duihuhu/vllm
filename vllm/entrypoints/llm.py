@@ -134,7 +134,7 @@ class LLM:
             for i in range(len(mixed_dummy_prompt_token_ids)):
                 self._add_mix_request(None, mixed_sampling_params, mixed_dummy_prompt_token_ids[i])
                 
-        return self._run_engine(use_tqdm, split_two_phase=1)
+        return self._run_engine(use_tqdm, split_two_phase=0)
 
     def _add_request(
         self,
