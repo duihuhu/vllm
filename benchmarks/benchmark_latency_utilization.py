@@ -31,7 +31,7 @@ def main(args: argparse.Namespace):
         ignore_eos=True,
         max_tokens=args.output_len,
     )
-    dummy_prompt_token_ids = [[0] * args.input_len]
+    dummy_prompt_token_ids = [[0] * args.input_len] * args.batch_size
 
     def run_to_completion(profile: bool = False):
         if profile:
