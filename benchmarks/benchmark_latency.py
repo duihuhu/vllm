@@ -20,7 +20,7 @@ def main(args: argparse.Namespace):
         tokenizer=args.tokenizer,
         tensor_parallel_size=args.tensor_parallel_size,
         max_num_seqs=args.batch_size,
-        max_num_batched_tokens=args.batch_size * args.input_len,
+        # max_num_batched_tokens=args.batch_size * args.input_len,
     )
 
     sampling_params = SamplingParams(
