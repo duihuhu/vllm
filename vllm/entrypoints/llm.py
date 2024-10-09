@@ -203,7 +203,7 @@ class LLM:
             self.llm_engine.covert_prefilled_to_running()
             time.sleep(3)
             st2 = time.time()
-            print(f"Start Decode at {st2}")
+            print(f"Start Decode at {st2}", time.time())
             interation = 0
 
             while self.llm_engine.has_unfinished_requests():
