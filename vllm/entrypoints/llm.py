@@ -201,7 +201,7 @@ class LLM:
 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
-            time.sleep(1)
+            time.sleep(3)
             st2 = time.time()
             print(f"Start Decode at {st2}")
             interation = 0
