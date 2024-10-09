@@ -201,7 +201,7 @@ class LLM:
 
         if split_two_phase == 1:
             self.llm_engine.covert_prefilled_to_running()
-            time.sleep(5)
+            time.sleep(1)
             st2 = time.time()
             print(f"Start Decode at {st2}")
             interation = 0
@@ -218,6 +218,7 @@ class LLM:
                         if use_tqdm:
                             pbar.update(1)
             ed2 = time.time()
+            time.sleep(1)
             print(f"iteration {interation}")
             print(f"End Decode at {ed2}", "total decode time: ", ed2-st2)
             total_num_token2 = sum(len(output.outputs[0].token_ids) for output in outputs)
