@@ -179,7 +179,7 @@ def sample_requests_aplaca(
     completion_token_ids = tokenizer(completions).input_ids
     tokenized_dataset = []
     for p, pt, c, ct in zip(prompts, prompt_token_ids, completions, completion_token_ids):
-        tokenized_dataset.append(len(p), len(pt), len(ct))
+        tokenized_dataset.append((len(p), len(pt), len(ct)))
 
     # Filter out too long sequences.
     # filtered_dataset: List[Tuple[str, int, int]] = []
