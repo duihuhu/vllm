@@ -114,7 +114,7 @@ class AsyncLLMEngine:
                 if output.finished:
                     outputs.append(output)
                     end_time = time.time()
-                    # output.end_time = end_time-s_time
+                    output.end_time = end_time-s_time
                     print("decode complish ", output.request_id, end_time, end_time-s_time, output.outputs[0].finish_reason)
         return len(outputs)
     
