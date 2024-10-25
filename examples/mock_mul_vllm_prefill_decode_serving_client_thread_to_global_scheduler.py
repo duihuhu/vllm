@@ -31,7 +31,7 @@ request_prompts_token_ids = {}
 request_prompts = {}
 
 mdecode_prefilled_num = 0
-total_requests = 16
+total_requests = 128
 # batch_size = 4
 
 # prefilled_event = asyncio.Event()

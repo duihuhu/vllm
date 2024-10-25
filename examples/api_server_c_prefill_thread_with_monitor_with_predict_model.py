@@ -121,7 +121,7 @@ async def mprefill_add_prefill(request_dict):
     #engine.add_mprefill_request(prompts=prompts, output_lens=output_lens, request_ids=request_ids, sampling_params=sampling_params_list)
         execute_time = time.time()
         print("prefill start execute time ", execute_time)
-        for i in range(1):
+        for i in range(4):
             # start_sort_time  = time.time()
             sorted_request_waiting = sorted(zip(chunkrunner.request_waiting[0][i*16:(i+1)*16], chunkrunner.request_waiting[1][i*16:(i+1)*16],
                                     chunkrunner.request_waiting[2][i*16:(i+1)*16], chunkrunner.request_waiting[3][i*16:(i+1)*16],
