@@ -57,6 +57,8 @@ def sample_requests_aplaca(
     # sampled_requests = random.sample(filtered_dataset, num_requests)
 
     sampled_prompts = random.sample(filtered_dataset, num_requests)
+    for req in sampled_prompts:
+        print("choose req info ", req[1], req[2])
     return sampled_prompts
 
 def sample_requests(
