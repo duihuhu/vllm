@@ -119,7 +119,7 @@ async def post_prefill_exec(prompts: List[str],
         elif alread_send < num_prompts:
             if (alread_send + batch_size) > num_prompts:
                 batch_size = num_prompts - alread_send
-        time.sleep(2)
+        # time.sleep(2)
     return
 
 def receive_mdecode_prefilled_signal(host, port):
