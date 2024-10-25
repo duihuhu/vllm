@@ -50,7 +50,7 @@ def sample_requests_aplaca(
         if prompt_len + output_len > 2048:
             # Prune too long sequences.
             continue
-        filtered_dataset.append((prompt, prompt_token_ids, request_id, output_len))
+        filtered_dataset.append((prompt, prompt_token_ids, output_len))
         # filtered_prompts.append(prompt)
         # filtered_tokenids.append(prompt_token_ids)
     # Sample the requests.
