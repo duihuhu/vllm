@@ -17,6 +17,7 @@ def sample_requests_aplaca(
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
 ) -> List[Tuple[str, int, int]]:
+    random.seed(0)
     # Load the dataset.
     with open(dataset_path) as f:
         dataset = json.load(f)
