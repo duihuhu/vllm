@@ -210,5 +210,6 @@ class LLM:
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
         for output in outputs:
+            print("output.end_time ", output.end_time)
             print(f"req {output.request_id} is finished", output.end_time-st, " first token time: ", output.first_token_time-st, " finished reason ", output.outputs[0].finish_reason)
         return outputs
