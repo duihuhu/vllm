@@ -39,7 +39,6 @@ def sample_requests_aplaca(
     # filtered_dataset: List[Tuple[str, int, int]] = []
     filtered_dataset: List[Tuple[str, List[int], str, int]] = []
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
-        request_id = random_uuid()
         prompt_len = len(prompt_token_ids)
         # if prompt_len > 256 or output_len > 128:
         if prompt_len < 4 or output_len < 4:
