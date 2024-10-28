@@ -122,7 +122,7 @@ class ChunkRunner:
         if tensor_parallel_size > 1:
             worker_use_ray = True
         else:
-            worker_use_ray = False
+            worker_use_ray = True
         self.worker_use_ray = worker_use_ray
         self.parallel_config = ParallelConfig(pipeline_parallel_size = 1,
                                               tensor_parallel_size = tensor_parallel_size,
