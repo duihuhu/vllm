@@ -176,7 +176,7 @@ class ParallelConfig:
         self.worker_use_ray = worker_use_ray
 
         self.world_size = pipeline_parallel_size * tensor_parallel_size
-        if self.world_size > 1:
+        if self.world_size >= 1:
             self.worker_use_ray = True
         self._verify_args()
 
