@@ -63,9 +63,9 @@ def init_mdecode_prefill(request_dict):
         decode_event.clear()
         decode_event.wait()
         
-@app.on_event("startup")
-def startup_decode_event():
-    threading.Thread(target=init_mdecode_prefill, daemon=True).start()
+# @app.on_event("startup")
+# def startup_decode_event():
+#     threading.Thread(target=init_mdecode_prefill, daemon=True).start()
         
 async def mprefill_exec_prefill(request_dict):
     global mprefill_status_curr
