@@ -15,7 +15,7 @@ from vllm.transformers_utils.tokenizer import get_tokenizer
 request_prompts_token_ids = {}
 request_prompts = {}
 G_URL = "http://127.0.0.1:8000/generate"  #GS服务器的地址 P
-AIOHTTP_TIMEOUT = 6 * 6 * 100
+AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
 
 def random_uuid() -> str:
     return str(uuid.uuid4().hex)
