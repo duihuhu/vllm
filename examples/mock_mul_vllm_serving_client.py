@@ -40,7 +40,6 @@ def post_http_request(prompt: str,
         "temperature": 0.0,
         "max_tokens": output_len,
         "logprobs": 1,
-        "prompt_logprobs": 1
     }
     response = requests.post(api_url, headers=headers, json=pload, stream=True)
     return response
