@@ -80,25 +80,28 @@ def get_response(response: requests.Response) -> List[str]:
     output = data["text"]
     return output
 
-async def post_request_and_get_response(args, prompt, output_len):
-    rsp = post_http_request(prompt, output_len, G_URL, args.n, args.stream)
-    if args.stream:
-        num_printed_lines = 0
-        for h in get_streaming_response(rsp):
-            print("res", h)
-            # clear_line(num_printed_lines)
-            # num_printed_lines = 0
-            # for _, line in enumerate(h):
-            #     num_printed_lines += 1
-            #     print(f"vllm : {line!r}", flush=True)
-                
+async def post_request_and_get_response(prompt, output_len):
+    pload = {
+        "prompt": prompt,
+        # "request_id": random_uuid(), 
+        "n": 1,
+        "use_beam_search": False,
+        "temperature": 0.0,
+        "max_tokens": output_len,
+        "logprobs": 1,
+    }
+    response = asyc_forward_request(prompt, G_URL)
+    async for resp in response:
+        resp = resp.decode('utf-8')
+        resp = json.loads(resp)
+        print("resp ", resp)
+    return "1" 
+
 async def main(args, prompts, output_lens):
     coroutines = []
     for prompt, output_len in zip(prompts, output_lens):
-        # print(f"prompt:", end=' ', flush=True)
-        # post_request_and_get_response(args, prompt)
         coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt, output_len)))
-    await asyncio.gather(*coroutines)
+    response = await asyncio.gather(*coroutines)
 
 def sample_requests(
     dataset_path: str,
