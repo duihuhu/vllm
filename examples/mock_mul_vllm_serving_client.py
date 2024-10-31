@@ -90,7 +90,7 @@ async def post_request_and_get_response(prompt, output_len):
         "max_tokens": output_len,
         "logprobs": 1,
     }
-    response = asyc_forward_request(prompt, G_URL)
+    response = asyc_forward_request(pload, G_URL)
     async for resp in response:
         resp = resp.decode('utf-8')
         resp = json.loads(resp)
@@ -100,7 +100,7 @@ async def post_request_and_get_response(prompt, output_len):
 async def main(args, prompts, output_lens):
     coroutines = []
     for prompt, output_len in zip(prompts, output_lens):
-        coroutines.append(asyncio.create_task(post_request_and_get_response(args, prompt, output_len)))
+        coroutines.append(asyncio.create_task(post_request_and_get_response(prompt, output_len)))
     response = await asyncio.gather(*coroutines)
 
 def sample_requests(
