@@ -169,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument("--stream", action="store_true")
     parser.add_argument("--dataset", type=str, required=True,
                         help="Path to the dataset.")
-    parser.add_argument("--num-prompts", type=int, default=1000,
+    parser.add_argument("--num-prompts", type=int, default=128,
                         help="Number of prompts to process.")
     parser.add_argument("--tokenizer", type=str, default=None)
     parser.add_argument("--model", type=str, default="facebook/opt-125m")
