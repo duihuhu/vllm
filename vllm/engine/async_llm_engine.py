@@ -268,11 +268,11 @@ class AsyncLLMEngine:
         request_event = asyncio.Event()
         self.request_events[request_id] = request_event
 
-        if self.log_requests:
-            logger.info(f"Received request {request_id}: "
-                        f"prompt: {prompt!r}, "
-                        f"sampling params: {sampling_params}, "
-                        f"prompt token ids: {prompt_token_ids}.")
+        # if self.log_requests:
+            # logger.info(f"Received request {request_id}: "
+            #             f"prompt: {prompt!r}, "
+            #             f"sampling params: {sampling_params}, "
+            #             f"prompt token ids: {prompt_token_ids}.")
 
         # Add the request into the vLLM engine's waiting queue.
         if self.engine_use_ray:
@@ -322,8 +322,8 @@ class AsyncLLMEngine:
 
             # Once finished, release the resources of the sequence group.
             if request_output.finished:
-                if self.log_requests:
-                    logger.info(f"Finished request {request_id}.")
+                # if self.log_requests:
+                    # logger.info(f"Finished request {request_id}.")
                 print(f"req {request_output.request_id} is finished", time.time())
                 del self.request_outputs[request_id]
                 del self.request_events[request_id]
