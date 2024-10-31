@@ -35,7 +35,7 @@ def post_http_request(prompt: str,
     pload = {
         "prompt": prompt,
         # "request_id": random_uuid(), 
-        "n": n,
+        "n": 1,
         "use_beam_search": False,
         "temperature": 0.0,
         "max_tokens": output_len,
