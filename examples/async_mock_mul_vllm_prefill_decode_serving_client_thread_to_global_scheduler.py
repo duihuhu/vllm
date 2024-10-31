@@ -95,6 +95,13 @@ async def asyc_forward_request(request_dict, api_url):
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
                         
 
+async def post_request_and_get_response(pload, api_url):
+    response = asyc_forward_request(pload, api_url)
+    async for resp in response:
+        resp = resp.decode('utf-8')
+        resp = json.loads(resp)
+        print("resp ", resp)
+    return "1" 
 
 async def post_prefill_exec(prompts: List[str],
                       output_lens: List[int],
@@ -109,6 +116,7 @@ async def post_prefill_exec(prompts: List[str],
     num_prompts = len(prompts)
     batch_size = 16
     alread_send = 0
+    coroutines = []
     while alread_send <= num_prompts:
         # if alread_send == 0:
         #     mprefill_status = "mprefill_execute"
@@ -133,12 +141,7 @@ async def post_prefill_exec(prompts: List[str],
         }
         print("mprefill send ", api_url, " alread_send " , alread_send, time.time())
         # response = requests.post(api_url, headers=headers, json=pload, stream=True)
-        response = asyc_forward_request(pload, api_url)
-        async for resp in response:
-            resp = resp.decode('utf-8')
-            resp = json.loads(resp)
-        print("resp ", resp)
-        
+        coroutines.append(asyncio.create_task(post_request_and_get_response(prompt, api_url)))
         alread_send = alread_send + batch_size
         if alread_send >= num_prompts:
             break
@@ -146,6 +149,7 @@ async def post_prefill_exec(prompts: List[str],
             if (alread_send + batch_size) > num_prompts:
                 batch_size = num_prompts - alread_send
         # time.sleep(2)
+    response = await asyncio.gather(*coroutines)
     return
 
 def receive_mdecode_prefilled_signal(host, port):
