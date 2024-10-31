@@ -141,7 +141,7 @@ async def post_prefill_exec(prompts: List[str],
         }
         print("mprefill send ", api_url, " alread_send " , alread_send, time.time())
         # response = requests.post(api_url, headers=headers, json=pload, stream=True)
-        coroutines.append(asyncio.create_task(post_request_and_get_response(prompt, api_url)))
+        coroutines.append(asyncio.create_task(post_request_and_get_response(pload, api_url)))
         alread_send = alread_send + batch_size
         if alread_send >= num_prompts:
             break
