@@ -115,7 +115,7 @@ class AsyncLLMEngine:
                     outputs.append(output)
                     end_time = time.time()
                     output.end_time = end_time-s_time
-                    print("decode complish ", output.request_id, end_time, end_time-s_time, output.outputs[0].finish_reason, len(output.prompt_token_ids))
+                    print("decode complish ", output.request_id, end_time, end_time-s_time, output.outputs[0].finish_reason)
         return len(outputs)
     
     def add_mprefill_request(self,

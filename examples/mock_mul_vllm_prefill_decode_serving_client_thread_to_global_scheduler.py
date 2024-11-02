@@ -248,11 +248,12 @@ if __name__ == "__main__":
       prompts.append(prompt[0])
       request_ids.append(prompt[-2])
       output_lens.append(prompt[-1])
-      print(len(prompt[1]), prompt[-1])
+      print(prompt[-2], len(prompt[1]), prompt[-1])
     
     n = args.n
     stream = args.stream
-            
+    
+    
     # while True:
     #     if status == 0:
     #         host_decode = args.host
