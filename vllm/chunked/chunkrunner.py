@@ -611,7 +611,7 @@ class ChunkRunner:
                     self._reduce_outputs()
                     output_num = 0
             #print(f"now {total_num} reqs have been finished")
-            print("mprefill!!:  prefill iteration now is no unfinished")
+            print("chunk mprefill!!:  prefill iteration now is no unfinished")
         return prefill_nums       
     
         
