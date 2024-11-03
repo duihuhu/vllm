@@ -107,7 +107,7 @@ def notify_mdecode_from_queue():
         arrive_time = time.time()
         # print("queue decode get data " , request_info[0], arrive_time, "\n")
         # engine.convert_req_label_status(request_info[0], request_info[1], arrive_time=arrive_time-0.0015)
-        engine.convert_req_label_status(request_info[0], request_info[1], arrive_time=arrive_time-0.0015)
+        engine.convert_req_label_status(request_info[0], request_info[1], arrive_time=arrive_time)
         mdecode_status = "decode"
         decode_event.set()
         
