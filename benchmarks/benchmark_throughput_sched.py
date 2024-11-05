@@ -18,8 +18,8 @@ def get_data(filename):
     with open(filename, "r") as fd:
         for line in fd.readlines():
             content = line.split("\n")[0].split(" ")
-            input_len.append(content[1])
-            output_len.append(content[2])
+            input_len.append(int(content[1]))
+            output_len.append(int(content[2]))
     return input_len, output_len
             
 
