@@ -76,7 +76,7 @@ def sample_requests(
     sampled_requests = random.sample(filtered_dataset, num_requests)
     for req in sampled_requests:
         print("choose req info ", req[1], req[2])
-    input_lens, output_lens = get_data("mixed_datasets/splitwise_0.txt")
+    input_lens, output_lens = get_data("mixed_datasets/spitwise_0.txt")
     
     sample_request = []
     for input_len, output_len in zip(input_lens, output_lens):
