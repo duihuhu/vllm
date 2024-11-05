@@ -78,6 +78,7 @@ def sample_requests_aplaca(
         for req in sampled_prompts:
             if req[1] == input_len and req[2] == output_len:
                 sample_request.append(req)
+                break
     # return sampled_requests
     print(len(sample_request))
     return sample_request
