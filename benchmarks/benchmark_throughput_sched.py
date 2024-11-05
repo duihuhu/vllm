@@ -27,6 +27,7 @@ def sample_requests(
     dataset_path: str,
     num_requests: int,
     tokenizer: PreTrainedTokenizerBase,
+    filename: str,
 ) -> List[Tuple[str, int, int]]:
     # Load the dataset.
     with open(dataset_path) as f:
@@ -76,7 +77,7 @@ def sample_requests(
     sampled_requests = random.sample(filtered_dataset, num_requests)
     for req in sampled_requests:
         print("choose req info ", req[1], req[2])
-    input_lens, output_lens = get_data("mixed_datasets/spitwise_0.txt")
+    input_lens, output_lens = get_data(filename)
     
     sample_request = []
     for input_len, output_len in zip(input_lens, output_lens):
@@ -212,7 +213,7 @@ def main(args: argparse.Namespace):
 
     # Sample the requests.
     tokenizer = get_tokenizer(args.tokenizer)
-    requests = sample_requests(args.dataset, args.num_prompts, tokenizer)
+    requests = sample_requests(args.dataset, args.num_prompts, tokenizer, args.filename)
 
     if args.backend == "vllm":
         elapsed_time = run_vllm(
@@ -251,6 +252,8 @@ if __name__ == "__main__":
                         help="Maximum batch size for HF backend.")
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--split-two-phase", type=int, default=0)
+    parser.add_argument("--filename", type=str, default="mixed_datasets/spitwise_0.txt")
+
     args = parser.parse_args()
 
     if args.backend == "vllm":
