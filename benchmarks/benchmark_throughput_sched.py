@@ -84,6 +84,7 @@ def sample_requests(
             if req[1] == input_len and req[2] == output_len:
                 sample_request.append(req)
     # return sampled_requests
+    print(len(sample_request))
     return sample_request
 
 
