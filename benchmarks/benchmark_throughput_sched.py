@@ -62,9 +62,9 @@ def sample_requests(
     for prompt, prompt_token_ids, output_len in tokenized_dataset:
         prompt_len = len(prompt_token_ids)
         # if prompt_len < 4 or output_len < 4:
-        if prompt_len > 256 or output_len > 128:
+        # if prompt_len > 256 or output_len > 128:
         # if prompt_len < 512 or output_len > 128:
-        # if prompt_len < 512 or output_len < 128:
+        if prompt_len < 512 or output_len < 128:
             # Prune too short sequences.
             continue
         # if prompt_len > 1024 or prompt_len + output_len > 2048:
