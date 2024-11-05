@@ -193,7 +193,7 @@ class LLM:
                 interation = interation  + 1
                 for output in step_outputs:
                     if output.finished:
-                        # print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st)
+                        print(f"req {output.request_id} is finished", len(output.prompt_token_ids), len(output.outputs[0].token_ids), time.time()-st, time.time()-st2)
                         outputs.append(output)
                         if use_tqdm:
                             pbar.update(1)
@@ -209,6 +209,6 @@ class LLM:
         # This is necessary because some requests may be finished earlier than
         # its previous requests.
         outputs = sorted(outputs, key=lambda x: int(x.request_id))
-        for output in outputs:
-            print(f"req {output.request_id} is finished", output.end_time-st, " first token time: ", output.first_token_time-st, " finished reason ", output.outputs[0].finish_reason, len(output.prompt_token_ids))
+        # for output in outputs:
+        #     print(f"req {output.request_id} is finished", output.end_time-st, " first token time: ", output.first_token_time-st, " finished reason ", output.outputs[0].finish_reason, len(output.prompt_token_ids))
         return outputs
