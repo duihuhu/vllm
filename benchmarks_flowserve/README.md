@@ -2,19 +2,21 @@
 
 ## Launch Global Scheduler
 ```bash
-python3 ./vllm/global_scheduler/gs/async_global_scheduler.py --model /home/jovyan/models/Llama-2-13b-hf/ --ep-policy random --ed-policy random
+python3 ./vllm/global_scheduler/gs/async_global_scheduler.py --model /home/jovyan/models/Llama-2-13b-hf/ --ep-policy random --ed-policy random --enable-separate
 
 # --ep-policy / --ed-policy: random, rr, prefix, least
 ```
 
 ## Launch Prefill instances
 ```bash
+ray start --head
+
 python3 ./vllm/entrypoints/server.py  --local_host 127.0.0.1 --model=/data/zhaoyiyang/Llama-2-7B-fp16/ --local_port 8082 --worker-use-ray  --tensor-parallel-size 2 --block-size 16 --enable-separate --role=prompt --enable-direct --enable-layer --enable-dcache --enable-radix-caching 
 ```
 
 ## Launch Decode instances
 ```bash
-python3 ./vllm/entrypoints/server.py  --local_host 127.0.0.1 --model=/data/zhaoyiyang/Llama-2-7B-fp16/ --local_port 8083 --worker-use-ray  --tensor-parallel-size 2 --block-size 16 --enable-separate --role=decoder --enable-direct  --enable-layer  --enable-dcache --enable-radix-caching 
+python3 ./vllm/entrypoints/server.py  --local_host 127.0.0.1 --model=/home/jovyan/hucc/models/Llama-2-13b-hf --local_port 8083 --worker-use-ray  --tensor-parallel-size 1 --block-size 16 --enable-separate --role=decoder --enable-direct  --enable-layer  --enable-dcache --enable-radix-caching 
 ```
 
 ## Create communication domain

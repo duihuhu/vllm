@@ -524,6 +524,7 @@ if __name__ == "__main__":
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)
+    # engine_args also has local_host and local_port
     server_args = ServerArgs(engine_args, args.local_host, args.local_port)
     server = Server(server_args)
     server.run_server()
