@@ -12,25 +12,18 @@ class EngineType(Enum):
 class CommonHeader:
     def __init__(
         self,
-        host: str,
-        port: int,
         engine_type: EngineType=None
     ) -> None:
-        self.host = host
-        self.port = port
+        # Should not set host in the header, it will affect the default host setting and cause 502
         self.engine_type = engine_type
     
     def __json__(self) -> Dict:
         if self.engine_type:
             return {
-                "host": self.host,
-                "port": str(self.port),
                 "engine_type": self.engine_type.value
             }
         else:
             return {
-                "host": self.host,
-                "port": str(self.port)
             }
 
 class CommData:

@@ -130,6 +130,7 @@ class Worker:
         init_distributed_environment(self.parallel_config, self.rank,
                                      self.distributed_init_method,
                                      self.local_rank)
+        print(f"worker init. rank: {self.rank}. local_rank: {self.local_rank}. nccl_local_rank: {self.nccl_local_rank}")
         # Set random seed.
         set_random_seed(self.model_config.seed)
         

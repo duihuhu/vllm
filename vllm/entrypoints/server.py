@@ -434,11 +434,15 @@ class ServerArgs:
         engine_args: AsyncEngineArgs,
         local_host: str,
         local_port: int,
+        gs_host: str,
+        gs_port: int,
         report_interval_time = 0.5
     ) -> None:
         self.engine_args = engine_args
         self.local_host = local_host
         self.local_port = local_port
+        self.gs_host = gs_host
+        self.gs_port = gs_port
         self.report_interval_time = report_interval_time
     
 
@@ -448,7 +452,7 @@ class Server:
     
     def _init_server(self, server_args: ServerArgs):
         self.local_entry_point = (server_args.local_host, server_args.local_port)
-        self.gs_entry_point = (cfg.global_scheduler_ip, cfg.global_scheduler_port)
+        self.gs_entry_point = (server_args.gs_host, server_args.gs_port) 
         
         engine_args = server_args.engine_args
         enable_separate = engine_args.enable_separate
@@ -497,13 +501,17 @@ class Server:
                 global_ranks = self.global_ranks,
                 timestamp = time.time()
             )
+            payload = load_info.__json__()
+            # add host and port to the payload
+            payload["host"] = self.gs_entry_point[0]
+            payload["port"] = self.gs_entry_point[1]
             data = CommData(
-                headers=CommonHeader(self.local_entry_point[0], self.local_entry_point[1],
-                                     self.engine_type).__json__(),
-                payload=load_info.__json__()
+                headers=CommonHeader(self.engine_type).__json__(),
+                payload=payload
             )
-            CommEngine.send_to(self.gs_entry_point, "monitor_report", data)
-            
+            response = CommEngine.send_to(self.gs_entry_point, "monitor_report", data)
+            if response.status_code != 200:
+                print(f"Error: Request failed with status code {response.status_code}. Response content: {response.text}") 
     def run_server(self):
         uvicorn.run(app,
                     host=self.local_entry_point[0],
@@ -513,8 +521,10 @@ class Server:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--local_host", type=str)
-    parser.add_argument("--local_port", type=int)
+    parser.add_argument("--server-host", type=str)
+    parser.add_argument("--server-port", type=int)
+    parser.add_argument("--gs-host", type=str)
+    parser.add_argument("--gs-port", type=int)
     parser.add_argument("--enable-direct", action="store_true")
     parser.add_argument("--enable-breakdown", action="store_true")
     # parser.add_argument("--enable-spee", action="store_true")
@@ -525,6 +535,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)
     # engine_args also has local_host and local_port
-    server_args = ServerArgs(engine_args, args.local_host, args.local_port)
+    server_args = ServerArgs(engine_args, args.server_host, args.server_port, args.gs_host, args.gs_port)
     server = Server(server_args)
     server.run_server()

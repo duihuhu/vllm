@@ -45,15 +45,16 @@ ep_token_tree = RadixTreeManager(block_size)
 ed_token_tree = RadixTreeManager(block_size)
 epd_token_tree = RadixTreeManager(block_size)
 
+args = None
 
 @app.post("/monitor_report")
 async def monitor_report(request: Request) -> Response:
     headers = request.headers
-    host = headers["host"]
-    port = int(headers["port"])
     engine_type = headers["engine_type"]
     
     request_dict = await request.json()
+    host = request_dict.pop("host")
+    port = request_dict.pop("port")
     num_unfinished_requests = request_dict.pop("num_unfinished_requests")
     used_gpu_blocks = request_dict.pop("used_gpu_blocks")
     used_cpu_blocks = request_dict.pop("used_cpu_blocks")
@@ -62,7 +63,7 @@ async def monitor_report(request: Request) -> Response:
     global_ranks =  request_dict.pop("global_ranks") 
     timestamp = request_dict.pop("timestamp")
     key = host + "_" + str(port) + "_" + engine_type
-    # print("key global_ranks", key, global_ranks)
+    print("key global_ranks", key, global_ranks)
     # print(key, unfinished_req, unfinished_tokens)
     if instance_table.get(key):
         instance = instance_table[key]
@@ -264,7 +265,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     uvicorn.run(app,
-                host=cfg.global_scheduler_ip,
-                port=cfg.global_scheduler_port,
+                host=args.host,
+                port=args.port,
                 log_level="debug",
                 timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
