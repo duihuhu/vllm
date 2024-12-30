@@ -69,8 +69,8 @@ class EngineArgs:
     role: str = None
     enable_dcache: bool = False
     enable_cache_meta: bool = False
-    local_host: bool = str
-    local_port: bool = str
+    local_host: str = None 
+    local_port: int = None
     enable_layer: bool = False
     enable_theory: bool = False
     enable_debug: bool = False
@@ -78,6 +78,7 @@ class EngineArgs:
     enable_radix_evictor: bool = False
     use_agg_block: bool = False
     enable_trans_to_dram: bool = False
+    cluster_rank: int = None
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -404,17 +405,17 @@ class EngineArgs:
             action="store_true",
             help=('enable check cache meta from global scheduler'))
         
-        parser.add_argument(
-            '--local-host',
-            type=str,
-            default=None,
-            help=('host send to pull kv data '))
+        # parser.add_argument(
+        #     '--local-host',
+        #     type=str,
+        #     default=None,
+        #     help=('host send to pull kv data '))
         
-        parser.add_argument(
-            '--local-port',
-            type=str,
-            default=None,
-            help=('port send to pull kv data'))
+        # parser.add_argument(
+        #     '--local-port',
+        #     type=int,
+        #     default=None,
+        #     help=('port send to pull kv data'))
         
         # parser.add_argument(
         #     '--enable-layer',
@@ -515,7 +516,7 @@ class EngineArgs:
 
         print("self.block_size ", self.block_size)
         deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
-            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.enable_radix_caching, self.use_agg_block, self.block_size, self.enable_trans_to_dram)
+            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.enable_radix_caching, self.use_agg_block, self.block_size, self.enable_trans_to_dram, self.cluster_rank)
         return (model_config, cache_config, parallel_config, scheduler_config,
                 device_config, deploy_config, lora_config, vision_language_config)
 

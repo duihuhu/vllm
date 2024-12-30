@@ -848,6 +848,7 @@ class DeployConfig:
         use_agg_block: bool = False,
         block_size: int = -1, 
         enable_trans_to_dram: bool = False,
+        cluster_rank: int = 0,
         ) -> None: 
             self.enable_separate = enable_separate
             self.role = role
@@ -865,11 +866,14 @@ class DeployConfig:
             self.use_agg_block = use_agg_block
             self.block_size = block_size
             self.enable_trans_to_dram = enable_trans_to_dram
+            self.cluster_rank = cluster_rank
             self._verify_args()
     
     def _verify_args(self) -> None:
         if self.enable_separate and self.role not in ['prompt', 'decoder']:
             raise ValueError(f"role of LLM Engine Instance must be prompt or decoder in separate mode")
+        if self.enable_separate and self.role == 'decoder' and self.cluster_rank == 0:
+            raise ValueError(f"cluster_rank of a decoder should not be 0 under PD seqparte mode")
 
     def set_global_ranks(self, global_ranks: List[int]) -> None:
         self.global_ranks = global_ranks

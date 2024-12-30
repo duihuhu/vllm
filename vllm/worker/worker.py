@@ -98,7 +98,7 @@ class Worker:
         self.dst_cpu_cache = {}
 
         self.trans_blocks_time = 0
-    def init_device(self) -> None:
+    def init_device(self) -> int:
         if self.device_config.device.type == "cuda":
             # torch.distributed.all_reduce does not free the input tensor until
             # the synchronization point. This causes the memory usage to grow
@@ -120,17 +120,18 @@ class Worker:
             raise RuntimeError(
                 f"Not support device type: {self.device_config.device}")
         
-        if not self.is_driver_worker:
-            self.nccl_local_rank, self.global_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0]), None
-            logger.info("worker get from rank = %d, ", self.nccl_local_rank)
-        else:
-            self.nccl_local_rank = self.device_id
+        # if not self.is_driver_worker:
+        #     self.nccl_local_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0])
+        #     logger.info("worker get from rank = %d, ", self.nccl_local_rank)
+        # else:
+        #     self.nccl_local_rank = self.device_id
             
+        self.nccl_local_rank = self.deploy_config.cluster_rank * self.parallel_config.tensor_parallel_size + self.rank
         # Initialize the distributed environment.
         init_distributed_environment(self.parallel_config, self.rank,
                                      self.distributed_init_method,
                                      self.local_rank)
-        print(f"worker init. rank: {self.rank}. local_rank: {self.local_rank}. nccl_local_rank: {self.nccl_local_rank}")
+        print(f"worker init. rank: {self.rank}. local_rank: {self.local_rank}. cluster_rank: {self.deploy_config.cluster_rank}. nccl_local_rank: {self.nccl_local_rank}")
         # Set random seed.
         set_random_seed(self.model_config.seed)
         

@@ -521,8 +521,8 @@ class Server:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server-host", type=str)
-    parser.add_argument("--server-port", type=int)
+    parser.add_argument("--local-host", type=str, help='host send to pull kv data')
+    parser.add_argument("--local-port", type=int, help='port send to pull kv data')
     parser.add_argument("--gs-host", type=str)
     parser.add_argument("--gs-port", type=int)
     parser.add_argument("--enable-direct", action="store_true")
@@ -530,11 +530,14 @@ if __name__ == "__main__":
     # parser.add_argument("--enable-spee", action="store_true")
     parser.add_argument("--enable-layer", action="store_true")
     parser.add_argument('--enable-separate', action="store_true", help=('separate or not '))
-    
+    parser.add_argument("--cluster-rank", type=int) 
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)
+    print(f"cluster_rank: {engine_args.cluster_rank}")
+    exit()
+    # print(engine_args.local_host, engine_args.local_port)
     # engine_args also has local_host and local_port
-    server_args = ServerArgs(engine_args, args.server_host, args.server_port, args.gs_host, args.gs_port)
+    server_args = ServerArgs(engine_args, args.local_host, args.local_port, args.gs_host, args.gs_port)
     server = Server(server_args)
     server.run_server()

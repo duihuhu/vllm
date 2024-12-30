@@ -16,6 +16,9 @@ def create_comm(eprefill_host, eprefill_port, prefill_rank, edecode_host, edecod
     uniqe_id_api_url = cfg.comm_uniqe_id_url % (eprefill_host, eprefill_port)
     dst_channel = "_".join([str(rank) for rank in decode_rank])
     resp = post_request(uniqe_id_api_url, {"dst_channel": dst_channel, "worker_type":worker_type})
+    if resp.status_code != 200:
+        print(f"Error: Request to prefill node for {worker_type} failed with status code {resp.status_code}. Response content: {resp.text}")
+        return None
     # send a request to decode node. 
     creat_comm_api_url = cfg.create_comm_url % (edecode_host, edecode_port)
     src_channel =  "_".join([str(rank) for rank in prefill_rank])
@@ -25,6 +28,9 @@ def create_comm(eprefill_host, eprefill_port, prefill_rank, edecode_host, edecod
     payload['worker_type'] = worker_type
     print("payload ", payload)
     resp = post_request(creat_comm_api_url, payload)
+    if resp.status_code != 200:
+        print(f"Error: Request to decode node for {worker_type} failed with status code {resp.status_code}. Response content: {resp.text}") 
+        return None
     return resp
 
 if __name__ == "__main__":

@@ -132,7 +132,7 @@ class RayGPUExecutor(ExecutorBase):
         driver_node_id, driver_gpu_ids = ray.get(
             self.driver_dummy_worker.get_node_and_gpu_ids.remote())
         driver_device_id = driver_gpu_ids[0]
-        
+        # 每个worker(GPU)是一个元素 
         worker_node_and_gpu_ids = ray.get(
             [worker.get_node_and_gpu_ids.remote() for worker in self.workers])
 
@@ -166,7 +166,6 @@ class RayGPUExecutor(ExecutorBase):
         device_config = copy.deepcopy(self.device_config)
         lora_config = copy.deepcopy(self.lora_config)
         kv_cache_dtype = self.cache_config.cache_dtype
-
         # Initialize the actual workers with the Worker class.
         for rank, (worker, (node_id, _)) in enumerate(
                 zip(self.workers, worker_node_and_gpu_ids),
@@ -444,7 +443,7 @@ class RayGPUExecutorAsync(RayGPUExecutor, ExecutorAsyncBase):
         driver_kwargs: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> Any:
-        """Runs the given method on all workers."""
+        """Runs the given method on ray driver (rank 0)."""
         coros = []
 
         if driver_args is None:
