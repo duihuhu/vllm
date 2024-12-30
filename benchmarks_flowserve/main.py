@@ -21,7 +21,8 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--test-type", type=str, default="open", choices=["open", "closed"])
     parser.add_argument("--num-clients", type=int, default=5)
     parser.add_argument("--duration", type=float, default=10)
-
+    parser.add_argument("--tokenizer-path", type=str)
+    parser.add_argument("--dataset-path", type=str)
     args = parser.parse_args()
 
     return args
@@ -30,15 +31,15 @@ if __name__ == "__main__":
 
     args = get_args()
     set_seed(42)
-    # tokenizer_path = "/data/zhaoyiyang/Llama-2-7B-fp16"
-    tokenizer_path = "/home/jovyan/models/Llama-2-13b-hf"
+    tokenizer_path = args.tokenizer_path
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     if args.dataset == "ShareGPT":
         from dataset_processing.ShareGPT import sample_requests
         reqs, multi_conversations_range = sample_requests(
             # "/data/hujunhao/FlowServe/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
-            "/home/jovyan/hjh/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
+            # "/home/jovyan/hjh/datasets/ShareGPT_V3_unfiltered_cleaned_split.json", 
+            args.dataset_path,
             tokenizer, 
             args.num_requests
         )
@@ -47,7 +48,8 @@ if __name__ == "__main__":
         reqs, multi_conversations_range = sample_requests(
             # ["/data/hujunhao/FlowServe/datasets/LooGLE/shortdep_qa.json", "/data/hujunhao/FlowServe/datasets/LooGLE/longdep_qa.json"], 
             # "/data/hujunhao/FlowServe/datasets/LooGLE/shortdep_qa.json",
-            "/home/jovyan/hjh/datasets/LooGLE/shortdep_qa.json",
+            # "/home/jovyan/hjh/datasets/LooGLE/shortdep_qa.json",
+            args.dataset_path,
             tokenizer, 
             args.num_requests
         )
@@ -55,7 +57,8 @@ if __name__ == "__main__":
         from dataset_processing.ReAct import sample_requests
         reqs, multi_conversations_range = sample_requests(
             # "/data/hujunhao/FlowServe/datasets/hotpotqa_100.jsonl", 
-            "/home/jovyan/hjh/datasets/hotpotqa_100.jsonl", 
+            # "/home/jovyan/hjh/datasets/hotpotqa_100.jsonl", 
+            args.dataset_path,
             tokenizer, 
             args.num_requests
         )
