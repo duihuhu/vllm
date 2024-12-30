@@ -6,7 +6,7 @@ MODEL_PATH=${3:-/workspace/file/models/llama2-7b/models--meta-llama--Llama-2-7b-
 GS_HOST=${4:-10.156.154.242}
 GS_PORT=${5:-8081}
 
-python ./vllm/entrypoints/server.py  --model ${MODEL_PATH} \
+python ./vllm/entrypoints/server.py --model ${MODEL_PATH} \
     --local-host ${SERVER_HOST} --local-port ${SERVER_PORT} --cluster-rank 0 \
     --gs-host ${GS_HOST} --gs-port ${GS_PORT} \
     --worker-use-ray  --tensor-parallel-size 1 \
