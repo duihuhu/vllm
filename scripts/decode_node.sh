@@ -1,6 +1,7 @@
 #!/bin/bash
 export NCCL_DEBUG=INFO
 export NCCL_DEBUG_SUBSYS=ALL
+export NCCL_SOCKET_IFNAME=eno1
 SERVER_HOST=${1:-10.156.154.20}
 SERVER_PORT=${2:-8083}
 # MODEL_PATH=${3:-/workspace/file/models/llama2-13b/models--meta-llama--Llama-2-13b-hf/snapshots/5c31dfb671ce7cfe2d7bb7c04375e44c55e815b1/}
