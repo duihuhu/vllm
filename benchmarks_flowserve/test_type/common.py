@@ -5,7 +5,7 @@ import uuid
 import aiohttp
 
 AIOHTTP_TIMEOUT = aiohttp.ClientTimeout(total=6 * 60 * 60)
-G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
+# G_URL = "http://127.0.0.1:8081/add_request"  #GS服务器的地址 P
 
 def random_uuid() -> str:
     return str(uuid.uuid4().hex)
@@ -42,8 +42,8 @@ async def post_request_and_get_response(args, req, waiting_time):
         "ignore_eos": True,
         "stream":True
     }
-    
-    response = asyc_forward_request(pload, G_URL)
+    g_url = f"http://{args.gs_host}:{args.gs_port}/add_request" 
+    response = asyc_forward_request(pload, g_url)
     start_time = 0
     end_time = 0
     ttft = 0

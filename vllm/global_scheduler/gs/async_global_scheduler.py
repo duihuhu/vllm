@@ -104,6 +104,9 @@ async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode
                         message = buffer[:index]  # 提取从缓冲区起始位置到分隔符位置的消息
                         yield message.strip()  # 返回提取的消息
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
+            else:
+                print(f"Error: Request in gs failed with status code {response.status_code}. Response content: {response.text}") 
+        return None
 
 async def asyc_forward_request_resp(request_dict, api_url):
     headers = {"User-Agent": "Test Client"}
@@ -220,8 +223,8 @@ async def add_request(request: Request) -> Response:
     if args.enable_separate:
         ep_instance, ed_instance = select_disagg_instance(prompt_token_ids, args.ep_policy, args.ed_policy)
         
-        # print("ep instance ", ep_instance.host, ep_instance.service_port)
-        # print("ed instance ", ed_instance.host, ed_instance.service_port)
+        print("ep instance ", ep_instance.host, ep_instance.service_port)
+        print("ed instance ", ed_instance.host, ed_instance.service_port)
         #add prefill and decode info in request_dict, belong to one request
         request_dict["eprefill_host"] = ep_instance.host
         request_dict["eprefill_port"] = ep_instance.service_port

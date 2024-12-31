@@ -396,8 +396,8 @@ std::vector<std::string> TransEngine::check_swap_remote_finished_events() {
 
 int TransEngine::create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice) {
 
-    std::cout << "before create Global NCCL Comm " << rank << std::endl;
-    ncclCommInitRank(&comm, NumDevice, uniqueId ,rank);
+    std::cout << "before create Global NCCL Comm. rank: " << rank << ", num_device: " << NumDevice << std::endl;
+    NCCLCHECK(ncclCommInitRank(&comm, NumDevice, uniqueId ,rank));
     std::cout << "Create Global NCCL Comm Success" << std::endl;
     return 0;
 }

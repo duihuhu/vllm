@@ -503,8 +503,8 @@ class Server:
             )
             payload = load_info.__json__()
             # add host and port to the payload
-            payload["host"] = self.gs_entry_point[0]
-            payload["port"] = self.gs_entry_point[1]
+            payload["host"] = self.local_entry_point[0]
+            payload["port"] = self.local_entry_point[1]
             data = CommData(
                 headers=CommonHeader(self.engine_type).__json__(),
                 payload=payload

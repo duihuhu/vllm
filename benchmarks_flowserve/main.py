@@ -23,6 +23,8 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--duration", type=float, default=10)
     parser.add_argument("--tokenizer-path", type=str)
     parser.add_argument("--dataset-path", type=str)
+    parser.add_argument("--gs-host", type=str, default="localhost")
+    parser.add_argument("--gs-port", type=int, default=8000)   
     args = parser.parse_args()
 
     return args

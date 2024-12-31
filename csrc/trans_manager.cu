@@ -58,7 +58,7 @@ void TransManager::dist_worker() {
 
 std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel, const std::string& worker_type){
     ncclUniqueId uniqueId; 
-    ncclGetUniqueId(&uniqueId);
+    NCCLCHECK(ncclGetUniqueId(&uniqueId));
     if(worker_type=="sender"){
         if(send_trans_workers.find(dst_channel) == send_trans_workers.end()){
             TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache);
