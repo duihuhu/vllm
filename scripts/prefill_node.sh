@@ -1,4 +1,6 @@
 #!/bin/bash
+export NCCL_DEBUG=INFO
+export NCCL_DEBUG_SUBSYS=ALL
 SERVER_HOST=${1:-10.156.154.242}
 SERVER_PORT=${2:-8082}
 # MODEL_PATH=${3:-/workspace/file/models/llama2-13b/models--meta-llama--Llama-2-13b-hf/snapshots/5c31dfb671ce7cfe2d7bb7c04375e44c55e815b1/}
@@ -12,4 +14,5 @@ python ./vllm/entrypoints/server.py --model ${MODEL_PATH} \
     --worker-use-ray  --tensor-parallel-size 1 \
     --block-size 16 --enable-separate \
     --role=prompt --enable-direct \
+    2>&1 > logs/prefill.log
     # --enable-layer --enable-dcache --enable-radix-caching \
