@@ -106,7 +106,6 @@ async def asyc_forward_request(request_dict, api_url, cdecode_host=None, cdecode
                         buffer = buffer[index + len(delimiter):]  # 从缓冲区中移除已提取的消息和分隔符
             else:
                 print(f"Error: Request in gs failed with status code {response.status_code}. Response content: {response.text}") 
-        return None
 
 async def asyc_forward_request_resp(request_dict, api_url):
     headers = {"User-Agent": "Test Client"}
