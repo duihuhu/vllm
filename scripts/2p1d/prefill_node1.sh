@@ -16,5 +16,5 @@ python ./vllm/entrypoints/server.py --model ${MODEL_PATH} \
     --block-size 16 --enable-separate \
     --role=prompt --enable-direct \
     --ray-address 10.156.154.242:6379 \
-    2>&1 > logs/prefill.log
+    2>&1 > logs/prefill1.log
     # --enable-layer --enable-dcache --enable-radix-caching \

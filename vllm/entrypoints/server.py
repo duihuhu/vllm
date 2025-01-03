@@ -531,6 +531,7 @@ if __name__ == "__main__":
     parser.add_argument("--enable-layer", action="store_true")
     parser.add_argument('--enable-separate', action="store_true", help=('separate or not '))
     parser.add_argument("--cluster-rank", type=int) 
+    parser.add_argument("--ray-address", type=str, default=None)
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
     engine_args = AsyncEngineArgs.from_cli_args(args)

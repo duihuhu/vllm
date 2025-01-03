@@ -802,7 +802,7 @@ class AsyncLLMEngine:
             raise NotImplementedError("Neuron is not supported for "
                                       "async engine yet.")
         elif parallel_config.worker_use_ray or engine_args.engine_use_ray:
-            initialize_ray_cluster(parallel_config)
+            initialize_ray_cluster(parallel_config, engine_args.ray_address)
             from vllm.executor.ray_gpu_executor import RayGPUExecutorAsync
             executor_class = RayGPUExecutorAsync
         else:

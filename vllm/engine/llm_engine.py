@@ -196,7 +196,7 @@ class LLMEngine:
             from vllm.executor.neuron_executor import NeuronExecutor
             executor_class = NeuronExecutor
         elif parallel_config.worker_use_ray:
-            initialize_ray_cluster(parallel_config)
+            initialize_ray_cluster(parallel_config, engine_args.ray_address)
             from vllm.executor.ray_gpu_executor import RayGPUExecutor
             executor_class = RayGPUExecutor
         else:

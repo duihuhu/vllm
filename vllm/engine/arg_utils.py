@@ -79,6 +79,7 @@ class EngineArgs:
     use_agg_block: bool = False
     enable_trans_to_dram: bool = False
     cluster_rank: int = None
+    ray_address: str = None
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
