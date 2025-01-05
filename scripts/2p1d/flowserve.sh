@@ -10,4 +10,4 @@ python3 ./benchmarks_flowserve/main.py \
     --tokenizer-path ${MODEL_PATH} \
     --dataset-path ${DATASET_PATH} \
     --gs-host ${GS_HOST} --gs-port ${GS_PORT} \
-    --test-type open --dataset ${DATASET} --request-rate 1 --num-requests 32
+    --test-type open --dataset ${DATASET} --request-rate 1 --num-requests 16

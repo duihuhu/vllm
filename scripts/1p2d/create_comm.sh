@@ -11,7 +11,7 @@ PREFILL_2_RANK="1"
 
 DECODE_HOST=10.156.154.20
 DECODE_PORT=8083
-DECODE_RANK="2"
+DECODE_RANK="4 5"
 
 
 python  ./vllm/global_scheduler/client/create_comm_test.py \
