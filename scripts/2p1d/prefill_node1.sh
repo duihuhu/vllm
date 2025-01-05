@@ -12,7 +12,7 @@ GS_PORT=${5:-8081}
 python ./vllm/entrypoints/server.py --model ${MODEL_PATH} \
     --local-host ${SERVER_HOST} --local-port ${SERVER_PORT} --cluster-rank 0 \
     --gs-host ${GS_HOST} --gs-port ${GS_PORT} \
-    --worker-use-ray  --tensor-parallel-size 1 \
+    --worker-use-ray  --tensor-parallel-size 2 \
     --block-size 16 --enable-separate \
     --role=prompt --enable-direct \
     --ray-address 10.156.154.242:6379 \
