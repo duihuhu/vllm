@@ -7,3 +7,4 @@ MODEL_PATH=${3:-/workspace/file/models/llama2-7b/models--meta-llama--Llama-2-7b-
 python3 ./vllm/global_scheduler/gs/async_global_scheduler.py --model ${MODEL_PATH} \
     --host ${SERVER_HOST} --port ${SERVER_PORT} \
     --ep-policy random --ed-policy random --enable-separate \
+    > logs/gs.log 2>&1 \

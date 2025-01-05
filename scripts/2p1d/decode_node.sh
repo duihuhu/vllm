@@ -1,6 +1,6 @@
 #!/bin/bash
-export NCCL_DEBUG=INFO
-export NCCL_DEBUG_SUBSYS=ALL
+# export NCCL_DEBUG=INFO
+# export NCCL_DEBUG_SUBSYS=ALL
 export NCCL_SOCKET_IFNAME=eno1
 SERVER_HOST=${1:-10.156.154.20}
 SERVER_PORT=${2:-8083}
@@ -15,5 +15,5 @@ python ./vllm/entrypoints/server.py --model ${MODEL_PATH} \
     --worker-use-ray  --tensor-parallel-size 1 \
     --block-size 16 --enable-separate \
     --role=decoder --enable-direct \
-    2>&1 > logs/decode.log
+    > logs/decode.log 2>&1 \
     # --enable-layer  --enable-dcache --enable-radix-caching \

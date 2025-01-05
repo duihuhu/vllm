@@ -1,5 +1,5 @@
 #!/bin/bash
-export NCCL_DEBUG=INFO
+# export NCCL_DEBUG=INFO
 # export NCCL_DEBUG_SUBSYS=ALL
 export NCCL_SOCKET_IFNAME=eno2
 SERVER_HOST=${1:-10.156.154.242}
@@ -16,5 +16,5 @@ python ./vllm/entrypoints/server.py --model ${MODEL_PATH} \
     --block-size 16 --enable-separate \
     --role=prompt --enable-direct \
     --ray-address 10.156.154.242:6379 \
-    2>&1 > logs/prefill1.log
+    > logs/prefill1.log 2>&1 \
     # --enable-layer --enable-dcache --enable-radix-caching \
