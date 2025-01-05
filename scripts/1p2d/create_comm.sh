@@ -4,20 +4,21 @@ PREFILL_1_HOST=10.156.154.242
 PREFILL_1_PORT=8082
 PREFILL_1_RANK="0"
 
-PREFILL_2_HOST=10.156.154.242
-PREFILL_2_PORT=8084
-PREFILL_2_RANK="1"
 
 
-DECODE_HOST=10.156.154.20
-DECODE_PORT=8083
-DECODE_RANK="2"
 
+DECODE_1_HOST=10.156.154.20
+DECODE_1_PORT=8083
+DECODE_1_RANK="1"
+
+DECODE_2_HOST=10.156.154.20
+DECODE_2_PORT=8085
+DECODE_2_RANK="2"
 
 python  ./vllm/global_scheduler/client/create_comm_test.py \
     --prefill-host ${PREFILL_1_HOST} --prefill-port ${PREFILL_1_PORT} --prefill-rank ${PREFILL_1_RANK} \
-    --decode-host ${DECODE_HOST} --decode-port ${DECODE_PORT} --decode-rank ${DECODE_RANK} \
+    --decode-host ${DECODE_1_HOST} --decode-port ${DECODE_1_PORT} --decode-rank ${DECODE_1_RANK} \
 
 python  ./vllm/global_scheduler/client/create_comm_test.py \
-    --prefill-host ${PREFILL_2_HOST} --prefill-port ${PREFILL_2_PORT} --prefill-rank ${PREFILL_2_RANK} \
-    --decode-host ${DECODE_HOST} --decode-port ${DECODE_PORT} --decode-rank ${DECODE_RANK} \
+    --prefill-host ${PREFILL_1_HOST} --prefill-port ${PREFILL_1_PORT} --prefill-rank ${PREFILL_1_RANK} \
+    --decode-host ${DECODE_2_HOST} --decode-port ${DECODE_2_PORT} --decode-rank ${DECODE_2_RANK} \

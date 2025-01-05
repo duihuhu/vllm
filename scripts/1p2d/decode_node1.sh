@@ -11,11 +11,11 @@ GS_PORT=${5:-8081}
 RAY_ADDRESS=${6:-"10.156.154.20:6379"}
 
 python ./vllm/entrypoints/server.py --model ${MODEL_PATH} \
-    --local-host ${SERVER_HOST} --local-port ${SERVER_PORT} --cluster-rank 2 \
+    --local-host ${SERVER_HOST} --local-port ${SERVER_PORT} --cluster-rank 1 \
     --gs-host ${GS_HOST} --gs-port ${GS_PORT} \
     --worker-use-ray  --tensor-parallel-size 1 \
     --block-size 16 --enable-separate \
     --role=decoder --enable-direct \
     --ray-address ${RAY_ADDRESS} \
-    > logs/decode.log 2>&1 \
+    > logs/decode1.log 2>&1 \
     # --enable-layer  --enable-dcache --enable-radix-caching \
