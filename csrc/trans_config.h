@@ -1,6 +1,6 @@
 #ifndef TRANS_CONFIG_H
 #define TRANS_CONFIG_H
-
+#include <memory>
 #include <torch/extension.h>
 #include <torch/torch.h>
 #include <torch/cuda.h>
@@ -364,7 +364,7 @@ private:
   
   std::vector<std::pair<at::Tensor, at::Tensor>> remote_swap_cpu_cache_;
   std::vector<uint64_t> remote_swap_blocks_address_;
-  std::map<int, std::string> mc_servers_addr_,
+  std::map<int, std::string> mc_servers_addr_;
   std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
   std::shared_ptr<mooncake::Transport> xport_{nullptr}; 
   int mc_num_gpu_bufs_{0};
