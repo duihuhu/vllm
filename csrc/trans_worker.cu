@@ -26,8 +26,11 @@ TransWorker::TransWorker(
     comm_rank = nccl_local_rank % tp;
     dst_rank = comm_rank + tp;
   }
-
-  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank].c_str());
+  auto it = mc_servers_addr.find(dst_rank);
+  if (it == mc_servers_addr.end()) {
+    throw std::runtime_error("not find dst_rank in the mc_servers_addr"); 
+  }
+  trans_engine.segment_id_ = transfer_engine_->openSegment(it->second.c_str());
   use_comm = 0;
 
   use_swap_stream = 0;
@@ -64,8 +67,11 @@ TransWorker::TransWorker(
     comm_rank = nccl_local_rank % tp;
     dst_rank = comm_rank + tp;
   }
-
-  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank].c_str());
+  auto it = mc_servers_addr.find(dst_rank);
+  if (it == mc_servers_addr.end()) {
+    throw std::runtime_error("not find dst_rank in the mc_servers_addr"); 
+  }
+  trans_engine.segment_id_ = transfer_engine_->openSegment(it->second.c_str());
   use_comm = 0;
 
   use_swap_stream = 0;
