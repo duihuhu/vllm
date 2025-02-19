@@ -78,9 +78,9 @@ TransManager::TransManager(
     args[0] = (void *)nic_priority_matrix.c_str();
     args[1] = nullptr;
     xport_ =
-        std::shared_ptr(transfer_engine_->installOrGetTransport("rdma", args));
+        std::shared_ptr<mooncake::Transport>(transfer_engine_->installOrGetTransport("rdma", args));
   } else if (mc_protocol == "tcp") {
-    xport_ = std::shared_ptr(
+    xport_ = std::shared_ptr<mooncake::Transport>(
         transfer_engine_->installOrGetTransport("tcp", nullptr));
   } else {
     std::cout << "Unsupported protocol" << std::endl;
@@ -99,7 +99,7 @@ TransManager::TransManager(
     
   }
   if (gpu_cache.size() > 1) {
-    std::string location = std::string("gpu:") + std::to_string<int>(local_rank);
+    std::string location = std::string("gpu:") + std::to_string(local_rank);
     for(auto& kv_tensor: gpu_cache) {
        auto res = transfer_engine_->registerLocalMemory(kv_tensor.first.data_ptr(), kv_tensor.first.nbytes(), location, true, true);
        if(res != 0) {

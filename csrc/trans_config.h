@@ -367,7 +367,7 @@ private:
   std::vector<uint64_t> remote_swap_blocks_address_;
   std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
   std::shared_ptr<mooncake::Transport> xport_{nullptr}; 
-  std::map<int, std::string> &mc_servers_addr_;
+  std::map<int, std::string> mc_servers_addr_;
   int mc_num_gpu_bufs_{0};
 
   TransQueue<TransferTask> worker_task_queue;
