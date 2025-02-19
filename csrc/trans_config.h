@@ -215,6 +215,7 @@ public:
     void SwapHbmToRemoteDramFullBlocks(std::vector<uint64_t>& srcCaches, std::vector<uint64_t>& dstCaches, \
         const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize);
     mooncake::Transport::SegmentHandle segment_id_;
+    std::vector<std::string> check_mc_swap_remote_finished_events();
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
     std::vector<uint64_t> blocks_gpu_cache; // key/value address in tensor 
@@ -366,6 +367,7 @@ private:
   std::vector<uint64_t> remote_swap_blocks_address_;
   std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
   std::shared_ptr<mooncake::Transport> xport_{nullptr}; 
+  std::map<int, std::string> &mc_servers_addr_;
   int mc_num_gpu_bufs_{0};
 
   TransQueue<TransferTask> worker_task_queue;

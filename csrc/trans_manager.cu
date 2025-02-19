@@ -1,6 +1,8 @@
 #include "trans_config.h"
 #include "mooncake/common.h"
 #include <iostream>
+#include <fstream>
+#include <memory>
 std::string formatDeviceNames(const std::string& device_names) {
     std::stringstream ss(device_names);
     std::string item;
@@ -64,7 +66,7 @@ TransManager::TransManager(
     throw std::runtime_error("construct TransferEngine error");
   }
   auto hostname_port = parseHostNameWithPort(mc_local_server_name);
-  int ret = transfer_engine_->init(local_hostname, hostname_port.first.c_str(),
+  int ret = transfer_engine_->init(mc_local_server_name.c_str(), hostname_port.first.c_str(),
                                    hostname_port.second);
   if (ret) {
     throw std::runtime_error("TransferEngine init error");
@@ -111,7 +113,7 @@ TransManager::TransManager(
     }
   }
   if(blocks_gpu_cache.size() > 0) {
-    std::string location = std::string("gpu:") + std::to_string<int>(local_rank);
+    std::string location = std::string("gpu:") + std::to_string(local_rank);
     for(auto& block_address: blocks_gpu_cache) {
         auto res = transfer_engine_->registerLocalMemory(block_address, cache_block_size, location, true, true);
         if(res != 0) {
@@ -206,12 +208,12 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel, cons
     NCCLCHECK(ncclGetUniqueId(&uniqueId));
     if(worker_type=="sender"){
         if(send_trans_workers.find(dst_channel) == send_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_num_gpu_bufs_);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
             send_trans_workers[dst_channel] = task_worker;
         }
     } else{
         if(recv_trans_workers.find(dst_channel) == recv_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_num_gpu_bufs_);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
             recv_trans_workers[dst_channel] = task_worker;
         }
     }
@@ -227,14 +229,14 @@ void TransManager::add_tasks(const std::vector<std::string>& tasks) {
 void TransManager::create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel, const std::string& worker_type){
     if(worker_type=="sender"){
         if(send_trans_workers.find(dst_channel) == send_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_num_gpu_bufs_);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
             send_trans_workers[dst_channel] = task_worker;
         }
         TransWorker* task_worker = send_trans_workers[dst_channel];
         task_worker->add_comm_task(nccl_id);
     } else{
         if(recv_trans_workers.find(dst_channel) == recv_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_num_gpu_bufs_);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
             recv_trans_workers[dst_channel] = task_worker;
         }
         TransWorker* task_worker = recv_trans_workers[dst_channel];
@@ -247,7 +249,7 @@ void TransManager::init_dst_cpu_cache(const std::string& dst_channel, const std:
     if(swap_workers.find(dst_channel) == swap_workers.end()){
         std::cout << "dst_channel " << dst_channel << " " << nccl_local_rank << std::endl;
         // TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache);
-        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache, dst_blocks_cpu_cache, transfer_engine_, xport_, mc_num_gpu_bufs_);
+        TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache, dst_blocks_cpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
 
         swap_workers[dst_channel] = task_worker;
     }

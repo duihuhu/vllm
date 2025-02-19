@@ -240,7 +240,7 @@ void TransEngine::swap_hbm_to_remote_dram_blocks(const std::string& channel, con
 }
 
 void TransEngine::mc_swap_hbm_to_remote_dram_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream) {
-    int layerNum = dstCaches.size();
+    int layerNum = dst_cpu_cache.size();
 
     auto segment_desc = xport_->meta()->getSegmentDescByID(segment_id_);
     if (!segment_desc) {
@@ -254,7 +254,7 @@ void TransEngine::mc_swap_hbm_to_remote_dram_blocks(const std::string& channel, 
         at::Tensor srcKeyCache = gpu_cache[i].first;
         at::Tensor srcValueCache = gpu_cache[i].second;
 
-        for (int j = 0; j < dstBlocks.size(); j++) {
+        for (int j = 0; j < dst_blocks.size(); j++) {
 
             mooncake::TransferRequest key_entry;
             int src_blockIdx = src_blocks[j];
@@ -312,7 +312,7 @@ void TransEngine::mc_swap_hbm_to_remote_dram_full_blocks(const std::string& chan
     }
     auto batch_id = xport_->allocateBatchID(src_blocks.size());
     std::vector<mooncake::TransferRequest> requests;
-    for (int j = 0; j < srcBlocks.size(); j++) {
+    for (int j = 0; j < src_blocks.size(); j++) {
         mooncake::TransferRequest entry;
         int src_blockIdx = src_blocks[j];
         int dst_blockIdx = dst_blocks[j];

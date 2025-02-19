@@ -158,7 +158,7 @@ void TransWorker::worker() {
         //for req
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
-        auto swap_blocks_finished = trans_engine.check_swap_remote_finished_events();
+        // auto swap_blocks_finished = trans_engine.check_swap_remote_finished_events();
         auto swap_blocks_finished = trans_engine.check_mc_swap_remote_finished_events(); 
 
         if (!send_blocks_finished.empty() || !recv_blocks_finished.empty() || !swap_blocks_finished.empty()){
