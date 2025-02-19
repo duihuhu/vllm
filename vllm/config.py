@@ -2,7 +2,7 @@ import enum
 import json
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Dict, Optional, Union
 
 import torch
 from packaging.version import Version
@@ -849,6 +849,12 @@ class DeployConfig:
         block_size: int = -1, 
         enable_trans_to_dram: bool = False,
         cluster_rank: int = 0,
+        mc_local_server_name: str = None,
+        mc_metadata_server: str = None,
+        mc_device_name: str = None,
+        mc_nic_priority_matrix: str = None,
+        mc_protocol: str = None, 
+        mc_servers_addr: Dict[int, str] = None
         ) -> None: 
             self.enable_separate = enable_separate
             self.role = role
@@ -867,6 +873,12 @@ class DeployConfig:
             self.block_size = block_size
             self.enable_trans_to_dram = enable_trans_to_dram
             self.cluster_rank = cluster_rank
+            self.mc_local_server_name = mc_local_server_name
+            self.mc_metadata_server = mc_metadata_server
+            self.mc_device_name = mc_device_name
+            self.mc_nic_priority_matrix = mc_nic_priority_matrix
+            self.mc_protocol = mc_protocol
+            self.mc_servers_addr = mc_servers_addr
             self._verify_args()
     
     def _verify_args(self) -> None:

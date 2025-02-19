@@ -1,20 +1,47 @@
 #include "trans_config.h"
 #include <stdexcept>
 #include <iostream>
-TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache)
-    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache){
-    // Initialize parameters from config dictionaries
+TransEngine::TransEngine(
+    int cache_size_per_block,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache,
+    int cache_block_size, std::vector<uint64_t> &blocks_gpu_cache,
+    std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+    std::shared_ptr<mooncake::Transport> xport, int mc_num_gpu_bufs)
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache),
+      cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache),
+      transfer_engine_(transfer_engine), xport_(xport),
+      mc_num_gpu_bufs_(mc_num_gpu_bufs_) {
+  // Initialize parameters from config dictionaries
 }
 
-TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache)
-    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache), dst_cpu_cache(dst_cpu_cache){
-    // Initialize parameters from config dictionaries
+TransEngine::TransEngine(
+    int cache_size_per_block,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache,
+    int cache_block_size, std::vector<uint64_t> &blocks_gpu_cache,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &dst_cpu_cache,
+    std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+    std::shared_ptr<mooncake::Transport> xport, int mc_num_gpu_bufs)
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache),
+      cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache),
+      dst_cpu_cache(dst_cpu_cache), transfer_engine_(transfer_engine),
+      xport_(xport), mc_num_gpu_bufs_(mc_num_gpu_bufs_) {
+  // Initialize parameters from config dictionaries
 }
 
-
-TransEngine::TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache)
-    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache), cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache), dst_cpu_cache(dst_cpu_cache), dst_blocks_cpu_cache(dst_blocks_cpu_cache){
-    // Initialize parameters from config dictionaries
+TransEngine::TransEngine(
+    int cache_size_per_block,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache,
+    int cache_block_size, std::vector<uint64_t> &blocks_gpu_cache,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &dst_cpu_cache,
+    const std::vector<uint64_t> &dst_blocks_cpu_cache,
+    std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+    std::shared_ptr<mooncake::Transport> xport, int mc_num_gpu_bufs)
+    : cache_size_per_block(cache_size_per_block), gpu_cache(gpu_cache),
+      cache_block_size(cache_block_size), blocks_gpu_cache(blocks_gpu_cache),
+      dst_cpu_cache(dst_cpu_cache), dst_blocks_cpu_cache(dst_blocks_cpu_cache),
+      transfer_engine_(transfer_engine), xport_(xport),
+      mc_num_gpu_bufs_(mc_num_gpu_bufs_) {
+  // Initialize parameters from config dictionaries
 }
 
 void TransEngine::recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream) {
@@ -212,6 +239,58 @@ void TransEngine::swap_hbm_to_remote_dram_blocks(const std::string& channel, con
         swap_remote_events[channel].push_back(std::make_pair(request_id, event));
 }
 
+void TransEngine::mc_swap_hbm_to_remote_dram_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream) {
+    int layerNum = dstCaches.size();
+
+    auto segment_desc = xport_->meta()->getSegmentDescByID(segment_id_);
+    if (!segment_desc) {
+        throw std::runtime_error("Unable to get target segment ID, please recheck");
+    }
+    auto batch_id = xport_->allocateBatchID(layerNum * src_blocks.size() * 2);
+    std::vector<mooncake::TransferRequest> requests;
+
+
+    for (int i=0; i < layerNum; i++) {
+        at::Tensor srcKeyCache = gpu_cache[i].first;
+        at::Tensor srcValueCache = gpu_cache[i].second;
+
+        for (int j = 0; j < dstBlocks.size(); j++) {
+
+            mooncake::TransferRequest key_entry;
+            int src_blockIdx = src_blocks[j];
+            int dst_blockIdx = dst_blocks[j];
+            uint64_t key_remote_base = (uint64_t)segment_desc->buffers[mc_num_gpu_bufs_ + 2 * i].addr;
+            key_entry.opcode = mooncake::TransferRequest::WRITE;
+            key_entry.length = cache_size_per_block;
+            key_entry.source = srcKeyCache.index({src_blockIdx}).data_ptr();
+            key_entry.target_id = segment_id_;
+            key_entry.target_offset = key_remote_base + cache_size_per_block * dst_blockIdx;
+        
+            requests.emplace_back(key_entry);
+
+            mooncake::TransferRequest value_entry;
+            uint64_t value_remote_base = (uint64_t)segment_desc->buffers[mc_num_gpu_bufs_ + 2 * i + 1].addr;
+            value_entry.opcode = mooncake::TransferRequest::WRITE;
+            value_entry.length = cache_size_per_block;
+            value_entry.source = srcValueCache.index({src_blockIdx}).data_ptr();
+            value_entry.target_id = segment_id_;
+            value_entry.target_offset = value_remote_base + cache_size_per_block * dst_blockIdx;
+        
+            requests.emplace_back(value_entry);
+        }
+    }
+    int ret = xport_->submitTransfer(batch_id, requests);
+    if(ret != 0) {
+        throw std::runtime_error("submitTransfer in dram_blocks error");
+    }
+    // need to send the message to TransManager for polling completion
+    if (mc_swap_remote_batchs_.find(channel) == mc_swap_remote_batchs_.end()) {
+        mc_swap_remote_batchs_[channel] = std::vector<std::pair<std::string, uint64_t>>();
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+    } else{
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+    }
+}
 
 void TransEngine::swap_hbm_to_remote_dram_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream) {
     c10::cuda::CUDAStreamGuard guard(stream);
@@ -223,6 +302,40 @@ void TransEngine::swap_hbm_to_remote_dram_full_blocks(const std::string& channel
         swap_remote_events[channel].push_back(std::make_pair(request_id, event));
     } else
         swap_remote_events[channel].push_back(std::make_pair(request_id, event));
+}
+void TransEngine::mc_swap_hbm_to_remote_dram_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream) {
+
+
+    auto segment_desc = xport_->meta()->getSegmentDescByID(segment_id_);
+    if (!segment_desc) {
+        throw std::runtime_error("Unable to get target segment ID, please recheck");
+    }
+    auto batch_id = xport_->allocateBatchID(src_blocks.size());
+    std::vector<mooncake::TransferRequest> requests;
+    for (int j = 0; j < srcBlocks.size(); j++) {
+        mooncake::TransferRequest entry;
+        int src_blockIdx = src_blocks[j];
+        int dst_blockIdx = dst_blocks[j];
+        uint64_t remote_base = (uint64_t)segment_desc->buffers[mc_num_gpu_bufs_ + dst_blockIdx].addr;
+        entry.opcode = mooncake::TransferRequest::WRITE;
+        entry.length = cache_block_size;
+        entry.source = (void*)blocks_gpu_cache[src_blockIdx];
+        entry.target_id = segment_id_;
+        entry.target_offset = remote_base;
+    
+        requests.emplace_back(entry);
+    }
+    int ret = xport_->submitTransfer(batch_id, requests);
+    if(ret != 0) {
+        throw std::runtime_error("submitTransfer in dram_blocks error");
+    }
+    // need to send the message to TransManager for polling completion
+    if (mc_swap_remote_batchs_.find(channel) == mc_swap_remote_batchs_.end()) {
+        mc_swap_remote_batchs_[channel] = std::vector<std::pair<std::string, uint64_t>>();
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+    } else{
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+    }
 }
 
 
@@ -389,6 +502,45 @@ std::vector<std::string> TransEngine::check_swap_remote_finished_events() {
         if (num_finished_events > 0) {
             // Remove finished events from the list
             request_ids_and_events.erase(request_ids_and_events.begin(), request_ids_and_events.begin() + num_finished_events);
+        }
+    }
+    return swap_blocks_finished;
+}
+
+std::vector<std::string> TransEngine::check_mc_swap_remote_finished_events() {
+    std::vector<std::string> swap_blocks_finished;
+    for (auto& kv : mc_swap_remote_batchs_) {
+        const std::string& channel = kv.first;
+        auto& request_ids_and_batch_ids = kv.second;
+        size_t num_finished_events = 0;
+
+        for (auto it = request_ids_and_batch_ids.begin(); it != request_ids_and_batch_ids.end(); ++it) {
+            const std::string& request_id = it->first;
+            uint64_t batch_id = it->second;
+            std::vector<mooncake::TransferStatus> status;
+            int ret = xport_->getgetTransferStatus(batch_id, status);
+            if(ret != 0) {
+                throw std::runtime_error("check transfer status error");
+            }
+            bool completed = true;
+            for(auto &s: status) {
+                if(s.s == mooncake::TransferStatusEnum::FAILED) {
+                    throw std::runtime_error("transfer failed"); 
+                }else if(s.s != mooncake::TransferStatusEnum::COMPLETED){
+                    completed = false;
+                    break;
+                }
+            }
+            if (completed == true) {
+                swap_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
+                ++++num_finished_events; 
+            } else {
+                break;
+            }
+        }
+        if (num_finished_events > 0) {
+            // Remove finished events from the list
+            request_ids_and_batch_ids.erase(request_ids_and_batch_ids.begin(), request_ids_and_batch_ids.begin() + num_finished_events);
         }
     }
     return swap_blocks_finished;

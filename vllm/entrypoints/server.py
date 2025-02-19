@@ -532,9 +532,20 @@ if __name__ == "__main__":
     parser.add_argument('--enable-separate', action="store_true", help=('separate or not '))
     parser.add_argument("--cluster-rank", type=int) 
     parser.add_argument("--ray-address", type=str, default=None)
+    # mooncake args
+    parser.add_argument("--mc-local-server-name", type=str, help="Local server name for segment discovery")
+    parser.add_argument("--mc-metadata-server", type=str, help="redis server host address. e.g. 192.168.3.77:2379")
+    parser.add_argument("--mc-device-name", type=str, help="Device name to use. e.g. mlx5_2")
+    parser.add_argument("--mc-nic-priority-matrix", type=str, default=None, help="Path to NIC priority matrix file (Advanced)")
+    parser.add_argument("--mc-protocol", type=str, default="tcp")
+    parser.add_argument("--mc-servers-file", type=str)
     parser = AsyncEngineArgs.add_cli_args(parser)
     args = parser.parse_args()
+
     engine_args = AsyncEngineArgs.from_cli_args(args)
+    with open(args.mc_servers_file) as f:
+        mc_servers_addr = json.load(f)
+        engine_args.mc_servers_addr = {int(key): value for key, value in mc_servers_addr.items()}
     # engine_args also has local_host and local_port
     server_args = ServerArgs(engine_args, args.local_host, args.local_port, args.gs_host, args.gs_port)
     server = Server(server_args)

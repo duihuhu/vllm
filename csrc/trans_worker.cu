@@ -1,64 +1,79 @@
 #include "trans_config.h"
 
-TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache): trans_engine(cache_size_per_block, gpu_cache, cache_block_size, blocks_gpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
-    std::stringstream ss(dst_channel);
-    std::string token;
-    while (std::getline(ss, token, '_')) {
-        dst_ranks.push_back(std::stoi(token));
-    }
-    if (nccl_local_rank >= dst_ranks[0]){
-        comm_rank = nccl_local_rank % tp + tp;
-        dst_rank = comm_rank - tp;
-    } else{
-        comm_rank = nccl_local_rank % tp;
-        dst_rank = comm_rank + tp;
-    }
-    use_comm = 0;
-    execute = std::thread(&TransWorker::worker, this);
+TransWorker::TransWorker(
+    int cache_size_per_block,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, int rank,
+    int local_rank, int nccl_local_rank, const std::string &dst_channel, int tp,
+    int num_layer, int cache_block_size,
+    std::vector<uint64_t> &blocks_gpu_cache,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &dst_cpu_cache,
+    std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+    std::shared_ptr<mooncake::Transport> xport, const std::map<int, std::string>& mc_servers_addr, int mc_num_gpu_bufs)
+    : trans_engine(cache_size_per_block, gpu_cache, cache_block_size,
+                   blocks_gpu_cache, dst_cpu_cache, transfer_engine,
+                   xport, mc_num_gpu_bufs),
+      rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank),
+      dst_channel(dst_channel), tp(tp), num_layer(num_layer), transfer_engine_(transfer_engine), xport_(xport) {
+  std::stringstream ss(dst_channel);
+  std::string token;
+  while (std::getline(ss, token, '_')) {
+    dst_ranks.push_back(std::stoi(token));
+  }
+  if (nccl_local_rank >= dst_ranks[0]) {
+    comm_rank = nccl_local_rank % tp + tp;
+    dst_rank = comm_rank - tp;
+  } else {
+    comm_rank = nccl_local_rank % tp;
+    dst_rank = comm_rank + tp;
+  }
+
+  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank]);
+  use_comm = 0;
+
+  use_swap_stream = 0;
+  swap_remote_streams.push_back(
+      c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+
+  execute = std::thread(&TransWorker::worker, this);
 }
 
-TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache): trans_engine(cache_size_per_block, gpu_cache, cache_block_size, blocks_gpu_cache, dst_cpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
-    std::stringstream ss(dst_channel);
-    std::string token;
-    while (std::getline(ss, token, '_')) {
-        dst_ranks.push_back(std::stoi(token));
-    }
-    if (nccl_local_rank >= dst_ranks[0]){
-        comm_rank = nccl_local_rank % tp + tp;
-        dst_rank = comm_rank - tp;
-    } else{
-        comm_rank = nccl_local_rank % tp;
-        dst_rank = comm_rank + tp;
-    }
-    use_comm = 0;
+TransWorker::TransWorker(
+    int cache_size_per_block,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, int rank,
+    int local_rank, int nccl_local_rank, const std::string &dst_channel, int tp,
+    int num_layer, int cache_block_size,
+    std::vector<uint64_t> &blocks_gpu_cache,
+    const std::vector<std::pair<at::Tensor, at::Tensor>> &dst_cpu_cache,
+    const std::vector<uint64_t> &dst_blocks_cpu_cache,
+    std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+    std::shared_ptr<mooncake::Transport> xport, const std::map<int, std::string>& mc_servers_addr, int mc_num_gpu_bufs)
+    : trans_engine(cache_size_per_block, gpu_cache, cache_block_size,
+                   blocks_gpu_cache, dst_cpu_cache, dst_blocks_cpu_cache,
+                   transfer_engine, xport, mc_num_gpu_bufs),
+      rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank),
+      dst_channel(dst_channel), tp(tp), num_layer(num_layer) ,transfer_engine_(transfer_engine), xport_(xport)  {
+  std::stringstream ss(dst_channel);
+  std::string token;
+  while (std::getline(ss, token, '_')) {
+    dst_ranks.push_back(std::stoi(token));
+  }
+  if (nccl_local_rank >= dst_ranks[0]) {
+    comm_rank = nccl_local_rank % tp + tp;
+    dst_rank = comm_rank - tp;
+  } else {
+    comm_rank = nccl_local_rank % tp;
+    dst_rank = comm_rank + tp;
+  }
 
-    use_swap_stream = 0;
-    swap_remote_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank]);
+  use_comm = 0;
 
-    execute = std::thread(&TransWorker::worker, this);
+  use_swap_stream = 0;
+  swap_remote_streams.push_back(
+      c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
+
+  execute = std::thread(&TransWorker::worker, this);
 }
-
-TransWorker::TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache): trans_engine(cache_size_per_block, gpu_cache, cache_block_size, blocks_gpu_cache, dst_cpu_cache, dst_blocks_cpu_cache), rank(rank), local_rank(local_rank), nccl_local_rank(nccl_local_rank), dst_channel(dst_channel), tp(tp), num_layer(num_layer) {
-    std::stringstream ss(dst_channel);
-    std::string token;
-    while (std::getline(ss, token, '_')) {
-        dst_ranks.push_back(std::stoi(token));
-    }
-    if (nccl_local_rank >= dst_ranks[0]){
-        comm_rank = nccl_local_rank % tp + tp;
-        dst_rank = comm_rank - tp;
-    } else{
-        comm_rank = nccl_local_rank % tp;
-        dst_rank = comm_rank + tp;
-    }
-    use_comm = 0;
-
-    use_swap_stream = 0;
-    swap_remote_streams.push_back(c10::cuda::CUDAStream(c10::cuda::getStreamFromPool(true)));
-
-    execute = std::thread(&TransWorker::worker, this);
-}
-
 
 TransWorker::~TransWorker() {
     if (execute.joinable()) {
@@ -138,7 +153,8 @@ void TransWorker::worker() {
         auto send_blocks_finished = trans_engine.check_send_finished_events();
         auto recv_blocks_finished = trans_engine.check_recv_finished_events();
         auto swap_blocks_finished = trans_engine.check_swap_remote_finished_events();
-        
+        auto swap_blocks_finished = trans_engine.check_mc_swap_remote_finished_events(); 
+
         if (!send_blocks_finished.empty() || !recv_blocks_finished.empty() || !swap_blocks_finished.empty()){
             // std::cout<<"task_queue is empty send " << send_blocks_finished.empty() << " recv " << recv_blocks_finished.empty()<<std::endl;
             transfer_result_queue.push_back(std::make_tuple(send_blocks_finished, recv_blocks_finished, swap_blocks_finished));

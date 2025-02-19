@@ -1,7 +1,7 @@
 import argparse
 import dataclasses
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from vllm.config import (CacheConfig, DeviceConfig, LoRAConfig, ModelConfig,
                          ParallelConfig, SchedulerConfig, TokenizerPoolConfig,
@@ -64,7 +64,7 @@ class EngineArgs:
     image_feature_size: Optional[int] = None
     scheduler_delay_factor: float = 0.0
     enable_chunked_prefill: bool = False
-    
+
     enable_separate: bool = False
     role: str = None
     enable_dcache: bool = False
@@ -80,6 +80,12 @@ class EngineArgs:
     enable_trans_to_dram: bool = False
     cluster_rank: int = None
     ray_address: str = None
+    mc_local_server_name: str = None
+    mc_metadata_server: str = None 
+    mc_device_name: str = None 
+    mc_nic_priority_matrix: str = None
+    mc_protocol: str = None
+    mc_servers_addr: Dict[int, str] = None
     def __post_init__(self):
         if self.tokenizer is None:
             self.tokenizer = self.model
@@ -215,15 +221,15 @@ class EngineArgs:
         parser.add_argument('--enable-prefix-caching',
                             action='store_true',
                             help='Enables automatic prefix caching')
-    
+
         parser.add_argument('--enable-radix-caching',
                             action='store_true',
                             help='radix caching')
-        
+
         parser.add_argument('--enable-radix-evictor',
                             action='store_true',
                             help='enable radix evict to dram')
-        
+
         parser.add_argument('--use-v2-block-manager',
                             action='store_true',
                             help='Use BlockSpaceMangerV2')
@@ -395,34 +401,33 @@ class EngineArgs:
             choices=['prompt', 'decoder'],
             default=None,
             help=('instance '))
-        
+
         parser.add_argument(
             '--enable-dcache',
             action="store_true",
             help=('d cache passing to p or not '))
-        
+
         parser.add_argument(
             '--enable-cache-meta',
             action="store_true",
             help=('enable check cache meta from global scheduler'))
-        
+
         # parser.add_argument(
         #     '--local-host',
         #     type=str,
         #     default=None,
         #     help=('host send to pull kv data '))
-        
+
         # parser.add_argument(
         #     '--local-port',
         #     type=int,
         #     default=None,
         #     help=('port send to pull kv data'))
-        
+
         # parser.add_argument(
         #     '--enable-layer',
         #     action="store_true",
         #     help=('enable enable layer pass data'))
-
 
         parser.add_argument(
             '--enable-theory',
@@ -433,7 +438,7 @@ class EngineArgs:
             '--enable-debug',
             action="store_true",
             help=('enable debug'))
-         
+
         parser.add_argument(
             '--use-agg-block',
             action="store_true",
@@ -444,7 +449,7 @@ class EngineArgs:
             action="store_true",
             help=('enable enable-trans-kv from hbm to-dram'))
         return parser
-        
+
     @classmethod
     def from_cli_args(cls, args: argparse.Namespace) -> 'EngineArgs':
         # Get the list of attributes of this dataclass.
@@ -516,10 +521,39 @@ class EngineArgs:
             vision_language_config = None
 
         print("self.block_size ", self.block_size)
-        deploy_config = DeployConfig(self.enable_separate, self.role, self.enable_dcache, \
-            self.enable_cache_meta, self.local_host, self.local_port, self.enable_layer, self.enable_theory, self.enable_debug, self.enable_breakdown, self.enable_radix_caching, self.use_agg_block, self.block_size, self.enable_trans_to_dram, self.cluster_rank)
-        return (model_config, cache_config, parallel_config, scheduler_config,
-                device_config, deploy_config, lora_config, vision_language_config)
+        deploy_config = DeployConfig(
+            self.enable_separate,
+            self.role,
+            self.enable_dcache,
+            self.enable_cache_meta,
+            self.local_host,
+            self.local_port,
+            self.enable_layer,
+            self.enable_theory,
+            self.enable_debug,
+            self.enable_breakdown,
+            self.enable_radix_caching,
+            self.use_agg_block,
+            self.block_size,
+            self.enable_trans_to_dram,
+            self.cluster_rank,
+            self.mc_local_server_name,
+            self.mc_metadata_server,
+            self.mc_device_name,
+            self.mc_nic_priority_matrix,
+            self.mc_protocol,
+            self.mc_servers_addr,
+        )
+        return (
+            model_config,
+            cache_config,
+            parallel_config,
+            scheduler_config,
+            device_config,
+            deploy_config,
+            lora_config,
+            vision_language_config,
+        )
 
 
 @dataclass

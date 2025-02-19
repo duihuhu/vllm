@@ -69,11 +69,13 @@ class RayGPUExecutor(ExecutorBase):
         self._init_cache()
 
 
-        if self.deploy_config.enable_separate:
-            self._init_trans_manager()
+
         if self.deploy_config.enable_separate and self.deploy_config.enable_trans_to_dram:
             self._init_share_cpu_cache()
-        
+            self._init_remote_swap_cpu_cache()
+        if self.deploy_config.enable_separate:
+            self._init_trans_manager()
+                    
         if self.deploy_config.enable_radix_caching:
             self._init_swap_manager()
             
@@ -278,7 +280,10 @@ class RayGPUExecutor(ExecutorBase):
 
     def _init_share_cpu_cache(self) -> None:
         self._run_workers("share_cpu_cache", global_ranks=self.deploy_config.global_ranks)      
-        
+    
+    def _init_remote_swap_cpu_cache(self) -> None:
+        self._run_workers("init_remote_swap_cpu_cache")
+    
     def execute_model(self,
                       seq_group_metadata_list: List[SequenceGroupMetadata],
                       blocks_to_swap_in: Dict[int, int],

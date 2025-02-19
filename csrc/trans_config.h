@@ -16,6 +16,10 @@
 #include <cuda_runtime.h>
 #include "swap_config.h"
 #include <tuple>
+#include "transfer_engine.h"
+#include "mooncake/transport/rdma_transport/rdma_transport.h"
+#include "mooncake/transport/transport.h"
+
 #define CHECK_NCCL(call) checkNcclError((call), __FILE__, __LINE__)
 
 using json = nlohmann::json;
@@ -140,11 +144,11 @@ public:
 // TransEngine类，负责管理KV缓存并执行发送和接收操作
 class TransEngine {
 public:
-    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, std::shared_ptr<mooncake::TransferEngine> transfer_engine, std::shared_ptr<mooncake::Transport> xport, int mc_num_gpu_bufs);
 
-    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, std::shared_ptr<mooncake::TransferEngine> transfer_engine, std::shared_ptr<mooncake::Transport> xport, int mc_num_gpu_bufs);
 
-    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache);
+    TransEngine(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache, std::shared_ptr<mooncake::TransferEngine> transfer_engine, std::shared_ptr<mooncake::Transport> xport, int mc_num_gpu_bufs);
 
 
     void recv_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& src_blocks, int opposite_rank, ncclComm_t& comm, c10::cuda::CUDAStream& stream);
@@ -165,9 +169,20 @@ public:
 
     int create_nccl_comm(int32_t rank, ncclComm_t& comm, ncclUniqueId& uniqueId , int32_t NumDevice);
 
+    /// @brief 
+    /// @param channel 
+    /// @param request_id 
+    /// @param blocks : the block indexs of gpu_cache 
+    /// @param dst_blocks: the block indexs of remote dst_cpu_cache 
+    /// @param stream 
     void swap_hbm_to_remote_dram_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream);
 
     void swap_hbm_to_remote_dram_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream);
+
+    void mc_swap_hbm_to_remote_dram_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream);
+
+    void mc_swap_hbm_to_remote_dram_full_blocks(const std::string& channel, const std::string& request_id, const std::vector<uint32_t>& blocks, std::vector<uint32_t>& dst_blocks, c10::cuda::CUDAStream& stream);
+
 
     std::vector<std::string> check_send_finished_events();
     std::vector<std::string> check_recv_finished_events();
@@ -223,25 +238,52 @@ private:
     //swao to remote instance dram
     std::unordered_map<std::string, std::vector<std::pair<std::string, at::cuda::CUDAEvent*>>> swap_remote_events;
 
+    std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
+    std::shared_ptr<mooncake::Transport> xport_{nullptr};
+    mooncake::Transport::SegmentHandle segment_id_;
+    std::unordered_map<std::string, std::vector<std::pair<std::string, uint64_t>>> mc_swap_remote_batchs_;
+    int mc_num_gpu_bufs_{0};
 };
 
 class TransWorker {
 public:
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
+    // TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, std::shared_ptr<mooncake::TransferEngine> transfer_engine, std::shared_ptr<mooncake::Transport> xport);
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache);
+  TransWorker(
+      int cache_size_per_block,
+      const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, int rank,
+      int local_rank, int nccl_local_rank, const std::string &dst_channel,
+      int tp, int num_layer, int cache_block_size,
+      std::vector<uint64_t> &blocks_gpu_cache,
+      const std::vector<std::pair<at::Tensor, at::Tensor>> &dst_cpu_cache,
+      std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+      std::shared_ptr<mooncake::Transport> xport,
+      const std::map<int, std::string> &mc_servers_addr, int mc_num_gpu_bufs);
 
-    TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache);
+  TransWorker(
+      int cache_size_per_block,
+      const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, int rank,
+      int local_rank, int nccl_local_rank, const std::string &dst_channel,
+      int tp, int num_layer, int cache_block_size,
+      std::vector<uint64_t> &blocks_gpu_cache,
+      const std::vector<std::pair<at::Tensor, at::Tensor>> &dst_cpu_cache,
+      const std::vector<uint64_t> &dst_blocks_cpu_cache,
+      std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+      std::shared_ptr<mooncake::Transport> xport,
+      const std::map<int, std::string> &mc_servers_addr, int mc_num_gpu_bufs);
 
-    ~TransWorker();
+  ~TransWorker();
 
-    void add_tasks(TransferTask& task);
-    // void add_tasks(const std::vector<std::string>& tasks);
-    // std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>> get_finished_transfer_tasks();
-    std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,std::vector<std::string>>> get_finished_transfer_tasks();
+  void add_tasks(TransferTask &task);
+  // void add_tasks(const std::vector<std::string>& tasks);
+  // std::vector<std::pair<std::vector<std::string>, std::vector<std::string>>>
+  // get_finished_transfer_tasks();
+  std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,
+                         std::vector<std::string>>>
+  get_finished_transfer_tasks();
 
-    void add_comm_task(std::vector<char>& uniqueId);
+  void add_comm_task(std::vector<char> &uniqueId);
 private:
     void init_device();
     void worker();
@@ -250,6 +292,7 @@ private:
     TransQueue<TransferTask> task_queue;
     TransQueue<std::vector<char>> comm_queue;
     TransQueue<std::tuple<std::vector<std::string>, std::vector<std::string>,std::vector<std::string>>> transfer_result_queue;
+
 
     std::thread execute;
     int rank;
@@ -267,44 +310,73 @@ private:
 
     std::vector<c10::cuda::CUDAStream> swap_remote_streams;
     int use_swap_stream;
+    std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
+    std::shared_ptr<mooncake::Transport> xport_{nullptr};
 };
 
 class TransManager {
 public:
-    TransManager(int cache_size_per_block, std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache);
+  TransManager(int cache_size_per_block,
+               std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache,
+               int rank, int local_rank, int nccl_local_rank, int tp,
+               int num_layer, int cache_block_size,
+               std::vector<uint64_t> &blocks_gpu_cache,
+               const std::string &mc_local_server_name,
+               const std::string &mc_metadata_server,
+               const std::string &mc_device_name,
+               const std::string &mc_nic_proirity_matrix,
+               const std::string &mc_protocol,
+               const std::map<int, std::string> &mc_servers_addr,
+               std::vector<std::pair<at::Tensor, at::Tensor>> &remote_swap_cpu_cache,
+               std::vector<uint64_t> &remote_swap_blocks_address
+               );
 
+  ~TransManager();
+  std::vector<char> get_nccl_id(const std::string &dst_channel,
+                                const std::string &worker_type);
+  void create_comm(std::vector<char> &nccl_id, const std::string &dst_channel,
+                   const std::string &worker_type);
+  void add_tasks(const std::vector<std::string> &tasks);
+  void dist_worker();
+  std::vector<
+      std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,
+                             std::vector<std::string>>>>
+  get_finished_transfer_tasks();
 
-    ~TransManager();
-    std::vector<char> get_nccl_id(const std::string& dst_channel, const std::string& worker_type);
-    void create_comm(std::vector<char>& nccl_id ,const std::string& dst_channel, const std::string& worker_type);
-    void add_tasks(const std::vector<std::string>& tasks);
-    void dist_worker();
-    std::vector<std::vector<std::tuple<std::vector<std::string>, std::vector<std::string>,std::vector<std::string>>>> get_finished_transfer_tasks();
-
-    void init_dst_cpu_cache(const std::string& dst_channel, const std::vector<std::pair<at::Tensor, at::Tensor>>& dst_cpu_cache, const std::vector<uint64_t>& dst_blocks_cpu_cache);
+  void init_dst_cpu_cache(
+      const std::string &dst_channel,
+      const std::vector<std::pair<at::Tensor, at::Tensor>> &dst_cpu_cache,
+      const std::vector<uint64_t> &dst_blocks_cpu_cache);
 
 private:
-    std::unordered_map<std::string, TransWorker*> send_trans_workers;
+  std::unordered_map<std::string, TransWorker *> send_trans_workers;
 
-    std::unordered_map<std::string, TransWorker*> recv_trans_workers;
+  std::unordered_map<std::string, TransWorker *> recv_trans_workers;
 
-    std::unordered_map<std::string, TransWorker*> swap_workers;
+  std::unordered_map<std::string, TransWorker *> swap_workers;
 
-    std::thread execute;
+  std::thread execute;
 
-    int cache_size_per_block;
-    std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
-    std::vector<uint64_t> blocks_gpu_cache;
-    std::vector<uint64_t> dst_blocks_cpu_cache;
+  int cache_size_per_block;
+  std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
+  std::vector<uint64_t> blocks_gpu_cache;
+  std::vector<uint64_t> dst_blocks_cpu_cache;
+  
+  std::vector<std::pair<at::Tensor, at::Tensor>> remote_swap_cpu_cache_;
+  std::vector<uint64_t> remote_swap_blocks_address_;
+  std::map<int, std::string> mc_servers_addr_,
+  std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
+  std::shared_ptr<mooncake::Transport> xport_{nullptr}; 
+  int mc_num_gpu_bufs_{0};
+
+  TransQueue<TransferTask> worker_task_queue;
 
 
-    TransQueue<TransferTask> worker_task_queue;
-    int rank;
-    int local_rank;
-    int nccl_local_rank;
-    int tp;
-    int num_layer;
-    int cache_block_size;
-
+  int rank;
+  int local_rank;
+  int nccl_local_rank;
+  int tp;
+  int num_layer;
+  int cache_block_size;
 };
 #endif // TRANS_CONFIG_H

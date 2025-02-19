@@ -187,3 +187,5 @@ _build/
 
 *.png
 logs/
+
+thirdparties

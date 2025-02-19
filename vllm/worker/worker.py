@@ -29,7 +29,7 @@ from multiprocessing import shared_memory
 from vllm._C import trans_ops, swap_ops, ops
 from vllm.logger import init_logger
 import ray
-#no TransferRequestIdTask, TransferBlocksTask
+# no TransferRequestIdTask, TransferBlocksTask
 from vllm.core.kv_trans_scheduler import TransferTaskMeta
 import time
 logger = init_logger(__name__)
@@ -98,6 +98,10 @@ class Worker:
         self.dst_cpu_cache = {}
 
         self.trans_blocks_time = 0
+        self.remote_swap_cpu_cache = [(torch.empty(1), torch.empty(1))]
+        self.remote_swap_blocks_address = []
+        self.remote_swap_shm = None
+
     def init_device(self) -> int:
         if self.device_config.device.type == "cuda":
             # torch.distributed.all_reduce does not free the input tensor until
@@ -119,13 +123,13 @@ class Worker:
         else:
             raise RuntimeError(
                 f"Not support device type: {self.device_config.device}")
-        
+
         # if not self.is_driver_worker:
         #     self.nccl_local_rank = int(ray.get_runtime_context().get_accelerator_ids()["GPU"][0])
         #     logger.info("worker get from rank = %d, ", self.nccl_local_rank)
         # else:
         #     self.nccl_local_rank = self.device_id
-            
+
         self.nccl_local_rank = self.deploy_config.cluster_rank * self.parallel_config.tensor_parallel_size + self.rank
         # Initialize the distributed environment.
         init_distributed_environment(self.parallel_config, self.rank,
@@ -134,12 +138,12 @@ class Worker:
         print(f"worker init. rank: {self.rank}. local_rank: {self.local_rank}. cluster_rank: {self.deploy_config.cluster_rank}. nccl_local_rank: {self.nccl_local_rank}")
         # Set random seed.
         set_random_seed(self.model_config.seed)
-        
+
         return self.nccl_local_rank
 
     def load_model(self):
         self.model_runner.load_model()
-        
+
     @torch.inference_mode()
     def profile_num_available_blocks(
         self,
@@ -215,14 +219,60 @@ class Worker:
             self.swap_manager = swap_ops.SwapManager(self.cache_engine.cache_block_size, self.gpu_blocks_address, self.cpu_blocks_address)
 
     def init_trans_manager(self):
+        mc_local_server_ip = self.deploy_config.mc_local_server_name.split(":")[0]
+        mc_local_server_port = (
+            int(self.deploy_config.mc_local_server_name.split(":")[1]) + self.local_rank
+        )
+        mc_local_server_name = f"{mc_local_server_ip}:{mc_local_server_port}"
+        # one RDMA device for one GPU
+        if self.deploy_config.mc_device_name != "":
+            devices = self.deploy_config.mc_device_name.split(",")
+            mc_device_name = devices[self.local_rank % len(devices)]
+        else:
+            mc_device_name = ""
         if not self.use_agg_block:
             gpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in self.gpu_cache]
-            self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, gpu_cache, self.rank, self.local_rank, self.nccl_local_rank, self.parallel_config.tensor_parallel_size, self.model_config.get_num_layers(self.parallel_config), self.cache_engine.cache_block_size, [])
+            self.trans_manager = trans_ops.TransManager(
+                self.cache_engine.cache_size_per_block,
+                gpu_cache,
+                self.rank,
+                self.local_rank,
+                self.nccl_local_rank,
+                self.parallel_config.tensor_parallel_size,
+                self.model_config.get_num_layers(self.parallel_config),
+                self.cache_engine.cache_block_size,
+                [],
+                mc_local_server_name,
+                self.deploy_config.mc_metadata_server,
+                mc_device_name,
+                self.deploy_config.mc_nic_priority_matrix,
+                self.deploy_config.mc_protocol,
+                self.deploy_config.mc_servers_addr,
+                self.remote_swap_cpu_cache,
+                self.remote_swap_blocks_address,
+            )
         else:
             null_gpu_cache = [(torch.empty(1), torch.empty(1))]
-            self.trans_manager = trans_ops.TransManager(self.cache_engine.cache_size_per_block, null_gpu_cache, self.rank, self.local_rank, self.nccl_local_rank, self.parallel_config.tensor_parallel_size, self.model_config.get_num_layers(self.parallel_config), self.cache_engine.cache_block_size, self.gpu_blocks_address)
-        
-    
+            self.trans_manager = trans_ops.TransManager(
+                self.cache_engine.cache_size_per_block,
+                null_gpu_cache,
+                self.rank,
+                self.local_rank,
+                self.nccl_local_rank,
+                self.parallel_config.tensor_parallel_size,
+                self.model_config.get_num_layers(self.parallel_config),
+                self.cache_engine.cache_block_size,
+                self.gpu_blocks_address,
+                mc_local_server_name,
+                self.deploy_config.mc_metadata_server,
+                mc_device_name,
+                self.deploy_config.mc_nic_priority_matrix,
+                self.deploy_config.mc_protocol,
+                self.deploy_config.mc_servers_addr,
+                self.remote_swap_cpu_cache,
+                self.remote_swap_blocks_address,
+            )
+
     def warm_up_model(self) -> None:
         if not self.model_config.enforce_eager:
             self.model_runner.capture_model(self.gpu_cache, self.caches_addresses_tensors_gpu)
@@ -254,7 +304,7 @@ class Worker:
                                            blocks_to_copy)
             else:
                 self.cache_engine.copy(blocks_to_copy)
-             
+
     @torch.inference_mode()
     def execute_model(
         self,
@@ -294,7 +344,7 @@ class Worker:
 
         self.cache_swap(blocks_to_swap_in, blocks_to_swap_out, blocks_to_copy)
 
-        #todo hucc
+        # todo hucc
         if evicted_blocks_to_swap_out:
             if self.use_agg_block:
                 self.swap_manager.add_swap_tasks(
@@ -302,7 +352,7 @@ class Worker:
             else:
                 self.swap_manager.add_swap_tasks(
                     swap_ops.SwapTask(swap_id, evicted_blocks_to_swap_out, swap_ops.SwapType.SWAP_OUT_BLOCKS))
-            
+
         # If there is no input, we don't need to execute the model.
         if num_seq_groups == 0:
             return {}
@@ -314,7 +364,7 @@ class Worker:
                                                     self.trans_manager)
         else:
             output = self.model_runner.execute_model(seq_group_metadata_list, self.gpu_cache, self.caches_addresses_tensors_gpu)
-        #TODO change return res
+        # TODO change return res
         # swap_finished_req_ids = self.cache_engine.check_finished_events()
         return (output, [])
 
@@ -326,7 +376,7 @@ class Worker:
 
     def list_loras(self) -> Set[int]:
         return self.model_runner.list_loras()
-    
+
     @property
     def max_model_len(self) -> int:
         return self.model_config.max_model_len
@@ -371,7 +421,7 @@ class Worker:
             self.trans_manager.add_tasks(recv_tasks)   
         if swap_to_remote_tasks:
             self.trans_manager.add_tasks(swap_to_remote_tasks)
-            
+
         if self.deploy_config.enable_debug:
             t2 = time.time()
             self.trans_blocks_time = self.trans_blocks_time + t2 - t1
@@ -381,7 +431,7 @@ class Worker:
         dst_channel, worker_type)->None:
         nccl_id = self.trans_manager.get_nccl_id(dst_channel, worker_type)
         return nccl_id
-    
+
     def create_comm(
         self,
         nccl_id,
@@ -405,25 +455,24 @@ class Worker:
                     for cache_block in dst_tensor:
                         blocks_address.append(cache_block.data_ptr())
                     self.trans_manager.init_dst_cpu_cache(dst_channel, null_dst_cpu_cache, blocks_address)
-        
+
     def get_dst_shm_rank(self, dst_channel):
         # 将字符串分割成整数列表
         dst_ranks = [int(token) for token in dst_channel.split('_')]
         self.dst_shm_rank = dst_ranks[self.local_rank]
         return self.dst_shm_rank
-    
+
     def get_trans_blocks_time(
         self,
     ) -> None:
         return self.trans_blocks_time
-    
+
     def get_finished_transfer_tasks(self) -> List[List[Tuple[List[trans_ops.TransferTaskMeta],List[trans_ops.TransferTaskMeta]]]]:
         return self.trans_manager.get_finished_transfer_tasks() 
-    
+
     def get_finished_swap_tasks(self) -> List[List[str]]:
         return self.swap_manager.get_finished_swap_tasks()
-    
-    
+
     def share_cpu_cache(self, global_ranks):
         self.deploy_config.set_global_ranks(global_ranks) 
         channel = "_".join([str(rank) for rank in self.deploy_config.global_ranks])
@@ -433,10 +482,11 @@ class Worker:
 
         # 计算总共需要的字节数
         total_bytes = sum(self.tensor_sizes)
-        
+
         share_cpu_cache_name = channel + "_" + str(self.nccl_local_rank)
         # 创建共享内存
         self.shm = shared_memory.SharedMemory(name=share_cpu_cache_name, create=True, size=total_bytes)
+        print(f"share_cpu_cache_name: {share_cpu_cache_name}")
         self.shm_name = self.shm.name
 
         # 将所有 Tensor 数据拷贝到共享内存中
@@ -445,7 +495,26 @@ class Worker:
             np_array_flat = np_array.flatten()
             np.copyto(np.ndarray(np_array_flat.shape, dtype=np_array_flat.dtype, buffer=self.shm.buf, offset=offset), np_array_flat)
             offset += np_array.nbytes
-    
+
+    def init_remote_swap_cpu_cache(self):
+
+        total_bytes = sum(cpu_tensor.nbytes for cpu_tensor in self.cpu_cache)
+        self.remote_swap_shm = shared_memory.SharedMemory(name=str(self.nccl_local_rank), create=True, size=total_bytes) 
+        # copy data from cpu_cache to shared memory
+        offset = 0
+        remote_swap_tensors = []
+        for cpu_tensor in self.cpu_cache:
+            shm_tensor = torch.frombuffer(self.remote_swap_shm.buf, dtype=cpu_tensor.dtype, offset=offset).reshape(cpu_tensor.shape)
+            shm_tensor.copy_(cpu_tensor)
+            offset += cpu_tensor.nbytes
+            remote_swap_tensors.append(shm_tensor)
+
+        if self.use_agg_block:
+            self.remote_swap_blocks_address = [cache_block.data_ptr() for cache_block in remote_swap_tensors]
+        else:  
+            self.remote_swap_cpu_cache = [(kv_cache[0], kv_cache[1]) for kv_cache in remote_swap_tensors] 
+        torch.cuda.empty_cache()
+
     def calculate_tensor_sizes(self):
         # 创建一个空的 Tensor 列表
         tensors = self.cache_engine._allocate_kv_cache(self.cache_engine.num_cpu_blocks, "cpu", self.use_agg_block)
@@ -453,20 +522,23 @@ class Worker:
         np_arrays = [tensor.numpy() for tensor in tensors]
         tensor_sizes = [np_array.nbytes for np_array in np_arrays]
         return tensor_sizes
-    
+
     def restore_other_shared_cpu_cache(self, dst_channel):
+        '''
+        Attach to an existing shared memory block indexed by dst_channel. Reinterpret the share memory to tensors.
+        '''
         tensor_sizes = self.calculate_tensor_sizes()
         dst_tensors = []
         index = 0
         shm = shared_memory.SharedMemory(name=dst_channel + "_" +str(self.dst_shm_rank))
-        print("restore_other_shared_cpu_cache shm.size ", shm.size)        
+        print(f"restore_other_shared_cpu_cache shm.size {shm.size}, name {dst_channel + '_' + str(self.dst_shm_rank)}")        
         if self.deploy_config.use_agg_block:
             kv_cache_shape = self.cache_engine.attn_backend.get_kv_cache_shape(
                 self.cache_engine.num_cpu_blocks, self.cache_engine.block_size, self.cache_engine.num_heads, self.cache_engine.head_size, self.cache_engine.num_layers)
         else:
             kv_cache_shape = self.cache_engine.attn_backend.get_kv_cache_shape(
                 self.cache_engine.num_cpu_blocks, self.cache_engine.block_size, self.cache_engine.num_heads, self.cache_engine.head_size, None)
-        
+
         shm_np_array = np.ndarray((self.shm.size,), dtype=np.uint8, buffer=self.shm.buf)
         for tensor_size in tensor_sizes:
             # 从共享内存中读取数据并恢复成 Torch Tensor
@@ -478,7 +550,7 @@ class Worker:
             index += tensor_size
 
         return dst_tensors
-    
+
 def init_distributed_environment(
     parallel_config: ParallelConfig,
     rank: int,
@@ -546,4 +618,3 @@ def _check_if_gpu_supports_dtype(torch_dtype: torch.dtype):
                 f"{compute_capability[0]}.{compute_capability[1]}. "
                 "You can use float16 instead by explicitly setting the"
                 "`dtype` flag in CLI, for example: --dtype=half.")
-

@@ -192,12 +192,22 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   pybind11::module trans_ops = m.def_submodule("trans_ops", "vLLM gpu nccl utils");
 
   py::class_<TransManager>(trans_ops, "TransManager")
-      .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>>&, int, int , int, int, int, int, std::vector<uint64_t>& >())
-      .def("get_nccl_id", &TransManager::get_nccl_id, "A function that returns NCCL unique ID as a list of characters")
+      .def(py::init<int, std::vector<std::pair<at::Tensor, at::Tensor>> &, int,
+                    int, int, int, int, int, std::vector<uint64_t> &,
+                    const std::string &, const std::string &,
+                    const std::string &, const std::string &,
+                    const std::string &, const std::map<int, std::string> &,
+                    std::vector<std::pair<at::Tensor, at::Tensor>> &,
+                    std::vector<uint64_t> &>())
+      .def("get_nccl_id", &TransManager::get_nccl_id,
+           "A function that returns NCCL unique ID as a list of characters")
       .def("create_comm", &TransManager::create_comm, "A function create comm")
       .def("add_tasks", &TransManager::add_tasks, "add_tasks")
-      .def("get_finished_transfer_tasks", &TransManager::get_finished_transfer_tasks, "get_finished_transfer_tasks")
-      .def("init_dst_cpu_cache", &TransManager::init_dst_cpu_cache, "init_dst_cpu_cache");
+      .def("get_finished_transfer_tasks",
+           &TransManager::get_finished_transfer_tasks,
+           "get_finished_transfer_tasks")
+      .def("init_dst_cpu_cache", &TransManager::init_dst_cpu_cache,
+           "init_dst_cpu_cache");
 
   py::enum_<TaskType>(trans_ops, "TaskType")
       .value("TRANSFER_SEND_BLOCKS", TaskType::TRANSFER_SEND_BLOCKS)
@@ -208,7 +218,6 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
       .value("TRANSFER_RECV_FULL_BLOCKS", TaskType::TRANSFER_RECV_FULL_BLOCKS) 
       .value("TRANSFER_HBM_TO_DRAM_BLOCKS", TaskType::TRANSFER_HBM_TO_DRAM_BLOCKS) 
       .value("TRANSFER_HBM_TO_DRAM_FULL_BLOCKS", TaskType::TRANSFER_HBM_TO_DRAM_FULL_BLOCKS) 
-
       .export_values();
 
   py::class_<TransferTaskMeta>(trans_ops, "TransferTaskMeta")
