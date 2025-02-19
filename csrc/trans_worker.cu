@@ -27,7 +27,7 @@ TransWorker::TransWorker(
     dst_rank = comm_rank + tp;
   }
 
-  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank]);
+  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank].c_str());
   use_comm = 0;
 
   use_swap_stream = 0;
@@ -65,7 +65,7 @@ TransWorker::TransWorker(
     dst_rank = comm_rank + tp;
   }
 
-  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank]);
+  trans_engine.segment_id_ = transfer_engine_->openSegment(mc_servers_addr[dst_rank].c_str());
   use_comm = 0;
 
   use_swap_stream = 0;

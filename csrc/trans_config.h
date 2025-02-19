@@ -214,6 +214,7 @@ public:
 
     void SwapHbmToRemoteDramFullBlocks(std::vector<uint64_t>& srcCaches, std::vector<uint64_t>& dstCaches, \
         const std::vector<uint32_t>& srcBlocks, const std::vector<uint32_t>& dstBlocks, uint32_t cacheSize);
+    mooncake::Transport::SegmentHandle segment_id_;
 private:
     std::vector<std::pair<at::Tensor, at::Tensor>> gpu_cache;
     std::vector<uint64_t> blocks_gpu_cache; // key/value address in tensor 
@@ -240,7 +241,6 @@ private:
 
     std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
     std::shared_ptr<mooncake::Transport> xport_{nullptr};
-    mooncake::Transport::SegmentHandle segment_id_;
     std::unordered_map<std::string, std::vector<std::pair<std::string, uint64_t>>> mc_swap_remote_batchs_;
     int mc_num_gpu_bufs_{0};
 };
@@ -364,7 +364,6 @@ private:
   
   std::vector<std::pair<at::Tensor, at::Tensor>> remote_swap_cpu_cache_;
   std::vector<uint64_t> remote_swap_blocks_address_;
-  std::map<int, std::string> mc_servers_addr_;
   std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
   std::shared_ptr<mooncake::Transport> xport_{nullptr}; 
   int mc_num_gpu_bufs_{0};
