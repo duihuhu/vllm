@@ -6,6 +6,8 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/utils.cmake)
 
+include_directories(/data/apps/nccl/nccl-2.23.4-1-cuda12.6/build/include/)
+include_directories(/data/home/scyb091/.opt/include/)
 #
 # Supported python versions.  These versions will be searched in order, the
 # first match will be selected.  These should be kept in sync with setup.py.

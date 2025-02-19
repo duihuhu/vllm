@@ -1,5 +1,5 @@
 #include "trans_config.h"
-#include "common.h"
+#include "mooncake/common.h"
 #include <iostream>
 std::string formatDeviceNames(const std::string& device_names) {
     std::stringstream ss(device_names);

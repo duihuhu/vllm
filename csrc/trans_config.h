@@ -16,7 +16,7 @@
 #include <cuda_runtime.h>
 #include "swap_config.h"
 #include <tuple>
-#include "transfer_engine.h"
+#include "mooncake/transfer_engine.h"
 #include "mooncake/transport/rdma_transport/rdma_transport.h"
 #include "mooncake/transport/transport.h"
 
