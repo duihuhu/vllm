@@ -65,7 +65,7 @@ TransManager::TransManager(
   if (!transfer_engine_) {
     throw std::runtime_error("construct TransferEngine error");
   }
-  auto hostname_port = parseHostNameWithPort(mc_local_server_name);
+  auto hostname_port = parseHostNameWithPort(mc_local_server_name.c_str());
   int ret = transfer_engine_->init(mc_local_server_name.c_str(), hostname_port.first.c_str(),
                                    hostname_port.second);
   if (ret) {
@@ -115,7 +115,7 @@ TransManager::TransManager(
   if(blocks_gpu_cache.size() > 0) {
     std::string location = std::string("gpu:") + std::to_string(local_rank);
     for(auto& block_address: blocks_gpu_cache) {
-        auto res = transfer_engine_->registerLocalMemory(block_address, cache_block_size, location, true, true);
+        auto res = transfer_engine_->registerLocalMemory((void *)block_address, cache_block_size, location, true, true);
         if(res != 0) {
             throw std::runtime_error("register gpu memory of key error in agg_block");
         }
@@ -139,7 +139,7 @@ TransManager::TransManager(
   if (remote_swap_blocks_address_.size() > 0) {
     std::string location = std::string("cpu:0");
     for(auto& block_address: remote_swap_blocks_address_) {
-        auto res = transfer_engine_->registerLocalMemory(block_address, cache_block_size, location, true, true);
+        auto res = transfer_engine_->registerLocalMemory((void *)block_address, cache_block_size, location, true, true);
         if(res != 0) {
             throw std::runtime_error("register cpu memory of key error in agg_block");
         }
@@ -208,12 +208,12 @@ std::vector<char> TransManager::get_nccl_id(const std::string& dst_channel, cons
     NCCLCHECK(ncclGetUniqueId(&uniqueId));
     if(worker_type=="sender"){
         if(send_trans_workers.find(dst_channel) == send_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, dst_cpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
             send_trans_workers[dst_channel] = task_worker;
         }
     } else{
         if(recv_trans_workers.find(dst_channel) == recv_trans_workers.end()){
-            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
+            TransWorker* task_worker = new TransWorker(cache_size_per_block, gpu_cache, rank, local_rank, nccl_local_rank, dst_channel, tp, num_layer, cache_block_size, blocks_gpu_cache,  dst_cpu_cache, transfer_engine_, xport_, mc_servers_addr_, mc_num_gpu_bufs_);
             recv_trans_workers[dst_channel] = task_worker;
         }
     }
