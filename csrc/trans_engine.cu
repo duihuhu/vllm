@@ -325,16 +325,17 @@ void TransEngine::mc_swap_hbm_to_remote_dram_full_blocks(const std::string& chan
     
         requests.emplace_back(entry);
     }
+    auto num_requests = requests.size();
     int ret = xport_->submitTransfer(batch_id, requests);
     if(ret != 0) {
         throw std::runtime_error("submitTransfer in dram_blocks error");
     }
     // need to send the message to TransManager for polling completion
     if (mc_swap_remote_batchs_.find(channel) == mc_swap_remote_batchs_.end()) {
-        mc_swap_remote_batchs_[channel] = std::vector<std::pair<std::string, uint64_t>>();
-        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+        mc_swap_remote_batchs_[channel] = std::vector<std::tuple<std::string, uint64_t, uint64_t>>();
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id, num_requests));
     } else{
-        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id, num_requests));
     }
 }
 
@@ -513,14 +514,20 @@ std::vector<std::string> TransEngine::check_mc_swap_remote_finished_events() {
         const std::string& channel = kv.first;
         auto& request_ids_and_batch_ids = kv.second;
         size_t num_finished_events = 0;
-
-        for (auto it = request_ids_and_batch_ids.begin(); it != request_ids_and_batch_ids.end(); ++it) {
-            const std::string& request_id = it->first;
-            uint64_t batch_id = it->second;
-            std::vector<mooncake::TransferStatus> status;
-            int ret = xport_->getgetTransferStatus(batch_id, status);
-            if(ret != 0) {
-                throw std::runtime_error("check transfer status error");
+        
+        for(const auto &t : request_ids_and_batch_ids) {
+            std::string request_id;
+            uint64_t batch_id;
+            uint64_t num_requests;
+            std::tie(request_id, batch_id, num_requests) = t;
+            std::vector<mooncake::TransferStatus> all_statuses;
+            for (uint64_t task_id = 0; task_id < num_requests; task_id++) {
+                mooncake::TransferStatus status;
+                int ret = xport_->getTransferStatus(batch_id, status);
+                if(ret != 0) {
+                    throw std::runtime_error("check transfer status error");
+                }
+                all_statuses.push_back(status); 
             }
             bool completed = true;
             for(auto &s: status) {
@@ -533,10 +540,13 @@ std::vector<std::string> TransEngine::check_mc_swap_remote_finished_events() {
             }
             if (completed == true) {
                 swap_blocks_finished.emplace_back(TransferTaskMeta(channel, request_id).serialize());
+                if(xport_->freeBatchID(batch_id) != 0) {
+                    throw std::runtime_error("free batch id error");
+                }          
                 ++++num_finished_events; 
             } else {
                 break;
-            }
+            }           
         }
         if (num_finished_events > 0) {
             // Remove finished events from the list

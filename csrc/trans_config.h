@@ -242,7 +242,7 @@ private:
 
     std::shared_ptr<mooncake::TransferEngine> transfer_engine_{nullptr};
     std::shared_ptr<mooncake::Transport> xport_{nullptr};
-    std::unordered_map<std::string, std::vector<std::pair<std::string, uint64_t>>> mc_swap_remote_batchs_;
+    std::unordered_map<std::string, std::vector<std::tuple<std::string, uint64_t, uint64_t>>> mc_swap_remote_batchs_; // channel -> [(request_id, batch_id, num_requests)]
     int mc_num_gpu_bufs_{0};
 };
 
