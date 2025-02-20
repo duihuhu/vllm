@@ -286,7 +286,7 @@ void TransEngine::mc_swap_hbm_to_remote_dram_blocks(const std::string& channel, 
     }
     // need to send the message to TransManager for polling completion
     if (mc_swap_remote_batchs_.find(channel) == mc_swap_remote_batchs_.end()) {
-        mc_swap_remote_batchs_[channel] = std::vector<std::pair<std::string, uint64_t, uint64_t>>();
+        mc_swap_remote_batchs_[channel] = std::vector<std::tuple<std::string, uint64_t, uint64_t>>();
         mc_swap_remote_batchs_[channel].push_back(std::make_tuple(request_id, batch_id, num_requests));
     } else{
         mc_swap_remote_batchs_[channel].push_back(std::make_tuple(request_id, batch_id, num_requests));
