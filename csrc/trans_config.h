@@ -249,7 +249,15 @@ private:
 class TransWorker {
 public:
 
-    // TransWorker(int cache_size_per_block, const std::vector<std::pair<at::Tensor, at::Tensor>>& gpu_cache, int rank, int local_rank, int nccl_local_rank, const std::string& dst_channel, int tp, int num_layer, int cache_block_size, std::vector<uint64_t>& blocks_gpu_cache, std::shared_ptr<mooncake::TransferEngine> transfer_engine, std::shared_ptr<mooncake::Transport> xport);
+  TransWorker(
+      int cache_size_per_block,
+      const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, int rank,
+      int local_rank, int nccl_local_rank, const std::string &dst_channel,
+      int tp, int num_layer, int cache_block_size,
+      std::vector<uint64_t> &blocks_gpu_cache,
+      std::shared_ptr<mooncake::TransferEngine> transfer_engine,
+      std::shared_ptr<mooncake::Transport> xport,
+      const std::map<int, std::string> &mc_servers_addr, int mc_num_gpu_bufs);
 
   TransWorker(
       int cache_size_per_block,
