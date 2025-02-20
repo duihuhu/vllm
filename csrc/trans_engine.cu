@@ -524,7 +524,7 @@ std::vector<std::string> TransEngine::check_mc_swap_remote_finished_events() {
             std::vector<mooncake::TransferStatus> all_statuses;
             for (uint64_t task_id = 0; task_id < num_requests; task_id++) {
                 mooncake::TransferStatus status;
-                int ret = xport_->getTransferStatus(batch_id, status);
+                int ret = xport_->getTransferStatus(batch_id, task_id, status);
                 if(ret != 0) {
                     throw std::runtime_error("check transfer status error");
                 }
