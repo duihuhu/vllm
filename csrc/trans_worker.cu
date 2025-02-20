@@ -1,7 +1,7 @@
 #include "trans_config.h"
 
 /// This constructor is not used for swap remote.
-TransWorker(
+TransWorker::TransWorker(
     int cache_size_per_block,
     const std::vector<std::pair<at::Tensor, at::Tensor>> &gpu_cache, int rank,
     int local_rank, int nccl_local_rank, const std::string &dst_channel,
