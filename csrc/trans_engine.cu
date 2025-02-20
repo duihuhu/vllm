@@ -279,16 +279,17 @@ void TransEngine::mc_swap_hbm_to_remote_dram_blocks(const std::string& channel, 
             requests.emplace_back(value_entry);
         }
     }
+    uint64_t num_requests = requests.size();
     int ret = xport_->submitTransfer(batch_id, requests);
     if(ret != 0) {
         throw std::runtime_error("submitTransfer in dram_blocks error");
     }
     // need to send the message to TransManager for polling completion
     if (mc_swap_remote_batchs_.find(channel) == mc_swap_remote_batchs_.end()) {
-        mc_swap_remote_batchs_[channel] = std::vector<std::pair<std::string, uint64_t>>();
-        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+        mc_swap_remote_batchs_[channel] = std::vector<std::pair<std::string, uint64_t, uint64_t>>();
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id, num_requests));
     } else{
-        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id));
+        mc_swap_remote_batchs_[channel].push_back(std::make_pair(request_id, batch_id, num_requests));
     }
 }
 
